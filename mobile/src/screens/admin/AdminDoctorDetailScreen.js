@@ -1,7 +1,4 @@
-/**
- * Admin Doctor Detail Screen - Doctor Profile & Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -76,7 +73,6 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
     ]);
   };
 
-
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
@@ -122,9 +118,8 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
       >
-        {/* Profile Card */}
-        {(() => {
-          // Check approval status - backend uses approvalStatus field
+        {}
+        {(() => {
           const isApproved = doctor.approvalStatus === 'approved' || doctor.isApproved === true;
           return (
         <>
@@ -141,7 +136,7 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Info Card */}
+        {}
         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Email</Text>
@@ -165,7 +160,7 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Stats Card */}
+        {}
         <View style={[styles.statsCard, { backgroundColor: colors.surface }]}>
           <View style={styles.statItem}>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{doctor.appointmentCount || 0}</Text>
@@ -183,7 +178,7 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Action Buttons */}
+        {}
         <View style={styles.actionButtons}>
           {!isApproved && (
             <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={handleApprove}>

@@ -1,31 +1,18 @@
-// backend/services/aiReportAnalyzer.js
-// AI-Powered Medical Report Image Analyzer
-// Analyzes uploaded lab report images to detect health conditions
+
 
 const fs = require('fs');
-const path = require('path');
-
-// ============================================
-// MEDICAL REFERENCE RANGES & CONDITIONS
-// ============================================
-
-// Comprehensive normal ranges for various tests
-const medicalReferenceRanges = {
-  // Diabetes Panel
+const path = require('path');
+const medicalReferenceRanges = {
   glucose_fasting: { min: 70, max: 100, unit: 'mg/dL', name: 'Fasting Blood Glucose', category: 'diabetes' },
   glucose_random: { min: 70, max: 140, unit: 'mg/dL', name: 'Random Blood Glucose', category: 'diabetes' },
   glucose_pp: { min: 70, max: 140, unit: 'mg/dL', name: 'Post-Prandial Glucose', category: 'diabetes' },
   hba1c: { min: 4.0, max: 5.6, unit: '%', name: 'HbA1c (Glycated Hemoglobin)', category: 'diabetes' },
-  fasting_insulin: { min: 2.6, max: 24.9, unit: 'µIU/mL', name: 'Fasting Insulin', category: 'diabetes' },
-  
-  // Lipid Profile
+  fasting_insulin: { min: 2.6, max: 24.9, unit: 'µIU/mL', name: 'Fasting Insulin', category: 'diabetes' },
   cholesterol_total: { min: 0, max: 200, unit: 'mg/dL', name: 'Total Cholesterol', category: 'lipid' },
   cholesterol_ldl: { min: 0, max: 100, unit: 'mg/dL', name: 'LDL Cholesterol', category: 'lipid' },
   cholesterol_hdl: { min: 40, max: 60, unit: 'mg/dL', name: 'HDL Cholesterol', category: 'lipid', inverse: true },
   triglycerides: { min: 0, max: 150, unit: 'mg/dL', name: 'Triglycerides', category: 'lipid' },
-  vldl: { min: 5, max: 40, unit: 'mg/dL', name: 'VLDL Cholesterol', category: 'lipid' },
-  
-  // Complete Blood Count (CBC)
+  vldl: { min: 5, max: 40, unit: 'mg/dL', name: 'VLDL Cholesterol', category: 'lipid' },
   hemoglobin: { min: 12, max: 17, unit: 'g/dL', name: 'Hemoglobin', category: 'cbc' },
   rbc: { min: 4.5, max: 5.5, unit: 'million/mcL', name: 'RBC Count', category: 'cbc' },
   wbc: { min: 4000, max: 11000, unit: '/mcL', name: 'WBC Count', category: 'cbc' },
@@ -33,16 +20,12 @@ const medicalReferenceRanges = {
   hematocrit: { min: 36, max: 50, unit: '%', name: 'Hematocrit', category: 'cbc' },
   mcv: { min: 80, max: 100, unit: 'fL', name: 'MCV', category: 'cbc' },
   mch: { min: 27, max: 33, unit: 'pg', name: 'MCH', category: 'cbc' },
-  mchc: { min: 32, max: 36, unit: 'g/dL', name: 'MCHC', category: 'cbc' },
-
-  // Kidney Function
+  mchc: { min: 32, max: 36, unit: 'g/dL', name: 'MCHC', category: 'cbc' },
   creatinine: { min: 0.6, max: 1.2, unit: 'mg/dL', name: 'Creatinine', category: 'kidney' },
   urea: { min: 7, max: 20, unit: 'mg/dL', name: 'Blood Urea', category: 'kidney' },
   bun: { min: 7, max: 20, unit: 'mg/dL', name: 'BUN', category: 'kidney' },
   uric_acid: { min: 3.5, max: 7.2, unit: 'mg/dL', name: 'Uric Acid', category: 'kidney' },
-  egfr: { min: 90, max: 120, unit: 'mL/min', name: 'eGFR', category: 'kidney' },
-  
-  // Liver Function
+  egfr: { min: 90, max: 120, unit: 'mL/min', name: 'eGFR', category: 'kidney' },
   bilirubin_total: { min: 0.1, max: 1.2, unit: 'mg/dL', name: 'Total Bilirubin', category: 'liver' },
   bilirubin_direct: { min: 0, max: 0.3, unit: 'mg/dL', name: 'Direct Bilirubin', category: 'liver' },
   sgpt: { min: 7, max: 56, unit: 'U/L', name: 'SGPT/ALT', category: 'liver' },
@@ -50,16 +33,12 @@ const medicalReferenceRanges = {
   alp: { min: 44, max: 147, unit: 'U/L', name: 'Alkaline Phosphatase', category: 'liver' },
   ggt: { min: 9, max: 48, unit: 'U/L', name: 'GGT', category: 'liver' },
   albumin: { min: 3.5, max: 5.0, unit: 'g/dL', name: 'Albumin', category: 'liver' },
-  protein_total: { min: 6.0, max: 8.3, unit: 'g/dL', name: 'Total Protein', category: 'liver' },
-  
-  // Thyroid Panel
+  protein_total: { min: 6.0, max: 8.3, unit: 'g/dL', name: 'Total Protein', category: 'liver' },
   tsh: { min: 0.4, max: 4.0, unit: 'mIU/L', name: 'TSH', category: 'thyroid' },
   t3: { min: 80, max: 200, unit: 'ng/dL', name: 'T3', category: 'thyroid' },
   t4: { min: 5, max: 12, unit: 'mcg/dL', name: 'T4', category: 'thyroid' },
   ft3: { min: 2.3, max: 4.2, unit: 'pg/mL', name: 'Free T3', category: 'thyroid' },
-  ft4: { min: 0.8, max: 1.8, unit: 'ng/dL', name: 'Free T4', category: 'thyroid' },
-  
-  // Vitamins & Minerals
+  ft4: { min: 0.8, max: 1.8, unit: 'ng/dL', name: 'Free T4', category: 'thyroid' },
   vitamin_d: { min: 30, max: 100, unit: 'ng/mL', name: 'Vitamin D', category: 'vitamin' },
   vitamin_b12: { min: 200, max: 900, unit: 'pg/mL', name: 'Vitamin B12', category: 'vitamin' },
   iron: { min: 60, max: 170, unit: 'mcg/dL', name: 'Serum Iron', category: 'vitamin' },
@@ -70,10 +49,7 @@ const medicalReferenceRanges = {
   sodium: { min: 136, max: 145, unit: 'mEq/L', name: 'Sodium', category: 'electrolyte' },
   potassium: { min: 3.5, max: 5.0, unit: 'mEq/L', name: 'Potassium', category: 'electrolyte' },
   chloride: { min: 98, max: 106, unit: 'mEq/L', name: 'Chloride', category: 'electrolyte' }
-};
-
-
-// Condition detection rules
+};
 const conditionRules = {
   diabetes: {
     name: 'Diabetes',
@@ -133,7 +109,6 @@ const conditionRules = {
     }
   },
 
-  
   hyperlipidemia: {
     name: 'High Cholesterol',
     checks: [
@@ -199,7 +174,6 @@ const conditionRules = {
     }
   },
 
-  
   kidney_disease: {
     name: 'Kidney Disease',
     checks: [
@@ -286,16 +260,8 @@ const conditionRules = {
       ]
     }
   }
-};
-
-
-// ============================================
-// TEXT EXTRACTION PATTERNS
-// ============================================
-
-// Patterns to extract test values from OCR text
-const extractionPatterns = {
-  // Diabetes tests
+};
+const extractionPatterns = {
   glucose_fasting: [
     /(?:fasting|fbs|fbg|fasting\s*blood\s*(?:sugar|glucose))[:\s]*(\d+\.?\d*)/i,
     /(?:glucose|blood\s*sugar)[,\s]*(?:fasting)[:\s]*(\d+\.?\d*)/i,
@@ -312,9 +278,7 @@ const extractionPatterns = {
   hba1c: [
     /(?:hba1c|hb\s*a1c|glycated\s*h(?:ae)?moglobin|a1c)[:\s]*(\d+\.?\d*)\s*%?/i,
     /a1c[:\s]*(\d+\.?\d*)/i
-  ],
-  
-  // Lipid profile
+  ],
   cholesterol_total: [
     /(?:total\s*cholesterol|cholesterol\s*total|t\.?\s*chol)[:\s]*(\d+\.?\d*)/i,
     /cholesterol[:\s]*(\d+\.?\d*)\s*(?:mg|mg\/dl)/i
@@ -327,9 +291,7 @@ const extractionPatterns = {
   ],
   triglycerides: [
     /(?:triglycerides?|tg|trigs)[:\s]*(\d+\.?\d*)/i
-  ],
-  
-  // CBC
+  ],
   hemoglobin: [
     /(?:h(?:ae)?moglobin|hgb|hb)[:\s]*(\d+\.?\d*)\s*(?:g\/dl|gm\/dl|g%)?/i
   ],
@@ -341,9 +303,7 @@ const extractionPatterns = {
   ],
   platelets: [
     /(?:platelets?|plt|thrombocytes?)[:\s]*(\d+\.?\d*)/i
-  ],
-  
-  // Kidney
+  ],
   creatinine: [
     /(?:creatinine|creat|s\.?\s*creatinine|serum\s*creatinine)[:\s]*(\d+\.?\d*)/i
   ],
@@ -352,9 +312,7 @@ const extractionPatterns = {
   ],
   uric_acid: [
     /(?:uric\s*acid|s\.?\s*uric\s*acid)[:\s]*(\d+\.?\d*)/i
-  ],
-  
-  // Liver
+  ],
   sgpt: [
     /(?:sgpt|alt|alanine\s*(?:amino)?transaminase)[:\s]*(\d+\.?\d*)/i
   ],
@@ -364,9 +322,7 @@ const extractionPatterns = {
   bilirubin_total: [
     /(?:total\s*bilirubin|bilirubin\s*total|t\.?\s*bil)[:\s]*(\d+\.?\d*)/i,
     /bilirubin[:\s]*(\d+\.?\d*)/i
-  ],
-  
-  // Thyroid
+  ],
   tsh: [
     /(?:tsh|thyroid\s*stimulating)[:\s]*(\d+\.?\d*)/i
   ],
@@ -375,9 +331,7 @@ const extractionPatterns = {
   ],
   t4: [
     /(?:t4|thyroxine)[:\s]*(\d+\.?\d*)/i
-  ],
-  
-  // Vitamins
+  ],
   vitamin_d: [
     /(?:vitamin\s*d|vit\.?\s*d|25[\s-]*oh[\s-]*d)[:\s]*(\d+\.?\d*)/i
   ],
@@ -390,18 +344,8 @@ const extractionPatterns = {
   calcium: [
     /(?:calcium|ca|s\.?\s*calcium)[:\s]*(\d+\.?\d*)/i
   ]
-};
+};
 
-
-// ============================================
-// CORE ANALYSIS FUNCTIONS
-// ============================================
-
-/**
- * Extract test values from OCR text
- * @param {string} ocrText - Text extracted from report image
- * @returns {object} - Extracted test values
- */
 function extractValuesFromText(ocrText) {
   const extractedValues = {};
   const text = ocrText.toLowerCase();
@@ -413,7 +357,7 @@ function extractValuesFromText(ocrText) {
         const value = parseFloat(match[1]);
         if (!isNaN(value) && value > 0) {
           extractedValues[testName] = value;
-          break; // Use first match
+          break; 
         }
       }
     }
@@ -422,12 +366,6 @@ function extractValuesFromText(ocrText) {
   return extractedValues;
 }
 
-/**
- * Analyze extracted values against reference ranges
- * @param {object} values - Extracted test values
- * @param {object} patientInfo - Optional patient info (age, gender)
- * @returns {object} - Analysis results
- */
 function analyzeExtractedValues(values, patientInfo = {}) {
   const results = {
     tests: [],
@@ -437,9 +375,7 @@ function analyzeExtractedValues(values, patientInfo = {}) {
     recommendations: [],
     summary: '',
     detectedConditions: []
-  };
-  
-  // Analyze each test value
+  };
   for (const [testKey, value] of Object.entries(values)) {
     const reference = medicalReferenceRanges[testKey];
     if (!reference) continue;
@@ -451,11 +387,8 @@ function analyzeExtractedValues(values, patientInfo = {}) {
       normalRange: `${reference.min} - ${reference.max}`,
       status: 'normal',
       category: reference.category
-    };
-    
-    // Check if value is abnormal
-    if (reference.inverse) {
-      // For HDL, higher is better
+    };
+    if (reference.inverse) {
       if (value < reference.min) {
         testResult.status = 'low';
         testResult.interpretation = `Low ${reference.name} - below optimal`;
@@ -478,9 +411,7 @@ function analyzeExtractedValues(values, patientInfo = {}) {
     }
     
     results.tests.push(testResult);
-  }
-  
-  // Detect conditions
+  }
   for (const [conditionKey, condition] of Object.entries(conditionRules)) {
     for (const check of condition.checks) {
       const value = values[check.test];
@@ -494,8 +425,7 @@ function analyzeExtractedValues(values, patientInfo = {}) {
         case '<': conditionMet = value < check.threshold; break;
       }
       
-      if (conditionMet) {
-        // Check gender-specific conditions
+      if (conditionMet) {
         if (check.gender && patientInfo.gender && check.gender !== patientInfo.gender) {
           continue;
         }
@@ -517,9 +447,7 @@ function analyzeExtractedValues(values, patientInfo = {}) {
         }
       }
     }
-  }
-  
-  // Determine overall status
+  }
   const abnormalTests = results.tests.filter(t => t.status !== 'normal');
   const criticalConditions = results.detectedConditions.filter(c => 
     c.severity.includes('severe') || c.severity.includes('diabetic') || c.severity.includes('high')
@@ -534,14 +462,10 @@ function analyzeExtractedValues(values, patientInfo = {}) {
   } else if (abnormalTests.length > 0) {
     results.overallStatus = 'minor_concerns';
     results.riskLevel = 'low';
-  }
-  
-  // Compile recommendations
+  }
   results.detectedConditions.forEach(condition => {
     results.recommendations.push(...condition.recommendations);
-  });
-  
-  // Generate summary
+  });
   results.summary = generateSummary(results);
   
   return results;
@@ -557,14 +481,8 @@ function getSeverityLevel(severity) {
   return levels[severity] || 0;
 }
 
-
-/**
- * Generate human-readable summary
- */
 function generateSummary(results) {
-  const parts = [];
-  
-  // Overall status
+  const parts = [];
   switch (results.overallStatus) {
     case 'critical':
       parts.push('🚨 ATTENTION REQUIRED: Your report shows values that need immediate medical attention.');
@@ -577,17 +495,13 @@ function generateSummary(results) {
       break;
     default:
       parts.push('✅ Your report values are within normal ranges.');
-  }
-  
-  // Detected conditions
+  }
   if (results.detectedConditions.length > 0) {
     parts.push('\n\n📋 Detected Conditions:');
     results.detectedConditions.forEach(c => {
       parts.push(`• ${c.name} (${c.severity.replace('_', ' ')})`);
     });
-  }
-  
-  // Abnormal tests count
+  }
   const abnormal = results.tests.filter(t => t.status !== 'normal');
   if (abnormal.length > 0) {
     parts.push(`\n\n📊 ${abnormal.length} test(s) outside normal range.`);
@@ -596,27 +510,15 @@ function generateSummary(results) {
   return parts.join('');
 }
 
-/**
- * Main function to analyze a medical report image
- * @param {string} imageBase64 - Base64 encoded image or file path
- * @param {object} options - Analysis options
- * @returns {object} - Complete analysis results
- */
 async function analyzeReportImage(imageBase64, options = {}) {
   try {
-    const { patientInfo = {}, reportType = 'auto' } = options;
-    
-    // For now, we'll use a simulated OCR approach
-    // In production, integrate with Google Vision API, AWS Textract, or Tesseract
-    let ocrText = '';
-    
-    // Check if we have OCR service configured
+    const { patientInfo = {}, reportType = 'auto' } = options;
+    let ocrText = '';
     if (process.env.GOOGLE_VISION_API_KEY) {
       ocrText = await performGoogleVisionOCR(imageBase64);
     } else if (process.env.AWS_ACCESS_KEY_ID) {
       ocrText = await performAWSTextractOCR(imageBase64);
-    } else {
-      // Use local Tesseract if available, otherwise return instructions
+    } else {
       try {
         const Tesseract = require('tesseract.js');
         const result = await Tesseract.recognize(
@@ -640,9 +542,7 @@ async function analyzeReportImage(imageBase64, options = {}) {
       }
     }
     
-    console.log('📄 OCR Text extracted:', ocrText.substring(0, 500) + '...');
-    
-    // Extract values from OCR text
+    console.log('📄 OCR Text extracted:', ocrText.substring(0, 500) + '...');
     const extractedValues = extractValuesFromText(ocrText);
     console.log('📊 Extracted values:', extractedValues);
     
@@ -653,9 +553,7 @@ async function analyzeReportImage(imageBase64, options = {}) {
         ocrText: ocrText.substring(0, 1000),
         suggestion: 'Try uploading a clearer image or enter values manually.'
       };
-    }
-    
-    // Analyze the extracted values
+    }
     const analysis = analyzeExtractedValues(extractedValues, patientInfo);
     
     return {
@@ -675,25 +573,14 @@ async function analyzeReportImage(imageBase64, options = {}) {
   }
 }
 
-/**
- * Calculate OCR confidence based on extracted values
- */
 function calculateOCRConfidence(extractedValues) {
   const totalPossible = Object.keys(extractionPatterns).length;
   const extracted = Object.keys(extractedValues).length;
   return Math.round((extracted / Math.min(totalPossible, 10)) * 100);
 }
 
-
-/**
- * Analyze manually entered report values
- * @param {object} values - Object with test names and values
- * @param {object} patientInfo - Patient information
- * @returns {object} - Analysis results
- */
 function analyzeManualReport(values, patientInfo = {}) {
-  try {
-    // Normalize keys
+  try {
     const normalizedValues = {};
     for (const [key, value] of Object.entries(values)) {
       const normalizedKey = key.toLowerCase().replace(/[\s-]/g, '_');
@@ -716,11 +603,6 @@ function analyzeManualReport(values, patientInfo = {}) {
   }
 }
 
-/**
- * Get diabetes-specific analysis
- * @param {object} values - Test values
- * @returns {object} - Diabetes analysis
- */
 function analyzeDiabetesReport(values) {
   const diabetesTests = ['glucose_fasting', 'glucose_pp', 'glucose_random', 'hba1c', 'fasting_insulin'];
   const relevantValues = {};
@@ -738,9 +620,7 @@ function analyzeDiabetesReport(values) {
     };
   }
   
-  const analysis = analyzeExtractedValues(relevantValues, {});
-  
-  // Add diabetes-specific interpretation
+  const analysis = analyzeExtractedValues(relevantValues, {});
   let diabetesStatus = 'normal';
   let interpretation = '';
   
@@ -796,9 +676,6 @@ function analyzeDiabetesReport(values) {
   };
 }
 
-/**
- * Get supported test types
- */
 function getSupportedTests() {
   return Object.entries(medicalReferenceRanges).map(([key, ref]) => ({
     key,
@@ -809,9 +686,6 @@ function getSupportedTests() {
   }));
 }
 
-/**
- * Get tests by category
- */
 function getTestsByCategory(category) {
   return Object.entries(medicalReferenceRanges)
     .filter(([_, ref]) => ref.category === category)
@@ -821,20 +695,12 @@ function getTestsByCategory(category) {
       unit: ref.unit,
       normalRange: `${ref.min} - ${ref.max}`
     }));
-}
-
-// Placeholder for Google Vision OCR
-async function performGoogleVisionOCR(imageBase64) {
-  // Integration with Google Cloud Vision API
-  // Requires: npm install @google-cloud/vision
+}
+async function performGoogleVisionOCR(imageBase64) {
   console.log('Google Vision OCR not implemented - use manual input');
   return '';
-}
-
-// Placeholder for AWS Textract OCR
-async function performAWSTextractOCR(imageBase64) {
-  // Integration with AWS Textract
-  // Requires: npm install @aws-sdk/client-textract
+}
+async function performAWSTextractOCR(imageBase64) {
   console.log('AWS Textract OCR not implemented - use manual input');
   return '';
 }

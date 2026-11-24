@@ -1,7 +1,4 @@
-/**
- * Appointments Screen - Enterprise Edition
- * Premium appointment management with enhanced UI
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -47,9 +44,7 @@ const AppointmentsScreen = ({ navigation }) => {
       
       const appointmentsList = Array.isArray(response) 
         ? response 
-        : (response?.data || response?.appointments || []);
-      
-      // Format appointments for the new AppointmentCard component
+        : (response?.data || response?.appointments || []);
       const formattedAppointments = appointmentsList.map(apt => ({
         id: apt._id || apt.id,
         doctorName: apt.doctorName || apt.doctor?.name || 'Doctor',
@@ -76,9 +71,7 @@ const AppointmentsScreen = ({ navigation }) => {
 
   useEffect(() => {
     fetchAppointments();
-  }, [fetchAppointments]);
-
-  // Refresh when screen comes into focus
+  }, [fetchAppointments]);
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchAppointments(false);
@@ -163,7 +156,7 @@ const AppointmentsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -183,7 +176,7 @@ const AppointmentsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Header */}
+      {}
       <View style={[styles.header, { paddingTop: spacing.xxl + 10 }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointments</Text>
         <TouchableOpacity 
@@ -202,7 +195,7 @@ const AppointmentsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Segmented Tabs (Glassmorphic Pill Container) */}
+      {}
       <View style={[
         styles.tabsContainer,
         {
@@ -242,7 +235,7 @@ const AppointmentsScreen = ({ navigation }) => {
         })}
       </View>
 
-      {/* Loading State with Skeletons */}
+      {}
       {loading ? (
         <View style={styles.listContent}>
           <SkeletonCard style={{ marginBottom: spacing.lg }} />
@@ -250,7 +243,7 @@ const AppointmentsScreen = ({ navigation }) => {
           <SkeletonCard style={{ marginBottom: spacing.lg }} />
         </View>
       ) : (
-        /* Appointments List */
+        
         <FlatList
           data={appointments}
           renderItem={renderAppointmentCard}
@@ -291,7 +284,6 @@ const AppointmentsScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

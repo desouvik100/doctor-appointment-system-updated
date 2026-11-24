@@ -1,6 +1,4 @@
-/**
- * HealthSync Mobile App
- */
+
 
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -10,25 +8,19 @@ import { configureGoogleSignIn } from './src/services/socialAuthService';
 import NotificationService from './src/services/notifications/NotificationService';
 
 const App = () => {
-  useEffect(() => {
-    // Initialize Google Sign-In on app start
-    configureGoogleSignIn();
-    
-    // Initialize Push Notifications
+  useEffect(() => {
+    configureGoogleSignIn();
     initializeNotifications();
   }, []);
 
   const initializeNotifications = async () => {
-    try {
-      // Request notification permission on Android 13+
+    try {
       if (Platform.OS === 'android' && Platform.Version >= 33) {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
         );
         console.log('🔔 Notification permission:', granted);
-      }
-      
-      // Initialize the notification service
+      }
       await NotificationService.initialize();
       console.log('🔔 Push notifications initialized');
     } catch (error) {

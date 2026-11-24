@@ -1,15 +1,7 @@
-/**
- * Critical Alerts Service
- * Clinical decision support for vital thresholds and patient safety
- * Requirements: 9.1, 9.3
- */
+
 
 const { VITAL_RANGES, validateVitalValue } = require('./vitalsService');
 
-/**
- * Critical threshold definitions with clinical context
- * Requirements: 9.1
- */
 const CRITICAL_THRESHOLDS = {
   bloodPressure: {
     hypertensiveCrisis: {
@@ -186,10 +178,6 @@ const CRITICAL_THRESHOLDS = {
   }
 };
 
-/**
- * High-risk medications for elderly patients (age > 65)
- * Requirements: 9.3
- */
 const ELDERLY_HIGH_RISK_MEDICATIONS = {
   benzodiazepines: {
     drugs: ['diazepam', 'lorazepam', 'alprazolam', 'clonazepam', 'temazepam', 'midazolam'],
@@ -235,20 +223,12 @@ const ELDERLY_HIGH_RISK_MEDICATIONS = {
   }
 };
 
-/**
- * Generate critical alerts for vitals
- * @param {Object} vitals - Vitals object
- * @returns {Array} Array of critical alerts
- */
 function generateVitalAlerts(vitals) {
-  const alerts = [];
-  
-  // Blood Pressure alerts
+  const alerts = [];
   if (vitals.bloodPressure) {
     const { systolic, diastolic } = vitals.bloodPressure;
     
-    if (systolic !== undefined && systolic !== null) {
-      // Check for hypertensive crisis
+    if (systolic !== undefined && systolic !== null) {
       if (systolic >= CRITICAL_THRESHOLDS.bloodPressure.hypertensiveCrisis.systolic ||
           (diastolic && diastolic >= CRITICAL_THRESHOLDS.bloodPressure.hypertensiveCrisis.diastolic)) {
         alerts.push({
@@ -265,9 +245,7 @@ function generateVitalAlerts(vitals) {
           value: `${systolic}/${diastolic || '?'}`,
           ...CRITICAL_THRESHOLDS.bloodPressure.severeHypertension
         });
-      }
-      
-      // Check for hypotension
+      }
       if (systolic <= CRITICAL_THRESHOLDS.bloodPressure.severeHypotension.systolic) {
         alerts.push({
           type: 'vital',
@@ -284,9 +262,7 @@ function generateVitalAlerts(vitals) {
         });
       }
     }
-  }
-  
-  // SpO2 alerts
+  }
   if (vitals.spo2?.value !== undefined && vitals.spo2?.value !== null) {
     const spo2 = vitals.spo2.value;
     
@@ -312,9 +288,7 @@ function generateVitalAlerts(vitals) {
         ...CRITICAL_THRESHOLDS.spo2.mildHypoxia
       });
     }
-  }
-  
-  // Pulse alerts
+  }
   if (vitals.pulse?.value !== undefined && vitals.pulse?.value !== null) {
     const pulse = vitals.pulse.value;
     
@@ -347,9 +321,7 @@ function generateVitalAlerts(vitals) {
         ...CRITICAL_THRESHOLDS.pulse.bradycardia
       });
     }
-  }
-  
-  // Temperature alerts
+  }
   if (vitals.temperature?.value !== undefined && vitals.temperature?.value !== null) {
     const temp = vitals.temperature.value;
     const unit = vitals.temperature.unit === '°C' || vitals.temperature.unit === 'C' ? 'celsius' : 'fahrenheit';
@@ -397,9 +369,7 @@ function generateVitalAlerts(vitals) {
         color: thresholds.hypothermia.color
       });
     }
-  }
-  
-  // Respiratory Rate alerts
+  }
   if (vitals.respiratoryRate?.value !== undefined && vitals.respiratoryRate?.value !== null) {
     const rr = vitals.respiratoryRate.value;
     const thresholds = CRITICAL_THRESHOLDS.respiratoryRate;
@@ -445,9 +415,7 @@ function generateVitalAlerts(vitals) {
         color: thresholds.distress.color
       });
     }
-  }
-  
-  // Blood Sugar alerts
+  }
   if (vitals.bloodSugar?.value !== undefined && vitals.bloodSugar?.value !== null) {
     const sugar = vitals.bloodSugar.value;
     const thresholds = CRITICAL_THRESHOLDS.bloodSugar;
@@ -481,21 +449,13 @@ function generateVitalAlerts(vitals) {
         ...thresholds.hypoglycemia
       });
     }
-  }
-  
-  // Sort by severity (critical first)
+  }
   const severityOrder = { critical: 1, high: 2, moderate: 3, low: 4 };
   alerts.sort((a, b) => (severityOrder[a.severity] || 5) - (severityOrder[b.severity] || 5));
   
   return alerts;
 }
 
-/**
- * Check medications for elderly patient safety
- * @param {Array} medications - Array of medication names
- * @param {number} patientAge - Patient's age
- * @returns {Array} Array of elderly safety alerts
- */
 function checkElderlyMedicationSafety(medications, patientAge) {
   const alerts = [];
   
@@ -520,39 +480,27 @@ function checkElderlyMedicationSafety(medications, patientAge) {
         });
       }
     }
-  }
-  
-  // Sort by severity
+  }
   const severityOrder = { high: 1, moderate: 2, low: 3 };
   alerts.sort((a, b) => (severityOrder[a.severity] || 4) - (severityOrder[b.severity] || 4));
   
   return alerts;
 }
 
-/**
- * Escalate interaction severity for elderly patients
- * @param {Array} interactions - Drug interactions
- * @param {number} patientAge - Patient's age
- * @returns {Array} Interactions with escalated severity for elderly
- */
 function escalateInteractionsForElderly(interactions, patientAge) {
   if (!interactions || !Array.isArray(interactions) || patientAge < 65) {
     return interactions;
   }
   
   return interactions.map(interaction => {
-    const escalated = { ...interaction };
-    
-    // Escalate moderate to major for elderly
+    const escalated = { ...interaction };
     if (interaction.severity === 'moderate') {
       escalated.originalSeverity = 'moderate';
       escalated.severity = 'major';
       escalated.severityLevel = 2;
       escalated.elderlyEscalated = true;
       escalated.escalationReason = 'Severity escalated due to patient age > 65';
-    }
-    
-    // Add elderly warning for major interactions
+    }
     if (interaction.severity === 'major') {
       escalated.elderlyWarning = 'Increased risk in elderly patients. Consider alternatives or dose reduction.';
     }
@@ -561,11 +509,6 @@ function escalateInteractionsForElderly(interactions, patientAge) {
   });
 }
 
-/**
- * Comprehensive clinical decision support check
- * @param {Object} params - Check parameters
- * @returns {Object} Clinical decision support results
- */
 function performClinicalCheck(params) {
   const { vitals, medications, patientAge, allergies, currentMedications } = params;
   
@@ -575,24 +518,18 @@ function performClinicalCheck(params) {
     hasCriticalAlerts: false,
     hasHighAlerts: false,
     summary: ''
-  };
-  
-  // Generate vital alerts
+  };
   if (vitals) {
     result.vitalAlerts = generateVitalAlerts(vitals);
     result.hasCriticalAlerts = result.vitalAlerts.some(a => a.severity === 'critical');
     result.hasHighAlerts = result.vitalAlerts.some(a => a.severity === 'high');
-  }
-  
-  // Check elderly medication safety
+  }
   if (medications && patientAge >= 65) {
     result.elderlyMedicationAlerts = checkElderlyMedicationSafety(medications, patientAge);
     if (result.elderlyMedicationAlerts.some(a => a.severity === 'high')) {
       result.hasHighAlerts = true;
     }
-  }
-  
-  // Generate summary
+  }
   const criticalCount = result.vitalAlerts.filter(a => a.severity === 'critical').length;
   const highCount = result.vitalAlerts.filter(a => a.severity === 'high').length + 
                     result.elderlyMedicationAlerts.filter(a => a.severity === 'high').length;
@@ -610,18 +547,10 @@ function performClinicalCheck(params) {
   return result;
 }
 
-/**
- * Get all critical thresholds
- * @returns {Object} All critical thresholds
- */
 function getCriticalThresholds() {
   return CRITICAL_THRESHOLDS;
 }
 
-/**
- * Get elderly high-risk medications
- * @returns {Object} Elderly high-risk medications
- */
 function getElderlyHighRiskMedications() {
   return ELDERLY_HIGH_RISK_MEDICATIONS;
 }

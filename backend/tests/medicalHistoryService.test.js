@@ -1,8 +1,4 @@
-/**
- * Medical History Service Tests
- * Tests Property 4: Medical History Data Completeness
- * Validates Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
- */
+
 
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -22,7 +18,7 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
   await mongoose.connect(mongoUri);
-}, 60000); // 60 second timeout for MongoDB download
+}, 60000); 
 
 afterAll(async () => {
   await mongoose.disconnect();
@@ -57,32 +53,20 @@ describe('Medical History Service Tests', () => {
           { drugName: 'Metformin', dosage: '500mg', isActive: true },
           { drugName: 'Lisinopril', dosage: '10mg', isActive: false }
         ]
-      };
-      
-      // Create medical history
-      await createOrUpdateHistory(patientId, historyData, clinicId, updatedBy);
-      
-      // Retrieve the history directly from database to avoid populate issues in test
-      const retrievedHistory = await MedicalHistory.findOne({ patientId, clinicId });
-      
-      // All provided data should be preserved
+      };
+      await createOrUpdateHistory(patientId, historyData, clinicId, updatedBy);
+      const retrievedHistory = await MedicalHistory.findOne({ patientId, clinicId });
       expect(retrievedHistory).toBeTruthy();
       expect(retrievedHistory.patientId.toString()).toBe(patientId);
-      expect(retrievedHistory.clinicId.toString()).toBe(clinicId);
-      
-      // Check allergies completeness
+      expect(retrievedHistory.clinicId.toString()).toBe(clinicId);
       expect(retrievedHistory.allergies).toHaveLength(2);
       expect(retrievedHistory.allergies[0].allergen).toBe('Penicillin');
       expect(retrievedHistory.allergies[0].type).toBe('drug');
       expect(retrievedHistory.allergies[0].severity).toBe('severe');
-      expect(retrievedHistory.allergies[0].isActive).toBe(true);
-      
-      // Check conditions completeness
+      expect(retrievedHistory.allergies[0].isActive).toBe(true);
       expect(retrievedHistory.chronicConditions).toHaveLength(2);
       expect(retrievedHistory.chronicConditions[0].condition).toBe('Diabetes Type 2');
-      expect(retrievedHistory.chronicConditions[0].status).toBe('active');
-      
-      // Check medications completeness
+      expect(retrievedHistory.chronicConditions[0].status).toBe('active');
       expect(retrievedHistory.currentMedications).toHaveLength(2);
       expect(retrievedHistory.currentMedications[0].drugName).toBe('Metformin');
       expect(retrievedHistory.currentMedications[0].dosage).toBe('500mg');
@@ -107,15 +91,9 @@ describe('Medical History Service Tests', () => {
           { drugName: 'Metformin', dosage: '500mg', isActive: true },
           { drugName: 'Old Medicine', dosage: '10mg', isActive: false }
         ]
-      };
-      
-      // Create history with data
-      await createOrUpdateHistory(patientId, historyData, clinicId, updatedBy);
-      
-      // Get critical summary
-      const summary = await getCriticalSummary(patientId);
-      
-      // Summary should include only active items
+      };
+      await createOrUpdateHistory(patientId, historyData, clinicId, updatedBy);
+      const summary = await getCriticalSummary(patientId);
       expect(summary.allergies).toHaveLength(1);
       expect(summary.allergies[0].allergen).toBe('Penicillin');
       
@@ -129,12 +107,12 @@ describe('Medical History Service Tests', () => {
     test('Data validation correctly identifies invalid data', () => {
       const invalidData = {
         allergies: [
-          { allergen: '', type: 'drug', severity: 'severe' }, // Missing allergen
-          { allergen: 'Penicillin', type: '', severity: 'severe' }, // Missing type
-          { allergen: 'Penicillin', type: 'drug', severity: '' } // Missing severity
+          { allergen: '', type: 'drug', severity: 'severe' }, 
+          { allergen: 'Penicillin', type: '', severity: 'severe' }, 
+          { allergen: 'Penicillin', type: 'drug', severity: '' } 
         ],
         chronicConditions: [
-          { condition: '' } // Missing condition
+          { condition: '' } 
         ]
       };
       
@@ -154,15 +132,9 @@ describe('Medical History Service Tests', () => {
       
       const conditions = [
         { condition: 'Diabetes Type 2', status: 'active' }
-      ];
-      
-      // Update allergies section
-      await updateAllergies(patientId, allergies, updatedBy);
-      
-      // Update conditions section
-      const historyAfterConditions = await updateConditions(patientId, conditions, updatedBy);
-      
-      // Both sections should be preserved
+      ];
+      await updateAllergies(patientId, allergies, updatedBy);
+      const historyAfterConditions = await updateConditions(patientId, conditions, updatedBy);
       expect(historyAfterConditions.allergies).toHaveLength(1);
       expect(historyAfterConditions.chronicConditions).toHaveLength(1);
       
@@ -172,19 +144,13 @@ describe('Medical History Service Tests', () => {
     
     test('Empty sections are handled correctly', async () => {
       const patientId = new mongoose.Types.ObjectId().toString();
-      const updatedBy = new mongoose.Types.ObjectId().toString();
-      
-      // Update with empty arrays
+      const updatedBy = new mongoose.Types.ObjectId().toString();
       await updateAllergies(patientId, [], updatedBy);
       await updateConditions(patientId, [], updatedBy);
       
-      const finalHistory = await MedicalHistory.findOne({ patientId });
-      
-      // All sections should be empty arrays, not null/undefined
+      const finalHistory = await MedicalHistory.findOne({ patientId });
       expect(finalHistory.allergies).toEqual([]);
-      expect(finalHistory.chronicConditions).toEqual([]);
-      
-      // Critical summary should be empty
+      expect(finalHistory.chronicConditions).toEqual([]);
       const summary = await getCriticalSummary(patientId);
       expect(summary.allergies).toEqual([]);
       expect(summary.activeConditions).toEqual([]);

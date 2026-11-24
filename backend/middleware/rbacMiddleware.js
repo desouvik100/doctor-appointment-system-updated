@@ -1,9 +1,4 @@
-/**
- * RBAC Middleware - Hospital-Grade Access Control
- * ================================================
- * Enforces permission-based access control on every API endpoint.
- * This middleware MUST be used on all protected routes.
- */
+
 
 const jwt = require('jsonwebtoken');
 const { 
@@ -13,9 +8,6 @@ const {
 } = require('../config/rbacConfig');
 const AuditLog = require('../models/AuditLog');
 
-/**
- * Authenticate and attach user to request
- */
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -29,9 +21,7 @@ const authenticate = async (req, res, next) => {
     }
     
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Attach user info
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = {
       id: decoded.userId || decoded.doctorId || decoded.id,
       role: decoded.role || 'patient',
@@ -40,9 +30,7 @@ const authenticate = async (req, res, next) => {
       branchId: decoded.branchId,
       departmentId: decoded.departmentId,
       assignedDoctorId: decoded.assignedDoctorId
-    };
-    
-    // Get data scope for this role
+    };
     req.dataScope = getDataScope(req.user.role);
     
     next();
@@ -62,11 +50,6 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-/**
- * Check if user has required permission(s)
- * @param {string|string[]} requiredPermissions - Single permission or array
- * @param {object} options - Additional options
- */
 const requirePermission = (requiredPermissions, options = {}) => {
   const permissions = Array.isArray(requiredPermissions) 
     ? requiredPermissions 
@@ -82,13 +65,10 @@ const requirePermission = (requiredPermissions, options = {}) => {
         });
       }
       
-      const userRole = req.user.role;
-      
-      // Check if user has ANY of the required permissions (OR logic)
+      const userRole = req.user.role;
       const hasAnyPermission = permissions.some(perm => hasPermission(userRole, perm));
       
-      if (!hasAnyPermission) {
-        // Log unauthorized access attempt
+      if (!hasAnyPermission) {
         await logUnauthorizedAccess(req, permissions);
         
         return res.status(403).json({
@@ -98,9 +78,7 @@ const requirePermission = (requiredPermissions, options = {}) => {
           requiredPermissions: permissions,
           userRole: userRole
         });
-      }
-      
-      // For high-risk actions, add extra verification flag
+      }
       if (permissions.some(p => isHighRiskAction(p))) {
         req.isHighRiskAction = true;
       }
@@ -116,9 +94,6 @@ const requirePermission = (requiredPermissions, options = {}) => {
   };
 };
 
-/**
- * Check ALL required permissions (AND logic)
- */
 const requireAllPermissions = (requiredPermissions) => {
   const permissions = Array.isArray(requiredPermissions) 
     ? requiredPermissions 
@@ -151,41 +126,28 @@ const requireAllPermissions = (requiredPermissions) => {
   };
 };
 
-/**
- * Enforce clinic isolation - users can only access their clinic's data
- */
 const enforceClinicIsolation = (clinicIdField = 'clinicId') => {
   return async (req, res, next) => {
     try {
       const userRole = req.user?.role;
-      const userClinicId = req.user?.clinicId;
-      
-      // Superadmin bypasses clinic isolation
+      const userClinicId = req.user?.clinicId;
       if (userRole === 'superadmin') {
         return next();
-      }
-      
-      // Patients can access any clinic (for booking)
+      }
       if (userRole === 'patient') {
         return next();
-      }
-      
-      // Get requested clinic ID from various sources
+      }
       const requestedClinicId = 
         req.params[clinicIdField] || 
         req.body[clinicIdField] || 
-        req.query[clinicIdField];
-      
-      // If no clinic ID in request, inject user's clinic ID
+        req.query[clinicIdField];
       if (!requestedClinicId) {
         if (userClinicId) {
           req.body[clinicIdField] = userClinicId;
           req.query[clinicIdField] = userClinicId;
         }
         return next();
-      }
-      
-      // Verify clinic match
+      }
       if (userClinicId && userClinicId.toString() !== requestedClinicId.toString()) {
         console.warn(`🚫 Clinic isolation violation: User ${req.user.id} tried to access clinic ${requestedClinicId}`);
         
@@ -212,14 +174,9 @@ const enforceClinicIsolation = (clinicIdField = 'clinicId') => {
   };
 };
 
-/**
- * Enforce department isolation for staff
- */
 const enforceDepartmentIsolation = () => {
   return async (req, res, next) => {
-    const dataScope = req.dataScope;
-    
-    // Only apply to department-scoped roles
+    const dataScope = req.dataScope;
     if (dataScope !== 'assigned_department') {
       return next();
     }
@@ -240,19 +197,13 @@ const enforceDepartmentIsolation = () => {
   };
 };
 
-/**
- * Enforce doctor-patient relationship
- * Doctors can only see their own patients unless explicitly allowed
- */
 const enforceDoctorPatientScope = () => {
   return async (req, res, next) => {
     const dataScope = req.dataScope;
     
     if (dataScope !== 'own_patients') {
       return next();
-    }
-    
-    // This will be used by the query builder to filter results
+    }
     req.doctorPatientFilter = {
       doctorId: req.user.id
     };
@@ -261,9 +212,6 @@ const enforceDoctorPatientScope = () => {
   };
 };
 
-/**
- * Enforce self-only access for patients
- */
 const enforceSelfAccess = (userIdField = 'userId') => {
   return async (req, res, next) => {
     const dataScope = req.dataScope;
@@ -283,18 +231,13 @@ const enforceSelfAccess = (userIdField = 'userId') => {
         code: 'SELF_ACCESS_ONLY',
         message: 'You can only access your own data'
       });
-    }
-    
-    // Inject user ID for queries
+    }
     req.selfFilter = { userId: req.user.id };
     
     next();
   };
 };
 
-/**
- * Log unauthorized access attempts
- */
 async function logUnauthorizedAccess(req, attemptedPermissions, details = {}) {
   try {
     await AuditLog.log({
@@ -321,9 +264,6 @@ async function logUnauthorizedAccess(req, attemptedPermissions, details = {}) {
   }
 }
 
-/**
- * Combined middleware: authenticate + permission + clinic isolation
- */
 const protect = (permissions, options = {}) => {
   const middlewares = [authenticate];
   

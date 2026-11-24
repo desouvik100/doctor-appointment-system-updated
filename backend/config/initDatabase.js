@@ -1,17 +1,13 @@
-// config/initDatabase.js - Database initialization and schema setup
+
 const { getPool } = require('./database');
 
 const createTables = async () => {
   const pool = getPool();
   
   try {
-    console.log('🔄 Creating database tables...');
-    
-    // Enable UUID extension
+    console.log('🔄 Creating database tables...');
     await pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
-    console.log('✅ UUID extension enabled');
-    
-    // Create tenants table (foundation for multi-tenancy)
+    console.log('✅ UUID extension enabled');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tenants (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -23,17 +19,13 @@ const createTables = async () => {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
-    console.log('✅ Tenants table created');
-    
-    // Create default tenant for existing system
+    console.log('✅ Tenants table created');
     await pool.query(`
       INSERT INTO tenants (name, subdomain, settings) 
       VALUES ('Default Clinic', 'default', '{"isDefault": true}')
       ON CONFLICT (subdomain) DO NOTHING
     `);
-    console.log('✅ Default tenant created');
-    
-    // Create users table with tenant support
+    console.log('✅ Default tenant created');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -49,15 +41,11 @@ const createTables = async () => {
         UNIQUE(tenant_id, email)
       )
     `);
-    console.log('✅ Users table created');
-    
-    // Create indexes for users table
+    console.log('✅ Users table created');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_tenant_email ON users(tenant_id, email)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_tenant_role ON users(tenant_id, role)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_clinic ON users(clinic_id)');
-    console.log('✅ User indexes created');
-    
-    // Create clinics table with tenant support
+    console.log('✅ User indexes created');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS clinics (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -72,14 +60,10 @@ const createTables = async () => {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
-    console.log('✅ Clinics table created');
-    
-    // Create indexes for clinics table
+    console.log('✅ Clinics table created');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_clinics_tenant ON clinics(tenant_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_clinics_parent ON clinics(parent_clinic_id)');
-    console.log('✅ Clinic indexes created');
-    
-    // Create doctors table with tenant support
+    console.log('✅ Clinic indexes created');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS doctors (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -95,14 +79,10 @@ const createTables = async () => {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
-    console.log('✅ Doctors table created');
-    
-    // Create indexes for doctors table
+    console.log('✅ Doctors table created');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_doctors_tenant ON doctors(tenant_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_doctors_clinic ON doctors(clinic_id)');
-    console.log('✅ Doctor indexes created');
-    
-    // Create appointments table with partitioning support (basic structure)
+    console.log('✅ Doctor indexes created');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS appointments (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -122,9 +102,7 @@ const createTables = async () => {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
-    console.log('✅ Appointments table created');
-    
-    // Create indexes for appointments table
+    console.log('✅ Appointments table created');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_appointments_tenant ON appointments(tenant_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_appointments_clinic ON appointments(clinic_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_appointments_doctor ON appointments(doctor_id)');

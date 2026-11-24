@@ -6,9 +6,7 @@ const auth = (roles = []) => {
   }
 
   return (req, res, next) => {
-    const authHeader = req.headers.authorization;
-
-    // No token
+    const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ message: 'No token provided' });
     }
@@ -16,12 +14,8 @@ const auth = (roles = []) => {
     const token = authHeader.split(' ')[1];
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // decoded contains: userId, role, clinicId
-      req.user = decoded;
-
-      // Check role
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
       if (roles.length && !roles.includes(decoded.role)) {
         return res.status(403).json({ message: 'Access denied' });
       }
@@ -32,12 +26,8 @@ const auth = (roles = []) => {
       return res.status(401).json({ message: 'Invalid token' });
     }
   };
-};
-
-// Alias for protect (commonly used in routes)
-const protect = auth();
-
-// Authorize specific roles
+};
+const protect = auth();
 const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {

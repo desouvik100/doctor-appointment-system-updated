@@ -1,13 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const MedicineReminder = require('../models/MedicineReminder');
-
-// Create medicine reminder
+const MedicineReminder = require('../models/MedicineReminder');
 router.post('/create', async (req, res) => {
   try {
-    const reminder = new MedicineReminder(req.body);
-    
-    // Calculate end date if duration provided
+    const reminder = new MedicineReminder(req.body);
     if (req.body.durationDays && !req.body.endDate) {
       reminder.endDate = new Date(reminder.startDate.getTime() + req.body.durationDays * 24 * 60 * 60 * 1000);
     }
@@ -18,9 +14,7 @@ router.post('/create', async (req, res) => {
     console.error('Create reminder error:', error);
     res.status(500).json({ message: 'Failed to create reminder', error: error.message });
   }
-});
-
-// Get user's reminders
+});
 router.get('/user/:userId', async (req, res) => {
   try {
     const { active } = req.query;
@@ -43,9 +37,7 @@ router.get('/user/:userId', async (req, res) => {
     console.error('Get reminders error:', error);
     res.status(500).json({ message: 'Failed to fetch reminders', error: error.message });
   }
-});
-
-// Get today's reminders for a user
+});
 router.get('/user/:userId/today', async (req, res) => {
   try {
     const today = new Date();
@@ -61,9 +53,7 @@ router.get('/user/:userId/today', async (req, res) => {
         { endDate: { $exists: false } },
         { endDate: { $gte: today } }
       ]
-    }).sort({ 'times.hour': 1, 'times.minute': 1 });
-
-    // Format reminders with today's schedule
+    }).sort({ 'times.hour': 1, 'times.minute': 1 });
     const todaySchedule = reminders.map(reminder => ({
       _id: reminder._id,
       medicineName: reminder.medicineName,
@@ -82,9 +72,7 @@ router.get('/user/:userId/today', async (req, res) => {
     console.error('Get today reminders error:', error);
     res.status(500).json({ message: 'Failed to fetch today\'s reminders', error: error.message });
   }
-});
-
-// Mark dose as taken
+});
 router.post('/:id/take-dose', async (req, res) => {
   try {
     const { scheduledTime, notes } = req.body;
@@ -103,9 +91,7 @@ router.post('/:id/take-dose', async (req, res) => {
     
     reminder.dosesTakenCount += 1;
     reminder.totalDoses += 1;
-    reminder.calculateAdherence();
-    
-    // Update pill count if tracking
+    reminder.calculateAdherence();
     if (reminder.pillCount && reminder.pillCount > 0) {
       reminder.pillCount -= 1;
     }
@@ -117,9 +103,7 @@ router.post('/:id/take-dose', async (req, res) => {
     console.error('Take dose error:', error);
     res.status(500).json({ message: 'Failed to record dose', error: error.message });
   }
-});
-
-// Mark dose as missed
+});
 router.post('/:id/miss-dose', async (req, res) => {
   try {
     const { scheduledTime, notes } = req.body;
@@ -146,9 +130,7 @@ router.post('/:id/miss-dose', async (req, res) => {
     console.error('Miss dose error:', error);
     res.status(500).json({ message: 'Failed to record missed dose', error: error.message });
   }
-});
-
-// Skip dose
+});
 router.post('/:id/skip-dose', async (req, res) => {
   try {
     const { scheduledTime, notes } = req.body;
@@ -171,9 +153,7 @@ router.post('/:id/skip-dose', async (req, res) => {
     console.error('Skip dose error:', error);
     res.status(500).json({ message: 'Failed to skip dose', error: error.message });
   }
-});
-
-// Update reminder
+});
 router.put('/:id', async (req, res) => {
   try {
     const reminder = await MedicineReminder.findByIdAndUpdate(
@@ -191,9 +171,7 @@ router.put('/:id', async (req, res) => {
     console.error('Update reminder error:', error);
     res.status(500).json({ message: 'Failed to update reminder', error: error.message });
   }
-});
-
-// Delete/deactivate reminder
+});
 router.delete('/:id', async (req, res) => {
   try {
     const reminder = await MedicineReminder.findByIdAndUpdate(
@@ -211,9 +189,7 @@ router.delete('/:id', async (req, res) => {
     console.error('Delete reminder error:', error);
     res.status(500).json({ message: 'Failed to delete reminder', error: error.message });
   }
-});
-
-// Get adherence stats
+});
 router.get('/user/:userId/stats', async (req, res) => {
   try {
     const reminders = await MedicineReminder.find({
@@ -236,9 +212,7 @@ router.get('/user/:userId/stats', async (req, res) => {
     console.error('Get stats error:', error);
     res.status(500).json({ message: 'Failed to fetch stats', error: error.message });
   }
-});
-
-// Create reminders from prescription
+});
 router.post('/from-prescription/:prescriptionId', async (req, res) => {
   try {
     const Prescription = require('../models/Prescription');
@@ -250,8 +224,7 @@ router.post('/from-prescription/:prescriptionId', async (req, res) => {
 
     const reminders = [];
     
-    for (const medicine of prescription.medicines) {
-      // Parse frequency to times
+    for (const medicine of prescription.medicines) {
       let times = [];
       switch (medicine.frequency.toLowerCase()) {
         case 'once daily':
@@ -290,9 +263,7 @@ router.post('/from-prescription/:prescriptionId', async (req, res) => {
         startDate: new Date(),
         durationDays: parseInt(medicine.duration) || 7,
         instructions: medicine.instructions
-      });
-
-      // Calculate end date
+      });
       reminder.endDate = new Date(reminder.startDate.getTime() + reminder.durationDays * 24 * 60 * 60 * 1000);
       
       await reminder.save();

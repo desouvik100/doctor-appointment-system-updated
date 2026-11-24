@@ -1,7 +1,4 @@
-/**
- * Social Authentication Service
- * Handles Google, Facebook, and Apple Sign-In
- */
+
 
 import { Alert, Platform } from 'react-native';
 import apiClient, { saveAuthToken, saveRefreshToken } from './api/apiClient';
@@ -11,22 +8,14 @@ import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-si
 
 const USER_KEY = 'userData';
 
-/**
- * Google Sign-In
- * Uses @react-native-google-signin/google-signin
- */
 export const signInWithGoogle = async () => {
   try {
-    console.log('🔵 Starting Google Sign-In...');
-    
-    // Check if Google Play Services are available (Android only)
+    console.log('🔵 Starting Google Sign-In...');
     if (Platform.OS === 'android') {
       console.log('🔵 Checking Play Services...');
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
       console.log('✅ Play Services available');
-    }
-    
-    // Check if already signed in and sign out first
+    }
     try {
       const isSignedIn = await GoogleSignin.isSignedIn();
       if (isSignedIn) {
@@ -35,9 +24,7 @@ export const signInWithGoogle = async () => {
       }
     } catch (e) {
       console.log('🔵 Could not check sign-in status, continuing...');
-    }
-    
-    // Sign in and get user info
+    }
     console.log('🔵 Calling GoogleSignin.signIn()...');
     const signInResult = await GoogleSignin.signIn();
     if (signInResult.type !== 'success') {
@@ -49,13 +36,10 @@ export const signInWithGoogle = async () => {
       throw new Error('Google did not return an ID token. Check the Android OAuth client configuration.');
     }
     console.log('✅ Google Sign-In successful:', user.email);
-    
-    // Send to backend for authentication/registration
+
     const response = await apiClient.post('/auth/google-signin', { idToken });
     
-    const { token, refreshToken, user: userData } = response.data;
-
-    // Save tokens
+    const { token, refreshToken, user: userData } = response.data;
     await saveAuthToken(token);
     if (refreshToken) {
       await saveRefreshToken(refreshToken);
@@ -66,9 +50,7 @@ export const signInWithGoogle = async () => {
   } catch (error) {
     console.error('Google Sign-In error:', error);
     console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
-    
-    // Handle specific Google Sign-In errors
+    console.error('Error message:', error.message);
     if (error.code) {
       switch (error.code) {
         case statusCodes.SIGN_IN_CANCELLED:
@@ -89,37 +71,23 @@ export const signInWithGoogle = async () => {
   }
 };
 
-/**
- * Facebook Sign-In
- * Uses react-native-fbsdk-next
- */
 export const signInWithFacebook = async () => {
   try {
-    const { LoginManager, AccessToken, Profile } = await import('react-native-fbsdk-next');
-    
-    // Request permissions
+    const { LoginManager, AccessToken, Profile } = await import('react-native-fbsdk-next');
     const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
     
     if (result.isCancelled) {
       throw new Error('Sign in cancelled');
-    }
-    
-    // Get access token
+    }
     const accessToken = await AccessToken.getCurrentAccessToken();
     if (!accessToken) {
       throw new Error('Failed to get access token');
-    }
-    
-    // Get user profile
-    const profile = await Profile.getCurrentProfile();
-    
-    // Fetch email from Graph API (email isn't in basic profile)
+    }
+    const profile = await Profile.getCurrentProfile();
     const emailResponse = await fetch(
       `https://graph.facebook.com/me?fields=email,name&access_token=${accessToken.accessToken}`
     );
-    const emailData = await emailResponse.json();
-    
-    // Send to backend
+    const emailData = await emailResponse.json();
     const response = await apiClient.post('/auth/facebook-signin', {
       email: emailData.email,
       name: profile?.name || emailData.name,
@@ -143,29 +111,20 @@ export const signInWithFacebook = async () => {
   }
 };
 
-
-/**
- * Apple Sign-In (iOS only)
- * Uses @invertase/react-native-apple-authentication
- */
 export const signInWithApple = async () => {
   if (Platform.OS !== 'ios') {
     throw new Error('Apple Sign-In is only available on iOS');
   }
   
   try {
-    const appleAuth = await import('@invertase/react-native-apple-authentication');
-    
-    // Perform Apple Sign-In request
+    const appleAuth = await import('@invertase/react-native-apple-authentication');
     const appleAuthRequestResponse = await appleAuth.default.performRequest({
       requestedOperation: appleAuth.default.Operation.LOGIN,
       requestedScopes: [
         appleAuth.default.Scope.EMAIL,
         appleAuth.default.Scope.FULL_NAME,
       ],
-    });
-    
-    // Get credential state
+    });
     const credentialState = await appleAuth.default.getCredentialStateForUser(
       appleAuthRequestResponse.user
     );
@@ -174,14 +133,10 @@ export const signInWithApple = async () => {
       throw new Error('Apple Sign-In not authorized');
     }
     
-    const { user, email, fullName, identityToken } = appleAuthRequestResponse;
-    
-    // Build name from fullName object
+    const { user, email, fullName, identityToken } = appleAuthRequestResponse;
     const name = fullName 
       ? [fullName.givenName, fullName.familyName].filter(Boolean).join(' ')
-      : null;
-    
-    // Send to backend
+      : null;
     const response = await apiClient.post('/auth/apple-signin', {
       email: email,
       name: name,
@@ -209,10 +164,6 @@ export const signInWithApple = async () => {
   }
 };
 
-/**
- * Configure Google Sign-In
- * Call this in App.js or during app initialization
- */
 export const configureGoogleSignIn = () => {
   try {
     console.log('🔧 Configuring Google Sign-In with Web Client ID:', GOOGLE_WEB_CLIENT_ID);
@@ -220,8 +171,7 @@ export const configureGoogleSignIn = () => {
     GoogleSignin.configure({
       webClientId: GOOGLE_WEB_CLIENT_ID,
       scopes: ['email', 'profile'],
-      // The backend only needs a signed identity token; it does not need to
-      // access a patient's Google account or retain a Google refresh token.
+
       offlineAccess: false,
     });
     
@@ -231,26 +181,19 @@ export const configureGoogleSignIn = () => {
   }
 };
 
-/**
- * Sign out from all social providers
- */
 export const signOutFromSocialProviders = async () => {
-  try {
-    // Google Sign-Out
+  try {
     const isSignedIn = await GoogleSignin.isSignedIn();
     if (isSignedIn) {
       await GoogleSignin.signOut();
     }
-  } catch (error) {
-    // Ignore if not signed in with Google
+  } catch (error) {
   }
   
-  try {
-    // Facebook Sign-Out
+  try {
     const { LoginManager } = await import('react-native-fbsdk-next');
     LoginManager.logOut();
-  } catch (error) {
-    // Ignore if not signed in with Facebook
+  } catch (error) {
   }
 };
 

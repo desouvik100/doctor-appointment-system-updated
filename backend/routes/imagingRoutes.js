@@ -6,50 +6,14 @@ const fs = require('fs');
 const ImagingReport = require('../models/ImagingReport');
 const AuditLog = require('../models/AuditLog');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-const { convertDicomToImage } = require('../services/dicomParserService');
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     ImagingReport:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         patientId:
- *           type: string
- *         patientName:
- *           type: string
- *         imagingType:
- *           type: string
- *           enum: [X-Ray, CT Scan, MRI, Ultrasound, PET Scan, Mammography, Fluoroscopy, Angiography]
- *         bodyPart:
- *           type: string
- *         status:
- *           type: string
- *           enum: [ordered, scheduled, in-progress, completed, cancelled]
- *         priority:
- *           type: string
- *           enum: [routine, urgent, stat]
- *         findings:
- *           type: string
- *         impression:
- *           type: string
- *         createdAt:
- *           type: string
- *           format: date-time
- */
-
-// Configure multer for DICOM file uploads
+const { convertDicomToImage } = require('../services/dicomParserService');
 const uploadDir = path.join(__dirname, '../uploads/imaging');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Use a temp directory first, we'll organize later
+  destination: (req, file, cb) => {
     const tempDir = path.join(uploadDir, 'temp');
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
@@ -62,24 +26,21 @@ const storage = multer.diskStorage({
   }
 });
 
-const fileFilter = (req, file, cb) => {
-  // Accept DICOM files and common image formats
+const fileFilter = (req, file, cb) => {
   const allowedTypes = ['.dcm', '.dicom', '.jpg', '.jpeg', '.png'];
   const ext = path.extname(file.originalname).toLowerCase();
   if (allowedTypes.includes(ext) || !file.originalname.includes('.')) {
     cb(null, true);
   } else {
-    cb(null, true); // Accept all files for now, filter on client side
+    cb(null, true); 
   }
 };
 
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 100 * 1024 * 1024 } // 100MB per file
-});
-
-// Helper to log audit
+  limits: { fileSize: 100 * 1024 * 1024 } 
+});
 const logAudit = async (req, action, entityId, entityName, changes = {}, severity = 'low') => {
   try {
     await AuditLog.log({
@@ -102,59 +63,20 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
   }
 };
 
-/**
- * @swagger
- * /imaging/render/{patientId}/{filename}:
- *   get:
- *     summary: Render DICOM file as PNG image
- *     description: Converts a DICOM file to PNG for viewing in browsers/mobile apps
- *     tags: [Imaging]
- *     parameters:
- *       - in: path
- *         name: patientId
- *         required: true
- *         schema:
- *           type: string
- *       - in: path
- *         name: filename
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: PNG image
- *         content:
- *           image/png:
- *             schema:
- *               type: string
- *               format: binary
- *       404:
- *         description: File not found
- *       500:
- *         description: Conversion error
- */
 router.get('/render/:patientId/:filename', async (req, res) => {
   try {
     const { patientId, filename } = req.params;
-    const { invert } = req.query; // Support invert parameter
-    
-    // Build file path
-    let filePath = path.join(uploadDir, patientId, filename);
-    
-    // Check if file exists in patient folder
-    if (!fs.existsSync(filePath)) {
-      // Try temp folder
+    const { invert } = req.query; 
+    let filePath = path.join(uploadDir, patientId, filename);
+    if (!fs.existsSync(filePath)) {
       filePath = path.join(uploadDir, 'temp', filename);
     }
     
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ success: false, message: 'File not found' });
-    }
-    
-    // Check if it's a DICOM file
+    }
     const ext = path.extname(filename).toLowerCase();
-    if (ext === '.dcm' || ext === '.dicom' || ext === '') {
-      // Convert DICOM to PNG
+    if (ext === '.dcm' || ext === '.dicom' || ext === '') {
       const fileBuffer = fs.readFileSync(filePath);
       const result = convertDicomToImage(fileBuffer, { invert: invert === '1' });
       
@@ -162,16 +84,14 @@ router.get('/render/:patientId/:filename', async (req, res) => {
         res.set('Content-Type', 'image/png');
         res.set('Cache-Control', invert ? 'no-cache' : 'public, max-age=86400');
         return res.send(result.imageBuffer);
-      } else {
-        // If conversion fails, return error
+      } else {
         return res.status(500).json({ 
           success: false, 
           message: 'Failed to convert DICOM file',
           error: result.error 
         });
       }
-    } else {
-      // For non-DICOM files (jpg, png), serve directly
+    } else {
       res.sendFile(filePath);
     }
   } catch (error) {
@@ -180,48 +100,6 @@ router.get('/render/:patientId/:filename', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /imaging/order:
- *   post:
- *     summary: Create imaging order
- *     description: Creates a new imaging order for a patient
- *     tags: [Imaging]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - patientId
- *               - imagingType
- *             properties:
- *               patientId:
- *                 type: string
- *               patientName:
- *                 type: string
- *               imagingType:
- *                 type: string
- *               bodyPart:
- *                 type: string
- *               priority:
- *                 type: string
- *                 enum: [routine, urgent, stat]
- *               clinicalHistory:
- *                 type: string
- *               indication:
- *                 type: string
- *     responses:
- *       201:
- *         description: Imaging order created
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- */
 router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'clinic']), async (req, res) => {
   try {
     const {
@@ -262,9 +140,7 @@ router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'clinic']), async 
     console.error('Error creating imaging order:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get imaging reports for clinic
+});
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -294,16 +170,12 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
     console.error('Error fetching imaging reports:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get patient's imaging reports
+});
 router.get('/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
     
-    console.log('Fetching reports for patient:', patientId);
-
-    // Check if patientId is a valid ObjectId
+    console.log('Fetching reports for patient:', patientId);
     const mongoose = require('mongoose');
     const isValidObjectId = mongoose.Types.ObjectId.isValid(patientId) && 
                             String(new mongoose.Types.ObjectId(patientId)) === patientId;
@@ -311,8 +183,7 @@ router.get('/patient/:patientId', async (req, res) => {
     let query;
     if (isValidObjectId) {
       query = { patientId: patientId };
-    } else {
-      // Search by string ID or both fields
+    } else {
       query = {
         $or: [
           { patientIdString: patientId },
@@ -333,9 +204,7 @@ router.get('/patient/:patientId', async (req, res) => {
     console.error('Error fetching patient imaging reports:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get patient's imaging studies (for DICOM viewer compatibility)
+});
 router.get('/patients/:patientId/studies', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -343,9 +212,7 @@ router.get('/patients/:patientId/studies', verifyToken, async (req, res) => {
     const reports = await ImagingReport.find({ patientId })
       .sort({ createdAt: -1 })
       .populate('orderedBy', 'name')
-      .populate('reportedBy', 'name');
-
-    // Transform reports to studies format for DICOM viewer
+      .populate('reportedBy', 'name');
     const studies = reports.map(report => ({
       _id: report._id,
       studyId: report._id,
@@ -377,9 +244,7 @@ router.get('/patients/:patientId/studies', verifyToken, async (req, res) => {
     console.error('Error fetching patient imaging studies:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Save imaging report (for DICOM viewer)
+});
 router.post('/reports', verifyToken, async (req, res) => {
   try {
     const { studyId, findings, impression, recommendations } = req.body;
@@ -404,23 +269,18 @@ router.post('/reports', verifyToken, async (req, res) => {
     console.error('Error saving imaging report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Upload DICOM files
+});
 router.post('/upload', upload.array('files', 500), async (req, res) => {
   try {
     const { patientId, clinicId } = req.body;
     const files = req.files || [];
 
-    console.log('Upload request received:', { patientId, clinicId, filesCount: files.length, user: req.user?.id });
-
-    // Use patientId from body, or from authenticated user, or generate a temp one
+    console.log('Upload request received:', { patientId, clinicId, filesCount: files.length, user: req.user?.id });
     let finalPatientId = patientId;
     if (!finalPatientId || finalPatientId === 'undefined' || finalPatientId === 'null') {
       if (req.user?.id) {
         finalPatientId = req.user.id;
-      } else {
-        // Generate a temporary patient ID for anonymous uploads
+      } else {
         finalPatientId = 'temp_' + Date.now();
       }
     }
@@ -429,9 +289,7 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
 
     if (files.length === 0) {
       return res.status(400).json({ success: false, message: 'No files uploaded' });
-    }
-
-    // Move files to patient directory
+    }
     const patientDir = path.join(uploadDir, finalPatientId.toString());
     if (!fs.existsSync(patientDir)) {
       fs.mkdirSync(patientDir, { recursive: true });
@@ -449,8 +307,7 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
           description: file.originalname
         });
       } catch (moveErr) {
-        console.error('Error moving file:', moveErr);
-        // Keep in temp if move fails
+        console.error('Error moving file:', moveErr);
         movedFiles.push({
           fileName: file.originalname,
           fileUrl: `/uploads/imaging/temp/${file.filename}`,
@@ -458,22 +315,16 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
           description: file.originalname
         });
       }
-    }
-
-    // Generate report number
+    }
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    const reportNumber = `DCM${year}${month}${day}${random}`;
-
-    // Check if patientId is a valid ObjectId, if not store as string reference
+    const reportNumber = `DCM${year}${month}${day}${random}`;
     const mongoose = require('mongoose');
     const isValidObjectId = mongoose.Types.ObjectId.isValid(finalPatientId) && 
-                            String(new mongoose.Types.ObjectId(finalPatientId)) === finalPatientId;
-
-    // Create a new imaging report for the uploaded study
+                            String(new mongoose.Types.ObjectId(finalPatientId)) === finalPatientId;
     const reportData = {
       reportNumber,
       patientName: req.user?.name || 'Patient',
@@ -485,16 +336,12 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
       status: 'pending_report',
       procedureDate: new Date(),
       images: movedFiles
-    };
-
-    // Only set patientId if it's a valid ObjectId, otherwise use string field
+    };
     if (isValidObjectId) {
       reportData.patientId = finalPatientId;
     } else {
       reportData.patientIdString = finalPatientId;
-    }
-
-    // Only add clinicId if provided and valid
+    }
     if (clinicId && mongoose.Types.ObjectId.isValid(clinicId)) {
       reportData.clinicId = clinicId;
     } else if (req.user?.clinicId && mongoose.Types.ObjectId.isValid(req.user.clinicId)) {
@@ -523,8 +370,7 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error uploading DICOM files:', error);
-    // Clean up any uploaded files on error
+    console.error('Error uploading DICOM files:', error);
     if (req.files) {
       req.files.forEach(f => {
         try { fs.unlinkSync(f.path); } catch (e) {}
@@ -532,9 +378,7 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
     }
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get single report
+});
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const report = await ImagingReport.findById(req.params.id)
@@ -554,9 +398,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     console.error('Error fetching imaging report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Schedule imaging
+});
 router.put('/:id/schedule', verifyTokenWithRole(['admin', 'receptionist', 'clinic']), async (req, res) => {
   try {
     const { procedureDate, procedureTime } = req.body;
@@ -579,9 +421,7 @@ router.put('/:id/schedule', verifyTokenWithRole(['admin', 'receptionist', 'clini
     console.error('Error scheduling imaging:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Record procedure completion
+});
 router.put('/:id/complete-procedure', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
   try {
     const { performedBy, technician, equipment } = req.body;
@@ -606,9 +446,7 @@ router.put('/:id/complete-procedure', verifyTokenWithRole(['admin', 'clinic']), 
     console.error('Error completing procedure:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Enter report findings
+});
 router.put('/:id/report', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const { findings, impression, recommendations, comparisonWithPrevious } = req.body;
@@ -640,9 +478,7 @@ router.put('/:id/report', verifyTokenWithRole(['admin', 'doctor']), async (req, 
     console.error('Error entering report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Verify report
+});
 router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const report = await ImagingReport.findById(req.params.id);
@@ -665,9 +501,7 @@ router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req,
     console.error('Error verifying report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Sign report
+});
 router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const { signatureData } = req.body;
@@ -692,9 +526,7 @@ router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, r
     console.error('Error signing report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Lock report
+});
 router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const report = await ImagingReport.findById(req.params.id);
@@ -716,12 +548,10 @@ router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor']), async (req, r
     console.error('Error locking report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Upload images
+});
 router.post('/:id/images', verifyToken, async (req, res) => {
   try {
-    const { images } = req.body; // Array of { fileName, fileUrl, fileType, thumbnailUrl, description }
+    const { images } = req.body; 
     const report = await ImagingReport.findById(req.params.id);
 
     if (!report) {

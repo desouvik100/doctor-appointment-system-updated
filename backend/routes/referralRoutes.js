@@ -2,9 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Referral = require('../models/Referral');
 const User = require('../models/User');
-const LoyaltyPoints = require('../models/LoyaltyPoints');
-
-// Get or create referral code for user
+const LoyaltyPoints = require('../models/LoyaltyPoints');
 router.get('/code/:userId', async (req, res) => {
   try {
     let referral = await Referral.findOne({ referrerId: req.params.userId });
@@ -34,9 +32,7 @@ router.get('/code/:userId', async (req, res) => {
     console.error('Get referral code error:', error);
     res.status(500).json({ message: 'Failed to get referral code', error: error.message });
   }
-});
-
-// Apply referral code (when new user signs up)
+});
 router.post('/apply', async (req, res) => {
   try {
     const { referralCode, newUserId } = req.body;
@@ -44,36 +40,28 @@ router.post('/apply', async (req, res) => {
     const referral = await Referral.findOne({ referralCode: referralCode.toUpperCase() });
     if (!referral) {
       return res.status(404).json({ message: 'Invalid referral code' });
-    }
-
-    // Check if user already referred
+    }
     const alreadyReferred = referral.referredUsers.some(
       u => u.userId.toString() === newUserId
     );
     if (alreadyReferred) {
       return res.status(400).json({ message: 'User already referred' });
-    }
-
-    // Check if referring self
+    }
     if (referral.referrerId.toString() === newUserId) {
       return res.status(400).json({ message: 'Cannot refer yourself' });
-    }
-
-    // Add referred user
+    }
     referral.referredUsers.push({
       userId: newUserId,
       joinedAt: new Date()
     });
     referral.totalReferrals += 1;
-    await referral.save();
-
-    // Give discount to new user (store in user profile or loyalty points)
+    await referral.save();
     let loyaltyPoints = await LoyaltyPoints.findOne({ userId: newUserId });
     if (!loyaltyPoints) {
       loyaltyPoints = new LoyaltyPoints({ userId: newUserId });
     }
     loyaltyPoints.addPoints(
-      referral.refereeDiscount * 10, // Convert to points
+      referral.refereeDiscount * 10, 
       'bonus',
       `Welcome bonus from referral code ${referralCode}`
     );
@@ -88,14 +76,10 @@ router.post('/apply', async (req, res) => {
     console.error('Apply referral error:', error);
     res.status(500).json({ message: 'Failed to apply referral code', error: error.message });
   }
-});
-
-// Complete referral (when referred user completes first appointment)
+});
 router.post('/complete', async (req, res) => {
   try {
-    const { referredUserId, appointmentId } = req.body;
-
-    // Find referral containing this user
+    const { referredUserId, appointmentId } = req.body;
     const referral = await Referral.findOne({
       'referredUsers.userId': referredUserId,
       'referredUsers.rewardGiven': false
@@ -103,9 +87,7 @@ router.post('/complete', async (req, res) => {
 
     if (!referral) {
       return res.json({ message: 'No pending referral found' });
-    }
-
-    // Update referred user entry
+    }
     const userIndex = referral.referredUsers.findIndex(
       u => u.userId.toString() === referredUserId && !u.rewardGiven
     );
@@ -120,9 +102,7 @@ router.post('/complete', async (req, res) => {
       referral.pendingEarnings += referral.rewardPerReferral;
       referral.updateTier();
 
-      await referral.save();
-
-      // Add loyalty points to referrer
+      await referral.save();
       let referrerPoints = await LoyaltyPoints.findOne({ userId: referral.referrerId });
       if (!referrerPoints) {
         referrerPoints = new LoyaltyPoints({ userId: referral.referrerId });
@@ -145,9 +125,7 @@ router.post('/complete', async (req, res) => {
     console.error('Complete referral error:', error);
     res.status(500).json({ message: 'Failed to complete referral', error: error.message });
   }
-});
-
-// Get referral stats
+});
 router.get('/stats/:userId', async (req, res) => {
   try {
     const referral = await Referral.findOne({ referrerId: req.params.userId })
@@ -183,9 +161,7 @@ router.get('/stats/:userId', async (req, res) => {
     console.error('Get referral stats error:', error);
     res.status(500).json({ message: 'Failed to get stats', error: error.message });
   }
-});
-
-// Validate referral code
+});
 router.get('/validate/:code', async (req, res) => {
   try {
     const referral = await Referral.findOne({ 
@@ -205,9 +181,7 @@ router.get('/validate/:code', async (req, res) => {
     console.error('Validate referral error:', error);
     res.status(500).json({ message: 'Failed to validate code', error: error.message });
   }
-});
-
-// Leaderboard
+});
 router.get('/leaderboard', async (req, res) => {
   try {
     const leaderboard = await Referral.find({ successfulReferrals: { $gt: 0 } })

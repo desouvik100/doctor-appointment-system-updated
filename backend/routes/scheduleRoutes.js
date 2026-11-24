@@ -1,13 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const DoctorSchedule = require('../models/DoctorSchedule');
-
-// Get doctor's schedule
+const DoctorSchedule = require('../models/DoctorSchedule');
 router.get('/doctor/:doctorId', async (req, res) => {
   try {
-    let schedule = await DoctorSchedule.findOne({ doctorId: req.params.doctorId });
-    
-    // Create default schedule if not exists
+    let schedule = await DoctorSchedule.findOne({ doctorId: req.params.doctorId });
     if (!schedule) {
       const defaultSlot = { startTime: '09:00', endTime: '17:00', slotDuration: 15, maxPatients: 20 };
       schedule = new DoctorSchedule({
@@ -29,9 +25,7 @@ router.get('/doctor/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Update doctor's schedule
+});
 router.put('/doctor/:doctorId', async (req, res) => {
   try {
     const schedule = await DoctorSchedule.findOneAndUpdate(
@@ -43,9 +37,7 @@ router.put('/doctor/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Block specific dates
+});
 router.post('/doctor/:doctorId/block', async (req, res) => {
   try {
     const { date, reason, isFullDay, blockedSlots } = req.body;
@@ -59,9 +51,7 @@ router.post('/doctor/:doctorId/block', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Unblock date
+});
 router.delete('/doctor/:doctorId/block/:dateId', async (req, res) => {
   try {
     const schedule = await DoctorSchedule.findOneAndUpdate(
@@ -73,9 +63,7 @@ router.delete('/doctor/:doctorId/block/:dateId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Set vacation mode
+});
 router.post('/doctor/:doctorId/vacation', async (req, res) => {
   try {
     const { isActive, startDate, endDate, message } = req.body;
@@ -89,9 +77,7 @@ router.post('/doctor/:doctorId/vacation', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get available slots for a date
+});
 router.get('/doctor/:doctorId/slots/:date', async (req, res) => {
   try {
     const { doctorId, date } = req.params;
@@ -103,18 +89,14 @@ router.get('/doctor/:doctorId/slots/:date', async (req, res) => {
 
     const dateObj = new Date(date);
     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'lowercase' });
-    const daySchedule = schedule.weeklySchedule[dayName];
-
-    // Check vacation mode
+    const daySchedule = schedule.weeklySchedule[dayName];
     if (schedule.vacationMode?.isActive) {
       const start = new Date(schedule.vacationMode.startDate);
       const end = new Date(schedule.vacationMode.endDate);
       if (dateObj >= start && dateObj <= end) {
         return res.json({ slots: [], message: schedule.vacationMode.message || 'Doctor on vacation' });
       }
-    }
-
-    // Check blocked dates
+    }
     const isBlocked = schedule.blockedDates.some(b => 
       new Date(b.date).toDateString() === dateObj.toDateString() && b.isFullDay
     );
@@ -124,9 +106,7 @@ router.get('/doctor/:doctorId/slots/:date', async (req, res) => {
 
     if (!daySchedule?.isWorking) {
       return res.json({ slots: [], message: 'Doctor not available on this day' });
-    }
-
-    // Generate time slots
+    }
     const slots = [];
     daySchedule.slots.forEach(slot => {
       const [startHour, startMin] = slot.startTime.split(':').map(Number);

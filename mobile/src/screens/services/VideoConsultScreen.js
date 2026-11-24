@@ -1,6 +1,4 @@
-/**
- * Video Consult Screen - Real doctor availability from API
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -190,7 +188,7 @@ const VideoConsultScreen = ({ navigation }) => {
         <View style={styles.placeholder} />
       </View>
 
-      {/* Banner */}
+      {}
       <LinearGradient
         colors={colors.gradientPrimary}
         start={{ x: 0, y: 0 }}
@@ -228,7 +226,7 @@ const VideoConsultScreen = ({ navigation }) => {
           />
         }
       >
-        {/* Specialties */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Specialty</Text>
           <View style={styles.specialtiesGrid}>
@@ -257,7 +255,7 @@ const VideoConsultScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Available Doctors */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Available Now</Text>
@@ -287,7 +285,6 @@ const VideoConsultScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },

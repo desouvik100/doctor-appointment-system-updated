@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
-const supportTicketSchema = new mongoose.Schema({
-  // Who submitted the ticket
+const supportTicketSchema = new mongoose.Schema({
   submittedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -11,13 +10,11 @@ const supportTicketSchema = new mongoose.Schema({
     type: String,
     enum: ['doctor', 'patient', 'receptionist'],
     required: true
-  },
-  // Doctor reference (if submitted by doctor)
+  },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
-  },
-  // Ticket details
+  },
   subject: {
     type: String,
     required: true,
@@ -44,8 +41,7 @@ const supportTicketSchema = new mongoose.Schema({
     type: String,
     enum: ['open', 'in_progress', 'resolved', 'closed'],
     default: 'open'
-  },
-  // Admin response
+  },
   adminResponse: {
     type: String,
     trim: true
@@ -54,8 +50,7 @@ const supportTicketSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  respondedAt: Date,
-  // Conversation thread
+  respondedAt: Date,
   messages: [{
     sender: {
       type: String,
@@ -78,15 +73,12 @@ const supportTicketSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     }
-  }],
-  // Metadata
+  }],
   resolvedAt: Date,
   closedAt: Date
 }, {
   timestamps: true
-});
-
-// Index for efficient queries
+});
 supportTicketSchema.index({ submittedBy: 1, status: 1 });
 supportTicketSchema.index({ status: 1, createdAt: -1 });
 supportTicketSchema.index({ doctorId: 1 });

@@ -1,6 +1,4 @@
-/**
- * OTP Verification Screen - Phone Number Verification
- */
+
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -34,11 +32,8 @@ const OTPVerificationScreen = ({ navigation, route }) => {
   const { login } = useUser();
   const { colors, isDarkMode } = useTheme();
 
-  useEffect(() => {
-    // Focus first input on mount
-    inputRefs.current[0]?.focus();
-    
-    // Start resend timer
+  useEffect(() => {
+    inputRefs.current[0]?.focus();
     startResendTimer();
   }, []);
 
@@ -58,13 +53,10 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     }, 1000);
   };
 
-  const handleOtpChange = (value, index) => {
-    // Only allow numbers
+  const handleOtpChange = (value, index) => {
     if (value && !/^\d+$/.test(value)) return;
 
-    const newOtp = [...otp];
-    
-    // Handle paste
+    const newOtp = [...otp];
     if (value.length > 1) {
       const pastedOtp = value.slice(0, OTP_LENGTH).split('');
       pastedOtp.forEach((digit, i) => {
@@ -78,16 +70,13 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     }
 
     newOtp[index] = value;
-    setOtp(newOtp);
-
-    // Auto-focus next input
+    setOtp(newOtp);
     if (value && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  const handleKeyPress = (e, index) => {
-    // Handle backspace
+  const handleKeyPress = (e, index) => {
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -103,12 +92,9 @@ const OTPVerificationScreen = ({ navigation, route }) => {
 
     setLoading(true);
     try {
-      if (isRegistration) {
-        // Registration flow: Verify OTP then register user
+      if (isRegistration) {
         console.log('✅ Verifying registration OTP for:', email);
-        await authService.verifyRegistrationOTP(email, otpString);
-        
-        // Now register the user with otpVerified flag
+        await authService.verifyRegistrationOTP(email, otpString);
         console.log('📝 Registering user:', { name, email, phone });
         const response = await authService.register({
           name,
@@ -116,9 +102,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
           phone,
           password,
           otpVerified: true,
-        });
-        
-        // Login the user
+        });
         if (response.user && response.token) {
           await login(response.user, response.token);
           Alert.alert(
@@ -127,8 +111,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             [{ text: 'OK', onPress: () => navigation.replace('Main') }]
           );
         }
-      } else {
-        // Phone verification flow (existing)
+      } else {
         const { user, token } = await authService.verifyOTP(phone, otpString);
         
         if (user && token) {
@@ -143,8 +126,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error('❌ OTP verification error:', error);
       const message = error.response?.data?.message || 'Invalid OTP. Please try again.';
-      Alert.alert('Verification Failed', message);
-      // Clear OTP on error
+      Alert.alert('Verification Failed', message);
       setOtp(Array(OTP_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
     } finally {
@@ -184,7 +166,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
@@ -197,7 +179,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          {/* Header */}
+          {}
           <View style={styles.header}>
             <TouchableOpacity 
               style={[
@@ -231,7 +213,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             </Text>
           </View>
 
-          {/* OTP Input */}
+          {}
           <View style={styles.otpContainer}>
             {otp.map((digit, index) => (
               <TextInput
@@ -258,7 +240,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             ))}
           </View>
 
-          {/* Resend Timer */}
+          {}
           <View style={styles.resendContainer}>
             {canResend ? (
               <TouchableOpacity onPress={handleResend}>
@@ -271,7 +253,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             )}
           </View>
 
-          {/* Verify Button */}
+          {}
           <Button
             title="Verify"
             onPress={handleVerify}
@@ -281,7 +263,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             disabled={otp.join('').length !== OTP_LENGTH}
           />
 
-          {/* Change Contact */}
+          {}
           <TouchableOpacity 
             style={styles.changeNumber}
             onPress={() => navigation.goBack()}

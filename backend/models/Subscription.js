@@ -43,9 +43,7 @@ const subscriptionSchema = new mongoose.Schema({
     paidAt: Date,
     createdAt: { type: Date, default: Date.now }
   }]
-}, { timestamps: true });
-
-// Check if subscription is active
+}, { timestamps: true });
 subscriptionSchema.methods.isActive = function() {
   return this.status === 'active' || (this.status === 'trial' && this.trialEndsAt > new Date());
 };

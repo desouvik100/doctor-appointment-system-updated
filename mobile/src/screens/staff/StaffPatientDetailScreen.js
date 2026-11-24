@@ -1,7 +1,4 @@
-/**
- * Staff Patient Detail Screen - View Patient Information
- * 100% Parity with Web Staff Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -99,7 +96,7 @@ const StaffPatientDetailScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B6B" />}
       >
-        {/* Patient Header */}
+        {}
         <View style={[styles.patientHeader, { backgroundColor: colors.surface }]}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{patient.name?.charAt(0) || 'P'}</Text>
@@ -125,7 +122,7 @@ const StaffPatientDetailScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Action Buttons */}
+        {}
         <View style={styles.actionRow}>
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#FF6B6B' }]} onPress={handleBookAppointment}>
             <Text style={styles.actionBtnIcon}>📅</Text>
@@ -137,7 +134,7 @@ const StaffPatientDetailScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Tabs */}
+        {}
         <View style={styles.tabsContainer}>
           {tabs.map(tab => (
             <TouchableOpacity
@@ -152,7 +149,7 @@ const StaffPatientDetailScreen = ({ navigation, route }) => {
           ))}
         </View>
 
-        {/* Tab Content */}
+        {}
         {activeTab === 'info' && (
           <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
             <InfoRow label="Phone" value={patient.phone || 'Not provided'} colors={colors} />
@@ -188,7 +185,6 @@ const InfoRow = ({ label, value, colors, isLast }) => (
     <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{value}</Text>
   </View>
 );
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

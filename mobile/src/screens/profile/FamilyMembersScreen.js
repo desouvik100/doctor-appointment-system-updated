@@ -25,13 +25,10 @@ const FamilyMembersScreen = ({ navigation }) => {
   const relations = ['Spouse', 'Child', 'Parent', 'Sibling', 'Other'];
 
   const fetchMembers = useCallback(async () => {
-    try {
-      // Backend route is /family/user/:userId
-      const response = await apiClient.get(`/family/user/${user?.id || user?._id}`);
-      // Response is array directly, not { members: [] }
+    try {
+      const response = await apiClient.get(`/family/user/${user?.id || user?._id}`);
       setMembers(Array.isArray(response.data) ? response.data : response.data?.members || []);
-    } catch (error) {
-      // Silently fail - show empty state
+    } catch (error) {
       setMembers([]);
     } finally {
       setLoading(false);
@@ -54,8 +51,7 @@ const FamilyMembersScreen = ({ navigation }) => {
       return;
     }
     setAdding(true);
-    try {
-      // Backend route is POST /family with primaryUserId in body
+    try {
       await apiClient.post('/family', {
         ...newMember,
         primaryUserId: user?.id || user?._id,
@@ -75,8 +71,7 @@ const FamilyMembersScreen = ({ navigation }) => {
     Alert.alert('Remove Member', `Remove ${member.name} from family?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: async () => {
-        try {
-          // Backend route is DELETE /family/:id
+        try {
           await apiClient.delete(`/family/${member._id}`);
           fetchMembers();
         } catch (error) {

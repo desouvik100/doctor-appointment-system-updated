@@ -1,6 +1,4 @@
-const mongoose = require('mongoose');
-
-// Withdrawal Request Schema
+const mongoose = require('mongoose');
 const withdrawalRequestSchema = new mongoose.Schema({
   amount: {
     type: Number,
@@ -75,28 +73,23 @@ const doctorWalletSchema = new mongoose.Schema({
     ref: 'Doctor',
     required: true,
     unique: true
-  },
-  // Current balance (earnings - payouts)
+  },
   balance: {
     type: Number,
     default: 0
-  },
-  // Total earnings from all appointments
+  },
   totalEarnings: {
     type: Number,
     default: 0
-  },
-  // Total amount paid out to doctor
+  },
   totalPayouts: {
     type: Number,
     default: 0
-  },
-  // Pending amount (not yet paid)
+  },
   pendingAmount: {
     type: Number,
     default: 0
-  },
-  // Statistics
+  },
   stats: {
     totalPatients: {
       type: Number,
@@ -134,35 +127,27 @@ const doctorWalletSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  },
-  // Bank details for payout
+  },
   bankDetails: {
     accountHolderName: String,
     accountNumber: String,
     ifscCode: String,
     bankName: String,
     upiId: String
-  },
-  // Transaction history
-  transactions: [transactionSchema],
-  // Withdrawal requests
-  withdrawalRequests: [withdrawalRequestSchema],
-  // Commission percentage (company takes this %)
+  },
+  transactions: [transactionSchema],
+  withdrawalRequests: [withdrawalRequestSchema],
   commissionRate: {
     type: Number,
-    default: 10  // 10% commission by default
+    default: 10  
   },
   isActive: {
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
-
-// Index for faster queries
+}, { timestamps: true });
 doctorWalletSchema.index({ doctorId: 1 });
-doctorWalletSchema.index({ 'transactions.createdAt': -1 });
-
-// Method to add earnings from appointment
+doctorWalletSchema.index({ 'transactions.createdAt': -1 });
 doctorWalletSchema.methods.addEarning = function(amount, appointmentId, patientName, description) {
   const commission = (amount * this.commissionRate) / 100;
   const doctorEarning = amount - commission;
@@ -181,24 +166,19 @@ doctorWalletSchema.methods.addEarning = function(amount, appointmentId, patientN
   this.pendingAmount += doctorEarning;
   this.stats.totalAppointments += 1;
   this.stats.completedAppointments += 1;
-  this.stats.lastUpdated = new Date();
-  
-  // Update monthly stats
+  this.stats.lastUpdated = new Date();
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   if (this.stats.lastUpdated >= startOfMonth) {
     this.stats.thisMonthEarnings += doctorEarning;
     this.stats.thisMonthPatients += 1;
-  } else {
-    // Reset monthly stats
+  } else {
     this.stats.thisMonthEarnings = doctorEarning;
     this.stats.thisMonthPatients = 1;
   }
   
   return { doctorEarning, commission };
-};
-
-// Method to process payout
+};
 doctorWalletSchema.methods.processPayout = function(amount, method, reference, processedBy) {
   if (amount > this.pendingAmount) {
     throw new Error('Payout amount exceeds pending balance');
@@ -219,15 +199,11 @@ doctorWalletSchema.methods.processPayout = function(amount, method, reference, p
   this.pendingAmount -= amount;
   
   return true;
-};
-
-// Method to create withdrawal request
+};
 doctorWalletSchema.methods.createWithdrawalRequest = function(amount, method = 'bank_transfer', notes = '') {
   if (amount > this.pendingAmount) {
     throw new Error('Withdrawal amount exceeds available balance');
-  }
-  
-  // Check if there's already a pending request
+  }
   const pendingRequest = this.withdrawalRequests.find(r => r.status === 'pending');
   if (pendingRequest) {
     throw new Error('You already have a pending withdrawal request');
@@ -242,9 +218,7 @@ doctorWalletSchema.methods.createWithdrawalRequest = function(amount, method = '
   });
   
   return this.withdrawalRequests[this.withdrawalRequests.length - 1];
-};
-
-// Method to process withdrawal request
+};
 doctorWalletSchema.methods.processWithdrawalRequest = function(requestId, action, processedBy, reference = '', rejectionReason = '') {
   const request = this.withdrawalRequests.id(requestId);
   if (!request) {
@@ -259,9 +233,7 @@ doctorWalletSchema.methods.processWithdrawalRequest = function(requestId, action
     request.status = 'completed';
     request.processedAt = new Date();
     request.processedBy = processedBy;
-    request.payoutReference = reference;
-    
-    // Deduct from wallet
+    request.payoutReference = reference;
     this.transactions.push({
       type: 'withdrawal',
       amount: -request.amount,
@@ -283,9 +255,7 @@ doctorWalletSchema.methods.processWithdrawalRequest = function(requestId, action
   }
   
   return request;
-};
-
-// Static method to get or create wallet
+};
 doctorWalletSchema.statics.getOrCreateWallet = async function(doctorId) {
   let wallet = await this.findOne({ doctorId });
   if (!wallet) {

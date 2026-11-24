@@ -1,6 +1,4 @@
-/**
- * Home Screen - Flagship Material 3 Patient Portal V3 (Dynamic Polish)
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -80,7 +78,6 @@ const HomeScreen = ({ navigation }) => {
     activeQueue: null,
   });
 
-  // progressive section loading for solid 60 FPS initial render
   useEffect(() => {
     const frame1 = requestAnimationFrame(() => {
       setLoadedSections(2);
@@ -133,7 +130,6 @@ const HomeScreen = ({ navigation }) => {
         loyaltyPoints: loyaltyData.points || 280,
       }));
 
-      // Trigger dynamic Live Queue status active check
       if (parsedAppointments.length > 0) {
         setDashboardData(prev => ({
           ...prev,
@@ -201,7 +197,6 @@ const HomeScreen = ({ navigation }) => {
 
   const firstName = user?.name?.split(' ')[0] || 'there';
 
-  // ── DYNAMIC HOMEPAGE STATE SELECTOR ──
   const hasLiveQueue = dashboardData.activeQueue && 
     (dashboardData.activeQueue.status === 'waiting' || dashboardData.activeQueue.status === 'active' || dashboardData.activeQueue.isYourTurn) &&
     dashboardData.appointments.length > 0;
@@ -209,7 +204,7 @@ const HomeScreen = ({ navigation }) => {
   const pendingBooking = pendingJourneys.find(j => j.id === 'booking');
   const pendingPayment = pendingJourneys.find(j => j.id === 'payment');
 
-  let homeState = 'D'; // Default General
+  let homeState = 'D'; 
   if (hasLiveQueue) {
     homeState = 'A';
   } else if (pendingBooking) {
@@ -218,7 +213,6 @@ const HomeScreen = ({ navigation }) => {
     homeState = 'C';
   }
 
-  // Dynamic context-aware greeting subtext
   const getGreetingCTA = () => {
     switch (homeState) {
       case 'A':
@@ -237,7 +231,7 @@ const HomeScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -270,7 +264,7 @@ const HomeScreen = ({ navigation }) => {
           />
         }
       >
-        {/* ── 1. DYNAMIC HERO SECTION (Dynamic greeting & context-aware CTA) ── */}
+        {}
         <View style={styles.headerRow}>
           <View style={styles.greetingContainer}>
             <Text style={[styles.heroSubGreeting, { color: colors.textSecondary }]}>
@@ -312,7 +306,7 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* ── 2. HERO SEARCH BAR & LOCATION ── */}
+        {}
         <View style={styles.searchSection}>
           <TouchableOpacity
             style={[
@@ -333,7 +327,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.body}>
-          {/* ── 3. STATE A PRIMARY: FLAGSHIP LIVE QUEUE TRACKER ── */}
+          {}
           {homeState === 'A' && (
             <LiveQueueStatus 
               appointments={dashboardData.appointments} 
@@ -341,18 +335,18 @@ const HomeScreen = ({ navigation }) => {
             />
           )}
 
-          {/* ── 4. STATE B & C PRIMARY: RESUME BOOKING progress ── */}
+          {}
           {(homeState === 'B' || homeState === 'C') && (
             <ContinueJourney items={pendingJourneys} />
           )}
 
-          {/* ── 5. BOOK DOCTOR HERO ACTIONS (State D Primary or State A/B/C Secondary) ── */}
+          {}
           <QuickBookActions />
 
-          {/* Progressive Load Tier 2 */}
+          {}
           {loadedSections >= 2 && (
             <>
-              {/* Render secondary states lower down */}
+              {}
               {homeState !== 'A' && (
                 <LiveQueueStatus 
                   appointments={dashboardData.appointments} 
@@ -364,15 +358,15 @@ const HomeScreen = ({ navigation }) => {
                 <ContinueJourney items={pendingJourneys} />
               )}
 
-              {/* ── 6. AVAILABLE NOW SECTION ── */}
+              {}
               <AvailableNow />
             </>
           )}
 
-          {/* Progressive Load Tier 3 */}
+          {}
           {loadedSections >= 3 && (
             <>
-              {/* ── 7. RECOMMENDED DOCTORS (AIRBNB OVERHAUL) ── */}
+              {}
               <View style={styles.recommendedSection}>
                 <View style={styles.sectionHeader}>
                   <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recommended Doctors</Text>
@@ -397,7 +391,7 @@ const HomeScreen = ({ navigation }) => {
                         ]}
                         onPress={() => {
                           const id = doc._id || doc.id || '';
-                          // Skip navigation for placeholder/fake IDs (not real MongoDB ObjectIds)
+
                           if (!id || id.length < 20) {
                             navigation.navigate('DoctorSearch');
                             return;
@@ -440,16 +434,16 @@ const HomeScreen = ({ navigation }) => {
                 </ScrollView>
               </View>
 
-              {/* ── 7.5. NEARBY DOCTORS ── */}
+              {}
               <NearbyDoctors />
 
-              {/* ── 8. TRENDING SPECIALTIES ── */}
+              {}
               <TrendingSpecialties />
 
-              {/* ── 9. OTHER SERVICES ── */}
+              {}
               <SecondaryServices />
 
-              {/* ── 10. WALLET SNAPSHOT (Bottom priority) ── */}
+              {}
               <WalletSummary
                 balance={dashboardData.walletBalance}
                 loyaltyPoints={dashboardData.loyaltyPoints}
@@ -467,7 +461,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingBottom: 120 },
 
-  // Ambient mesh
   backgroundContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
@@ -490,7 +483,6 @@ const styles = StyleSheet.create({
     right: -100,
   },
 
-  // Dynamic Greeting row
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -540,7 +532,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
 
-  // Search Section
   searchSection: {
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
@@ -558,12 +549,10 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 15, marginRight: spacing.md },
   searchPlaceholder: { flex: 1, ...typography.bodyMedium, opacity: 0.6, fontSize: 12.5 },
 
-  // Body
   body: { 
     paddingHorizontal: spacing.lg,
   },
 
-  // Recommended Doctors Section
   recommendedSection: {
     marginBottom: spacing.lg,
   },
@@ -586,7 +575,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     gap: spacing.md,
   },
-  // Airbnb-style doctor listing cards
+
   doctorCard: {
     width: 155,
     borderRadius: borderRadius.lg,

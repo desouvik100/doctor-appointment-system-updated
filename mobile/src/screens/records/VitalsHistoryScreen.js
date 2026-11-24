@@ -1,6 +1,4 @@
-/**
- * VitalsHistoryScreen - Display vitals trend with charts
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -51,7 +49,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingVital, setAddingVital] = useState(false);
   const [newVitalValue, setNewVitalValue] = useState('');
-  const [newVitalValue2, setNewVitalValue2] = useState(''); // For BP diastolic
+  const [newVitalValue2, setNewVitalValue2] = useState(''); 
 
   const fetchVitals = useCallback(async () => {
     if (!user?._id) return;
@@ -140,9 +138,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
   };
 
   const activeVitalConfig = vitals.find(v => v.id === activeVital);
-  const currentVital = latestVitals[activeVital];
-
-  // Generate chart data from vitalsData
+  const currentVital = latestVitals[activeVital];
   const chartData = vitalsData.slice(0, 7).reverse().map(v => {
     if (activeVital === 'bp') return v.systolic || 120;
     return v.numericValue || 0;
@@ -176,7 +172,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
       >
-        {/* Vitals Selector */}
+        {}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vitalsScroll}>
           {vitals.map(vital => (
             <TouchableOpacity
@@ -192,7 +188,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
           ))}
         </ScrollView>
 
-        {/* Current Value Card */}
+        {}
         <Card variant="gradient" style={styles.currentCard}>
           <View style={styles.currentHeader}>
             <Text style={styles.currentIcon}>{activeVitalConfig?.icon}</Text>
@@ -212,7 +208,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
           )}
         </Card>
 
-        {/* Date Range Selector */}
+        {}
         <View style={styles.dateRangeContainer}>
           {dateRanges.map(range => (
             <TouchableOpacity
@@ -227,7 +223,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
           ))}
         </View>
 
-        {/* Chart */}
+        {}
         <Card variant="default" style={styles.chartCard}>
           <Text style={styles.chartTitle}>Trend</Text>
           {chartData.length > 0 ? (
@@ -255,7 +251,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
           )}
         </Card>
 
-        {/* History List */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Readings</Text>
           {vitalsData.length > 0 ? (
@@ -287,7 +283,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Add Vital Modal */}
+      {}
       <Modal visible={showAddModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -362,7 +358,6 @@ const VitalsHistoryScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },

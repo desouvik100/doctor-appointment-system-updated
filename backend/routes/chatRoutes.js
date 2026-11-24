@@ -4,14 +4,10 @@ const Conversation = require('../models/Conversation');
 const ChatMessage = require('../models/ChatMessage');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
-const Appointment = require('../models/Appointment');
-
-// Check if patient has a confirmed appointment with doctor
+const Appointment = require('../models/Appointment');
 router.get('/can-chat/:patientId/:doctorId', async (req, res) => {
   try {
-    const { patientId, doctorId } = req.params;
-
-    // Check for confirmed/completed appointments
+    const { patientId, doctorId } = req.params;
     const appointment = await Appointment.findOne({
       userId: patientId,
       doctorId: doctorId,
@@ -34,14 +30,10 @@ router.get('/can-chat/:patientId/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get or create conversation between patient and doctor
+});
 router.post('/conversation', async (req, res) => {
   try {
-    const { patientId, doctorId, appointmentId } = req.body;
-
-    // Verify patient has a confirmed appointment with this doctor
+    const { patientId, doctorId, appointmentId } = req.body;
     const hasAppointment = await Appointment.findOne({
       userId: patientId,
       doctorId: doctorId,
@@ -53,13 +45,10 @@ router.post('/conversation', async (req, res) => {
         message: 'You can only message doctors after booking a confirmed appointment',
         requiresAppointment: true
       });
-    }
-
-    // Check if conversation exists
+    }
     let conversation = await Conversation.findOne({ patientId, doctorId, isActive: true });
 
-    if (!conversation) {
-      // Get participant details
+    if (!conversation) {
       const patient = await User.findById(patientId).select('name profilePhoto');
       const doctor = await Doctor.findById(doctorId).select('name profilePhoto');
 
@@ -89,9 +78,7 @@ router.post('/conversation', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get all conversations for a user
+});
 router.get('/conversations/:userId/:userType', async (req, res) => {
   try {
     const { userId, userType } = req.params;
@@ -107,9 +94,7 @@ router.get('/conversations/:userId/:userType', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get messages for a conversation
+});
 router.get('/messages/:conversationId', async (req, res) => {
   try {
     const { conversationId } = req.params;
@@ -124,9 +109,7 @@ router.get('/messages/:conversationId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Send a message
+});
 router.post('/message', async (req, res) => {
   try {
     const { conversationId, senderId, senderType, senderName, message, messageType, attachments, metadata } = req.body;
@@ -141,9 +124,7 @@ router.post('/message', async (req, res) => {
       attachments,
       metadata
     });
-    await chatMessage.save();
-
-    // Update conversation's last message
+    await chatMessage.save();
     const unreadField = senderType === 'patient' ? 'unreadCount.doctor' : 'unreadCount.patient';
     await Conversation.findByIdAndUpdate(conversationId, {
       lastMessage: {
@@ -159,9 +140,7 @@ router.post('/message', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Mark messages as read
+});
 router.put('/messages/read/:conversationId/:userType', async (req, res) => {
   try {
     const { conversationId, userType } = req.params;
@@ -179,9 +158,7 @@ router.put('/messages/read/:conversationId/:userType', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get unread count for user
+});
 router.get('/unread/:userId/:userType', async (req, res) => {
   try {
     const { userId, userType } = req.params;
@@ -195,9 +172,7 @@ router.get('/unread/:userId/:userType', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Close conversation
+});
 router.put('/conversation/:id/close', async (req, res) => {
   try {
     const { reason } = req.body;

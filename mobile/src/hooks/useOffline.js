@@ -1,13 +1,8 @@
-/**
- * useOffline Hook - React hook for offline status and caching
- */
+
 
 import { useState, useEffect, useCallback } from 'react';
 import { offlineManager } from '../services/offline';
 
-/**
- * Hook to track online/offline status
- */
 export const useOnlineStatus = () => {
   const [isOnline, setIsOnline] = useState(offlineManager.isOnline);
 
@@ -19,12 +14,9 @@ export const useOnlineStatus = () => {
   return isOnline;
 };
 
-/**
- * Hook for cached data with automatic refresh
- */
 export const useCachedData = (key, fetchFn, options = {}) => {
   const { 
-    cacheDuration = 60 * 60 * 1000, // 1 hour default
+    cacheDuration = 60 * 60 * 1000, 
     refreshOnMount = true,
     refreshOnFocus = false,
   } = options;
@@ -39,8 +31,7 @@ export const useCachedData = (key, fetchFn, options = {}) => {
     setLoading(true);
     setError(null);
 
-    try {
-      // Try to get cached data first
+    try {
       if (!force) {
         const cached = await offlineManager.getCachedData(key);
         if (cached) {
@@ -49,9 +40,7 @@ export const useCachedData = (key, fetchFn, options = {}) => {
           setLoading(false);
           return cached;
         }
-      }
-
-      // If online, fetch fresh data
+      }
       if (isOnline) {
         const freshData = await fetchFn();
         await offlineManager.cacheData(key, freshData, cacheDuration);
@@ -59,25 +48,19 @@ export const useCachedData = (key, fetchFn, options = {}) => {
         setIsStale(false);
         setLoading(false);
         return freshData;
-      }
-
-      // If offline, try to get stale cached data
+      }
       const staleData = await offlineManager.getCachedDataForce(key);
       if (staleData) {
         setData(staleData);
         setIsStale(true);
         setLoading(false);
         return staleData;
-      }
-
-      // No data available
+      }
       setLoading(false);
       return null;
     } catch (err) {
       setError(err);
-      setLoading(false);
-      
-      // Try to use stale cache on error
+      setLoading(false);
       const staleData = await offlineManager.getCachedDataForce(key);
       if (staleData) {
         setData(staleData);
@@ -104,15 +87,11 @@ export const useCachedData = (key, fetchFn, options = {}) => {
   };
 };
 
-/**
- * Hook for queuing offline actions
- */
 export const useOfflineAction = () => {
   const isOnline = useOnlineStatus();
   const [pendingCount, setPendingCount] = useState(offlineManager.getPendingCount());
 
-  useEffect(() => {
-    // Update pending count when online status changes
+  useEffect(() => {
     setPendingCount(offlineManager.getPendingCount());
   }, [isOnline]);
 

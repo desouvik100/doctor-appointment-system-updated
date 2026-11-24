@@ -3,28 +3,20 @@ const mongoose = require('mongoose');
 const waitingTimeSchema = new mongoose.Schema({
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
-  date: { type: Date, required: true },
-  
-  // Real-time tracking
-  currentWaitTime: { type: Number, default: 0 }, // minutes
+  date: { type: Date, required: true },
+  currentWaitTime: { type: Number, default: 0 }, 
   patientsInQueue: { type: Number, default: 0 },
-  avgConsultationTime: { type: Number, default: 15 },
-  
-  // Historical data for predictions
+  avgConsultationTime: { type: Number, default: 15 },
   hourlyData: [{
     hour: Number,
     avgWaitTime: Number,
     patientCount: Number
-  }],
-  
-  // Predictions
+  }],
   predictions: [{
     timeSlot: String,
     predictedWaitTime: Number,
     confidence: Number
-  }],
-  
-  // Alerts
+  }],
   alerts: [{
     type: { type: String, enum: ['high_wait', 'delay', 'emergency'] },
     message: String,
@@ -32,9 +24,7 @@ const waitingTimeSchema = new mongoose.Schema({
   }],
   
   lastUpdated: { type: Date, default: Date.now }
-}, { timestamps: true });
-
-// Calculate predicted wait time
+}, { timestamps: true });
 waitingTimeSchema.methods.predictWaitTime = function(appointmentTime) {
   const baseWait = this.patientsInQueue * this.avgConsultationTime;
   const hour = new Date(appointmentTime).getHours();

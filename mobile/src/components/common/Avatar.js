@@ -1,6 +1,4 @@
-/**
- * Avatar Component with status indicator
- */
+
 
 import React, { useState } from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
@@ -10,18 +8,16 @@ import { typography, borderRadius } from '../../theme/typography';
 
 const Avatar = ({
   source,
-  imageUrl, // Support both source and imageUrl props
+  imageUrl, 
   name,
-  size = 'medium', // small, medium, large, xlarge
+  size = 'medium', 
   showStatus = false,
-  status = 'online', // online, offline, busy, away
+  status = 'online', 
   showBorder = false,
   customBorderRadius,
 }) => {
   const { colors } = useTheme();
-  const [imageError, setImageError] = useState(false);
-
-  // Convert imageUrl to source format if provided
+  const [imageError, setImageError] = useState(false);
   const imageSource = imageUrl ? { uri: imageUrl } : source;
 
   const getSize = () => {
@@ -58,9 +54,7 @@ const Avatar = ({
 
   const avatarSize = getSize();
   const statusSize = getStatusSize();
-  const fontSize = avatarSize * 0.35;
-
-  // Check if imageSource is valid (has uri property with a truthy value)
+  const fontSize = avatarSize * 0.35;
   const hasValidSource = imageSource && imageSource.uri && !imageError;
 
   const styles = makeStyles(colors);
@@ -78,8 +72,7 @@ const Avatar = ({
           />
         </View>
       );
-    }
-    // Premium Healthcare Illustration fallback instead of initials
+    }
     const isDoctor = name && name.toLowerCase().includes('dr.');
     const isFemale = name && (
       name.toLowerCase().includes('ananya') || 

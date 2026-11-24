@@ -71,13 +71,11 @@ const reviewSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Indexes for sorting and filtering approved reviews efficiently
 reviewSchema.index({ doctorId: 1, status: 1, createdAt: -1 });
 reviewSchema.index({ doctorId: 1, rating: 1, status: 1 });
 reviewSchema.index({ doctorId: 1, visitType: 1, status: 1 });
 reviewSchema.index({ doctorId: 1, isVerified: 1, status: 1 });
 
-// Static method to calculate doctor's average rating and total counts
 reviewSchema.statics.calculateDoctorRating = async function(doctorId) {
   const result = await this.aggregate([
     { $match: { doctorId: new mongoose.Types.ObjectId(doctorId), status: 'approved' } },

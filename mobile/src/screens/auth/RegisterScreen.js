@@ -1,6 +1,4 @@
-/**
- * Register Screen - User Registration with Form Validation
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -23,9 +21,7 @@ import authService from '../../services/api/authService';
 import socialAuthService from '../../services/socialAuthService';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
-import Svg, { Path } from 'react-native-svg';
-
-// ─── Branded SVG Logos ───────────────────────────────────────────────────────
+import Svg, { Path } from 'react-native-svg';
 const GoogleIcon = () => (
   <Svg width="18" height="18" viewBox="0 0 24 24">
     <Path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -72,47 +68,36 @@ const RegisterScreen = ({ navigation }) => {
     : ['rgba(108, 92, 231, 0.05)', 'transparent'];
 
   const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user types
+    setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
   };
 
   const validateForm = () => {
-    const newErrors = {};
-
-    // Name validation
+    const newErrors = {};
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
-    }
-
-    // Email validation
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!emailRegex.test(formData.email.trim())) {
       newErrors.email = 'Please enter a valid email';
-    }
-
-    // Phone validation
+    }
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
     } else if (!phoneRegex.test(formData.phone.trim())) {
       newErrors.phone = 'Please enter a valid 10-digit phone number';
-    }
-
-    // Password validation
+    }
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    // Confirm password validation
+    }
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
@@ -129,12 +114,9 @@ const RegisterScreen = ({ navigation }) => {
     }
 
     setLoading(true);
-    try {
-      // Step 1: Send OTP to email for verification
+    try {
       console.log('📧 Sending registration OTP to:', formData.email.trim().toLowerCase());
-      await authService.sendRegistrationOTP(formData.email.trim().toLowerCase());
-
-      // Navigate to OTP verification screen
+      await authService.sendRegistrationOTP(formData.email.trim().toLowerCase());
       navigation.navigate('OTPVerification', { 
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim(),
@@ -215,7 +197,7 @@ const RegisterScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
@@ -235,7 +217,7 @@ const RegisterScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
+          {}
           <View style={styles.header}>
             <TouchableOpacity 
               style={[
@@ -254,7 +236,7 @@ const RegisterScreen = ({ navigation }) => {
             <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Join HealthSync today</Text>
           </View>
 
-          {/* Registration Form */}
+          {}
           <View style={styles.formContainer}>
             <View style={styles.form}>
               <Input
@@ -321,14 +303,14 @@ const RegisterScreen = ({ navigation }) => {
                 size="large"
               />
 
-              {/* Divider */}
+              {}
               <View style={styles.divider}>
                 <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
                 <Text style={[styles.dividerText, { color: colors.textMuted }]}>or sign up with</Text>
                 <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
               </View>
 
-              {/* Social Sign Up */}
+              {}
               <View style={styles.socialStack}>
                 {[
                   { id: 'google',   label: 'Sign up with Google',   icon: <GoogleIcon />,       color: colors.textPrimary, bg: colors.surface, onPress: handleGoogleSignUp },
@@ -363,7 +345,7 @@ const RegisterScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Sign In Link */}
+          {}
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: colors.textSecondary }]}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>

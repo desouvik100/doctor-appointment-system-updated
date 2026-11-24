@@ -1,20 +1,10 @@
-/**
- * File Upload Validation Middleware
- * =================================
- * Comprehensive file validation for security:
- * - File type validation (magic bytes)
- * - File size limits
- * - Filename sanitization
- * - Malware pattern detection
- */
+
 
 const path = require('path');
-const fs = require('fs');
-
-// File type configurations
+const fs = require('fs');
 const FILE_CONFIGS = {
   image: {
-    maxSize: 5 * 1024 * 1024, // 5MB
+    maxSize: 5 * 1024 * 1024, 
     allowedMimes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
     allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
     magicBytes: {
@@ -25,7 +15,7 @@ const FILE_CONFIGS = {
     }
   },
   document: {
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 10 * 1024 * 1024, 
     allowedMimes: ['application/pdf', 'image/jpeg', 'image/png'],
     allowedExtensions: ['.pdf', '.jpg', '.jpeg', '.png'],
     magicBytes: {
@@ -35,7 +25,7 @@ const FILE_CONFIGS = {
     }
   },
   medical: {
-    maxSize: 50 * 1024 * 1024, // 50MB for DICOM etc.
+    maxSize: 50 * 1024 * 1024, 
     allowedMimes: ['application/pdf', 'image/jpeg', 'image/png', 'application/dicom'],
     allowedExtensions: ['.pdf', '.jpg', '.jpeg', '.png', '.dcm'],
     magicBytes: {
@@ -44,9 +34,7 @@ const FILE_CONFIGS = {
       'image/png': [0x89, 0x50, 0x4E, 0x47]
     }
   }
-};
-
-// Dangerous patterns to detect
+};
 const DANGEROUS_PATTERNS = [
   /<script/i,
   /javascript:/i,
@@ -58,12 +46,9 @@ const DANGEROUS_PATTERNS = [
   /window\./i
 ];
 
-/**
- * Validate file type using magic bytes
- */
 function validateMagicBytes(buffer, expectedMime, config) {
   const magicBytes = config.magicBytes[expectedMime];
-  if (!magicBytes) return true; // No magic bytes defined, skip check
+  if (!magicBytes) return true; 
 
   for (let i = 0; i < magicBytes.length; i++) {
     if (buffer[i] !== magicBytes[i]) {
@@ -73,17 +58,9 @@ function validateMagicBytes(buffer, expectedMime, config) {
   return true;
 }
 
-/**
- * Sanitize filename
- */
-function sanitizeFilename(filename) {
-  // Remove path traversal attempts
-  let sanitized = filename.replace(/\.\./g, '');
-  
-  // Remove special characters except alphanumeric, dash, underscore, dot
-  sanitized = sanitized.replace(/[^a-zA-Z0-9\-_\.]/g, '_');
-  
-  // Limit length
+function sanitizeFilename(filename) {
+  let sanitized = filename.replace(/\.\./g, '');
+  sanitized = sanitized.replace(/[^a-zA-Z0-9\-_\.]/g, '_');
   if (sanitized.length > 255) {
     const ext = path.extname(sanitized);
     sanitized = sanitized.substring(0, 250 - ext.length) + ext;
@@ -92,9 +69,6 @@ function sanitizeFilename(filename) {
   return sanitized;
 }
 
-/**
- * Check for dangerous content in file
- */
 function checkDangerousContent(buffer) {
   const content = buffer.toString('utf8', 0, Math.min(buffer.length, 10000));
   
@@ -107,9 +81,6 @@ function checkDangerousContent(buffer) {
   return { safe: true };
 }
 
-/**
- * Create file validation middleware
- */
 function createFileValidator(fileType = 'document') {
   const config = FILE_CONFIGS[fileType] || FILE_CONFIGS.document;
 
@@ -122,9 +93,7 @@ function createFileValidator(fileType = 'document') {
     const filesToValidate = Array.isArray(files) ? files : [files];
 
     for (const file of filesToValidate) {
-      if (!file) continue;
-
-      // 1. Check file size
+      if (!file) continue;
       if (file.size > config.maxSize) {
         return res.status(400).json({
           success: false,
@@ -132,9 +101,7 @@ function createFileValidator(fileType = 'document') {
           message: `File size exceeds limit of ${config.maxSize / (1024 * 1024)}MB`,
           maxSize: config.maxSize
         });
-      }
-
-      // 2. Check MIME type
+      }
       if (!config.allowedMimes.includes(file.mimetype)) {
         return res.status(400).json({
           success: false,
@@ -142,9 +109,7 @@ function createFileValidator(fileType = 'document') {
           message: `File type ${file.mimetype} is not allowed`,
           allowedTypes: config.allowedMimes
         });
-      }
-
-      // 3. Check extension
+      }
       const ext = path.extname(file.originalname).toLowerCase();
       if (!config.allowedExtensions.includes(ext)) {
         return res.status(400).json({
@@ -153,9 +118,7 @@ function createFileValidator(fileType = 'document') {
           message: `File extension ${ext} is not allowed`,
           allowedExtensions: config.allowedExtensions
         });
-      }
-
-      // 4. Validate magic bytes (if file buffer available)
+      }
       if (file.buffer) {
         if (!validateMagicBytes(file.buffer, file.mimetype, config)) {
           return res.status(400).json({
@@ -163,9 +126,7 @@ function createFileValidator(fileType = 'document') {
             code: 'FILE_TYPE_MISMATCH',
             message: 'File content does not match declared type'
           });
-        }
-
-        // 5. Check for dangerous content
+        }
         const safetyCheck = checkDangerousContent(file.buffer);
         if (!safetyCheck.safe) {
           return res.status(400).json({
@@ -174,8 +135,7 @@ function createFileValidator(fileType = 'document') {
             message: 'File contains potentially dangerous content'
           });
         }
-      } else if (file.path) {
-        // Read first bytes from file on disk
+      } else if (file.path) {
         try {
           const fd = fs.openSync(file.path, 'r');
           const buffer = Buffer.alloc(100);
@@ -183,7 +143,7 @@ function createFileValidator(fileType = 'document') {
           fs.closeSync(fd);
 
           if (!validateMagicBytes(buffer, file.mimetype, config)) {
-            fs.unlinkSync(file.path); // Delete suspicious file
+            fs.unlinkSync(file.path); 
             return res.status(400).json({
               success: false,
               code: 'FILE_TYPE_MISMATCH',
@@ -193,9 +153,7 @@ function createFileValidator(fileType = 'document') {
         } catch (error) {
           console.error('File validation error:', error);
         }
-      }
-
-      // 6. Sanitize filename
+      }
       file.originalname = sanitizeFilename(file.originalname);
     }
 
@@ -203,24 +161,12 @@ function createFileValidator(fileType = 'document') {
   };
 }
 
-/**
- * Validate image files
- */
 const validateImage = createFileValidator('image');
 
-/**
- * Validate document files
- */
 const validateDocument = createFileValidator('document');
 
-/**
- * Validate medical files
- */
 const validateMedicalFile = createFileValidator('medical');
 
-/**
- * Generic file validation with custom config
- */
 function validateFile(options = {}) {
   const config = {
     maxSize: options.maxSize || 10 * 1024 * 1024,

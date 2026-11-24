@@ -1,7 +1,4 @@
-/**
- * Admin Edit Doctor Screen - Update Doctor Details
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -100,7 +97,6 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
     }
   };
 
-
   const InputField = ({ label, value, onChangeText, placeholder, keyboardType, multiline }) => (
     <View style={styles.inputContainer}>
       <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{label}</Text>
@@ -144,7 +140,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
         <InputField label="Experience (years)" value={form.experience} onChangeText={(v) => setForm({...form, experience: v})} placeholder="10" keyboardType="numeric" />
         <InputField label="Consultation Fee (₹)" value={form.consultationFee} onChangeText={(v) => setForm({...form, consultationFee: v})} placeholder="500" keyboardType="numeric" />
 
-        {/* Clinic Picker */}
+        {}
         <View style={styles.inputContainer}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Clinic</Text>
           <TouchableOpacity style={[styles.pickerBtn, { backgroundColor: colors.surface }]} onPress={() => setShowClinicPicker(!showClinicPicker)}>
@@ -167,7 +163,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Availability */}
+        {}
         <View style={styles.inputContainer}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Availability</Text>
           <View style={styles.availabilityRow}>
@@ -179,7 +175,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Submit Button */}
+        {}
         <TouchableOpacity style={[styles.submitBtn, saving && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={saving}>
           <Text style={styles.submitBtnText}>{saving ? 'Saving...' : 'Update Doctor'}</Text>
         </TouchableOpacity>

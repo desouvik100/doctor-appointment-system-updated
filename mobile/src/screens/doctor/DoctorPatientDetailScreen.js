@@ -1,7 +1,4 @@
-/**
- * Doctor Patient Detail Screen - Patient Profile & Medical History
- * 100% Parity with Web Doctor Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -117,7 +114,7 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
-        {/* Profile Card */}
+        {}
         <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
           <View style={styles.avatarLarge}>
             <Text style={styles.avatarText}>{patient.name?.charAt(0) || 'P'}</Text>
@@ -128,14 +125,14 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Tabs */}
+        {}
         <View style={styles.tabContainer}>
           <TabButton label="Info" value="info" />
           <TabButton label="Vitals" value="vitals" />
           <TabButton label="History" value="history" />
         </View>
 
-        {/* Info Tab */}
+        {}
         {activeTab === 'info' && (
           <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
             <View style={styles.infoRow}>
@@ -169,7 +166,7 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Vitals Tab */}
+        {}
         {activeTab === 'vitals' && (
           <View style={styles.vitalsGrid}>
             <View style={[styles.vitalCard, { backgroundColor: colors.surface }]}>
@@ -205,7 +202,7 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* History Tab */}
+        {}
         {activeTab === 'history' && (
           <View>
             {healthRecords.length === 0 ? (
@@ -234,7 +231,7 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Action Buttons */}
+        {}
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={[styles.actionBtn, styles.prescriptionBtn]}

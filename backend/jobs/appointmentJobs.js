@@ -1,24 +1,10 @@
-/**
- * Appointment Jobs - Automated Appointment Management
- * ====================================================
- * Handles automatic appointment status updates and cancellations
- * 
- * Jobs:
- * 1. Auto-cancel expired pending appointments (>24 hours old)
- * 2. Auto-complete appointments (>2 hours after scheduled time)
- * 3. Mark no-show appointments (>30 minutes after scheduled time)
- * 4. Update queue positions and estimated wait times
- */
+
 
 const cron = require('node-cron');
 const Appointment = require('../models/Appointment');
 const Notification = require('../models/Notification');
 const { sendEmail } = require('../services/emailService');
 
-/**
- * Auto-cancel expired pending appointments
- * Cancels appointments that are pending payment for >24 hours
- */
 async function autoCancelExpiredPending() {
   try {
     console.log('🔄 Checking for expired pending appointments...');
@@ -27,9 +13,7 @@ async function autoCancelExpiredPending() {
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
     const fifteenMinutesAgo = new Date();
-    fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
-
-    // Find pending appointments older than 24 hours OR pending_payment older than 15 minutes
+    fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
     const expiredAppointments = await Appointment.find({
       $or: [
         { status: 'pending', createdAt: { $lt: twentyFourHoursAgo } },
@@ -46,17 +30,14 @@ async function autoCancelExpiredPending() {
 
     for (const appointment of expiredAppointments) {
       try {
-        const isFifteenMinCancel = appointment.status === 'pending_payment';
-        // Update appointment status
+        const isFifteenMinCancel = appointment.status === 'pending_payment';
         appointment.status = 'cancelled';
         appointment.cancellationReason = isFifteenMinCancel 
           ? 'Automatically cancelled - Payment not completed within 15 minutes'
           : 'Automatically cancelled - Booking not completed within 24 hours';
         appointment.cancelledBy = 'system';
         appointment.cancelledAt = new Date();
-        await appointment.save();
-
-        // Send notification to user
+        await appointment.save();
         if (appointment.userId) {
           await Notification.create({
             userId: appointment.userId._id,
@@ -69,9 +50,7 @@ async function autoCancelExpiredPending() {
               appointmentId: appointment._id,
               doctorId: appointment.doctorId._id
             }
-          });
-
-          // Send email notification
+          });
           if (appointment.userId.email) {
             await sendCancellationEmail(appointment);
           }
@@ -91,18 +70,12 @@ async function autoCancelExpiredPending() {
   }
 }
 
-/**
- * Auto-complete past appointments
- * Marks confirmed appointments as completed if >2 hours past scheduled time
- */
 async function autoCompletePastAppointments() {
   try {
     console.log('🔄 Checking for past appointments to complete...');
 
     const twoHoursAgo = new Date();
-    twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
-
-    // Find confirmed appointments that are >2 hours past their scheduled time
+    twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
     const pastAppointments = await Appointment.find({
       status: { $in: ['confirmed', 'in_progress'] },
       date: { $lt: twoHoursAgo }
@@ -113,8 +86,7 @@ async function autoCompletePastAppointments() {
     let completedCount = 0;
 
     for (const appointment of pastAppointments) {
-      try {
-        // Check if appointment time has passed by >2 hours
+      try {
         const appointmentDateTime = new Date(appointment.date);
         const [hours, minutes] = appointment.time.split(':');
         appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -141,18 +113,12 @@ async function autoCompletePastAppointments() {
   }
 }
 
-/**
- * Mark no-show appointments
- * Marks appointments as no-show if patient didn't arrive >30 minutes after scheduled time
- */
 async function markNoShowAppointments() {
   try {
     console.log('🔄 Checking for no-show appointments...');
 
     const thirtyMinutesAgo = new Date();
-    thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
-
-    // Find confirmed appointments where patient hasn't checked in
+    thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
     const appointments = await Appointment.find({
       status: 'confirmed',
       consultationType: 'in_person',
@@ -168,8 +134,7 @@ async function markNoShowAppointments() {
     let noShowCount = 0;
 
     for (const appointment of appointments) {
-      try {
-        // Check if appointment time has passed by >30 minutes
+      try {
         const appointmentDateTime = new Date(appointment.date);
         const [hours, minutes] = appointment.time.split(':');
         appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -182,9 +147,7 @@ async function markNoShowAppointments() {
           appointment.cancellationReason = 'Patient did not show up';
           appointment.cancelledBy = 'system';
           appointment.cancelledAt = new Date();
-          await appointment.save();
-
-          // Send notification
+          await appointment.save();
           if (appointment.userId) {
             await Notification.create({
               userId: appointment.userId._id,
@@ -215,10 +178,6 @@ async function markNoShowAppointments() {
   }
 }
 
-/**
- * Update queue positions and estimated wait times
- * Recalculates queue positions for active appointments
- */
 async function updateQueuePositions() {
   try {
     console.log('🔄 Updating queue positions...');
@@ -226,9 +185,7 @@ async function updateQueuePositions() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    // Get all doctors with active queues today
+    tomorrow.setDate(tomorrow.getDate() + 1);
     const activeQueues = await Appointment.aggregate([
       {
         $match: {
@@ -247,17 +204,14 @@ async function updateQueuePositions() {
 
     let updatedCount = 0;
 
-    for (const queue of activeQueues) {
-      // Sort appointments by time
+    for (const queue of activeQueues) {
       const sortedAppointments = queue.appointments.sort((a, b) => {
         return a.time.localeCompare(b.time);
-      });
-
-      // Update queue positions
+      });
       for (let i = 0; i < sortedAppointments.length; i++) {
         const appointment = sortedAppointments[i];
         const newPosition = i + 1;
-        const estimatedWait = i * 15; // Assume 15 minutes per patient
+        const estimatedWait = i * 15; 
 
         await Appointment.updateOne(
           { _id: appointment._id },
@@ -281,9 +235,6 @@ async function updateQueuePositions() {
   }
 }
 
-/**
- * Send cancellation email
- */
 async function sendCancellationEmail(appointment) {
   const patient = appointment.userId;
   const doctor = appointment.doctorId;
@@ -334,9 +285,6 @@ async function sendCancellationEmail(appointment) {
   });
 }
 
-/**
- * Run all appointment jobs
- */
 async function runAllAppointmentJobs() {
   console.log('\n' + '='.repeat(60));
   console.log('📅 RUNNING ALL APPOINTMENT JOBS');
@@ -360,31 +308,20 @@ async function runAllAppointmentJobs() {
   return results;
 }
 
-/**
- * Initialize appointment job scheduler
- */
 function initializeAppointmentJobs() {
-  console.log('📅 Initializing appointment job scheduler...');
-
-  // Auto-cancel expired pending appointments - every 15 minutes
+  console.log('📅 Initializing appointment job scheduler...');
   cron.schedule('*/15 * * * *', async () => {
     console.log('⏰ Running auto-cancel expired pending job...');
     await autoCancelExpiredPending();
-  });
-
-  // Auto-complete past appointments - every 2 hours
+  });
   cron.schedule('0 */2 * * *', async () => {
     console.log('⏰ Running auto-complete past appointments job...');
     await autoCompletePastAppointments();
-  });
-
-  // Mark no-show appointments - every 30 minutes
+  });
   cron.schedule('*/30 * * * *', async () => {
     console.log('⏰ Running mark no-show appointments job...');
     await markNoShowAppointments();
-  });
-
-  // Update queue positions - every 15 minutes
+  });
   cron.schedule('*/15 * * * *', async () => {
     console.log('⏰ Running update queue positions job...');
     await updateQueuePositions();

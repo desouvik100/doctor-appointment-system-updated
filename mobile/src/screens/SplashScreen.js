@@ -1,6 +1,4 @@
-/**
- * SplashScreen - Premium app launch screen with heartbeat animation
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, StatusBar } from 'react-native';
@@ -15,19 +13,14 @@ const SplashScreen = ({ onFinish }) => {
   const glowAnim = useRef(new Animated.Value(0.3)).current;
   const textFade = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    // Initial fade in
+  useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, tension: 50, friction: 8, useNativeDriver: true }),
-    ]).start();
-
-    // ECG animation
+    ]).start();
     Animated.loop(
       Animated.timing(ecgAnim, { toValue: 1, duration: 2000, easing: Easing.linear, useNativeDriver: true })
-    ).start();
-
-    // Heartbeat
+    ).start();
     Animated.loop(
       Animated.sequence([
         Animated.timing(heartScale, { toValue: 1.2, duration: 150, useNativeDriver: true }),
@@ -36,22 +29,16 @@ const SplashScreen = ({ onFinish }) => {
         Animated.timing(heartScale, { toValue: 1, duration: 100, useNativeDriver: true }),
         Animated.delay(600),
       ])
-    ).start();
-
-    // Glow
+    ).start();
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
         Animated.timing(glowAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
       ])
-    ).start();
-
-    // Text fade in
+    ).start();
     setTimeout(() => {
       Animated.timing(textFade, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-    }, 500);
-
-    // Finish after 2 seconds
+    }, 500);
     const timer = setTimeout(() => {
       Animated.timing(fadeAnim, { toValue: 0, duration: 400, useNativeDriver: true }).start(() => {
         onFinish && onFinish();
@@ -63,13 +50,12 @@ const SplashScreen = ({ onFinish }) => {
 
   const ecgPath = "M 0 50 L 40 50 L 50 50 L 60 20 L 70 80 L 80 10 L 90 70 L 100 50 L 110 50 L 120 50 L 160 50 L 170 40 L 180 60 L 190 50 L 240 50";
 
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <LinearGradient colors={['#0F172A', '#1E293B', '#0F172A']} style={styles.gradient}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-          {/* Logo with glow */}
+          {}
           <View style={styles.logoSection}>
             <Animated.View style={[styles.logoGlow, { opacity: glowAnim }]} />
             <Animated.View style={[styles.logoContainer, { transform: [{ scale: heartScale }] }]}>
@@ -80,13 +66,13 @@ const SplashScreen = ({ onFinish }) => {
             </Animated.View>
           </View>
 
-          {/* Brand name */}
+          {}
           <Animated.View style={{ opacity: textFade }}>
             <Text style={styles.brandName}>HealthSync</Text>
             <Text style={styles.tagline}>Your Health, Our Priority</Text>
           </Animated.View>
 
-          {/* ECG Animation */}
+          {}
           <View style={styles.ecgSection}>
             <Svg width={280} height={100} viewBox="0 0 240 100">
               <Defs>
@@ -99,7 +85,7 @@ const SplashScreen = ({ onFinish }) => {
               <Path d={ecgPath} stroke="url(#ecgGrad)" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
             </Svg>
             
-            {/* Scan line */}
+            {}
             <Animated.View style={[styles.scanLine, {
               transform: [{ translateX: ecgAnim.interpolate({ inputRange: [0, 1], outputRange: [-280, 280] }) }]
             }]}>
@@ -107,14 +93,14 @@ const SplashScreen = ({ onFinish }) => {
             </Animated.View>
           </View>
 
-          {/* BPM indicator */}
+          {}
           <Animated.View style={[styles.bpmBox, { opacity: textFade }]}>
             <Animated.Text style={[styles.bpmHeart, { transform: [{ scale: heartScale }] }]}>❤️</Animated.Text>
             <Text style={styles.bpmValue}>72</Text>
             <Text style={styles.bpmLabel}>BPM</Text>
           </Animated.View>
 
-          {/* Loading dots */}
+          {}
           <Animated.View style={[styles.loadingDots, { opacity: glowAnim }]}>
             <View style={styles.dot} />
             <View style={[styles.dot, styles.dotActive]} />
@@ -122,7 +108,7 @@ const SplashScreen = ({ onFinish }) => {
           </Animated.View>
         </Animated.View>
 
-        {/* Footer */}
+        {}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Made with ❤️ in India</Text>
         </View>
@@ -130,7 +116,6 @@ const SplashScreen = ({ onFinish }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

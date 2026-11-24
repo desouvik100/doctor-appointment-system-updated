@@ -1,34 +1,24 @@
-/**
- * EMR Audit Log Model
- * Tracks all changes made in the EMR system (Advanced plan feature)
- */
+
 
 const mongoose = require('mongoose');
 
-const emrAuditLogSchema = new mongoose.Schema({
-  // Clinic reference
+const emrAuditLogSchema = new mongoose.Schema({
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
     required: true,
     index: true
-  },
-  
-  // User who performed the action
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  
-  // User details snapshot (in case user is deleted later)
+  },
   userSnapshot: {
     name: String,
     email: String,
     role: String
-  },
-  
-  // Action type
+  },
   action: {
     type: String,
     enum: [
@@ -55,9 +45,7 @@ const emrAuditLogSchema = new mongoose.Schema({
       'role_change'
     ],
     required: true
-  },
-  
-  // Entity affected
+  },
   entityType: {
     type: String,
     enum: [
@@ -76,30 +64,22 @@ const emrAuditLogSchema = new mongoose.Schema({
   entityId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true
-  },
-  
-  // Patient reference (for patient-related actions)
+  },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  },
-  
-  // Changes made
+  },
   changes: {
     field: String,
     oldValue: mongoose.Schema.Types.Mixed,
     newValue: mongoose.Schema.Types.Mixed,
     description: String
-  },
-  
-  // Additional context
+  },
   metadata: {
     ipAddress: String,
     userAgent: String,
     sessionId: String
-  },
-  
-  // Timestamp
+  },
   timestamp: {
     type: Date,
     default: Date.now,
@@ -107,22 +87,16 @@ const emrAuditLogSchema = new mongoose.Schema({
   }
   
 }, {
-  timestamps: false // We use our own timestamp field
-});
-
-// Indexes for efficient querying
+  timestamps: false 
+});
 emrAuditLogSchema.index({ clinicId: 1, timestamp: -1 });
 emrAuditLogSchema.index({ clinicId: 1, userId: 1, timestamp: -1 });
 emrAuditLogSchema.index({ clinicId: 1, entityType: 1, timestamp: -1 });
 emrAuditLogSchema.index({ clinicId: 1, action: 1, timestamp: -1 });
-emrAuditLogSchema.index({ patientId: 1, timestamp: -1 });
-
-// Static method to log an action
+emrAuditLogSchema.index({ patientId: 1, timestamp: -1 });
 emrAuditLogSchema.statics.log = async function(data) {
   try {
-    const User = require('./User');
-    
-    // Get user snapshot
+    const User = require('./User');
     let userSnapshot = {};
     if (data.userId) {
       const user = await User.findById(data.userId).select('name email role').lean();
@@ -144,13 +118,10 @@ emrAuditLogSchema.statics.log = async function(data) {
     await log.save();
     return log;
   } catch (error) {
-    console.error('Error creating audit log:', error);
-    // Don't throw - audit logging shouldn't break main operations
+    console.error('Error creating audit log:', error);
     return null;
   }
-};
-
-// Static method to get audit logs for clinic
+};
 emrAuditLogSchema.statics.getClinicLogs = async function(clinicId, options = {}) {
   const {
     startDate,
@@ -186,9 +157,7 @@ emrAuditLogSchema.statics.getClinicLogs = async function(clinicId, options = {})
   const total = await this.countDocuments(query);
   
   return { logs, total };
-};
-
-// Static method to get patient-specific audit trail
+};
 emrAuditLogSchema.statics.getPatientAuditTrail = async function(patientId, clinicId) {
   return this.find({
     patientId,
@@ -197,9 +166,7 @@ emrAuditLogSchema.statics.getPatientAuditTrail = async function(patientId, clini
     .populate('userId', 'name email')
     .sort({ timestamp: -1 })
     .limit(100);
-};
-
-// Static method to get user activity
+};
 emrAuditLogSchema.statics.getUserActivity = async function(userId, clinicId, days = 30) {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
@@ -211,9 +178,7 @@ emrAuditLogSchema.statics.getUserActivity = async function(userId, clinicId, day
   })
     .sort({ timestamp: -1 })
     .limit(200);
-};
-
-// Format log for display
+};
 emrAuditLogSchema.methods.formatForDisplay = function() {
   const actionDescriptions = {
     create: 'created',

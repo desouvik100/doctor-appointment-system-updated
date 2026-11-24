@@ -1,40 +1,26 @@
-/**
- * DICOM Parser Service
- * Extracts metadata from DICOM files for storage and validation
- */
 
-const dicomParser = require('dicom-parser');
 
-// Try to load canvas, but don't fail if not available
+const dicomParser = require('dicom-parser');
 let createCanvas = null;
 try {
   createCanvas = require('canvas').createCanvas;
 } catch (e) {
   console.log('Canvas not available, DICOM to image conversion disabled');
-}
-
-// DICOM Tag definitions
-const DICOM_TAGS = {
-  // Patient Information
+}
+const DICOM_TAGS = {
   PatientID: 'x00100020',
   PatientName: 'x00100010',
   PatientBirthDate: 'x00100030',
-  PatientSex: 'x00100040',
-  
-  // Study Information
+  PatientSex: 'x00100040',
   StudyInstanceUID: 'x0020000d',
   StudyDate: 'x00080020',
   StudyTime: 'x00080030',
   StudyDescription: 'x00081030',
-  AccessionNumber: 'x00080050',
-  
-  // Series Information
+  AccessionNumber: 'x00080050',
   SeriesInstanceUID: 'x0020000e',
   SeriesNumber: 'x00200011',
   SeriesDescription: 'x0008103e',
-  Modality: 'x00080060',
-  
-  // Image Information
+  Modality: 'x00080060',
   SOPInstanceUID: 'x00080018',
   InstanceNumber: 'x00200013',
   Rows: 'x00280010',
@@ -44,24 +30,13 @@ const DICOM_TAGS = {
   WindowCenter: 'x00281050',
   WindowWidth: 'x00281051',
   SliceLocation: 'x00201041',
-  SliceThickness: 'x00180050',
-  
-  // Institution
+  SliceThickness: 'x00180050',
   InstitutionName: 'x00080080',
-  ReferringPhysicianName: 'x00080090',
-  
-  // Body Part
+  ReferringPhysicianName: 'x00080090',
   BodyPartExamined: 'x00180015'
-};
-
-// Valid DICOM modalities
+};
 const VALID_MODALITIES = ['CR', 'CT', 'MR', 'US', 'XA', 'NM', 'PT', 'DX', 'MG', 'OT'];
 
-/**
- * Parse a DICOM file buffer and extract metadata
- * @param {Buffer} fileBuffer - The DICOM file as a buffer
- * @returns {Object} Extracted metadata
- */
 function parseDicomFile(fileBuffer) {
   try {
     const byteArray = new Uint8Array(fileBuffer);
@@ -81,11 +56,6 @@ function parseDicomFile(fileBuffer) {
   }
 }
 
-/**
- * Extract all relevant metadata from a parsed DICOM dataset
- * @param {Object} dataSet - Parsed DICOM dataset
- * @returns {Object} Extracted metadata
- */
 function extractMetadata(dataSet) {
   const metadata = {
     patient: extractPatientInfo(dataSet),
@@ -98,9 +68,6 @@ function extractMetadata(dataSet) {
   return metadata;
 }
 
-/**
- * Extract patient information
- */
 function extractPatientInfo(dataSet) {
   return {
     patientId: getString(dataSet, DICOM_TAGS.PatientID),
@@ -110,9 +77,6 @@ function extractPatientInfo(dataSet) {
   };
 }
 
-/**
- * Extract study information
- */
 function extractStudyInfo(dataSet) {
   return {
     studyInstanceUID: getString(dataSet, DICOM_TAGS.StudyInstanceUID),
@@ -123,10 +87,6 @@ function extractStudyInfo(dataSet) {
   };
 }
 
-
-/**
- * Extract series information
- */
 function extractSeriesInfo(dataSet) {
   const modality = getString(dataSet, DICOM_TAGS.Modality) || 'OT';
   return {
@@ -138,9 +98,6 @@ function extractSeriesInfo(dataSet) {
   };
 }
 
-/**
- * Extract image information
- */
 function extractImageInfo(dataSet) {
   return {
     sopInstanceUID: getString(dataSet, DICOM_TAGS.SOPInstanceUID),
@@ -156,21 +113,13 @@ function extractImageInfo(dataSet) {
   };
 }
 
-/**
- * Extract institution information
- */
 function extractInstitutionInfo(dataSet) {
   return {
     institutionName: getString(dataSet, DICOM_TAGS.InstitutionName),
     referringPhysician: formatPatientName(getString(dataSet, DICOM_TAGS.ReferringPhysicianName))
   };
-}
+}
 
-// Helper functions
-
-/**
- * Get string value from dataset
- */
 function getString(dataSet, tag) {
   try {
     const value = dataSet.string(tag);
@@ -180,9 +129,6 @@ function getString(dataSet, tag) {
   }
 }
 
-/**
- * Get number value from dataset
- */
 function getNumber(dataSet, tag) {
   try {
     const value = dataSet.intString(tag);
@@ -197,9 +143,6 @@ function getNumber(dataSet, tag) {
   }
 }
 
-/**
- * Get number array from dataset (e.g., pixel spacing)
- */
 function getNumberArray(dataSet, tag) {
   try {
     const value = dataSet.string(tag);
@@ -210,9 +153,6 @@ function getNumberArray(dataSet, tag) {
   }
 }
 
-/**
- * Parse DICOM date format (YYYYMMDD) to Date object
- */
 function parseDate(dateString) {
   if (!dateString || dateString.length < 8) return null;
   
@@ -228,19 +168,12 @@ function parseDate(dateString) {
   }
 }
 
-/**
- * Format DICOM patient name (Last^First^Middle) to readable format
- */
 function formatPatientName(name) {
-  if (!name) return null;
-  
-  // DICOM names use ^ as separator
+  if (!name) return null;
   const parts = name.split('^').map(p => p.trim()).filter(p => p);
   
   if (parts.length === 0) return null;
-  if (parts.length === 1) return parts[0];
-  
-  // Format as "First Last" or "First Middle Last"
+  if (parts.length === 1) return parts[0];
   const [lastName, firstName, middleName] = parts;
   
   if (middleName) {
@@ -249,21 +182,14 @@ function formatPatientName(name) {
   return `${firstName} ${lastName}`;
 }
 
-/**
- * Validate if a file is a valid DICOM file
- * @param {Buffer} fileBuffer - The file buffer to validate
- * @returns {Object} Validation result
- */
 function validateDicomFile(fileBuffer) {
-  try {
-    // Check for DICOM magic number "DICM" at offset 128
+  try {
     if (fileBuffer.length < 132) {
       return { isValid: false, error: 'File too small to be a valid DICOM file' };
     }
     
     const magicNumber = fileBuffer.slice(128, 132).toString('ascii');
-    if (magicNumber !== 'DICM') {
-      // Try parsing anyway - some DICOM files don't have the preamble
+    if (magicNumber !== 'DICM') {
       try {
         const byteArray = new Uint8Array(fileBuffer);
         dicomParser.parseDicom(byteArray);
@@ -279,31 +205,19 @@ function validateDicomFile(fileBuffer) {
   }
 }
 
-/**
- * Check if file extension is valid DICOM
- * @param {string} filename - The filename to check
- * @returns {boolean}
- */
 function isValidDicomExtension(filename) {
   if (!filename) return false;
   const ext = filename.toLowerCase().split('.').pop();
   return ['dcm', 'dicom', 'dic'].includes(ext) || !filename.includes('.');
 }
 
-/**
- * Extract metadata from multiple DICOM files (for a study)
- * @param {Array<Buffer>} fileBuffers - Array of file buffers
- * @returns {Object} Aggregated study metadata
- */
 function parseMultipleDicomFiles(fileBuffers) {
   const results = fileBuffers.map(buffer => parseDicomFile(buffer));
   const validResults = results.filter(r => r.success);
   
   if (validResults.length === 0) {
     return { success: false, error: 'No valid DICOM files found' };
-  }
-  
-  // Group by series
+  }
   const seriesMap = new Map();
   
   validResults.forEach(result => {
@@ -318,9 +232,7 @@ function parseMultipleDicomFiles(fileBuffers) {
     }
     
     seriesMap.get(seriesUID).images.push(image);
-  });
-  
-  // Get study info from first valid file
+  });
   const firstResult = validResults[0];
   
   return {
@@ -352,16 +264,8 @@ module.exports = {
   VALID_MODALITIES
 };
 
-/**
- * Convert DICOM pixel data to a PNG buffer
- * @param {Buffer} fileBuffer - The DICOM file buffer
- * @param {Object} options - Conversion options { invert: boolean }
- * @returns {Object} { success, imageBuffer, width, height }
- */
 function convertDicomToImage(fileBuffer, options = {}) {
-  const { invert = false } = options;
-  
-  // If canvas is not available, skip conversion
+  const { invert = false } = options;
   if (!createCanvas) {
     return { success: false, error: 'Canvas not available' };
   }
@@ -379,9 +283,7 @@ function convertDicomToImage(fileBuffer, options = {}) {
     
     const bitsAllocated = dataSet.uint16(DICOM_TAGS.BitsAllocated) || 16;
     const pixelRepresentation = dataSet.uint16('x00280103') || 0;
-    const photometricInterpretation = dataSet.string('x00280004') || 'MONOCHROME2';
-    
-    // Get window center/width
+    const photometricInterpretation = dataSet.string('x00280004') || 'MONOCHROME2';
     let windowCenter = dataSet.intString(DICOM_TAGS.WindowCenter);
     let windowWidth = dataSet.intString(DICOM_TAGS.WindowWidth);
     
@@ -390,22 +292,16 @@ function convertDicomToImage(fileBuffer, options = {}) {
     }
     if (typeof windowWidth === 'string' && windowWidth.includes('\\')) {
       windowWidth = parseFloat(windowWidth.split('\\')[0]);
-    }
-    
-    // Get pixel data
+    }
     const pixelDataElement = dataSet.elements.x7fe00010;
     if (!pixelDataElement) {
       return { success: false, error: 'No pixel data found' };
     }
     
-    const pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
-    
-    // Create canvas
+    const pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
     const canvas = createCanvas(columns, rows);
     const ctx = canvas.getContext('2d');
-    const imageData = ctx.createImageData(columns, rows);
-    
-    // Convert pixel data
+    const imageData = ctx.createImageData(columns, rows);
     let minPixel = Infinity;
     let maxPixel = -Infinity;
     const pixelValues = [];
@@ -424,18 +320,14 @@ function convertDicomToImage(fileBuffer, options = {}) {
         if (pixelData[i] < minPixel) minPixel = pixelData[i];
         if (pixelData[i] > maxPixel) maxPixel = pixelData[i];
       }
-    }
-    
-    // Auto-window if not available
+    }
     if (!windowCenter || !windowWidth || isNaN(windowCenter) || isNaN(windowWidth)) {
       windowCenter = (minPixel + maxPixel) / 2;
       windowWidth = maxPixel - minPixel || 1;
     }
     
     const windowMin = windowCenter - windowWidth / 2;
-    const windowMax = windowCenter + windowWidth / 2;
-    
-    // Apply window/level
+    const windowMax = windowCenter + windowWidth / 2;
     for (let i = 0; i < pixelValues.length; i++) {
       let value = pixelValues[i];
       
@@ -449,9 +341,7 @@ function convertDicomToImage(fileBuffer, options = {}) {
       
       if (photometricInterpretation === 'MONOCHROME1') {
         value = 255 - value;
-      }
-      
-      // Apply invert if requested
+      }
       if (invert) {
         value = 255 - value;
       }

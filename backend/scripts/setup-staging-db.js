@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// Staging database setup for performance testing
-// Uses the same connection as the backend .env configuration
 require('dotenv').config();
 const STAGING_DB_URI = process.env.MONGODB_URI;
 
@@ -10,26 +8,22 @@ async function setupStagingDatabase() {
   try {
     console.log('🔧 Setting up staging database for performance testing...');
     console.log(`📍 Database: ${STAGING_DB_URI}`);
-    
-    // Connect to staging database
+
     await mongoose.connect(STAGING_DB_URI);
     console.log('✅ Connected to staging database');
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
     const Clinic = require('../models/Clinic');
-    
-    // Clear existing staging data
+
     console.log('🗑️  Clearing existing staging data...');
     await User.deleteMany({});
     await Doctor.deleteMany({});
     await Clinic.deleteMany({});
     console.log('✅ Staging data cleared');
-    
-    // Create basic test infrastructure
+
     console.log('🏥 Creating basic test infrastructure...');
-    
-    // Create test clinic
+
     const testClinic = new Clinic({
       name: 'HealthSync Performance Test Clinic',
       address: '123 Test Street',
@@ -44,8 +38,7 @@ async function setupStagingDatabase() {
     });
     await testClinic.save();
     console.log('✅ Test clinic created');
-    
-    // Create test doctor
+
     const salt = await bcrypt.genSalt(10);
     const doctorHash = await bcrypt.hash('TestDoctor@123', salt);
     
@@ -61,8 +54,7 @@ async function setupStagingDatabase() {
     });
     await testDoctor.save();
     console.log('✅ Test doctor created');
-    
-    // Create Doctor profile
+
     const doctorProfile = new Doctor({
       userId: testDoctor._id,
       name: 'Dr. Performance Test',
@@ -126,8 +118,7 @@ async function setupStagingDatabase() {
     });
     await doctorProfile.save();
     console.log('✅ Doctor profile created');
-    
-    // Create admin user
+
     const adminHash = await bcrypt.hash('AdminTest@123', salt);
     const adminUser = new User({
       name: 'Performance Test Admin',
@@ -164,7 +155,6 @@ async function setupStagingDatabase() {
   }
 }
 
-// Only run if called directly
 if (require.main === module) {
   setupStagingDatabase();
 }

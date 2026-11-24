@@ -2,9 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Bed = require('../models/Bed');
 const AuditLog = require('../models/AuditLog');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// Create bed
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 router.post('/create', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const {
@@ -38,14 +36,10 @@ router.post('/create', verifyTokenWithRole(['admin', 'clinic', 'receptionist']),
     console.error('Error creating bed:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Bulk create beds
+});
 router.post('/bulk-create', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const { beds, clinicId } = req.body;
-
-    // Generate bedCode for each bed since insertMany doesn't trigger pre-save hooks
+    const { beds, clinicId } = req.body;
     const bedsWithCodes = beds.map(bed => {
       const wardPrefix = (bed.wardType || 'gen').substring(0, 3).toUpperCase();
       const bedCode = `${wardPrefix}-${bed.floorNumber || '1'}-${bed.bedNumber}`;
@@ -63,9 +57,7 @@ router.post('/bulk-create', verifyTokenWithRole(['admin', 'clinic', 'receptionis
     console.error('Error bulk creating beds:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all beds for clinic
+});
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -86,9 +78,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
     console.error('Error fetching beds:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get available beds
+});
 router.get('/available/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -101,16 +91,12 @@ router.get('/available/:clinicId', verifyToken, async (req, res) => {
     console.error('Error fetching available beds:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get bed occupancy stats
+});
 router.get('/occupancy/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
 
-    const stats = await Bed.getOccupancyStats(clinicId);
-
-    // Calculate totals
+    const stats = await Bed.getOccupancyStats(clinicId);
     const totals = stats.reduce((acc, ward) => ({
       total: acc.total + ward.total,
       occupied: acc.occupied + ward.occupied,
@@ -126,15 +112,13 @@ router.get('/occupancy/:clinicId', verifyToken, async (req, res) => {
     console.error('Error fetching occupancy stats:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update bed
+});
 router.put('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const updates = req.body;
     delete updates.currentPatientId;
     delete updates.currentAdmissionId;
-    delete updates.status; // Status should be changed through specific endpoints
+    delete updates.status; 
 
     const bed = await Bed.findByIdAndUpdate(
       req.params.id,
@@ -151,9 +135,7 @@ router.put('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), asy
     console.error('Error updating bed:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update bed status
+});
 router.put('/:id/status', verifyTokenWithRole(['admin', 'receptionist', 'nurse', 'clinic']), async (req, res) => {
   try {
     const { status, maintenanceNotes } = req.body;
@@ -161,9 +143,7 @@ router.put('/:id/status', verifyTokenWithRole(['admin', 'receptionist', 'nurse',
 
     if (!bed) {
       return res.status(404).json({ success: false, message: 'Bed not found' });
-    }
-
-    // Can't change status of occupied bed directly
+    }
     if (bed.status === 'occupied' && status !== 'occupied') {
       return res.status(400).json({ 
         success: false, 
@@ -187,9 +167,7 @@ router.put('/:id/status', verifyTokenWithRole(['admin', 'receptionist', 'nurse',
     console.error('Error updating bed status:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Reserve bed
+});
 router.post('/:id/reserve', verifyTokenWithRole(['admin', 'receptionist', 'clinic']), async (req, res) => {
   try {
     const { patientId, patientName, reservedFrom, reservedUntil } = req.body;
@@ -219,9 +197,7 @@ router.post('/:id/reserve', verifyTokenWithRole(['admin', 'receptionist', 'clini
     console.error('Error reserving bed:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Cancel reservation
+});
 router.post('/:id/cancel-reservation', verifyTokenWithRole(['admin', 'receptionist', 'clinic']), async (req, res) => {
   try {
     const bed = await Bed.findById(req.params.id);
@@ -244,9 +220,7 @@ router.post('/:id/cancel-reservation', verifyTokenWithRole(['admin', 'receptioni
     console.error('Error cancelling reservation:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Delete bed (soft delete)
+});
 router.delete('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const bed = await Bed.findById(req.params.id);
@@ -267,9 +241,7 @@ router.delete('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), 
     console.error('Error deleting bed:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get bed visual layout (for floor map)
+});
 router.get('/layout/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -281,9 +253,7 @@ router.get('/layout/:clinicId', verifyToken, async (req, res) => {
     const beds = await Bed.find(query)
       .select('bedNumber bedCode wardType roomNumber floorNumber status currentPatientId')
       .populate('currentPatientId', 'name')
-      .sort({ floorNumber: 1, wardType: 1, roomNumber: 1, bedNumber: 1 });
-
-    // Group by floor and ward
+      .sort({ floorNumber: 1, wardType: 1, roomNumber: 1, bedNumber: 1 });
     const layout = beds.reduce((acc, bed) => {
       const floor = bed.floorNumber || 'Ground';
       const ward = bed.wardType;

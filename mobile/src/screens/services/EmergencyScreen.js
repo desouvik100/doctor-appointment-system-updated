@@ -1,6 +1,4 @@
-/**
- * Emergency Screen - SOS & Emergency Services with real geolocation
- */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -37,9 +35,8 @@ const EmergencyScreen = ({ navigation }) => {
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [emergencyInfo, setEmergencyInfo] = useState(null);
-  const [personalContacts, setPersonalContacts] = useState([]);
-  // SOS contacts management
-  const [sosContacts, setSosContacts] = useState([]); // [{name, phone}]
+  const [personalContacts, setPersonalContacts] = useState([]);
+  const [sosContacts, setSosContacts] = useState([]); 
   const [addContactModal, setAddContactModal] = useState(false);
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
@@ -190,15 +187,11 @@ const EmergencyScreen = ({ navigation }) => {
 
   const handleCall = (number) => {
     Linking.openURL(`tel:${number}`);
-  };
-
-  // Build Google Maps live location link
+  };
   const buildLocationLink = (loc) => {
     if (!loc) return 'Location unavailable';
     return `https://maps.google.com/?q=${loc.latitude},${loc.longitude}`;
-  };
-
-  // Send SOS WhatsApp message to a specific phone number
+  };
   const sendSOSToContact = async (phone, loc) => {
     const locationLink = buildLocationLink(loc);
     const message =
@@ -212,8 +205,7 @@ const EmergencyScreen = ({ navigation }) => {
     try {
       await Linking.openURL(url);
       return true;
-    } catch {
-      // Try https fallback
+    } catch {
       try {
         await Linking.openURL(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`);
         return true;
@@ -234,9 +226,7 @@ const EmergencyScreen = ({ navigation }) => {
         `📍 Live Location:\n${locationLink}\n\n` +
         `Please respond immediately!`;
 
-      if (sosContacts.length === 0) {
-        // No saved contacts — open WhatsApp without a number so user picks contact
-        // Use https://wa.me as fallback if whatsapp:// scheme fails
+      if (sosContacts.length === 0) {
         try {
           await Linking.openURL(`whatsapp://send?text=${encodeURIComponent(message)}`);
         } catch {
@@ -259,9 +249,7 @@ const EmergencyScreen = ({ navigation }) => {
         );
         setSosActive(false);
         return;
-      }
-
-      // Send to all saved SOS contacts sequentially
+      }
       let sent = 0;
       for (const contact of sosContacts) {
         const ok = await sendSOSToContact(contact.phone, loc);
@@ -314,7 +302,7 @@ const EmergencyScreen = ({ navigation }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* SOS Button */}
+        {}
         <View style={styles.sosSection}>
           <TouchableOpacity
             style={styles.sosButton}
@@ -337,7 +325,7 @@ const EmergencyScreen = ({ navigation }) => {
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* Location Status */}
+          {}
           <View style={styles.locationStatus}>
             {loadingLocation ? (
               <Text style={styles.locationText}>📍 Getting location...</Text>
@@ -355,7 +343,7 @@ const EmergencyScreen = ({ navigation }) => {
           </Text>
         </View>
 
-        {/* Medical Info Card */}
+        {}
         {emergencyInfo && (
           <Card variant="gradient" style={styles.medicalCard}>
             <Text style={styles.medicalTitle}>Your Medical Info</Text>
@@ -372,7 +360,7 @@ const EmergencyScreen = ({ navigation }) => {
           </Card>
         )}
 
-        {/* Emergency Numbers */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Emergency Numbers</Text>
           <View style={styles.emergencyGrid}>
@@ -392,7 +380,7 @@ const EmergencyScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Nearby Hospitals */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Nearby Hospitals</Text>
@@ -422,7 +410,7 @@ const EmergencyScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* SOS Favorite Contacts */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>SOS Contacts</Text>
@@ -476,7 +464,7 @@ const EmergencyScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Profile Emergency Contact */}
+        {}
         {personalContacts.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Profile Emergency Contact</Text>
@@ -501,7 +489,7 @@ const EmergencyScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* First Aid Tips */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick First Aid</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -522,7 +510,7 @@ const EmergencyScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Add SOS Contact Modal */}
+      {}
       <Modal visible={addContactModal} transparent animationType="slide" onRequestClose={() => setAddContactModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { backgroundColor: colors.backgroundCard }]}>
@@ -563,7 +551,6 @@ const EmergencyScreen = ({ navigation }) => {
   );
 };
 
-
 const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
@@ -589,8 +576,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   removeBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   removeBtnText: { fontSize: 14, fontWeight: '700' },
   addContactBtn: { marginTop: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm, borderRadius: borderRadius.lg },
-  addContactBtnText: { ...typography.buttonSmall, fontWeight: '600' },
-  // Modal
+  addContactBtnText: { ...typography.buttonSmall, fontWeight: '600' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xxl, paddingBottom: 40 },
   modalTitle: { ...typography.headlineMedium, marginBottom: spacing.sm },

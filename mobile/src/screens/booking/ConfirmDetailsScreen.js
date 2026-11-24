@@ -1,6 +1,4 @@
-/**
- * ConfirmDetailsScreen - Premium booking parameters confirmation screen
- */
+
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
@@ -78,7 +76,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
   }
 
   const consultationFee = activeDoc?.consultationFee || activeDoc?.fee || 500;
-  const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
+  const platformFee = Math.round(consultationFee * 0.05); 
   const totalPayable = consultationFee + platformFee;
 
   const formatDate = (dateStr) => {
@@ -114,7 +112,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Header Banner */}
+      {}
       <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -129,7 +127,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-        {/* Step Indicator */}
+        {}
         <View style={styles.stepProgressRow}>
           <View style={[styles.stepDot, { backgroundColor: colors.primary }]}>
             <Text style={styles.stepCheck}>✓</Text>
@@ -150,7 +148,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
           <Text style={[styles.stepLabelText, { color: colors.textMuted }]}>Pay</Text>
         </View>
 
-        {/* Doctor Info Card */}
+        {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>YOUR DOCTOR</Text>
           <View style={styles.doctorRow}>
@@ -174,7 +172,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Slot details card */}
+        {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>APPOINTMENT SUMMARY</Text>
           {appointmentDetails.map(({ icon, label, value }) => (
@@ -188,7 +186,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
           ))}
         </View>
 
-        {/* Clinic address coordinates */}
+        {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>CLINIC & VENUE DETAILS</Text>
           {consultationType === 'online' ? (
@@ -220,7 +218,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Transparent Bill details card */}
+        {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>TRANSPARENT PRICING</Text>
 
@@ -242,7 +240,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Trust verification pill */}
+        {}
         <View style={[styles.trustPillBox, { backgroundColor: colors.success + '08', borderColor: colors.success + '30' }]}>
           <Text style={styles.trustLockIcon}>🔒</Text>
           <View style={styles.trustMessageInfo}>
@@ -253,7 +251,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Cancellation policy banner */}
+        {}
         <View style={[styles.cancellationBox, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cancellationTitleText, { color: colors.textPrimary }]}>Cancellation & Refund Policy</Text>
           <Text style={[styles.cancellationDescText, { color: colors.textSecondary }]}>
@@ -267,7 +265,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Bottom Sticky CTA bar */}
+      {}
       <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#F1F5F9' }]}>
         <View style={styles.bottomPriceRow}>
           <View>
@@ -295,9 +293,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-
-  // Header Banner
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -317,9 +313,7 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
   headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2 },
 
-  scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
-
-  // Step Progress Row
+  scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
   stepProgressRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -331,9 +325,7 @@ const styles = StyleSheet.create({
   stepCheck: { color: '#FFF', fontSize: 10, fontWeight: '900' },
   stepLine: { flex: 1, height: 2 },
   stepLabelRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.xl + 4, marginBottom: spacing.lg },
-  stepLabelText: { fontSize: 11, fontWeight: '500' },
-
-  // Section card base
+  stepLabelText: { fontSize: 11, fontWeight: '500' },
   sectionCard: {
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
@@ -349,9 +341,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.8,
     marginBottom: spacing.md,
-  },
-
-  // Doctor section info
+  },
   doctorRow: { flexDirection: 'row', alignItems: 'center' },
   doctorInfo: { flex: 1, marginLeft: spacing.md },
   doctorNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -359,9 +349,7 @@ const styles = StyleSheet.create({
   verifiedBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   verifiedText: { fontSize: 9, fontWeight: '700' },
   doctorSpecialty: { ...typography.bodySmall, fontWeight: '600', marginTop: 2 },
-  doctorExp: { ...typography.labelSmall, marginTop: 3 },
-
-  // Detail Item row
+  doctorExp: { ...typography.labelSmall, marginTop: 3 },
   detailItemRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -372,38 +360,28 @@ const styles = StyleSheet.create({
   detailLabelColumn: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   detailIcon: { fontSize: 16 },
   detailLabelText: { ...typography.bodyMedium },
-  detailValueText: { ...typography.bodyMedium, fontWeight: '600' },
-
-  // Venue Section details
+  detailValueText: { ...typography.bodyMedium, fontWeight: '600' },
   clinicRow: { flexDirection: 'row', alignItems: 'center' },
   clinicIconBox: { width: 44, height: 44, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
   clinicEmoji: { fontSize: 20 },
   clinicInfo: { flex: 1 },
   clinicNameText: { ...typography.bodyLarge, fontWeight: '700', marginBottom: 2 },
-  clinicAddressText: { ...typography.bodySmall, lineHeight: 18 },
-
-  // Pricing details card
+  clinicAddressText: { ...typography.bodySmall, lineHeight: 18 },
   pricingItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm },
   pricingLabelText: { ...typography.bodyMedium },
   pricingValueText: { ...typography.bodyMedium, fontWeight: '600' },
   pricingDivider: { height: 1, marginVertical: spacing.md },
   pricingTotalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 2 },
   totalLabelText: { ...typography.bodyLarge, fontWeight: '800' },
-  totalValueText: { fontSize: 22, fontWeight: '700' },
-
-  // Trust pill
+  totalValueText: { fontSize: 22, fontWeight: '700' },
   trustPillBox: { flexDirection: 'row', alignItems: 'flex-start', borderWidth: 1, borderRadius: borderRadius.lg, padding: spacing.md, marginBottom: spacing.md },
   trustLockIcon: { fontSize: 20, marginRight: spacing.sm, marginTop: 1 },
   trustMessageInfo: { flex: 1 },
   trustTitleText: { ...typography.labelSmall, fontWeight: '800' },
-  trustSubtext: { ...typography.bodySmall, fontSize: 11, lineHeight: 16, marginTop: 2 },
-
-  // Cancellation policy card
+  trustSubtext: { ...typography.bodySmall, fontSize: 11, lineHeight: 16, marginTop: 2 },
   cancellationBox: { borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.xl },
   cancellationTitleText: { ...typography.bodyMedium, fontWeight: '700', marginBottom: spacing.sm },
-  cancellationDescText: { ...typography.bodySmall, lineHeight: 18, marginBottom: 2 },
-
-  // Bottom action bar
+  cancellationDescText: { ...typography.bodySmall, lineHeight: 18, marginBottom: 2 },
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingHorizontal: spacing.xl, paddingTop: spacing.md, paddingBottom: spacing.lg,

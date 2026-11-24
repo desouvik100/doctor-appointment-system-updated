@@ -1,7 +1,4 @@
-/**
- * Enterprise Doctor Card - Premium Marketplace Layout (Zocdoc/Practo Style)
- * Soft shadows-only design, verified badges, rating indicators, and high contrast typography.
- */
+
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
@@ -73,7 +70,7 @@ const DoctorCard = ({
       ]}
     >
       <View style={styles.cardHeader}>
-        {/* Availability Pill */}
+        {}
         <View style={[
           styles.statusPill,
           { backgroundColor: isAvailableNow ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)' }
@@ -90,7 +87,7 @@ const DoctorCard = ({
           </Text>
         </View>
 
-        {/* Rating chip on header */}
+        {}
         <View style={[styles.ratingChip, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#FFFBEB' }]}>
           <Text style={styles.ratingStar}>⭐</Text>
           <Text style={[styles.ratingVal, { color: colors.warning }]}>
@@ -103,7 +100,7 @@ const DoctorCard = ({
       </View>
 
       <View style={styles.mainContent}>
-        {/* Left Side: Avatar with verified overlay badge */}
+        {}
         <View style={styles.avatarContainer}>
           <Avatar
             imageUrl={displayPhoto}
@@ -119,7 +116,7 @@ const DoctorCard = ({
           )}
         </View>
 
-        {/* Right Side: Doctor Profile details */}
+        {}
         <View style={styles.detailsContainer}>
           <Text style={[styles.nameText, { color: colors.textPrimary }]} numberOfLines={1}>
             Dr. {displayName}
@@ -138,7 +135,7 @@ const DoctorCard = ({
         </View>
       </View>
 
-      {/* Lower Section: Pricing & Booking CTA */}
+      {}
       <View style={[styles.footer, { borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : colors.divider || '#F1F5F9' }]}>
         <View style={styles.feeWrapper}>
           <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consultation Fee</Text>

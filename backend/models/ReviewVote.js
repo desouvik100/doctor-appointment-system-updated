@@ -20,7 +20,6 @@ const reviewVoteSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Enforce unique vote per user per review
 reviewVoteSchema.index({ reviewId: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model('ReviewVote', reviewVoteSchema);

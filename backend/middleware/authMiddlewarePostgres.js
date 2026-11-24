@@ -1,4 +1,4 @@
-// middleware/authMiddlewarePostgres.js - Enhanced auth middleware with tenant support
+
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserPostgres');
 
@@ -9,9 +9,7 @@ const auth = (roles = []) => {
 
   return async (req, res, next) => {
     try {
-      const authHeader = req.headers.authorization;
-
-      // No token
+      const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return res.status(401).json({ 
           error: 'Authentication required',
@@ -19,31 +17,21 @@ const auth = (roles = []) => {
         });
       }
 
-      const token = authHeader.split(' ')[1];
-
-      // Verify JWT token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // decoded contains: userId, tenantId, role, clinicId
-      req.user = decoded;
-
-      // Validate tenant context if available
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded;
       if (req.tenantId && decoded.tenantId !== req.tenantId) {
         return res.status(403).json({ 
           error: 'Tenant access denied',
           message: 'Token does not match current tenant context' 
         });
-      }
-
-      // Check role authorization
+      }
       if (roles.length && !roles.includes(decoded.role)) {
         return res.status(403).json({ 
           error: 'Access denied',
           message: `Insufficient privileges. Required: ${roles.join(' or ')}` 
         });
-      }
-
-      // Optional: Fetch fresh user data for critical operations
+      }
       if (req.query.fresh === 'true' || req.body.fresh === true) {
         const user = await User.findById(decoded.userId, decoded.tenantId);
         if (!user) {
@@ -82,9 +70,6 @@ const auth = (roles = []) => {
   };
 };
 
-/**
- * Middleware to require specific clinic access
- */
 const requireClinicAccess = (clinicIdParam = 'clinicId') => {
   return (req, res, next) => {
     const clinicId = req.params[clinicIdParam] || req.body[clinicIdParam] || req.query[clinicIdParam];
@@ -94,14 +79,10 @@ const requireClinicAccess = (clinicIdParam = 'clinicId') => {
         error: 'Missing clinic ID',
         message: 'Clinic ID is required for this operation' 
       });
-    }
-
-    // Admin can access any clinic
+    }
     if (req.user.role === 'admin') {
       return next();
-    }
-
-    // User must be assigned to the clinic
+    }
     if (req.user.clinicId !== clinicId) {
       return res.status(403).json({ 
         error: 'Clinic access denied',
@@ -113,9 +94,6 @@ const requireClinicAccess = (clinicIdParam = 'clinicId') => {
   };
 };
 
-/**
- * Middleware to require tenant admin privileges
- */
 const requireTenantAdmin = (req, res, next) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ 
@@ -126,19 +104,12 @@ const requireTenantAdmin = (req, res, next) => {
   next();
 };
 
-/**
- * Middleware to check if user owns the resource or is admin
- */
 const requireOwnershipOrAdmin = (userIdParam = 'userId') => {
   return (req, res, next) => {
-    const resourceUserId = req.params[userIdParam] || req.body[userIdParam];
-    
-    // Admin can access any resource
+    const resourceUserId = req.params[userIdParam] || req.body[userIdParam];
     if (req.user.role === 'admin') {
       return next();
-    }
-
-    // User can only access their own resources
+    }
     if (req.user.userId !== resourceUserId) {
       return res.status(403).json({ 
         error: 'Access denied',
@@ -150,33 +121,25 @@ const requireOwnershipOrAdmin = (userIdParam = 'userId') => {
   };
 };
 
-/**
- * Optional authentication - doesn't fail if no token provided
- */
 const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      // No token provided, continue without user context
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return next();
     }
 
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    req.user = decoded;
-    
-    // Validate tenant context if available
-    if (req.tenantId && decoded.tenantId !== req.tenantId) {
-      // Invalid tenant context, continue without user
+    req.user = decoded;
+    if (req.tenantId && decoded.tenantId !== req.tenantId) {
       req.user = null;
     }
 
     next();
 
-  } catch (err) {
-    // Invalid token, continue without user context
+  } catch (err) {
     req.user = null;
     next();
   }

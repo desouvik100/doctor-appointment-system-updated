@@ -1,7 +1,4 @@
-/**
- * ConfirmationScreen - Booking confirmation with QR code
- * Uses useTheme() for proper light/dark mode support
- */
+
 
 import React from 'react';
 import {
@@ -44,7 +41,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
       await Share.share({
         message: `Appointment Confirmed!\n\nDoctor: ${cleanDocName}\nDate: ${formatDate(booking?.date)}\nTime: ${booking?.time || ''}\nToken: #${booking?.queueNumber || '-'}\nBooking ID: ${booking?.id}\n\nHealthSync`,
       });
-    } catch (e) { /* ignore */ }
+    } catch (e) {  }
   };
 
   const handleGoHome = () => navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
@@ -70,7 +67,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-        {/* Success Header with Circular Animation */}
+        {}
         <View style={styles.successContainer}>
           <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
             <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.successCircle}>
@@ -83,7 +80,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Booking Details Card */}
+        {}
         <View style={[styles.bookingCard, { backgroundColor: colors.surface }, shadows.md]}>
           <Text style={[styles.bookingCardTitle, { color: colors.textPrimary }]}>Appointment Summary</Text>
           <View style={styles.detailsGrid}>
@@ -101,7 +98,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* QR Code Card */}
+        {}
         <View style={[styles.qrCard, { backgroundColor: colors.surface }, shadows.md]}>
           <Text style={[styles.qrTitle, { color: colors.textPrimary }]}>Clinic Check-in QR</Text>
           <Text style={[styles.qrSubtitle, { color: colors.textSecondary }]}>
@@ -124,7 +121,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Actions Row */}
+        {}
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0' }]}
@@ -144,7 +141,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Payment Summary */}
+        {}
         <View style={[styles.paymentCard, { backgroundColor: colors.surface }, shadows.md]}>
           <View style={styles.paymentRow}>
             <Text style={[styles.paymentLabel, { color: colors.textSecondary }]}>Amount Paid</Text>
@@ -161,7 +158,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Bottom Navigation Buttons */}
+        {}
         <TouchableOpacity style={styles.primaryBtn} onPress={handleViewAppointments} activeOpacity={0.85}>
           <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.primaryBtnGradient}>
             <Text style={styles.primaryBtnText}>Go to Appointments</Text>

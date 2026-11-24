@@ -1,16 +1,11 @@
-/**
- * FHIR (Fast Healthcare Interoperability Resources) Service
- * HL7 FHIR R4 compliant data transformation
- */
+
 
 class FHIRService {
   
   constructor() {
     this.fhirVersion = 'R4';
     this.baseUrl = process.env.FHIR_BASE_URL || 'http://localhost:5000/fhir';
-  }
-  
-  // Convert internal patient to FHIR Patient resource
+  }
   toFHIRPatient(patient) {
     return {
       resourceType: 'Patient',
@@ -62,9 +57,7 @@ class FHIRService {
         telecom: [{ system: 'phone', value: patient.emergencyContact.phone }]
       }] : []
     };
-  }
-  
-  // Convert FHIR Patient to internal format
+  }
   fromFHIRPatient(fhirPatient) {
     const name = fhirPatient.name?.[0];
     const phone = fhirPatient.telecom?.find(t => t.system === 'phone');
@@ -82,9 +75,7 @@ class FHIRService {
       state: address?.state,
       pincode: address?.postalCode
     };
-  }
-  
-  // Convert internal observation/vitals to FHIR Observation
+  }
   toFHIRObservation(observation, patientId) {
     const loincCodes = {
       bloodPressureSystolic: { code: '8480-6', display: 'Systolic blood pressure' },
@@ -128,9 +119,7 @@ class FHIRService {
         system: 'http://unitsofmeasure.org'
       }
     };
-  }
-  
-  // Convert internal condition/diagnosis to FHIR Condition
+  }
   toFHIRCondition(condition, patientId) {
     return {
       resourceType: 'Condition',
@@ -175,9 +164,7 @@ class FHIRService {
       recordedDate: condition.recordedAt || new Date().toISOString(),
       note: condition.notes ? [{ text: condition.notes }] : []
     };
-  }
-  
-  // Convert internal medication to FHIR MedicationRequest
+  }
   toFHIRMedicationRequest(prescription, patientId, practitionerId) {
     return {
       resourceType: 'MedicationRequest',
@@ -226,9 +213,7 @@ class FHIRService {
       },
       note: prescription.instructions ? [{ text: prescription.instructions }] : []
     };
-  }
-  
-  // Convert internal encounter/visit to FHIR Encounter
+  }
   toFHIREncounter(visit, patientId, practitionerId) {
     return {
       resourceType: 'Encounter',
@@ -268,9 +253,7 @@ class FHIRService {
         }
       }] : []
     };
-  }
-  
-  // Convert internal practitioner/doctor to FHIR Practitioner
+  }
   toFHIRPractitioner(doctor) {
     return {
       resourceType: 'Practitioner',
@@ -304,9 +287,7 @@ class FHIRService {
         }
       }]
     };
-  }
-  
-  // Convert internal lab result to FHIR DiagnosticReport
+  }
   toFHIRDiagnosticReport(labReport, patientId) {
     return {
       resourceType: 'DiagnosticReport',
@@ -338,9 +319,7 @@ class FHIRService {
       })),
       conclusion: labReport.interpretation
     };
-  }
-  
-  // Create FHIR Bundle
+  }
   createBundle(resources, type = 'collection') {
     return {
       resourceType: 'Bundle',
@@ -352,9 +331,7 @@ class FHIRService {
         resource
       }))
     };
-  }
-  
-  // Create patient summary bundle (IPS - International Patient Summary)
+  }
   async createPatientSummary(patientId) {
     const EMRPatient = require('../models/EMRPatient');
     const EMRVisit = require('../models/EMRVisit');
@@ -370,9 +347,7 @@ class FHIRService {
       this.toFHIRPatient(patient),
       ...visits.map(v => this.toFHIREncounter(v, patientId, v.doctorId)),
       ...prescriptions.map(p => this.toFHIRMedicationRequest(p, patientId, p.prescriberId))
-    ];
-    
-    // Add conditions from visits
+    ];
     visits.forEach(v => {
       if (v.diagnosis) {
         resources.push(this.toFHIRCondition({
@@ -419,9 +394,7 @@ class FHIRService {
         }))
       ]
     };
-  }
-  
-  // Helper methods
+  }
   mapGender(gender) {
     const map = { male: 'male', female: 'female', other: 'other', 'Male': 'male', 'Female': 'female' };
     return map[gender] || 'unknown';

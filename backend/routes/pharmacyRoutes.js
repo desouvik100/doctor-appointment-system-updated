@@ -1,14 +1,9 @@
-/**
- * Pharmacy/Inventory Routes
- * API endpoints for pharmacy and medicine inventory management
- */
+
 
 const express = require('express');
 const router = express.Router();
 const PharmacyInventory = require('../models/PharmacyInventory');
-const { verifyToken } = require('../middleware/auth');
-
-// Get all inventory items for a clinic
+const { verifyToken } = require('../middleware/auth');
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -28,9 +23,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
     let items = await PharmacyInventory.find(query)
       .sort({ medicineName: 1 })
       .skip((page - 1) * limit)
-      .limit(parseInt(limit));
-    
-    // Filter by stock status if specified
+      .limit(parseInt(limit));
     if (stockStatus) {
       items = items.filter(item => item.stockStatus === stockStatus);
     }
@@ -51,9 +44,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
     console.error('Error fetching inventory:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get single item
+});
 router.get('/item/:itemId', verifyToken, async (req, res) => {
   try {
     const item = await PharmacyInventory.findById(req.params.itemId);
@@ -64,9 +55,7 @@ router.get('/item/:itemId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Add new medicine/item
+});
 router.post('/add', verifyToken, async (req, res) => {
   try {
     const item = new PharmacyInventory({
@@ -79,9 +68,7 @@ router.post('/add', verifyToken, async (req, res) => {
     console.error('Error adding item:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update item
+});
 router.put('/item/:itemId', verifyToken, async (req, res) => {
   try {
     const item = await PharmacyInventory.findByIdAndUpdate(
@@ -96,9 +83,7 @@ router.put('/item/:itemId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Add stock (purchase)
+});
 router.post('/item/:itemId/add-stock', verifyToken, async (req, res) => {
   try {
     const { quantity, batchNumber, unitPrice, supplier, expiryDate, reference } = req.body;
@@ -114,9 +99,7 @@ router.post('/item/:itemId/add-stock', verifyToken, async (req, res) => {
       totalAmount: quantity * unitPrice,
       reference,
       performedBy: req.user?.id
-    });
-    
-    // Update expiry if provided
+    });
     if (expiryDate) {
       item.expiryDate = expiryDate;
     }
@@ -129,9 +112,7 @@ router.post('/item/:itemId/add-stock', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Reduce stock (sale/dispense)
+});
 router.post('/item/:itemId/reduce-stock', verifyToken, async (req, res) => {
   try {
     const { quantity, reason, reference, type = 'sale' } = req.body;
@@ -152,9 +133,7 @@ router.post('/item/:itemId/reduce-stock', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
-});
-
-// Get low stock items
+});
 router.get('/clinic/:clinicId/low-stock', verifyToken, async (req, res) => {
   try {
     const items = await PharmacyInventory.getLowStock(req.params.clinicId);
@@ -162,9 +141,7 @@ router.get('/clinic/:clinicId/low-stock', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get expiring items
+});
 router.get('/clinic/:clinicId/expiring', verifyToken, async (req, res) => {
   try {
     const { days = 30 } = req.query;
@@ -173,9 +150,7 @@ router.get('/clinic/:clinicId/expiring', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get expired items
+});
 router.get('/clinic/:clinicId/expired', verifyToken, async (req, res) => {
   try {
     const items = await PharmacyInventory.getExpired(req.params.clinicId);
@@ -183,9 +158,7 @@ router.get('/clinic/:clinicId/expired', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get inventory summary/dashboard
+});
 router.get('/clinic/:clinicId/summary', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -219,9 +192,7 @@ router.get('/clinic/:clinicId/summary', verifyToken, async (req, res) => {
         expiryDate: { $lt: new Date() },
         currentStock: { $gt: 0 }
       })
-    ]);
-    
-    // Calculate total inventory value
+    ]);
     const valueAgg = await PharmacyInventory.aggregate([
       { $match: { clinicId: require('mongoose').Types.ObjectId(clinicId), isActive: true } },
       { $group: { _id: null, totalValue: { $sum: { $multiply: ['$currentStock', '$costPrice'] } } } }
@@ -241,9 +212,7 @@ router.get('/clinic/:clinicId/summary', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Search medicines (for prescription autocomplete)
+});
 router.get('/search', verifyToken, async (req, res) => {
   try {
     const { q, clinicId } = req.query;
@@ -269,9 +238,7 @@ router.get('/search', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Delete item (soft delete)
+});
 router.delete('/item/:itemId', verifyToken, async (req, res) => {
   try {
     const item = await PharmacyInventory.findByIdAndUpdate(

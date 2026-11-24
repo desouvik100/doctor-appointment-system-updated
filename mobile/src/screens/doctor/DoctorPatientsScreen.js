@@ -1,6 +1,4 @@
-/**
- * Doctor Patients Screen - View patient list
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -94,7 +92,7 @@ const DoctorPatientsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>My Patients</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
@@ -102,7 +100,7 @@ const DoctorPatientsScreen = ({ navigation }) => {
         </Text>
       </View>
 
-      {/* Search */}
+      {}
       <View style={styles.searchContainer}>
         <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -116,7 +114,7 @@ const DoctorPatientsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Patients List */}
+      {}
       <FlatList
         data={filteredPatients}
         renderItem={renderPatient}

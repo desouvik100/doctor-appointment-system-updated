@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const HealthArticle = require('../models/HealthArticle');
-
-// Get all published articles
+const HealthArticle = require('../models/HealthArticle');
 router.get('/', async (req, res) => {
   try {
     const { category, page = 1, limit = 10, featured } = req.query;
@@ -26,9 +24,7 @@ router.get('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get article by slug
+});
 router.get('/slug/:slug', async (req, res) => {
   try {
     const article = await HealthArticle.findOneAndUpdate(
@@ -44,9 +40,7 @@ router.get('/slug/:slug', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get categories with count
+});
 router.get('/categories', async (req, res) => {
   try {
     const categories = await HealthArticle.aggregate([
@@ -58,9 +52,7 @@ router.get('/categories', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Create article (admin/doctor)
+});
 router.post('/', async (req, res) => {
   try {
     const article = new HealthArticle(req.body);
@@ -72,9 +64,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Update article
+});
 router.put('/:id', async (req, res) => {
   try {
     const article = await HealthArticle.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -85,9 +75,7 @@ router.put('/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Like article
+});
 router.post('/:id/like', async (req, res) => {
   try {
     const article = await HealthArticle.findByIdAndUpdate(
@@ -99,9 +87,7 @@ router.post('/:id/like', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Search articles
+});
 router.get('/search', async (req, res) => {
   try {
     const { q } = req.query;

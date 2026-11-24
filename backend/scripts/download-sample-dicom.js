@@ -1,16 +1,9 @@
-/**
- * Download Sample DICOM File Script
- * Downloads a real DICOM file from a public source for testing
- * 
- * Usage: node scripts/download-sample-dicom.js
- */
+
 
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
-
-// Sample DICOM files from public sources
+const path = require('path');
 const SAMPLE_DICOM_URLS = [
   {
     name: 'CT-MONO2-16-brain.dcm',
@@ -29,14 +22,10 @@ const SAMPLE_DICOM_URLS = [
   }
 ];
 
-const dataDir = path.join(__dirname, '../data');
-
-// Ensure data directory exists
+const dataDir = path.join(__dirname, '../data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Download a file
+}
 function downloadFile(url, destPath) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(destPath);
@@ -44,8 +33,7 @@ function downloadFile(url, destPath) {
     
     console.log(`📥 Downloading from: ${url}`);
     
-    const request = protocol.get(url, (response) => {
-      // Handle redirects
+    const request = protocol.get(url, (response) => {
       if (response.statusCode === 301 || response.statusCode === 302) {
         const redirectUrl = response.headers.location;
         console.log(`   ↪ Redirecting to: ${redirectUrl}`);
@@ -92,13 +80,9 @@ function downloadFile(url, destPath) {
       reject(new Error('Download timeout'));
     });
   });
-}
-
-// Verify DICOM file
+}
 function verifyDicom(filePath) {
-  const buffer = fs.readFileSync(filePath);
-  
-  // Check for DICOM magic number at offset 128
+  const buffer = fs.readFileSync(filePath);
   if (buffer.length > 132) {
     const magic = buffer.slice(128, 132).toString();
     if (magic === 'DICM') {
@@ -107,9 +91,7 @@ function verifyDicom(filePath) {
   }
   
   return { valid: false, size: buffer.length };
-}
-
-// Main function
+}
 async function main() {
   console.log('\n🏥 DICOM Sample File Downloader\n');
   console.log('=' .repeat(50));
@@ -120,9 +102,7 @@ async function main() {
     const destPath = path.join(dataDir, sample.name);
     
     console.log(`\n📁 ${sample.name}`);
-    console.log(`   ${sample.description}`);
-    
-    // Check if already exists
+    console.log(`   ${sample.description}`);
     if (fs.existsSync(destPath)) {
       const verification = verifyDicom(destPath);
       if (verification.valid) {
@@ -158,13 +138,9 @@ async function main() {
     downloadedFiles.forEach((file, i) => {
       console.log(`   ${i + 1}. ${file.name} (${(file.size/1024).toFixed(1)} KB)`);
       console.log(`      Path: ${file.path}`);
-    });
-    
-    // Get a patient ID
+    });
     console.log('\n📋 To test upload, run:\n');
-    console.log(`   node scripts/test-dicom-upload.js <patientId> "${downloadedFiles[0].path}"`);
-    
-    // Try to get a real patient ID
+    console.log(`   node scripts/test-dicom-upload.js <patientId> "${downloadedFiles[0].path}"`);
     try {
       require('dotenv').config();
       const mongoose = require('mongoose');
@@ -176,8 +152,7 @@ async function main() {
         console.log(`   node scripts/test-dicom-upload.js ${user._id} "${downloadedFiles[0].path}"`);
       }
       await mongoose.disconnect();
-    } catch (e) {
-      // Ignore DB errors
+    } catch (e) {
     }
   } else {
     console.log('\n❌ No DICOM files were downloaded successfully.');

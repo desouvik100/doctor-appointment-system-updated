@@ -1,12 +1,6 @@
-/**
- * Interaction Log Service Tests
- * Tests Property 9: Interaction Override Logging
- * Validates Requirements 5.5, 5.8
- */
 
-const fc = require('fast-check');
 
-// Mock the DrugInteractionLog model
+const fc = require('fast-check');
 jest.mock('../models/DrugInteractionLog');
 const DrugInteractionLog = require('../models/DrugInteractionLog');
 
@@ -27,10 +21,7 @@ describe('Interaction Log Service Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('Property 9: Interaction Override Logging', () => {
-    
-    // Feature: emr-clinical-features, Property 9: Interaction Override Logging
-    // **Validates: Requirements 5.5, 5.8**
+  describe('Property 9: Interaction Override Logging', () => {
     
     test('For any interaction check, createInteractionLog stores all required fields', async () => {
       const testCases = [
@@ -77,23 +68,18 @@ describe('Interaction Log Service Tests', () => {
         { type: 'allergy', drug: 'aspirin', allergen: 'nsaid' }
       ];
       
-      for (const testCase of testCases) {
-        // Test missing reason
+      for (const testCase of testCases) {
         await expect(logOverride({
           logId: '507f1f77bcf86cd799439011',
           type: testCase.type,
           ...testCase,
-          doctorId: '507f1f77bcf86cd799439012'
-          // reason missing
-        })).rejects.toThrow();
-        
-        // Test missing doctorId
+          doctorId: '507f1f77bcf86cd799439012'
+        })).rejects.toThrow();
         await expect(logOverride({
           logId: '507f1f77bcf86cd799439011',
           type: testCase.type,
           ...testCase,
-          reason: 'Clinical necessity'
-          // doctorId missing
+          reason: 'Clinical necessity'
         })).rejects.toThrow();
       }
     });
@@ -184,8 +170,7 @@ describe('Interaction Log Service Tests', () => {
       }
     });
     
-    test('logOverride correctly routes to interaction or allergy override based on type', async () => {
-      // Test interaction override
+    test('logOverride correctly routes to interaction or allergy override based on type', async () => {
       const mockInteraction = { drug1: 'warfarin', drug2: 'aspirin', wasOverridden: false };
       const mockAlert = { drug: 'aspirin', allergen: 'nsaid', wasOverridden: false };
       
@@ -208,9 +193,7 @@ describe('Interaction Log Service Tests', () => {
       });
       
       expect(mockLog.interactionsFound[0].wasOverridden).toBe(true);
-      expect(mockLog.allergyAlerts[0].wasOverridden).toBe(false);
-      
-      // Test allergy override
+      expect(mockLog.allergyAlerts[0].wasOverridden).toBe(false);
       mockLog = {
         _id: '507f1f77bcf86cd799439011',
         interactionsFound: [{ drug1: 'warfarin', drug2: 'aspirin', wasOverridden: false }],

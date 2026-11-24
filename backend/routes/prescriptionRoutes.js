@@ -4,117 +4,10 @@ const Prescription = require('../models/Prescription');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const { emitPrescriptionCreated, emitPrescriptionUpdated } = require('../services/socketManager');
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Prescription:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         prescriptionNumber:
- *           type: string
- *         patientId:
- *           type: string
- *         doctorId:
- *           type: string
- *         clinicId:
- *           type: string
- *         diagnosis:
- *           type: string
- *         symptoms:
- *           type: array
- *           items:
- *             type: string
- *         medicines:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               dosage:
- *                 type: string
- *               frequency:
- *                 type: string
- *               duration:
- *                 type: string
- *               timing:
- *                 type: string
- *               instructions:
- *                 type: string
- *         notes:
- *           type: string
- *         createdAt:
- *           type: string
- *           format: date-time
- */
-
-/**
- * @swagger
- * /prescriptions:
- *   post:
- *     summary: Create a prescription
- *     description: Creates a new prescription. Doctors, admin, receptionist, and clinic staff only.
- *     tags: [Prescriptions]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - patientId
- *               - doctorId
- *             properties:
- *               patientId:
- *                 type: string
- *               doctorId:
- *                 type: string
- *               clinicId:
- *                 type: string
- *               appointmentId:
- *                 type: string
- *               diagnosis:
- *                 type: string
- *               symptoms:
- *                 type: array
- *                 items:
- *                   type: string
- *               medicines:
- *                 type: array
- *                 items:
- *                   type: object
- *               notes:
- *                 type: string
- *     responses:
- *       201:
- *         description: Prescription created
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 prescription:
- *                   $ref: '#/components/schemas/Prescription'
- *       400:
- *         description: Missing required fields
- *       401:
- *         description: Unauthorized
- */
 router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic']), async (req, res) => {
   try {
-    console.log('📝 Creating prescription, body:', JSON.stringify(req.body, null, 2));
-    
-    // Transform medicines to match schema (notes -> instructions, ensure required fields)
-    const transformedBody = { ...req.body };
-    
-    // If patientId is missing but appointmentId is present, try to get patientId from appointment
+    console.log('📝 Creating prescription, body:', JSON.stringify(req.body, null, 2));
+    const transformedBody = { ...req.body };
     if (!transformedBody.patientId && transformedBody.appointmentId) {
       try {
         const Appointment = require('../models/Appointment');
@@ -127,9 +20,7 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
       } catch (e) {
         console.log('📝 Could not fetch appointment:', e.message);
       }
-    }
-    
-    // Validate required fields
+    }
     if (!transformedBody.patientId) {
       console.log('❌ Missing patientId');
       return res.status(400).json({ success: false, message: 'Patient ID is required' });
@@ -137,9 +28,7 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
     if (!transformedBody.doctorId) {
       console.log('❌ Missing doctorId');
       return res.status(400).json({ success: false, message: 'Doctor ID is required' });
-    }
-    
-    // Transform medicines
+    }
     if (transformedBody.medicines && Array.isArray(transformedBody.medicines)) {
       transformedBody.medicines = transformedBody.medicines.map(med => ({
         name: med.name || 'Unknown',
@@ -150,14 +39,10 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
         instructions: med.instructions || med.notes || '',
         quantity: med.quantity || 1
       }));
-    }
-    
-    // Handle symptoms - convert string to array if needed
+    }
     if (transformedBody.symptoms && typeof transformedBody.symptoms === 'string') {
       transformedBody.symptoms = transformedBody.symptoms.split(',').map(s => s.trim()).filter(s => s);
-    }
-    
-    // Generate prescription number if not provided
+    }
     if (!transformedBody.prescriptionNumber) {
       const date = new Date();
       const year = date.getFullYear().toString().slice(-2);
@@ -171,9 +56,7 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
     
     const prescription = new Prescription(transformedBody);
     await prescription.save();
-    console.log('✅ Prescription saved:', prescription._id);
-    
-    // Emit socket event for real-time sync
+    console.log('✅ Prescription saved:', prescription._id);
     emitPrescriptionCreated(prescription);
     
     res.status(201).json({ success: true, prescription });
@@ -181,9 +64,7 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
     console.error('❌ Error creating prescription:', error);
     res.status(500).json({ success: false, message: 'Failed to create prescription', error: error.message });
   }
-});
-
-// Get current user's prescriptions (authenticated self-lookup)
+});
 router.get('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -211,9 +92,7 @@ router.get('/', verifyToken, async (req, res) => {
     console.error('Get prescriptions error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get prescriptions by patient (authenticated users - patients, doctors, clinic staff)
+});
 router.get('/patient/:patientId', verifyToken, async (req, res) => {
   try {
     const prescriptions = await Prescription.find({ patientId: req.params.patientId })
@@ -223,9 +102,7 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch prescriptions', error: error.message });
   }
-});
-
-// Get prescriptions by clinic (for clinic staff and doctors)
+});
 router.get('/clinic/:clinicId', verifyTokenWithRole(['receptionist', 'clinic', 'admin', 'doctor']), async (req, res) => {
   try {
     const prescriptions = await Prescription.find({ clinicId: req.params.clinicId })
@@ -241,12 +118,9 @@ router.get('/clinic/:clinicId', verifyTokenWithRole(['receptionist', 'clinic', '
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch prescriptions', error: error.message });
   }
-});
-
-// Get prescriptions by doctor (doctors/admin only)
+});
 router.get('/doctor/:doctorId', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
-  try {
-    // Doctors can only view their own prescriptions
+  try {
     if (req.user.role === 'doctor' && req.user.id !== req.params.doctorId) {
       return res.status(403).json({ message: 'Access denied' });
     }
@@ -257,9 +131,7 @@ router.get('/doctor/:doctorId', verifyTokenWithRole(['doctor', 'admin']), async 
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch prescriptions', error: error.message });
   }
-});
-
-// Get single prescription
+});
 router.get('/:id', async (req, res) => {
   try {
     const prescription = await Prescription.findById(req.params.id)
@@ -272,9 +144,7 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch prescription', error: error.message });
   }
-});
-
-// Send prescription via Email
+});
 router.post('/:id/send-email', verifyToken, async (req, res) => {
   try {
     const prescription = await Prescription.findById(req.params.id)
@@ -291,9 +161,7 @@ router.post('/:id/send-email', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Patient email not found' });
     }
     
-    const { sendEmail } = require('../services/emailService');
-    
-    // Generate prescription HTML
+    const { sendEmail } = require('../services/emailService');
     const prescriptionHtml = generatePrescriptionEmailHtml(prescription);
     
     await sendEmail({
@@ -308,9 +176,7 @@ router.post('/:id/send-email', verifyToken, async (req, res) => {
     console.error('Error sending prescription email:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Send prescription via WhatsApp
+});
 router.post('/:id/send-whatsapp', verifyToken, async (req, res) => {
   try {
     const prescription = await Prescription.findById(req.params.id)
@@ -325,12 +191,8 @@ router.post('/:id/send-whatsapp', verifyToken, async (req, res) => {
     const patientPhone = req.body.phone || prescription.patientId?.phone;
     if (!patientPhone) {
       return res.status(400).json({ success: false, message: 'Patient phone not found' });
-    }
-    
-    // Generate WhatsApp message
-    const message = generatePrescriptionWhatsAppMessage(prescription);
-    
-    // Generate WhatsApp URL (opens WhatsApp with pre-filled message)
+    }
+    const message = generatePrescriptionWhatsAppMessage(prescription);
     const cleanPhone = patientPhone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone}?text=${encodeURIComponent(message)}`;
     
@@ -344,14 +206,10 @@ router.post('/:id/send-whatsapp', verifyToken, async (req, res) => {
     console.error('Error generating WhatsApp message:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Helper function to detect Bengali text
+});
 function containsBengali(text) {
   return /[\u0980-\u09FF]/.test(text || '');
-}
-
-// Detect language from prescription content
+}
 function detectPrescriptionLanguage(prescription) {
   const allText = [
     prescription.diagnosis,
@@ -360,14 +218,10 @@ function detectPrescriptionLanguage(prescription) {
     ...(prescription.medicines || []).map(m => (m.name || '') + (m.instructions || '')),
   ].join(' ');
   return containsBengali(allText) ? 'bn' : 'en';
-}
-
-// Helper function to generate prescription email HTML
+}
 function generatePrescriptionEmailHtml(prescription) {
   const lang = detectPrescriptionLanguage(prescription);
-  const isBengali = lang === 'bn';
-  
-  // Labels in both languages
+  const isBengali = lang === 'bn';
   const labels = {
     prescriptionNo: isBengali ? 'প্রেসক্রিপশন নং' : 'PRESCRIPTION NO.',
     date: isBengali ? 'তারিখ' : 'DATE',
@@ -407,16 +261,14 @@ function generatePrescriptionEmailHtml(prescription) {
 </head>
 <body style="font-family: ${isBengali ? "'Noto Sans Bengali', " : ''}-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
   <div style="max-width: 700px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    
-    <!-- Header -->
+
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center;">
       <h1 style="margin: 0 0 5px 0; font-size: 28px;">${prescription.clinicId?.name || 'HealthSync Clinic'}</h1>
       <p style="margin: 0; opacity: 0.9;">${prescription.clinicId?.address || ''}</p>
       <p style="margin: 5px 0 0 0; opacity: 0.9;">${prescription.clinicId?.phone || ''}</p>
       ${isBengali ? `<span style="display: inline-block; margin-top: 10px; padding: 4px 12px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px;">${labels.languageBadge}</span>` : ''}
     </div>
-    
-    <!-- Prescription Header -->
+
     <div style="padding: 20px 30px; border-bottom: 2px solid #e5e7eb;">
       <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
         <div>
@@ -429,8 +281,7 @@ function generatePrescriptionEmailHtml(prescription) {
         </div>
       </div>
     </div>
-    
-    <!-- Patient & Doctor Info -->
+
     <div style="padding: 20px 30px; display: flex; flex-wrap: wrap; gap: 20px;">
       <div style="flex: 1; min-width: 200px; background: #f9fafb; padding: 15px; border-radius: 8px;">
         <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; text-transform: uppercase;">${labels.patientDetails}</p>
@@ -444,8 +295,7 @@ function generatePrescriptionEmailHtml(prescription) {
         <p style="margin: 5px 0 0 0; color: #4b5563; font-size: 14px;">${prescription.doctorId?.specialization || ''}</p>
       </div>
     </div>
-    
-    <!-- Diagnosis -->
+
     ${prescription.diagnosis ? `
     <div style="padding: 0 30px 20px 30px;">
       <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 0 8px 8px 0;">
@@ -454,8 +304,7 @@ function generatePrescriptionEmailHtml(prescription) {
       </div>
     </div>
     ` : ''}
-    
-    <!-- Medicines -->
+
     <div style="padding: 0 30px 20px 30px;">
       <h3 style="margin: 0 0 15px 0; color: #1f2937; font-size: 16px;">℞ ${labels.medicines}</h3>
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
@@ -473,8 +322,7 @@ function generatePrescriptionEmailHtml(prescription) {
         </tbody>
       </table>
     </div>
-    
-    <!-- Instructions -->
+
     ${prescription.advice ? `
     <div style="padding: 0 30px 20px 30px;">
       <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; border-radius: 0 8px 8px 0;">
@@ -483,8 +331,7 @@ function generatePrescriptionEmailHtml(prescription) {
       </div>
     </div>
     ` : ''}
-    
-    <!-- Follow-up -->
+
     ${prescription.followUpDate ? `
     <div style="padding: 0 30px 20px 30px;">
       <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 0 8px 8px 0;">
@@ -494,8 +341,7 @@ function generatePrescriptionEmailHtml(prescription) {
       </div>
     </div>
     ` : ''}
-    
-    <!-- Footer -->
+
     <div style="background: #1f2937; color: #9ca3af; padding: 20px 30px; text-align: center;">
       <p style="margin: 0 0 5px 0; font-size: 12px;">${isBengali ? 'এটি HealthSync থেকে ডিজিটালভাবে তৈরি প্রেসক্রিপশন' : 'This is a digitally generated prescription from HealthSync'}</p>
       <p style="margin: 0; font-size: 11px;">${isBengali ? 'যোগাযোগ:' : 'For any queries, contact:'} support@healthsyncpro.in | +91-7001268485</p>
@@ -506,9 +352,7 @@ function generatePrescriptionEmailHtml(prescription) {
 </body>
 </html>
   `;
-}
-
-// Helper function to generate WhatsApp message
+}
 function generatePrescriptionWhatsAppMessage(prescription) {
   const lang = detectPrescriptionLanguage(prescription);
   const isBengali = lang === 'bn';

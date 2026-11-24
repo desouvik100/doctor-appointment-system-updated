@@ -1,6 +1,4 @@
-/**
- * Records Screen - Medical Records (prescriptions, lab reports, bills)
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -78,9 +76,7 @@ const RecordsScreen = ({ navigation }) => {
   const formatDate = (d) => {
     if (!d) return 'N/A';
     return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-  };
-
-  // Normalise records into a unified shape
+  };
   const allRecords = [
     ...prescriptions.map(p => ({
       id: p._id,
@@ -158,7 +154,7 @@ const RecordsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity
           style={[styles.backBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
@@ -170,7 +166,7 @@ const RecordsScreen = ({ navigation }) => {
         <View style={{ width: 44 }} />
       </View>
 
-      {/* Stats */}
+      {}
       <View style={styles.statsRow}>
         <Card variant="gradient" style={styles.statCard}>
           <Text style={styles.statIcon}>💊</Text>
@@ -189,7 +185,7 @@ const RecordsScreen = ({ navigation }) => {
         </Card>
       </View>
 
-      {/* Tabs */}
+      {}
       <View style={styles.tabsContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {tabs.map((tab) => (
@@ -210,7 +206,7 @@ const RecordsScreen = ({ navigation }) => {
         </ScrollView>
       </View>
 
-      {/* Records List */}
+      {}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -269,7 +265,7 @@ const RecordsScreen = ({ navigation }) => {
           ))
         )}
 
-        {/* Upload Section */}
+        {}
         <View style={[styles.uploadSection, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <Text style={[styles.uploadTitle, { color: colors.textPrimary }]}>Add New Record</Text>
           <View style={styles.uploadOptions}>

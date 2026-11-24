@@ -1,6 +1,4 @@
-/**
- * DoctorProfileScreen - Premium trust-building healthcare landing experience V2 (Production-Grade)
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -52,13 +50,11 @@ const DoctorProfileScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(!doctor);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState('about');
-  
-  // Real dynamic slots states
+
   const [availableSlotsToday, setAvailableSlotsToday] = useState([]);
   const [availableSlotsTomorrow, setAvailableSlotsTomorrow] = useState([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
 
-  // Dynamic reviews & discussions states
   const [reviewsList, setReviewsList] = useState([]);
   const [reviewsTotal, setReviewsTotal] = useState(0);
   const [reviewsPage, setReviewsPage] = useState(1);
@@ -66,33 +62,28 @@ const DoctorProfileScreen = ({ navigation, route }) => {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewsAnalytics, setReviewsAnalytics] = useState(null);
 
-  // Sorting & Filtering
-  const [reviewSort, setReviewSort] = useState('newest'); // 'helpful', 'highest', 'lowest', 'newest', 'oldest'
-  const [filterVisitType, setFilterVisitType] = useState(null); // 'in-clinic', 'virtual', null
-  const [filterVerified, setFilterVerified] = useState(false); // true/false
-  const [filterRating, setFilterRating] = useState(null); // 5, 4, 3, 2, 1 or null
+  const [reviewSort, setReviewSort] = useState('newest'); 
+  const [filterVisitType, setFilterVisitType] = useState(null); 
+  const [filterVerified, setFilterVerified] = useState(false); 
+  const [filterRating, setFilterRating] = useState(null); 
 
-  // Interactive reviews states
-  const [votedReviews, setVotedReviews] = useState({}); // { [reviewId]: 'helpful' | 'unhelpful' }
-  const [activeReplyBox, setActiveReplyBox] = useState(null); // { reviewId, parentId }
+  const [votedReviews, setVotedReviews] = useState({}); 
+  const [activeReplyBox, setActiveReplyBox] = useState(null); 
   const [replyText, setReplyText] = useState('');
   const [replySubmitting, setReplySubmitting] = useState(false);
 
-  // Write Review Modal States
   const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
   const [reviewAppointmentId, setReviewAppointmentId] = useState(null);
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [newReviewTitle, setNewReviewTitle] = useState('');
   const [newReviewComment, setNewReviewComment] = useState('');
-  const [newReviewVisitType, setNewReviewVisitType] = useState('in-clinic'); // 'in-clinic' | 'virtual'
+  const [newReviewVisitType, setNewReviewVisitType] = useState('in-clinic'); 
   const [newReviewAnonymous, setNewReviewAnonymous] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState(null); // { uri, base64 }
+  const [selectedPhoto, setSelectedPhoto] = useState(null); 
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  // Animation values for tab content
   const tabContentOpacity = useSharedValue(1);
 
-  // Helper to format date into YYYY-MM-DD
   const formatDate = (date) => {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -100,7 +91,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     return `${y}-${m}-${d}`;
   };
 
-  // Helper to convert 24h string to 12h AM/PM
   const formatSlotTime = (timeStr) => {
     if (!timeStr) return '';
     const [hoursStr, minutesStr] = timeStr.split(':');
@@ -110,14 +100,12 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     return `${displayHours}:${minutesStr} ${ampm}`;
   };
 
-  // Fetch full profile and check favorites
-  // isValidMongoId: MongoDB ObjectIds are exactly 24 hex characters
   const isValidMongoId = (id) => typeof id === 'string' && /^[a-f\d]{24}$/i.test(id);
 
   useEffect(() => {
     const fetchProfile = async () => {
       const id = doctorId || doctor?._id || doctor?.id;
-      if (!id || !isValidMongoId(id)) return;  // skip fake/placeholder IDs
+      if (!id || !isValidMongoId(id)) return;  
       try {
         setLoading(true);
         const data = await doctorService.getDoctorById(id);
@@ -132,7 +120,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
 
     const checkFavorite = async () => {
       const id = doctorId || doctor?._id || doctor?.id;
-      if (!id || !isValidMongoId(id)) return;  // skip fake/placeholder IDs
+      if (!id || !isValidMongoId(id)) return;  
       try {
         const fav = await doctorService.isFavorite(id);
         setIsFavorite(fav);
@@ -147,11 +135,10 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     checkFavorite();
   }, [doctorId, doctor]);
 
-  // Fetch available slots for Today and Tomorrow
   useEffect(() => {
     const fetchSlots = async () => {
       const id = doctorId || doctor?._id || doctor?.id || doctorData?._id || doctorData?.id;
-      if (!id || !isValidMongoId(id)) return;  // skip fake/placeholder IDs
+      if (!id || !isValidMongoId(id)) return;  
       try {
         setSlotsLoading(true);
         const today = new Date();
@@ -189,20 +176,18 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     }
   }, [loading, doctorId, doctor, doctorData]);
 
-  // Handle auto-opening review modal from finished booking link
   useEffect(() => {
     if (route.params?.autoOpenReview && !loading) {
-      // Clear parameter to avoid opening again on rotate/update
+
       navigation.setParams({ autoOpenReview: undefined });
-      // Call eligibility checker directly
+
       checkReviewEligibility();
     }
   }, [route.params?.autoOpenReview, loading]);
 
-  // Dynamic reviews loader
   const fetchReviews = async (page = 1, append = false) => {
     const id = doctorId || doctor?._id || doctor?.id || doctorData?._id || doctorData?.id;
-    if (!id || !isValidMongoId(id)) return;  // skip fake/placeholder IDs
+    if (!id || !isValidMongoId(id)) return;  
     try {
       setReviewsLoading(true);
       const params = {
@@ -229,7 +214,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     }
   };
 
-  // Trigger reviews reload on filters/sort changes
   useEffect(() => {
     if (!loading) {
       fetchReviews(1, false);
@@ -262,7 +246,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
 
   const activeDoctor = doctorData || doctor || {};
 
-  // Formulate verified metadata lists defensively
   const doctorDetails = {
     bio: activeDoctor.bio || 'Professional clinical summary is currently pending credentials verification.',
     education: activeDoctor.education || [],
@@ -288,7 +271,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     ...activeDoctor,
   };
 
-  // Find next available slot dynamically
   const getNextAvailableSlotInfo = () => {
     const firstToday = availableSlotsToday.find(s => s.available);
     if (firstToday) {
@@ -349,7 +331,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
       await reviewService.voteReviewHelpful(reviewId, voteType);
     } catch (err) {
       console.error('Failed to register vote:', err);
-      // Revert optimistic updates
+
       setVotedReviews(prev => {
         const next = { ...prev };
         delete next[reviewId];
@@ -376,7 +358,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     }
   };
 
-  // Eligibility Verification Check
   const checkReviewEligibility = async () => {
     if (!user) {
       Alert.alert('Authentication Required', 'Please sign in to your patient account to submit a review.');
@@ -401,7 +382,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         return;
       }
 
-      // Check if any of these completed appointments is reviewable
       let reviewableAppointment = null;
       for (const app of forThisDoctor) {
         const checkRes = await apiClient.get(`/reviews/can-review/${app._id}`).catch(() => null);
@@ -419,7 +399,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         return;
       }
 
-      // Eligible! Open Modal
       setReviewAppointmentId(reviewableAppointment._id);
       setNewReviewRating(5);
       setNewReviewTitle('');
@@ -436,7 +415,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     }
   };
 
-  // Photo pick handler
   const handlePickPhoto = () => {
     launchImageLibrary({ mediaType: 'photo', quality: 0.7, includeBase64: true }, (response) => {
       if (response.didCancel) return;
@@ -451,7 +429,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     });
   };
 
-  // Review submission
   const handleReviewFormSubmit = async () => {
     if (!newReviewComment.trim()) {
       Alert.alert('Validation Error', 'Please write a review comment.');
@@ -473,7 +450,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
       if (res && res.success) {
         Alert.alert('Success', 'Thank you for your feedback! Your review has been submitted.');
         setIsReviewModalVisible(false);
-        fetchReviews(1, false); // Reload reviews
+        fetchReviews(1, false); 
       } else {
         Alert.alert('Error', res.message || 'Failed to submit review.');
       }
@@ -493,7 +470,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     opacity: tabContentOpacity.value,
   }));
 
-  // Build verified highlight grid items
   const highlightItems = [];
   if (doctorDetails.experience && doctorDetails.experience > 0) {
     highlightItems.push({ label: 'EXPERIENCE', value: `${doctorDetails.experience} Yrs` });
@@ -511,11 +487,9 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     highlightItems.push({ label: 'CLINIC COUNT', value: '1 Clinic' });
   }
 
-  // Check consultation settings status
   const inClinicAvailable = doctorDetails.consultationSettings?.inClinicConsultationEnabled !== false;
   const virtualAvailable = doctorDetails.consultationSettings?.virtualConsultationEnabled !== false;
 
-  // Render Star distribution breakdown
   const renderReviewAnalytics = () => {
     if (!reviewsAnalytics) return null;
     const { averageRating, totalReviews, distribution } = reviewsAnalytics;
@@ -543,7 +517,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
             })}
           </View>
         </View>
-        {/* Write Review CTA when reviews exist */}
+        {}
         <TouchableOpacity 
           onPress={checkReviewEligibility}
           style={[styles.writeReviewSecondaryBtn, { borderColor: colors.primary }]}
@@ -554,11 +528,10 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     );
   };
 
-  // Render sorting and filtering controls
   const renderSortAndFilters = () => {
     return (
       <View style={styles.filtersWrapper}>
-        {/* Sort Select */}
+        {}
         <Text style={[styles.filterTitleLabel, { color: colors.textPrimary }]}>Sort By</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsRow}>
           {[
@@ -590,7 +563,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           })}
         </ScrollView>
 
-        {/* Visit Type Filter */}
+        {}
         <Text style={[styles.filterTitleLabel, { color: colors.textPrimary, marginTop: 8 }]}>Filter By Visit Type</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsRow}>
           {[
@@ -620,7 +593,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           })}
         </ScrollView>
 
-        {/* Star Rating Filter */}
+        {}
         <Text style={[styles.filterTitleLabel, { color: colors.textPrimary, marginTop: 8 }]}>Filter By Rating</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsRow}>
           {[
@@ -653,7 +626,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           })}
         </ScrollView>
 
-        {/* Verified Reviews Toggle */}
+        {}
         <View style={styles.verifiedFilterToggleRow}>
           <Text style={[styles.verifiedFilterLabel, { color: colors.textPrimary }]}>Show verified reviews only</Text>
           <TouchableOpacity 
@@ -670,7 +643,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     );
   };
 
-  // Render single recursive reply node
   const renderReplyNode = (reply, depth = 1) => {
     const isDoctor = reply.userType === 'Doctor';
     const isClinic = reply.userType === 'ClinicStaff';
@@ -722,7 +694,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
             {reply.text}
           </Text>
 
-          {/* Inline Reply CTA inside thread */}
+          {}
           {depth < 3 && (
             <TouchableOpacity 
               onPress={() => {
@@ -736,7 +708,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Nested child replies */}
+        {}
         {reply.replies && reply.replies.map(child => renderReplyNode(child, depth + 1))}
       </View>
     );
@@ -746,7 +718,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -754,7 +726,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         />
       </View>
 
-      {/* ── 1. HEADER ROW ── */}
+      {}
       <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         <TouchableOpacity 
           style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)', borderColor: colors.surfaceBorder, borderWidth: 1 }]}
@@ -775,7 +747,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* ── 2. DYNAMIC PROFILE HEADER CARD ── */}
+        {}
         <Animated.View entering={FadeInDown.delay(50)} style={styles.profileCardContainer}>
           <View style={[
             styles.profileCard, 
@@ -799,7 +771,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                   {doctorDetails.specializations[0] || 'General Physician'}
                 </Text>
                 
-                {/* Verification Badges Row */}
+                {}
                 {doctorDetails.isVerified ? (
                   <View style={styles.verificationRow}>
                     <View style={[styles.badgeItem, { backgroundColor: isDarkMode ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)' }]}>
@@ -842,7 +814,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </View>
         </Animated.View>
 
-        {/* ── 3. CONSULTATION MODES ── */}
+        {}
         <Animated.View entering={FadeInDown.delay(100)} style={styles.modesContainer}>
           <View style={[styles.modeChip, { backgroundColor: isDarkMode ? '#171E2D' : '#F1F5F9' }]}>
             <Text style={styles.modeEmoji}>🏥</Text>
@@ -864,7 +836,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </View>
         </Animated.View>
 
-        {/* ── 4. MINI AVAILABILITY TIMELINE ── */}
+        {}
         <Animated.View entering={FadeInDown.delay(150)} style={styles.availabilitySection}>
           <Text style={[styles.sectionTitleLabel, { color: colors.textPrimary }]}>Next Available Slots</Text>
           {slotsLoading ? (
@@ -873,7 +845,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
             </View>
           ) : (
             <View style={styles.timelineContainer}>
-              {/* Today Slots */}
+              {}
               <View style={styles.timelineDay}>
                 <Text style={[styles.timelineDayLabel, { color: colors.textPrimary }]}>Today</Text>
                 {availableSlotsToday.filter(s => s.available).length > 0 ? (
@@ -895,7 +867,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               
               <View style={styles.timelineDivider} />
               
-              {/* Tomorrow Slots */}
+              {}
               <View style={styles.timelineDay}>
                 <Text style={[styles.timelineDayLabel, { color: colors.textPrimary }]}>Tomorrow</Text>
                 {availableSlotsTomorrow.filter(s => s.available).length > 0 ? (
@@ -921,7 +893,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </Text>
         </Animated.View>
 
-        {/* ── 5. TRUST HIGHLIGHTS GRID (Verified Data Only) ── */}
+        {}
         {highlightItems.length > 0 && (
           <Animated.View entering={FadeInDown.delay(200)} style={styles.highlightsWrapper}>
             <Text style={[styles.sectionTitleLabel, { color: colors.textPrimary }]}>Doctor Highlights</Text>
@@ -945,11 +917,11 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </Animated.View>
         )}
 
-        {/* ── 5.5. MEDIA & TRUST ASSETS (Introduction Video & Clinic Photos) ── */}
+        {}
         <Animated.View entering={FadeInDown.delay(220)} style={styles.mediaSection}>
           <Text style={[styles.sectionTitleLabel, { color: colors.textPrimary }]}>Media & Trust Assets</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mediaScroll}>
-            {/* Doctor Video Intro Block */}
+            {}
             <TouchableOpacity 
               activeOpacity={0.9} 
               style={[
@@ -976,7 +948,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               </View>
             </TouchableOpacity>
 
-            {/* Clinic Photo 1 */}
+            {}
             <View style={[styles.clinicPhotoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
               <Image 
                 source={{ uri: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=300' }} 
@@ -988,7 +960,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               </View>
             </View>
 
-            {/* Clinic Photo 2 */}
+            {}
             <View style={[styles.clinicPhotoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
               <Image 
                 source={{ uri: 'https://images.unsplash.com/photo-1583364481905-d41f4b551289?auto=format&fit=crop&q=80&w=300' }} 
@@ -1002,7 +974,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </ScrollView>
         </Animated.View>
 
-        {/* ── 6. TABS CONTAINER ── */}
+        {}
         <View style={[
           styles.tabsContainer, 
           { 
@@ -1043,11 +1015,11 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           })}
         </View>
 
-        {/* Tab content wrapper */}
+        {}
         <Animated.View style={animatedTabStyle}>
           {activeTab === 'about' ? (
             <View style={styles.tabContentContainer}>
-              {/* Professional Summary */}
+              {}
               <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                 <View style={styles.cardHeaderRow}>
                   <Text style={styles.cardHeaderIcon}>📝</Text>
@@ -1056,7 +1028,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 <Text style={[styles.cardText, { color: colors.textSecondary }]}>{doctorDetails.bio}</Text>
               </View>
 
-              {/* Specializations & Conditions */}
+              {}
               <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                 <View style={styles.cardHeaderRow}>
                   <Text style={styles.cardHeaderIcon}>🩺</Text>
@@ -1080,7 +1052,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              {/* Education & Certifications */}
+              {}
               {(doctorDetails.education.length > 0 || doctorDetails.certifications.length > 0) && (
                 <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                   <View style={styles.cardHeaderRow}>
@@ -1108,7 +1080,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               )}
 
-              {/* Languages Card */}
+              {}
               {doctorDetails.languages && doctorDetails.languages.length > 0 && (
                 <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                   <View style={styles.cardHeaderRow}>
@@ -1125,7 +1097,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               )}
 
-              {/* Clinic Information (Verified location map) */}
+              {}
               {doctorDetails.clinicName && doctorDetails.clinicAddress && (
                 <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                   <View style={styles.cardHeaderRow}>
@@ -1137,7 +1109,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                   {doctorDetails.clinicDistance && (
                     <Text style={[styles.clinicDistText, { color: colors.primary }]}>🚀 Proximity: {doctorDetails.clinicDistance}</Text>
                   )}
-                  {/* Mock Map Preview Card */}
+                  {}
                   <LinearGradient
                     colors={isDarkMode ? ['#171B26', '#222A3F'] : ['#E2E8F0', '#CFD8DC']}
                     style={styles.mapPreview}
@@ -1149,20 +1121,20 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               )}
             </View>
           ) : (
-            /* Patient Reviews Tab V2 (Live Community Reviews with Redesigned UX) */
+            
             <View style={styles.tabContentContainer}>
               
               {reviewsLoading && reviewsList.length === 0 && (
                 <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 20 }} />
               )}
 
-              {/* Conditional Analytics Summary & Filters: HIDE when reviewsTotal === 0 */}
+              {}
               {reviewsTotal > 0 ? (
                 <>
                   {renderReviewAnalytics()}
                   {renderSortAndFilters()}
 
-                  {/* Reviews List */}
+                  {}
                   {reviewsList.map((rev) => (
                     <View key={rev._id} style={[styles.reviewCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                       <View style={styles.reviewHeader}>
@@ -1191,12 +1163,12 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                       )}
                       <Text style={[styles.reviewCommentText, { color: colors.textSecondary }]}>{rev.review}</Text>
 
-                      {/* Review Photo Attachment (if exists) */}
+                      {}
                       {rev.photo && (
                         <Image source={{ uri: rev.photo }} style={styles.reviewImageAttached} />
                       )}
                       
-                      {/* Helpfulness Actions */}
+                      {}
                       <View style={styles.voteActionsRow}>
                         <TouchableOpacity 
                           onPress={() => handleVoteHelpful(rev._id, 'helpful')} 
@@ -1230,7 +1202,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                         </TouchableOpacity>
                       </View>
 
-                      {/* Comment Actions */}
+                      {}
                       <View style={styles.commentActionsRow}>
                         <TouchableOpacity 
                           onPress={() => {
@@ -1243,7 +1215,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                         </TouchableOpacity>
                       </View>
 
-                      {/* Inline Reply input box */}
+                      {}
                       {activeReplyBox && activeReplyBox.reviewId === rev._id && (
                         <View style={[styles.replyInputWrapper, { borderColor: colors.primary, borderWidth: 1, backgroundColor: isDarkMode ? '#171E2D' : '#F8FAFC' }]}>
                           <Text style={[styles.replyToLabel, { color: colors.textMuted }]}>
@@ -1282,7 +1254,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                         </View>
                       )}
 
-                      {/* Discussions Thread Trees (Recursive up to Depth 3) */}
+                      {}
                       {rev.discussionThread && rev.discussionThread.length > 0 && (
                         <View style={styles.repliesThreadContainer}>
                           {rev.discussionThread.map(reply => renderReplyNode(reply, 1))}
@@ -1292,7 +1264,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                     </View>
                   ))}
 
-                  {/* Load More Pagination Trigger */}
+                  {}
                   {reviewsPage < reviewsTotalPages && (
                     <TouchableOpacity 
                       onPress={handleLoadMoreReviews} 
@@ -1308,7 +1280,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                   )}
                 </>
               ) : (
-                /* Empty State: HIDE filters, render clean Practo empty UX block */
+                
                 !reviewsLoading && (
                   <View style={[styles.emptyReviewsContainer, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                     <View style={[styles.emptyReviewsIconWrap, { backgroundColor: colors.primary + '15' }]}>
@@ -1333,7 +1305,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         </Animated.View>
       </ScrollView>
 
-      {/* ── ── 10. WRITE REVIEW FORM MODAL ── ── */}
+      {}
       <Modal
         visible={isReviewModalVisible}
         animationType="slide"
@@ -1356,7 +1328,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.modalScrollContent}
             >
-              {/* Star Rating Select */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Rating</Text>
                 <View style={styles.ratingSelectorRow}>
@@ -1378,7 +1350,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              {/* Title Input */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Review Title</Text>
                 <TextInput
@@ -1390,7 +1362,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 />
               </View>
 
-              {/* Review Comment Input */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Review Comment</Text>
                 <TextInput
@@ -1404,7 +1376,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 />
               </View>
 
-              {/* Consultation Visit Type */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Visit Type</Text>
                 <View style={[styles.segmentedControl, { borderColor: colors.surfaceBorder }]}>
@@ -1447,7 +1419,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              {/* Anonymous Post Toggle */}
+              {}
               <View style={styles.verifiedFilterToggleRow}>
                 <Text style={[styles.verifiedFilterLabel, { color: colors.textPrimary }]}>Submit Review Anonymously</Text>
                 <TouchableOpacity 
@@ -1461,7 +1433,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
               </View>
 
-              {/* Optional Photo Picker */}
+              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Photo Attachment (Optional)</Text>
                 <View style={styles.photoUploadArea}>
@@ -1485,7 +1457,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              {/* Submit CTA */}
+              {}
               <TouchableOpacity 
                 onPress={handleReviewFormSubmit}
                 disabled={submittingReview}
@@ -1504,7 +1476,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         </View>
       </Modal>
 
-      {/* ── 9. BOTTOM STICKY CONVERSION BAR ── */}
+      {}
       <View style={[
         styles.bottomBar,
         {
@@ -1653,7 +1625,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  // Consultation modes styles
+
   modesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1687,7 +1659,7 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     marginTop: 2,
   },
-  // Availability Section styles
+
   availabilitySection: {
     marginBottom: spacing.md,
   },
@@ -1749,7 +1721,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontStyle: 'italic',
   },
-  // Highlights Grid
+
   highlightsWrapper: {
     marginBottom: spacing.md,
   },
@@ -1777,7 +1749,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginTop: 2,
   },
-  // Media Section
+
   mediaSection: {
     marginBottom: spacing.md,
   },
@@ -1852,7 +1824,7 @@ const styles = StyleSheet.create({
     height: 90,
     width: '100%',
   },
-  // Tabs system
+
   tabsContainer: {
     flexDirection: 'row',
     borderRadius: borderRadius.full,
@@ -1885,7 +1857,7 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     fontWeight: '600',
   },
-  // Cards inside Tab content
+
   tabContentContainer: {
     gap: spacing.md,
   },
@@ -1979,7 +1951,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
-  // Reviews List Card
+
   reviewCard: {
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
@@ -2045,7 +2017,7 @@ const styles = StyleSheet.create({
     color: '#A0AEC0',
     fontWeight: '700',
   },
-  // Sticky Bottom Bar
+
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -2085,7 +2057,7 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '800',
   },
-  // ─── NEW REVIEWS SYSTEM V2 STYLES ───
+
   replyNodeContainer: {
     marginTop: spacing.sm,
     gap: 2,
@@ -2189,7 +2161,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: '800',
   },
-  // Analytics Breakdown Card
+
   analyticsCard: {
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
@@ -2247,7 +2219,7 @@ const styles = StyleSheet.create({
     width: 28,
     textAlign: 'right',
   },
-  // Filters Styles
+
   filtersWrapper: {
     marginBottom: spacing.md,
     gap: 6,
@@ -2357,7 +2329,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-  // Empty State Styles
+
   emptyReviewsContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -2399,7 +2371,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-  // Modal Styles
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

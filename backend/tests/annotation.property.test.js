@@ -1,16 +1,8 @@
-/**
- * Property-Based Tests for Annotation Storage Service
- * Feature: advanced-imaging
- * Property 4: Study-Patient-Visit Linking Integrity
- */
 
-const fc = require('fast-check');
 
-// Mock mongoose for testing
+const fc = require('fast-check');
 const mockAnnotations = new Map();
-let annotationIdCounter = 1;
-
-// Mock annotation storage functions
+let annotationIdCounter = 1;
 const mockSaveAnnotation = (annotationData) => {
   const annotation = {
     ...annotationData,
@@ -55,9 +47,7 @@ describe('Annotation Storage Service - Property Tests', () => {
   beforeEach(() => {
     mockAnnotations.clear();
     annotationIdCounter = 1;
-  });
-
-  // Property 4: Study-Patient-Visit Linking Integrity
+  });
   describe('Property 4: Study-Patient-Visit Linking Integrity', () => {
     
     test('saved annotations maintain study reference', () => {
@@ -91,8 +81,7 @@ describe('Annotation Storage Service - Property Tests', () => {
         fc.property(
           fc.string({ minLength: 1, maxLength: 20 }),
           fc.integer({ min: 1, max: 10 }),
-          (studyId, count) => {
-            // Clear and add annotations
+          (studyId, count) => {
             mockAnnotations.clear();
             
             for (let i = 0; i < count; i++) {
@@ -122,9 +111,7 @@ describe('Annotation Storage Service - Property Tests', () => {
           fc.string({ minLength: 1, maxLength: 20 }),
           fc.integer({ min: 1, max: 5 }),
           (studyId, sopUID, count) => {
-            mockAnnotations.clear();
-            
-            // Add annotations for target image
+            mockAnnotations.clear();
             for (let i = 0; i < count; i++) {
               mockSaveAnnotation({
                 studyId,
@@ -134,9 +121,7 @@ describe('Annotation Storage Service - Property Tests', () => {
                 createdBy: 'user123',
                 data: { handles: [] }
               });
-            }
-            
-            // Add annotations for different image
+            }
             mockSaveAnnotation({
               studyId,
               seriesInstanceUID: 'series_1',
@@ -157,9 +142,7 @@ describe('Annotation Storage Service - Property Tests', () => {
         { numRuns: 20 }
       );
     });
-  });
-
-  // Annotation CRUD operations
+  });
   describe('Annotation CRUD Operations', () => {
     
     test('annotation IDs are unique', () => {
@@ -197,13 +180,9 @@ describe('Annotation Storage Service - Property Tests', () => {
         toolType: 'length',
         createdBy: 'user123',
         data: { handles: [] }
-      });
-      
-      // Different user should fail
+      });
       expect(() => mockDeleteAnnotation(annotation.annotationId, 'user456'))
-        .toThrow('Not authorized');
-      
-      // Creator should succeed
+        .toThrow('Not authorized');
       expect(() => mockDeleteAnnotation(annotation.annotationId, 'user123'))
         .not.toThrow();
     });
@@ -237,9 +216,7 @@ describe('Annotation Storage Service - Property Tests', () => {
     });
 
     test('hidden annotations are not returned by getAnnotationsForImage', () => {
-      mockAnnotations.clear();
-      
-      // Add visible annotation
+      mockAnnotations.clear();
       mockSaveAnnotation({
         studyId: 'study_1',
         seriesInstanceUID: 'series_1',
@@ -248,9 +225,7 @@ describe('Annotation Storage Service - Property Tests', () => {
         createdBy: 'user123',
         data: { handles: [] },
         visible: true
-      });
-      
-      // Add hidden annotation
+      });
       mockSaveAnnotation({
         studyId: 'study_1',
         seriesInstanceUID: 'series_1',
@@ -265,9 +240,7 @@ describe('Annotation Storage Service - Property Tests', () => {
       expect(retrieved.length).toBe(1);
       expect(retrieved[0].toolType).toBe('length');
     });
-  });
-
-  // Annotation data integrity
+  });
   describe('Annotation Data Integrity', () => {
     
     test('measurement data is preserved', () => {
@@ -356,9 +329,7 @@ describe('Annotation Storage Service - Property Tests', () => {
         { numRuns: 30 }
       );
     });
-  });
-
-  // Timestamps
+  });
   describe('Timestamp Management', () => {
     
     test('createdAt is set on save', () => {
@@ -390,9 +361,7 @@ describe('Annotation Storage Service - Property Tests', () => {
         data: { handles: [] }
       });
       
-      const originalUpdatedAt = annotation.updatedAt;
-      
-      // Small delay to ensure time difference
+      const originalUpdatedAt = annotation.updatedAt;
       const toggled = mockToggleVisibility(annotation.annotationId);
       
       expect(toggled.updatedAt >= originalUpdatedAt).toBe(true);

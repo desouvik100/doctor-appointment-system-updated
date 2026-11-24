@@ -1,42 +1,25 @@
-/**
- * JWT Token Service - Access + Refresh Token Flow
- * ================================================
- * Implements secure token management with:
- * - Short-lived access tokens (15 min)
- * - Long-lived refresh tokens (7 days)
- * - Token blacklisting for logout
- * - Token rotation on refresh
- */
+
 
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-
-// In-memory token blacklist (use Redis in production for scalability)
+const crypto = require('crypto');
 const tokenBlacklist = new Map();
-const refreshTokenStore = new Map();
-
-// Configuration
+const refreshTokenStore = new Map();
 const CONFIG = {
-  ACCESS_TOKEN_EXPIRY: '15m',      // 15 minutes
-  REFRESH_TOKEN_EXPIRY: '7d',      // 7 days
+  ACCESS_TOKEN_EXPIRY: '15m',      
+  REFRESH_TOKEN_EXPIRY: '7d',      
   ACCESS_TOKEN_EXPIRY_MS: 15 * 60 * 1000,
   REFRESH_TOKEN_EXPIRY_MS: 7 * 24 * 60 * 60 * 1000,
-  TOKEN_CLEANUP_INTERVAL: 60 * 60 * 1000, // 1 hour
-  MAX_REFRESH_TOKENS_PER_USER: 5   // Max devices per user
+  TOKEN_CLEANUP_INTERVAL: 60 * 60 * 1000, 
+  MAX_REFRESH_TOKENS_PER_USER: 5   
 };
 
 class JWTTokenService {
   constructor() {
     this.accessSecret = process.env.JWT_SECRET;
-    this.refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh';
-    
-    // Start cleanup interval
+    this.refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh';
     this.startCleanupInterval();
   }
 
-  /**
-   * Generate access token (short-lived)
-   */
   generateAccessToken(payload) {
     const tokenPayload = {
       userId: payload.userId || payload.id,
@@ -55,9 +38,6 @@ class JWTTokenService {
     });
   }
 
-  /**
-   * Generate refresh token (long-lived)
-   */
   generateRefreshToken(payload) {
     const tokenId = crypto.randomBytes(32).toString('hex');
     const userId = payload.userId || payload.id || payload.doctorId;
@@ -72,17 +52,12 @@ class JWTTokenService {
     const token = jwt.sign(tokenPayload, this.refreshSecret, {
       expiresIn: CONFIG.REFRESH_TOKEN_EXPIRY,
       issuer: 'healthsync-pro'
-    });
-
-    // Store refresh token metadata
+    });
     this.storeRefreshToken(userId, tokenId, payload);
 
     return { token, tokenId };
   }
 
-  /**
-   * Generate both access and refresh tokens
-   */
   generateTokenPair(payload) {
     const accessToken = this.generateAccessToken(payload);
     const { token: refreshToken, tokenId } = this.generateRefreshToken(payload);
@@ -96,12 +71,8 @@ class JWTTokenService {
     };
   }
 
-  /**
-   * Verify access token
-   */
   verifyAccessToken(token) {
-    try {
-      // Check if token is blacklisted
+    try {
       if (this.isTokenBlacklisted(token)) {
         return { valid: false, error: 'Token has been revoked' };
       }
@@ -123,9 +94,6 @@ class JWTTokenService {
     }
   }
 
-  /**
-   * Verify refresh token and issue new token pair
-   */
   async refreshTokens(refreshToken) {
     try {
       const decoded = jwt.verify(refreshToken, this.refreshSecret, {
@@ -134,18 +102,12 @@ class JWTTokenService {
 
       if (decoded.type !== 'refresh') {
         return { success: false, error: 'Invalid token type' };
-      }
-
-      // Check if refresh token is valid in store
+      }
       const storedToken = this.getStoredRefreshToken(decoded.userId, decoded.tokenId);
       if (!storedToken) {
         return { success: false, error: 'Refresh token not found or revoked' };
-      }
-
-      // Revoke old refresh token (rotation)
-      this.revokeRefreshToken(decoded.userId, decoded.tokenId);
-
-      // Generate new token pair
+      }
+      this.revokeRefreshToken(decoded.userId, decoded.tokenId);
       const newTokens = this.generateTokenPair(storedToken.payload);
 
       return {
@@ -160,9 +122,6 @@ class JWTTokenService {
     }
   }
 
-  /**
-   * Blacklist access token (for logout)
-   */
   blacklistToken(token) {
     try {
       const decoded = jwt.decode(token);
@@ -181,16 +140,10 @@ class JWTTokenService {
     }
   }
 
-  /**
-   * Check if token is blacklisted
-   */
   isTokenBlacklisted(token) {
     return tokenBlacklist.has(token);
   }
 
-  /**
-   * Store refresh token metadata
-   */
   storeRefreshToken(userId, tokenId, payload) {
     const userKey = userId.toString();
     
@@ -198,9 +151,7 @@ class JWTTokenService {
       refreshTokenStore.set(userKey, new Map());
     }
 
-    const userTokens = refreshTokenStore.get(userKey);
-
-    // Enforce max tokens per user (remove oldest if exceeded)
+    const userTokens = refreshTokenStore.get(userKey);
     if (userTokens.size >= CONFIG.MAX_REFRESH_TOKENS_PER_USER) {
       const oldestKey = userTokens.keys().next().value;
       userTokens.delete(oldestKey);
@@ -213,9 +164,6 @@ class JWTTokenService {
     });
   }
 
-  /**
-   * Get stored refresh token
-   */
   getStoredRefreshToken(userId, tokenId) {
     const userKey = userId.toString();
     const userTokens = refreshTokenStore.get(userKey);
@@ -231,9 +179,6 @@ class JWTTokenService {
     return token;
   }
 
-  /**
-   * Revoke specific refresh token
-   */
   revokeRefreshToken(userId, tokenId) {
     const userKey = userId.toString();
     const userTokens = refreshTokenStore.get(userKey);
@@ -243,23 +188,14 @@ class JWTTokenService {
     }
   }
 
-  /**
-   * Revoke all refresh tokens for a user (logout from all devices)
-   */
   revokeAllUserTokens(userId) {
     const userKey = userId.toString();
     refreshTokenStore.delete(userKey);
     console.log(`🔒 All tokens revoked for user: ${userId}`);
   }
 
-  /**
-   * Logout - blacklist access token and revoke refresh token
-   */
-  logout(accessToken, refreshToken = null) {
-    // Blacklist access token
-    this.blacklistToken(accessToken);
-
-    // Revoke refresh token if provided
+  logout(accessToken, refreshToken = null) {
+    this.blacklistToken(accessToken);
     if (refreshToken) {
       try {
         const decoded = jwt.decode(refreshToken);
@@ -274,38 +210,25 @@ class JWTTokenService {
     return true;
   }
 
-  /**
-   * Logout from all devices
-   */
-  logoutAll(userId, currentAccessToken) {
-    // Blacklist current access token
+  logoutAll(userId, currentAccessToken) {
     if (currentAccessToken) {
       this.blacklistToken(currentAccessToken);
-    }
-
-    // Revoke all refresh tokens
+    }
     this.revokeAllUserTokens(userId);
 
     return true;
   }
 
-  /**
-   * Cleanup expired tokens from blacklist and store
-   */
   cleanup() {
     const now = Date.now();
     let cleanedBlacklist = 0;
-    let cleanedRefresh = 0;
-
-    // Clean blacklist
+    let cleanedRefresh = 0;
     for (const [token, data] of tokenBlacklist.entries()) {
       if (data.expiresAt < now) {
         tokenBlacklist.delete(token);
         cleanedBlacklist++;
       }
-    }
-
-    // Clean refresh token store
+    }
     for (const [userId, userTokens] of refreshTokenStore.entries()) {
       for (const [tokenId, data] of userTokens.entries()) {
         if (data.expiresAt < now) {
@@ -323,16 +246,10 @@ class JWTTokenService {
     }
   }
 
-  /**
-   * Start periodic cleanup
-   */
   startCleanupInterval() {
     setInterval(() => this.cleanup(), CONFIG.TOKEN_CLEANUP_INTERVAL);
   }
 
-  /**
-   * Get active sessions for a user
-   */
   getActiveSessions(userId) {
     const userKey = userId.toString();
     const userTokens = refreshTokenStore.get(userKey);
@@ -353,7 +270,5 @@ class JWTTokenService {
 
     return sessions;
   }
-}
-
-// Export singleton instance
+}
 module.exports = new JWTTokenService();

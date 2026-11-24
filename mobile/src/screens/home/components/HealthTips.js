@@ -1,6 +1,4 @@
-/**
- * HealthTips Component - Scrollable health tips cards
- */
+
 
 import React from 'react';
 import {
@@ -62,8 +60,7 @@ const DEFAULT_TIPS = [
 ];
 
 const HealthTips = ({ tips, onTipPress }) => {
-  const { colors } = useTheme();
-  // Guard: parent may pass null/undefined despite default prop — always fall back to DEFAULT_TIPS
+  const { colors } = useTheme();
   const safeTips = Array.isArray(tips) && tips.length > 0 ? tips : DEFAULT_TIPS;
   
   return (

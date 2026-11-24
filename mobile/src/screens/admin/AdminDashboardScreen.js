@@ -1,7 +1,4 @@
-/**
- * Admin Dashboard Screen - COMPLETE Implementation
- * 100% Parity with Web Admin Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -30,9 +27,7 @@ const AdminDashboardScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  
-  // Dashboard data state
+  const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState({
     totalPatients: 0,
     totalDoctors: 0,
@@ -107,9 +102,7 @@ const AdminDashboardScreen = ({ navigation }) => {
     setRefreshing(true);
     await fetchDashboardData();
     setRefreshing(false);
-  }, [fetchDashboardData]);
-
-  // Stat Card Component
+  }, [fetchDashboardData]);
   const StatCard = ({ icon, value, label, color, onPress }) => (
     <TouchableOpacity 
       style={[styles.statCard, { backgroundColor: colors.surface }]}
@@ -124,9 +117,7 @@ const AdminDashboardScreen = ({ navigation }) => {
       </Text>
       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
     </TouchableOpacity>
-  );
-
-  // Quick Action Card
+  );
   const QuickAction = ({ icon, label, onPress, badge }) => (
     <TouchableOpacity 
       style={[styles.quickAction, { backgroundColor: colors.surface }]}
@@ -167,7 +158,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />
         }
       >
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>
@@ -187,7 +178,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Overview Stats */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
           <View style={styles.statsGrid}>
@@ -222,7 +213,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* This Month Stats */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>This Month</Text>
           <Card style={[styles.monthCard, { backgroundColor: colors.surface }]}>
@@ -270,7 +261,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           </Card>
         </View>
 
-        {/* Pending Approvals Alert */}
+        {}
         {pendingApprovals.total > 0 && (
           <View style={styles.section}>
             <TouchableOpacity 
@@ -298,7 +289,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Quick Actions */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
@@ -358,7 +349,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Top Doctors */}
+        {}
         {topDoctors.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -402,7 +393,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* System Status */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>System Status</Text>
           <Card style={[styles.statusCard, { backgroundColor: colors.surface }]}>
@@ -438,32 +429,24 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: spacing.md, ...typography.bodyMedium },
-  scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: 120 },
-  
-  // Header
+  scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: 120 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.xxl },
   headerLeft: {},
   greeting: { ...typography.bodyLarge },
   userName: { ...typography.headlineLarge, marginTop: spacing.xs },
   roleBadge: { marginTop: spacing.sm },
   roleBadgeGradient: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
-  roleBadgeText: { color: '#0A0A0F', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
-  
-  // Section
+  roleBadgeText: { color: '#0A0A0F', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   section: { marginBottom: spacing.xxl },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   sectionTitle: { ...typography.headlineSmall, marginBottom: spacing.lg },
-  seeAll: { ...typography.labelMedium },
-  
-  // Stats Grid
+  seeAll: { ...typography.labelMedium },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   statCard: { width: (width - spacing.xl * 2 - spacing.md) / 2, padding: spacing.lg, borderRadius: borderRadius.lg },
   statIconBg: { width: 44, height: 44, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   statIcon: { fontSize: 22 },
   statValue: { ...typography.displaySmall, marginBottom: spacing.xs },
-  statLabel: { ...typography.labelSmall },
-  
-  // Month Card
+  statLabel: { ...typography.labelSmall },
   monthCard: { padding: spacing.lg, borderRadius: borderRadius.lg },
   monthRow: { flexDirection: 'row', alignItems: 'center' },
   monthStat: { flex: 1, alignItems: 'center' },
@@ -471,27 +454,21 @@ const styles = StyleSheet.create({
   monthValue: { ...typography.headlineMedium, marginBottom: spacing.xs },
   monthLabel: { ...typography.labelSmall, marginBottom: spacing.sm },
   growthBadge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.full },
-  growthText: { ...typography.labelSmall, fontWeight: '600' },
-  
-  // Alert Card
+  growthText: { ...typography.labelSmall, fontWeight: '600' },
   alertCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderRadius: borderRadius.lg, borderWidth: 1 },
   alertContent: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   alertIcon: { fontSize: 24, marginRight: spacing.md },
   alertText: { flex: 1 },
   alertTitle: { ...typography.bodyMedium, fontWeight: '600' },
   alertSubtext: { ...typography.labelSmall, marginTop: 2 },
-  alertArrow: { fontSize: 20, color: '#F59E0B' },
-  
-  // Quick Actions
+  alertArrow: { fontSize: 20, color: '#F59E0B' },
   quickActionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   quickAction: { width: (width - spacing.xl * 2 - spacing.md * 3) / 4, padding: spacing.md, borderRadius: borderRadius.lg, alignItems: 'center', position: 'relative' },
   quickActionContent: { alignItems: 'center' },
   quickActionIcon: { fontSize: 24, marginBottom: spacing.xs },
   quickActionLabel: { ...typography.labelSmall, textAlign: 'center' },
   badge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  
-  // List Card
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
   listCard: { borderRadius: borderRadius.lg, overflow: 'hidden' },
   doctorItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg },
   doctorItemBorder: { borderBottomWidth: 1 },
@@ -502,9 +479,7 @@ const styles = StyleSheet.create({
   doctorSpec: { ...typography.labelSmall, marginTop: 2 },
   doctorStats: { alignItems: 'flex-end' },
   doctorAppts: { ...typography.bodyLarge, fontWeight: '700' },
-  doctorApptLabel: { ...typography.labelSmall },
-  
-  // Status Card
+  doctorApptLabel: { ...typography.labelSmall },
   statusCard: { padding: spacing.lg, borderRadius: borderRadius.lg },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm },
   statusItem: { flexDirection: 'row', alignItems: 'center' },

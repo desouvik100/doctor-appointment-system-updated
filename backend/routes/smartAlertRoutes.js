@@ -1,17 +1,10 @@
-/**
- * Smart Alert Routes
- * ML-based patient deterioration prediction and alerts
- */
+
 
 const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const deteriorationService = require('../services/deteriorationPredictionService');
 
-/**
- * Predict patient deterioration risk
- * POST /api/smart-alerts/predict
- */
 router.post('/predict', verifyToken, async (req, res) => {
   try {
     const { patient, vitals, labResults, recentVitals } = req.body;
@@ -43,10 +36,6 @@ router.post('/predict', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Calculate NEWS2 score only
- * POST /api/smart-alerts/news2
- */
 router.post('/news2', verifyToken, async (req, res) => {
   try {
     const { vitals } = req.body;
@@ -72,10 +61,6 @@ router.post('/news2', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Analyze lab results for critical values
- * POST /api/smart-alerts/analyze-labs
- */
 router.post('/analyze-labs', verifyToken, async (req, res) => {
   try {
     const { labResults } = req.body;
@@ -101,10 +86,6 @@ router.post('/analyze-labs', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get risk levels reference
- * GET /api/smart-alerts/risk-levels
- */
 router.get('/risk-levels', (req, res) => {
   res.json({
     success: true,

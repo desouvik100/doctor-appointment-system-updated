@@ -1,7 +1,4 @@
-/**
- * Doctor Schedule Screen - Full Availability Management
- * Features: Weekly schedule, time slots, block dates, vacation mode, online settings
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -38,22 +35,12 @@ const DoctorScheduleScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [schedule, setSchedule] = useState({});
   const [availability, setAvailability] = useState('Available');
-  const [activeTab, setActiveTab] = useState('weekly'); // weekly, blocked, settings
-  
-  // Vacation mode
-  const [vacationMode, setVacationMode] = useState({ isActive: false, startDate: '', endDate: '', message: '' });
-  
-  // Online consultation
-  const [onlineSettings, setOnlineSettings] = useState({ enabled: true, separateSlots: false });
-  
-  // Settings
+  const [activeTab, setActiveTab] = useState('weekly'); 
+  const [vacationMode, setVacationMode] = useState({ isActive: false, startDate: '', endDate: '', message: '' });
+  const [onlineSettings, setOnlineSettings] = useState({ enabled: true, separateSlots: false });
   const [bufferTime, setBufferTime] = useState(5);
-  const [advanceBookingDays, setAdvanceBookingDays] = useState(30);
-  
-  // Blocked dates
-  const [blockedDates, setBlockedDates] = useState([]);
-  
-  // Modals
+  const [advanceBookingDays, setAdvanceBookingDays] = useState(30);
+  const [blockedDates, setBlockedDates] = useState([]);
   const [showSlotModal, setShowSlotModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -202,7 +189,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -213,7 +200,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Tabs */}
+      {}
       <View style={styles.tabsContainer}>
         {[
           { id: 'weekly', label: '📅 Weekly', icon: '📅' },
@@ -234,7 +221,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
-        {/* Current Status - Always visible */}
+        {}
         <Card style={[styles.statusCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>🟢 Current Status</Text>
           <View style={styles.statusButtons}>
@@ -251,10 +238,10 @@ const DoctorScheduleScreen = ({ navigation }) => {
           </View>
         </Card>
 
-        {/* WEEKLY TAB */}
+        {}
         {activeTab === 'weekly' && (
           <>
-            {/* Vacation Mode */}
+            {}
             <Card style={[styles.vacationCard, { backgroundColor: vacationMode.isActive ? '#EF444420' : colors.surface }]}>
               <View style={styles.vacationHeader}>
                 <View style={styles.vacationInfo}>
@@ -293,7 +280,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
               )}
             </Card>
 
-            {/* Weekly Schedule */}
+            {}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>📆 Weekly Schedule</Text>
               
@@ -352,7 +339,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
           </>
         )}
 
-        {/* BLOCKED TAB */}
+        {}
         {activeTab === 'blocked' && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -388,12 +375,12 @@ const DoctorScheduleScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* SETTINGS TAB */}
+        {}
         {activeTab === 'settings' && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>⚙️ Booking Settings</Text>
             
-            {/* Online Consultation */}
+            {}
             <Card style={[styles.settingCard, { backgroundColor: colors.surface }]}>
               <View style={styles.settingHeader}>
                 <Text style={styles.settingIcon}>📹</Text>
@@ -410,7 +397,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
               </View>
             </Card>
 
-            {/* Buffer Time */}
+            {}
             <Card style={[styles.settingCard, { backgroundColor: colors.surface }]}>
               <View style={styles.settingHeader}>
                 <Text style={styles.settingIcon}>⏳</Text>
@@ -432,7 +419,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
               </View>
             </Card>
 
-            {/* Advance Booking */}
+            {}
             <Card style={[styles.settingCard, { backgroundColor: colors.surface }]}>
               <View style={styles.settingHeader}>
                 <Text style={styles.settingIcon}>📆</Text>
@@ -454,7 +441,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
               </View>
             </Card>
 
-            {/* Consultation Duration Info */}
+            {}
             <Card style={[styles.infoCard, { backgroundColor: '#6C5CE710' }]}>
               <Text style={styles.infoIcon}>💡</Text>
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
@@ -465,7 +452,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
         )}
       </ScrollView>
 
-      {/* Slot Edit Modal */}
+      {}
       <Modal visible={showSlotModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
@@ -543,7 +530,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* Block Date Modal */}
+      {}
       <Modal visible={showBlockModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
@@ -689,9 +676,7 @@ const styles = StyleSheet.create({
   
   infoCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderRadius: borderRadius.lg },
   infoIcon: { fontSize: 20, marginRight: spacing.md },
-  infoText: { flex: 1, ...typography.bodySmall },
-  
-  // Modal styles
+  infoText: { flex: 1, ...typography.bodySmall },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: borderRadius.xxl, borderTopRightRadius: borderRadius.xxl, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' },

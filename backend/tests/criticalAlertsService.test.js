@@ -1,8 +1,4 @@
-/**
- * Critical Alerts Service Tests
- * Tests Property 10: Clinical Decision Support Alerts
- * Validates Requirements 9.1
- */
+
 
 const fc = require('fast-check');
 const {
@@ -18,10 +14,7 @@ const {
 
 describe('Critical Alerts Service Tests', () => {
   
-  describe('Property 10: Clinical Decision Support Alerts', () => {
-    
-    // Feature: emr-clinical-features, Property 10: Clinical Decision Support Alerts
-    // **Validates: Requirements 9.1**
+  describe('Property 10: Clinical Decision Support Alerts', () => {
     
     test('For any BP >= 180/120, a hypertensive crisis alert is generated', () => {
       const criticalBPValues = [
@@ -111,21 +104,16 @@ describe('Critical Alerts Service Tests', () => {
       }
     });
     
-    test('Alerts are sorted by severity (critical first)', () => {
-      // Create vitals with multiple alerts of different severities
+    test('Alerts are sorted by severity (critical first)', () => {
       const vitals = {
-        bloodPressure: { systolic: 180, diastolic: 120 }, // critical
-        pulse: { value: 110 }, // no alert (normal range)
-        spo2: { value: 93 }, // moderate (mild hypoxia)
-        temperature: { value: 102, unit: 'F' } // high (high fever)
+        bloodPressure: { systolic: 180, diastolic: 120 }, 
+        pulse: { value: 110 }, 
+        spo2: { value: 93 }, 
+        temperature: { value: 102, unit: 'F' } 
       };
       
-      const alerts = generateVitalAlerts(vitals);
-      
-      // Should have multiple alerts
-      expect(alerts.length).toBeGreaterThan(1);
-      
-      // Should be sorted by severity
+      const alerts = generateVitalAlerts(vitals);
+      expect(alerts.length).toBeGreaterThan(1);
       const severityOrder = { critical: 1, high: 2, moderate: 3, low: 4 };
       for (let i = 0; i < alerts.length - 1; i++) {
         const currentOrder = severityOrder[alerts[i].severity] || 5;
@@ -166,15 +154,11 @@ describe('Critical Alerts Service Tests', () => {
         { severity: 'major', severityLevel: 2, drug1: 'drugC', drug2: 'drugD' }
       ];
       
-      const escalated = escalateInteractionsForElderly(interactions, 70);
-      
-      // Moderate should be escalated to major
+      const escalated = escalateInteractionsForElderly(interactions, 70);
       const formerlyModerate = escalated.find(i => i.drug1 === 'drugA');
       expect(formerlyModerate.severity).toBe('major');
       expect(formerlyModerate.elderlyEscalated).toBe(true);
-      expect(formerlyModerate.originalSeverity).toBe('moderate');
-      
-      // Major should have elderly warning
+      expect(formerlyModerate.originalSeverity).toBe('moderate');
       const majorInteraction = escalated.find(i => i.drug1 === 'drugC');
       expect(majorInteraction.elderlyWarning).toBeDefined();
     });
@@ -221,8 +205,7 @@ describe('Critical Alerts Service Tests', () => {
     
     test('generateVitalAlerts handles missing vitals gracefully', () => {
       const partialVitals = {
-        bloodPressure: { systolic: 120 }
-        // Missing other vitals
+        bloodPressure: { systolic: 120 }
       };
       
       const alerts = generateVitalAlerts(partialVitals);
@@ -252,14 +235,11 @@ describe('Critical Alerts Service Tests', () => {
       expect(alerts[0].severity).toBe('critical');
     });
     
-    test('respiratory distress generates appropriate alerts', () => {
-      // High respiratory rate
+    test('respiratory distress generates appropriate alerts', () => {
       let vitals = { respiratoryRate: { value: 32 } };
       let alerts = generateVitalAlerts(vitals);
       expect(alerts.length).toBeGreaterThan(0);
-      expect(alerts[0].alert).toBe('SEVERE RESPIRATORY DISTRESS');
-      
-      // Low respiratory rate
+      expect(alerts[0].alert).toBe('SEVERE RESPIRATORY DISTRESS');
       vitals = { respiratoryRate: { value: 7 } };
       alerts = generateVitalAlerts(vitals);
       expect(alerts.length).toBeGreaterThan(0);
@@ -311,9 +291,7 @@ describe('Critical Alerts Service Tests', () => {
       expect(meds).toHaveProperty('benzodiazepines');
       expect(meds).toHaveProperty('opioids');
       expect(meds).toHaveProperty('nsaids');
-      expect(meds).toHaveProperty('anticholinergics');
-      
-      // Each category should have drugs array
+      expect(meds).toHaveProperty('anticholinergics');
       expect(Array.isArray(meds.benzodiazepines.drugs)).toBe(true);
       expect(meds.benzodiazepines.drugs.length).toBeGreaterThan(0);
     });
@@ -326,20 +304,15 @@ describe('Critical Alerts Service Tests', () => {
       expect(result.hasCriticalAlerts).toBe(false);
     });
     
-    test('performClinicalCheck summary reflects alert severity', () => {
-      // Critical alerts
+    test('performClinicalCheck summary reflects alert severity', () => {
       let result = performClinicalCheck({
         vitals: { bloodPressure: { systolic: 200, diastolic: 130 } }
       });
-      expect(result.summary).toContain('CRITICAL');
-      
-      // High alerts only
+      expect(result.summary).toContain('CRITICAL');
       result = performClinicalCheck({
         vitals: { pulse: { value: 125 } }
       });
-      expect(result.summary).toContain('high-priority');
-      
-      // No alerts
+      expect(result.summary).toContain('high-priority');
       result = performClinicalCheck({
         vitals: { pulse: { value: 72 } }
       });

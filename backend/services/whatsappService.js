@@ -1,38 +1,21 @@
-/**
- * WhatsApp Business API Service
- * Handles sending messages via WhatsApp Cloud API
- */
 
-const axios = require('axios');
 
-// WhatsApp Cloud API Configuration
+const axios = require('axios');
 const WHATSAPP_API_URL = 'https://graph.facebook.com/v18.0';
 const WHATSAPP_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const WHATSAPP_BUSINESS_ACCOUNT_ID = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID;
 
-/**
- * Check if WhatsApp is configured
- */
 const isWhatsAppConfigured = () => {
   return !!(WHATSAPP_PHONE_NUMBER_ID && WHATSAPP_ACCESS_TOKEN);
 };
 
-/**
- * Format phone number for WhatsApp (must include country code without +)
- */
 const formatPhoneNumber = (phone) => {
-  if (!phone) return null;
-  
-  // Remove all non-numeric characters
-  let cleaned = phone.replace(/\D/g, '');
-  
-  // If starts with 0, assume Indian number and add 91
+  if (!phone) return null;
+  let cleaned = phone.replace(/\D/g, '');
   if (cleaned.startsWith('0')) {
     cleaned = '91' + cleaned.substring(1);
-  }
-  
-  // If 10 digits, assume Indian number
+  }
   if (cleaned.length === 10) {
     cleaned = '91' + cleaned;
   }
@@ -40,9 +23,6 @@ const formatPhoneNumber = (phone) => {
   return cleaned;
 };
 
-/**
- * Send a text message via WhatsApp
- */
 const sendTextMessage = async (to, message) => {
   if (!isWhatsAppConfigured()) {
     console.log('⚠️ WhatsApp not configured, skipping message');
@@ -80,9 +60,6 @@ const sendTextMessage = async (to, message) => {
   }
 };
 
-/**
- * Send a template message (for business-initiated conversations)
- */
 const sendTemplateMessage = async (to, templateName, languageCode = 'en', components = []) => {
   if (!isWhatsAppConfigured()) {
     console.log('⚠️ WhatsApp not configured, skipping template message');
@@ -129,9 +106,6 @@ const sendTemplateMessage = async (to, templateName, languageCode = 'en', compon
   }
 };
 
-/**
- * Send appointment confirmation via WhatsApp
- */
 const sendAppointmentConfirmation = async (phone, appointmentDetails) => {
   const { patientName, doctorName, date, time, clinicName, appointmentId } = appointmentDetails;
   
@@ -157,9 +131,6 @@ Thank you for choosing HealthSync! 💚`;
   return sendTextMessage(phone, message);
 };
 
-/**
- * Send appointment reminder via WhatsApp
- */
 const sendAppointmentReminder = async (phone, appointmentDetails) => {
   const { patientName, doctorName, date, time, clinicName, hoursUntil } = appointmentDetails;
   
@@ -182,9 +153,6 @@ See you soon! 💚`;
   return sendTextMessage(phone, message);
 };
 
-/**
- * Send appointment cancellation notice via WhatsApp
- */
 const sendAppointmentCancellation = async (phone, appointmentDetails) => {
   const { patientName, doctorName, date, time, reason } = appointmentDetails;
   
@@ -207,9 +175,6 @@ We apologize for any inconvenience. 🙏`;
   return sendTextMessage(phone, message);
 };
 
-/**
- * Send prescription ready notification via WhatsApp
- */
 const sendPrescriptionReady = async (phone, details) => {
   const { patientName, doctorName, prescriptionId } = details;
   
@@ -228,9 +193,6 @@ Get well soon! 💚`;
   return sendTextMessage(phone, message);
 };
 
-/**
- * Send OTP via WhatsApp
- */
 const sendOTP = async (phone, otp) => {
   const message = `🔐 *HealthSync Verification*
 
@@ -243,9 +205,6 @@ Do not share this code with anyone.`;
   return sendTextMessage(phone, message);
 };
 
-/**
- * Send payment confirmation via WhatsApp
- */
 const sendPaymentConfirmation = async (phone, paymentDetails) => {
   const { patientName, amount, transactionId, appointmentDate, doctorName } = paymentDetails;
   
@@ -266,9 +225,6 @@ Thank you for your payment! 💚`;
   return sendTextMessage(phone, message);
 };
 
-/**
- * Send Google Meet link for online consultation
- */
 const sendMeetLink = async (phone, meetDetails) => {
   const { patientName, doctorName, date, time, meetLink } = meetDetails;
   

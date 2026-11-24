@@ -8,18 +8,15 @@ const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const { verifyClinicAccess } = require('../middleware/clinicIsolation');
 const router = express.Router();
 
-// Receptionist login
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find receptionist user
     const user = await User.findOne({ email, role: 'receptionist' });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Check if receptionist is approved
     if (user.approvalStatus === 'pending') {
       return res.status(403).json({ message: 'Your account is pending approval. Please wait for admin confirmation.' });
     }
@@ -28,13 +25,11 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ message: 'Your account has been rejected. Please contact admin.' });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -57,7 +52,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Reset password for receptionist (after OTP verification)
 router.post('/reset-password', async (req, res) => {
   try {
     console.log('📧 Reset password request received:', { email: req.body.email });
@@ -80,11 +74,10 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    // Find user by email - first try receptionist, then any user
     let user = await User.findOne({ email: email.toLowerCase().trim(), role: 'receptionist' });
     
     if (!user) {
-      // Try finding any user with this email
+
       user = await User.findOne({ email: email.toLowerCase().trim() });
       if (user) {
         console.log('Found user with role:', user.role);
@@ -101,10 +94,8 @@ router.post('/reset-password', async (req, res) => {
 
     console.log('✅ User found:', user.email, 'Role:', user.role);
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    
-    // Update password using findByIdAndUpdate to avoid validation issues
+
     await User.findByIdAndUpdate(user._id, { password: hashedPassword });
 
     console.log(`✅ Password reset successful for: ${email}`);
@@ -123,17 +114,13 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-// Get appointments for receptionist's clinic (with clinic isolation)
-// If staff has assignedDoctorId, only show that doctor's appointments (department isolation)
 router.get('/appointments/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
-    const { assignedDoctorId } = req.query; // Optional: filter by assigned doctor
-    
-    // Build query
+    const { assignedDoctorId } = req.query; 
+
     const query = { clinicId };
-    
-    // If staff has an assigned doctor, only show that doctor's appointments
+
     if (assignedDoctorId) {
       query.doctorId = assignedDoctorId;
     }
@@ -150,7 +137,6 @@ router.get('/appointments/:clinicId', verifyToken, verifyClinicAccess('clinicId'
   }
 });
 
-// Update appointment status
 router.put('/appointments/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
@@ -174,7 +160,6 @@ router.put('/appointments/:id/status', async (req, res) => {
   }
 });
 
-// Get pending receptionists (admin only)
 router.get('/pending', async (req, res) => {
   try {
     const pendingReceptionists = await User.find({ 
@@ -191,7 +176,6 @@ router.get('/pending', async (req, res) => {
   }
 });
 
-// Approve receptionist (admin only)
 router.put('/:id/approve', async (req, res) => {
   try {
     const { clinicId } = req.body;
@@ -201,15 +185,13 @@ router.put('/:id/approve', async (req, res) => {
       return res.status(404).json({ message: 'Receptionist not found' });
     }
 
-    // Update approval status and assign clinic if provided
     user.approvalStatus = 'approved';
     if (clinicId) {
       user.clinicId = clinicId;
     }
 
     await user.save();
-    
-    // Audit log
+
     try {
       const auditService = require('../services/auditService');
       await auditService.staffApproved(user, req.user || { name: 'Admin', role: 'admin' }, req);
@@ -228,7 +210,6 @@ router.put('/:id/approve', async (req, res) => {
   }
 });
 
-// Reject receptionist (admin only)
 router.put('/:id/reject', async (req, res) => {
   try {
     const { reason } = req.body;
@@ -242,7 +223,6 @@ router.put('/:id/reject', async (req, res) => {
       return res.status(404).json({ message: 'Receptionist not found' });
     }
 
-    // Audit log
     try {
       const auditService = require('../services/auditService');
       await auditService.staffRejected(user, req.user || { name: 'Admin', role: 'admin' }, reason, req);
@@ -258,7 +238,6 @@ router.put('/:id/reject', async (req, res) => {
   }
 });
 
-// Assign staff to a specific doctor (admin only - for department isolation)
 router.put('/:id/assign-doctor', async (req, res) => {
   try {
     const { doctorId, department } = req.body;
@@ -269,7 +248,6 @@ router.put('/:id/assign-doctor', async (req, res) => {
       return res.status(404).json({ message: 'Staff not found' });
     }
 
-    // Update assigned doctor and department
     user.assignedDoctorId = doctorId || null;
     user.department = department || null;
     
@@ -289,21 +267,13 @@ router.put('/:id/assign-doctor', async (req, res) => {
   }
 });
 
-// ==========================================
-// DOCTOR MANAGEMENT FOR CLINICS
-// ==========================================
-
-// Get doctors for a specific clinic (with clinic isolation)
-// If staff has assignedDoctorId, only show that doctor (department isolation)
 router.get('/doctors/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
-    const { assignedDoctorId } = req.query; // Optional: filter by assigned doctor
-    
-    // Build query
+    const { assignedDoctorId } = req.query; 
+
     const query = { clinicId, isActive: true };
-    
-    // If staff has an assigned doctor, only show that doctor
+
     if (assignedDoctorId) {
       query._id = assignedDoctorId;
     }
@@ -318,25 +288,20 @@ router.get('/doctors/:clinicId', verifyToken, verifyClinicAccess('clinicId'), as
   }
 });
 
-// Get patients who have appointments at this clinic (with clinic isolation)
-// If staff has assignedDoctorId, only show that doctor's patients (department isolation)
 router.get('/patients/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
-    const { assignedDoctorId } = req.query; // Optional: filter by assigned doctor
-    
-    // Build query
+    const { assignedDoctorId } = req.query; 
+
     const query = { clinicId };
     if (assignedDoctorId) {
       query.doctorId = assignedDoctorId;
     }
-    
-    // Get all appointments for this clinic/doctor to find unique patients
+
     const appointments = await Appointment.find(query)
       .populate('userId', 'name email phone medicalHistory')
       .sort({ date: -1 });
 
-    // Get unique patients with their appointment stats
     const patientMap = new Map();
     
     appointments.forEach(apt => {
@@ -370,13 +335,11 @@ router.get('/patients/:clinicId', verifyToken, verifyClinicAccess('clinicId'), a
   }
 });
 
-// Update doctor availability (clinic can set Available/Busy) - with clinic isolation
 router.put('/doctors/:doctorId/availability', verifyTokenWithRole(['receptionist', 'admin']), async (req, res) => {
   try {
     const { doctorId } = req.params;
     const { availability, clinicId } = req.body;
-    
-    // Verify receptionist can only update doctors from their clinic
+
     if (req.user.role === 'receptionist' && req.user.clinicId) {
       const doctor = await Doctor.findById(doctorId);
       if (doctor && doctor.clinicId?.toString() !== req.user.clinicId?.toString()) {
@@ -384,24 +347,20 @@ router.put('/doctors/:doctorId/availability', verifyTokenWithRole(['receptionist
       }
     }
 
-    // Validate availability value
     if (!['Available', 'Busy', 'On Leave'].includes(availability)) {
       return res.status(400).json({ message: 'Invalid availability status. Use: Available, Busy, or On Leave' });
     }
 
-    // Find doctor and verify they belong to this clinic
     const doctor = await Doctor.findById(doctorId);
     
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    // Verify doctor belongs to the clinic
     if (clinicId && doctor.clinicId.toString() !== clinicId) {
       return res.status(403).json({ message: 'You can only update doctors from your clinic' });
     }
 
-    // Update availability
     doctor.availability = availability;
     await doctor.save();
 

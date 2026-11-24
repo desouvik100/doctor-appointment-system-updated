@@ -1,6 +1,4 @@
-/**
- * Bottom Tab Navigator - Redesigned Floating Dock & Quick Actions Sheet
- */
+
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -28,10 +26,9 @@ import AppointmentsScreen from '../screens/appointments/AppointmentsScreen';
 const Tab = createBottomTabNavigator();
 const { width, height } = Dimensions.get('window');
 
-// 3-tab configuration
 const TAB_CONFIG = [
   { name: 'Home', icon: '🏠', label: 'Home' },
-  { name: 'Book', icon: '➕', label: 'Book' }, // Floating center action button
+  { name: 'Book', icon: '➕', label: 'Book' }, 
   { name: 'Appointments', icon: '📅', label: 'Appointments' },
 ];
 
@@ -163,7 +160,7 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
           },
         ]}
       >
-        {/* Active Tab sliding pill background - skips center button */}
+        {}
         {state.index !== 1 && (
           <Animated.View
             style={[
@@ -225,8 +222,7 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
 
 const BottomTabNavigator = ({ navigation: navProp }) => {
   const { colors, isDarkMode } = useTheme();
-  // useNavigation() is the reliable source — navProp may be undefined
-  // when this component is rendered as a nested tab screen
+
   const hookNav = useNavigation();
   const navigation = navProp || hookNav;
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -250,7 +246,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
         useNativeDriver: true,
       }),
       Animated.spring(rotateAnim, {
-        toValue: 1, // 45 degree rotation
+        toValue: 1, 
         useNativeDriver: true,
         tension: 40,
         friction: 7,
@@ -285,7 +281,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
   const handleAction = (screenName) => {
     closeSheet();
     setTimeout(() => {
-      // Ensure target navigation works based on screen IDs
+
       if (screenName === 'Booking') {
         navigation.navigate('DoctorSearch');
       } else {
@@ -296,7 +292,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
 
   const rotation = rotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '135deg'], // Rotates plus to close icon
+    outputRange: ['0deg', '135deg'], 
   });
 
   return (
@@ -312,19 +308,19 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
         screenOptions={{ headerShown: false }}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        {/* Placeholder tab: Center Action is intercepted to open sheet */}
+        {}
         <Tab.Screen name="Book" component={HomeScreen} />
         <Tab.Screen name="Appointments" component={AppointmentsScreen} />
       </Tab.Navigator>
 
       {sheetVisible && (
         <View style={StyleSheet.absoluteFill}>
-          {/* Backdrop */}
+          {}
           <TouchableWithoutFeedback onPress={closeSheet}>
             <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]} />
           </TouchableWithoutFeedback>
 
-          {/* Bottom Sheet Container */}
+          {}
           <Animated.View
             style={[
               styles.sheetContainer,
@@ -336,7 +332,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
               },
             ]}
           >
-            {/* Grab Handle */}
+            {}
             <View style={[styles.grabHandle, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)' }]} />
 
             <View style={styles.sheetHeader}>
@@ -344,7 +340,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
               <Text style={[styles.sheetSubtitle, { color: colors.textMuted }]}>Select a premium health service below</Text>
             </View>
 
-            {/* Actions Grid */}
+            {}
             <View style={styles.gridContainer}>
               {QUICK_ACTIONS.map((item) => (
                 <TouchableOpacity
@@ -370,7 +366,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
               ))}
             </View>
 
-            {/* Close Button */}
+            {}
             <TouchableOpacity
               style={[
                 styles.closeButton,
@@ -470,12 +466,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '300',
   },
-  // Backdrop
+
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#000000',
   },
-  // Bottom Sheet
+
   sheetContainer: {
     position: 'absolute',
     bottom: 0,

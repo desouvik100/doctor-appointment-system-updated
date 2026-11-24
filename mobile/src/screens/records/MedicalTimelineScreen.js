@@ -1,6 +1,4 @@
-/**
- * MedicalTimelineScreen - Chronological health events timeline with API integration
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -58,8 +56,7 @@ const MedicalTimelineScreen = ({ navigation }) => {
       setHasMore(pagination?.page < pagination?.pages);
       setPage(pageNum);
     } catch (error) {
-      console.error('Error fetching timeline:', error);
-      // Keep existing events on error
+      console.error('Error fetching timeline:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -1,17 +1,11 @@
-/**
- * Global Error Handler - Prevents red screen crashes
- */
 
-/**
- * Handle API errors safely
- */
+
 export const handleApiError = (error) => {
   if (__DEV__) {
     console.log('API Error:', error?.response?.data || error?.message);
   }
 
-  if (error.response) {
-    // Server responded with error status
+  if (error.response) {
     const status = error.response.status;
     const message = error.response.data?.message;
 
@@ -31,36 +25,24 @@ export const handleApiError = (error) => {
     }
   }
 
-  if (error.request) {
-    // Request made but no response
+  if (error.request) {
     return 'Network error. Please check your connection.';
-  }
-
-  // Something else happened
+  }
   return 'An unexpected error occurred.';
 };
 
-/**
- * Safe console log - only in dev mode
- */
 export const devLog = (...args) => {
   if (__DEV__) {
     console.log(...args);
   }
 };
 
-/**
- * Safe console error - only in dev mode
- */
 export const devError = (...args) => {
   if (__DEV__) {
     console.error(...args);
   }
 };
 
-/**
- * Wrap async function with error handling
- */
 export const safeAsync = async (asyncFn, fallback = null) => {
   try {
     return await asyncFn();
@@ -70,9 +52,6 @@ export const safeAsync = async (asyncFn, fallback = null) => {
   }
 };
 
-/**
- * Check if value is valid (not null, undefined, or empty)
- */
 export const isValid = (value) => {
   if (value === null || value === undefined) return false;
   if (typeof value === 'string' && value.trim() === '') return false;

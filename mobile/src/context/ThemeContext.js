@@ -1,13 +1,9 @@
-/**
- * Theme Context - Light/Dark Mode Support
- */
+
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const THEME_KEY = 'app_theme';
-
-// Dark theme colors (current default)
+const THEME_KEY = 'app_theme';
 export const darkColors = {
   primary: '#00D4AA',
   primaryDark: '#00B894',
@@ -24,7 +20,7 @@ export const darkColors = {
   backgroundElevated: '#232A3D',
   surface: '#1E2433',
   surfaceLight: '#2A3142',
-  surfaceBorder: 'transparent', // NO GRAY BORDERS - Use transparent for clean design
+  surfaceBorder: 'transparent', 
   textPrimary: '#FFFFFF',
   textSecondary: '#A0AEC0',
   textMuted: '#6B7280',
@@ -56,9 +52,7 @@ export const darkColors = {
   skeleton: '#2A3142',
   ripple: 'rgba(0, 212, 170, 0.2)',
   statusBar: 'light-content',
-};
-
-// Light theme colors
+};
 export const lightColors = {
   primary: '#00B894',
   primaryDark: '#009B77',
@@ -75,7 +69,7 @@ export const lightColors = {
   backgroundElevated: '#FFFFFF',
   surface: '#FFFFFF',
   surfaceLight: '#F1F5F9',
-  surfaceBorder: 'transparent', // NO GRAY BORDERS - Use transparent for clean design
+  surfaceBorder: 'transparent', 
   textPrimary: '#1E293B',
   textSecondary: '#475569',
   textMuted: '#64748B',
@@ -113,7 +107,7 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [colors, setColors] = useState(lightColors); // Start with lightColors immediately
+  const [colors, setColors] = useState(lightColors); 
 
   useEffect(() => {
     loadTheme();
@@ -128,8 +122,7 @@ export const ThemeProvider = ({ children }) => {
         setColors(isDark ? darkColors : lightColors);
       }
     } catch (error) {
-      console.log('Error loading theme:', error);
-      // Fallback to light colors on error
+      console.log('Error loading theme:', error);
       setColors(lightColors);
     }
   };

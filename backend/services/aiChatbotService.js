@@ -1,18 +1,8 @@
-// backend/services/aiChatbotService.js
-// AI Chatbot Service for HealthSync - Handles common queries
+
 
 const Doctor = require('../models/Doctor');
 const Clinic = require('../models/Clinic');
-const Appointment = require('../models/Appointment');
-
-/**
- * ============================================
- * 7. AI CHATBOT FOR COMMON QUERIES
- * Intelligent responses to user questions
- * ============================================
- */
-
-// Intent patterns for query classification
+const Appointment = require('../models/Appointment');
 const intentPatterns = {
   greeting: [
     /^(hi|hello|hey|good morning|good afternoon|good evening|namaste)/i,
@@ -60,9 +50,6 @@ const intentPatterns = {
   ]
 };
 
-/**
- * Classify user intent from message
- */
 function classifyIntent(message) {
   const normalizedMessage = message.toLowerCase().trim();
   
@@ -77,13 +64,8 @@ function classifyIntent(message) {
   return 'unknown';
 }
 
-/**
- * Extract entities from message (doctor name, specialization, date, etc.)
- */
 function extractEntities(message) {
-  const entities = {};
-  
-  // Extract specialization
+  const entities = {};
   const specializations = [
     'cardiologist', 'dermatologist', 'pediatrician', 'orthopedic',
     'neurologist', 'gynecologist', 'dentist', 'ophthalmologist',
@@ -95,18 +77,14 @@ function extractEntities(message) {
       entities.specialization = spec;
       break;
     }
-  }
-  
-  // Extract date references
+  }
   if (/today/i.test(message)) {
     entities.date = new Date().toISOString().split('T')[0];
   } else if (/tomorrow/i.test(message)) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     entities.date = tomorrow.toISOString().split('T')[0];
-  }
-  
-  // Extract symptoms for doctor recommendation
+  }
   const symptoms = message.match(/(fever|cold|cough|headache|pain|skin|heart|stomach|eye|ear|tooth|bone|joint|mental|stress|anxiety)/gi);
   if (symptoms) {
     entities.symptoms = [...new Set(symptoms.map(s => s.toLowerCase()))];
@@ -115,9 +93,6 @@ function extractEntities(message) {
   return entities;
 }
 
-/**
- * Generate response based on intent
- */
 async function generateResponse(intent, entities, userId = null) {
   const responses = {
     greeting: {
@@ -224,9 +199,7 @@ async function generateResponse(intent, entities, userId = null) {
     }
   };
 
-  let response = responses[intent] || responses.unknown;
-  
-  // Enhance response with dynamic data based on entities
+  let response = responses[intent] || responses.unknown;
   if (intent === 'doctor' && entities.specialization) {
     try {
       const doctors = await Doctor.find({
@@ -248,9 +221,7 @@ async function generateResponse(intent, entities, userId = null) {
     } catch (error) {
       console.error('Error fetching doctors:', error);
     }
-  }
-  
-  // Add symptom-based doctor recommendation
+  }
   if (entities.symptoms && entities.symptoms.length > 0) {
     const symptomToSpecialist = {
       fever: 'General Physician',
@@ -281,9 +252,7 @@ async function generateResponse(intent, entities, userId = null) {
         recommendedSpecialists
       };
     }
-  }
-  
-  // Add queue info if user has appointments today
+  }
   if (intent === 'queue' && userId) {
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -307,21 +276,11 @@ async function generateResponse(intent, entities, userId = null) {
   return response;
 }
 
-/**
- * Main chatbot function - process user message and return response
- */
 async function processMessage(message, userId = null, conversationHistory = []) {
-  try {
-    // Classify intent
-    const intent = classifyIntent(message);
-    
-    // Extract entities
-    const entities = extractEntities(message);
-    
-    // Generate response
-    const response = await generateResponse(intent, entities, userId);
-    
-    // Add metadata
+  try {
+    const intent = classifyIntent(message);
+    const entities = extractEntities(message);
+    const response = await generateResponse(intent, entities, userId);
     return {
       success: true,
       intent,
@@ -346,9 +305,6 @@ async function processMessage(message, userId = null, conversationHistory = []) 
   }
 }
 
-/**
- * Get quick replies for common actions
- */
 function getQuickReplies() {
   return [
     { id: 'book', text: '📅 Book Appointment', intent: 'booking' },

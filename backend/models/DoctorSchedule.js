@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const timeSlotSchema = new mongoose.Schema({
-  startTime: { type: String, required: true }, // "09:00"
-  endTime: { type: String, required: true },   // "13:00"
-  slotDuration: { type: Number, default: 15 }, // minutes
+  startTime: { type: String, required: true }, 
+  endTime: { type: String, required: true },   
+  slotDuration: { type: Number, default: 15 }, 
   maxPatients: { type: Number, default: 20 }
 });
 
@@ -30,7 +30,7 @@ const doctorScheduleSchema = new mongoose.Schema({
     date: Date,
     reason: String,
     isFullDay: { type: Boolean, default: true },
-    blockedSlots: [String] // specific time slots if not full day
+    blockedSlots: [String] 
   }],
   vacationMode: {
     isActive: { type: Boolean, default: false },
@@ -45,11 +45,11 @@ const doctorScheduleSchema = new mongoose.Schema({
   },
   bufferTime: {
     type: Number,
-    default: 5 // minutes between appointments
+    default: 5 
   },
   advanceBookingDays: {
     type: Number,
-    default: 30 // how many days in advance can book
+    default: 30 
   }
 }, { timestamps: true });
 

@@ -8,7 +8,6 @@ const Doctor = require('../models/Doctor');
 const { verifyToken } = require('../middleware/auth');
 const mongoose = require('mongoose');
 
-// Helper to dynamically populate Patient names and Doctor names for reply threads
 const populateReplyUsers = async (replies) => {
   const userIds = [];
   const doctorIds = [];
@@ -53,8 +52,6 @@ const populateReplyUsers = async (replies) => {
   });
 };
 
-// ─── GET /api/reviews/:doctorId ───
-// Public access to reviews tab listing with analytics and recursive replies
 router.get('/:doctorId', async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -70,7 +67,6 @@ router.get('/:doctorId', async (req, res) => {
     const limitNum = parseInt(limit, 10);
     const skipNum = (parseInt(page, 10) - 1) * limitNum;
 
-    // 1. Build Query
     const query = { 
       doctorId: new mongoose.Types.ObjectId(doctorId), 
       status: 'approved' 
@@ -85,12 +81,11 @@ router.get('/:doctorId', async (req, res) => {
     }
 
     if (rating) {
-      // Handles single or multiple ratings e.g. rating=5 or rating=5,4
+
       const ratingArray = rating.split(',').map(Number);
       query.rating = { $in: ratingArray };
     }
 
-    // 2. Sorting
     let sortOption = { createdAt: -1 };
     if (sort === 'helpful') {
       sortOption = { helpfulCount: -1, createdAt: -1 };
@@ -104,7 +99,6 @@ router.get('/:doctorId', async (req, res) => {
       sortOption = { createdAt: 1 };
     }
 
-    // 3. Query Reviews
     const [reviews, totalCount] = await Promise.all([
       Review.find(query)
         .populate('patientId', 'name profilePhoto')
@@ -115,7 +109,6 @@ router.get('/:doctorId', async (req, res) => {
       Review.countDocuments(query)
     ]);
 
-    // 4. Calculate Distribution Analytics
     const analyticsQuery = { doctorId: new mongoose.Types.ObjectId(doctorId), status: 'approved' };
     const [ratingCounts, stats] = await Promise.all([
       Review.aggregate([
@@ -140,7 +133,6 @@ router.get('/:doctorId', async (req, res) => {
       ratingDistributionPercentages[star] = sumCounts > 0 ? Math.round((count / sumCounts) * 100) : 0;
     });
 
-    // 5. Fetch and nest recursive replies up to Depth 3
     const reviewIds = reviews.map(r => r._id);
     const replies = await ReviewReply.find({ reviewId: { $in: reviewIds } }).sort({ createdAt: 1 });
     const populatedReplies = await populateReplyUsers(replies);
@@ -163,7 +155,7 @@ router.get('/:doctorId', async (req, res) => {
           if (parent) {
             parent.replies.push(mapped);
           } else {
-            tree.push(mapped); // fallback if parent isn't loaded/found
+            tree.push(mapped); 
           }
         } else {
           tree.push(mapped);
@@ -198,8 +190,6 @@ router.get('/:doctorId', async (req, res) => {
   }
 });
 
-// ─── GET /api/reviews/can-review/:appointmentId ───
-// Check if the user is eligible to review an appointment
 router.get('/can-review/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -232,8 +222,6 @@ router.get('/can-review/:appointmentId', verifyToken, async (req, res) => {
   }
 });
 
-// ─── POST /api/reviews ───
-// Patient submits review post appointment completed
 router.post('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -243,7 +231,6 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Appointment ID and rating are required.' });
     }
 
-    // 1. Confirm appointment is completed and belongs to the authenticated user
     const appointment = await Appointment.findOne({ _id: appointmentId, userId });
     if (!appointment) {
       return res.status(404).json({ success: false, message: 'Completed appointment not found for this user.' });
@@ -253,13 +240,11 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Can only review completed appointments.' });
     }
 
-    // 2. Prevent duplicate reviews per appointment
     const existingReview = await Review.findOne({ appointmentId });
     if (existingReview) {
       return res.status(400).json({ success: false, message: 'Review already submitted for this appointment.' });
     }
 
-    // 3. Upload photo to Cloudinary if provided
     let photoUrl = null;
     if (req.body.photo) {
       try {
@@ -277,7 +262,6 @@ router.post('/', verifyToken, async (req, res) => {
       }
     }
 
-    // 4. Create Review
     const newReview = new Review({
       appointmentId,
       patientId: userId,
@@ -294,7 +278,6 @@ router.post('/', verifyToken, async (req, res) => {
 
     await newReview.save();
 
-    // 5. Update Doctor stats
     const stats = await Review.calculateDoctorRating(appointment.doctorId);
     await Doctor.findByIdAndUpdate(appointment.doctorId, {
       rating: Math.round(stats.averageRating * 10) / 10,
@@ -308,8 +291,6 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-// ─── POST /api/reviews/:reviewId/reply ───
-// Patient, doctor, or staff replies to review
 router.post('/:reviewId/reply', verifyToken, async (req, res) => {
   try {
     const { reviewId } = req.params;
@@ -320,13 +301,11 @@ router.post('/:reviewId/reply', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Reply text is required.' });
     }
 
-    // 1. Verify review exists
     const review = await Review.findById(reviewId);
     if (!review) {
       return res.status(404).json({ success: false, message: 'Review not found.' });
     }
 
-    // 2. Resolve reply depth and validate depth limits
     let targetDepth = 1;
     if (parentId) {
       const parentReply = await ReviewReply.findById(parentId);
@@ -339,7 +318,6 @@ router.post('/:reviewId/reply', verifyToken, async (req, res) => {
       }
     }
 
-    // 3. Resolve userType role highlight
     let userType = 'Patient';
     if (review.doctorId.toString() === userId.toString()) {
       userType = 'Doctor';
@@ -357,8 +335,7 @@ router.post('/:reviewId/reply', verifyToken, async (req, res) => {
     });
 
     await newReply.save();
-    
-    // Fetch user details for immediate response
+
     const populated = await populateReplyUsers([newReply]);
 
     res.status(201).json({ success: true, message: 'Reply posted.', reply: populated[0] });
@@ -368,31 +345,26 @@ router.post('/:reviewId/reply', verifyToken, async (req, res) => {
   }
 });
 
-// ─── POST /api/reviews/:reviewId/helpful ───
-// Votes: helpful 👍 / unhelpful 👎 (One vote per user check)
 router.post('/:reviewId/helpful', verifyToken, async (req, res) => {
   try {
     const { reviewId } = req.params;
-    const { voteType = 'helpful' } = req.body; // 'helpful' or 'unhelpful'
+    const { voteType = 'helpful' } = req.body; 
     const userId = req.user.id || req.user.userId;
 
     if (!['helpful', 'unhelpful'].includes(voteType)) {
       return res.status(400).json({ success: false, message: 'Invalid voteType.' });
     }
 
-    // 1. Verify review exists
     const review = await Review.findById(reviewId);
     if (!review) {
       return res.status(404).json({ success: false, message: 'Review not found.' });
     }
 
-    // 2. Check duplicate voting
     const existingVote = await ReviewVote.findOne({ reviewId, userId });
     if (existingVote) {
       return res.status(400).json({ success: false, message: 'You have already voted on this review.' });
     }
 
-    // 3. Create Vote
     const vote = new ReviewVote({
       reviewId,
       userId,
@@ -400,7 +372,6 @@ router.post('/:reviewId/helpful', verifyToken, async (req, res) => {
     });
     await vote.save();
 
-    // 4. Update count on Review
     if (voteType === 'helpful') {
       review.helpfulCount += 1;
     } else {
@@ -420,8 +391,6 @@ router.post('/:reviewId/helpful', verifyToken, async (req, res) => {
   }
 });
 
-// ─── DELETE /api/reviews/:reviewId ───
-// Review deletion (Admin or Review Owner only)
 router.delete('/:reviewId', verifyToken, async (req, res) => {
   try {
     const { reviewId } = req.params;
@@ -433,19 +402,16 @@ router.delete('/:reviewId', verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Review not found.' });
     }
 
-    // Security check: must be owner or admin
     if (review.patientId.toString() !== userId.toString() && userRole !== 'admin') {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this review.' });
     }
 
-    // Delete review, votes, and replies
     await Promise.all([
       Review.findByIdAndDelete(reviewId),
       ReviewVote.deleteMany({ reviewId }),
       ReviewReply.deleteMany({ reviewId })
     ]);
 
-    // Recalculate doctor ratings
     const stats = await Review.calculateDoctorRating(review.doctorId);
     await Doctor.findByIdAndUpdate(review.doctorId, {
       rating: Math.round(stats.averageRating * 10) / 10,
@@ -459,8 +425,6 @@ router.delete('/:reviewId', verifyToken, async (req, res) => {
   }
 });
 
-// ─── PUT /api/reviews/:reviewId ───
-// Edit review (Review Owner only)
 router.put('/:reviewId', verifyToken, async (req, res) => {
   try {
     const { reviewId } = req.params;
@@ -472,7 +436,6 @@ router.put('/:reviewId', verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Review not found.' });
     }
 
-    // Security check: owner only
     if (existingReview.patientId.toString() !== userId.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to edit this review.' });
     }
@@ -490,7 +453,6 @@ router.put('/:reviewId', verifyToken, async (req, res) => {
       { new: true }
     );
 
-    // Recalculate doctor ratings if rating changed
     if (rating !== undefined) {
       const stats = await Review.calculateDoctorRating(updatedReview.doctorId);
       await Doctor.findByIdAndUpdate(updatedReview.doctorId, {

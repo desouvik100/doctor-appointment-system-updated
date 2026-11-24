@@ -1,6 +1,4 @@
-/**
- * BookingScreen - Premium Doctor Selection
- */
+
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -13,9 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Avatar from '../../components/common/Avatar';
 import apiClient from '../../services/api/apiClient';
-import { useTheme } from '../../context/ThemeContext';
-
-// ─── Department icons map ─────────────────────────────────────────────────────
+import { useTheme } from '../../context/ThemeContext';
 const DEPT_ICONS = {
   'All': '🏥',
   'General Medicine': '🩺', 'General Physician': '🩺',
@@ -26,17 +22,13 @@ const DEPT_ICONS = {
   'Pulmonology': '🫁', 'Gastroenterology': '🫃', 'Endocrinology': '⚗️',
   'Rheumatology': '🦵', 'Dentistry': '🦷', 'Radiology': '🩻',
 };
-const getDeptIcon = (name) => DEPT_ICONS[name] || '🏥';
-
-// ─── Quick Filters ────────────────────────────────────────────────────────────
+const getDeptIcon = (name) => DEPT_ICONS[name] || '🏥';
 const QUICK_FILTERS = [
   { id: 'top_rated',  label: '⭐ Top Rated',     sort: 'rating' },
   { id: 'low_fee',    label: '💰 Low Fee',        sort: 'fee_asc' },
   { id: 'available',  label: '⚡ Available Now',  sort: 'available' },
   { id: 'nearby',     label: '📍 Nearby',         sort: 'nearby' },
-];
-
-// ─── Skeleton Card ────────────────────────────────────────────────────────────
+];
 const SkeletonCard = ({ colors }) => {
   const anim = React.useRef(new Animated.Value(0.4)).current;
   useEffect(() => {
@@ -65,12 +57,8 @@ const sk = StyleSheet.create({
   lines: { flex: 1, marginLeft: 12 },
   line: { height: 12, borderRadius: 6 },
   btn: { width: 80, height: 36, borderRadius: 20 },
-});
-
-// ─── Doctor Card ──────────────────────────────────────────────────────────────
-import DoctorCard from '../../components/cards/DoctorCard';
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
+});
+import DoctorCard from '../../components/cards/DoctorCard';
 const BookingScreen = ({ navigation, route }) => {
   const { colors, isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
@@ -167,7 +155,7 @@ const BookingScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* ── Hero Header ── */}
+      {}
       <LinearGradient colors={['rgba(26, 31, 46, 0.55)', 'rgba(10, 14, 23, 0.15)']}
         style={[styles.hero, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.heroRow}>
@@ -181,7 +169,7 @@ const BookingScreen = ({ navigation, route }) => {
           <View style={{ width: 36 }} />
         </View>
 
-        {/* Search Bar (Translucent glass style) */}
+        {}
         <View style={[styles.searchBar, { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)', borderWidth: 1 }]}>
           <Text style={[styles.searchIcon, { color: 'rgba(255, 255, 255, 0.6)' }]}>🔍</Text>
           <TextInput
@@ -209,7 +197,7 @@ const BookingScreen = ({ navigation, route }) => {
         contentContainerStyle={[styles.scroll, { paddingBottom: 100 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {/* ── Department Pill Tabs ── */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Department</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}>
@@ -240,7 +228,7 @@ const BookingScreen = ({ navigation, route }) => {
           </ScrollView>
         </View>
 
-        {/* ── Quick Filters ── */}
+        {}
         <View style={styles.filterRow}>
           {QUICK_FILTERS.map(f => (
             <TouchableOpacity key={f.id} onPress={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
@@ -262,7 +250,7 @@ const BookingScreen = ({ navigation, route }) => {
           ))}
         </View>
 
-        {/* ── Results ── */}
+        {}
         {loading ? (
           <View style={styles.listPad}>
             {[1, 2, 3, 4].map(i => <SkeletonCard key={i} colors={colors} />)}
@@ -300,18 +288,14 @@ const BookingScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-
-  // Hero
+  container: { flex: 1 },
   hero: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
   heroRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg },
   backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { color: '#fff', fontSize: 18, fontWeight: '700' },
   heroCenter: { flex: 1, alignItems: 'center' },
   heroTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
-  heroSub: { color: 'rgba(255,255,255,0.8)', ...typography.bodySmall, marginTop: 2 },
-
-  // Search
+  heroSub: { color: 'rgba(255,255,255,0.8)', ...typography.bodySmall, marginTop: 2 },
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     borderRadius: borderRadius.full,
@@ -323,9 +307,7 @@ const styles = StyleSheet.create({
   filterIconBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   filterIconText: { fontSize: 14 },
 
-  scroll: { paddingTop: spacing.lg },
-
-  // Sections
+  scroll: { paddingTop: spacing.lg },
   section: { marginBottom: spacing.lg },
   sectionLabel: { ...typography.bodyLarge, fontWeight: '700', paddingHorizontal: spacing.xl, marginBottom: spacing.md },
   pillRow: { paddingHorizontal: spacing.xl, gap: spacing.sm, flexDirection: 'row' },
@@ -334,18 +316,12 @@ const styles = StyleSheet.create({
   pillIcon: { fontSize: 14, marginRight: 5 },
   pillIconActive: { fontSize: 14, marginRight: 5 },
   pillText: { ...typography.labelSmall, fontWeight: '600' },
-  pillTextActive: { ...typography.labelSmall, fontWeight: '700', color: '#0A0E17' },
-
-  // Quick filters
+  pillTextActive: { ...typography.labelSmall, fontWeight: '700', color: '#0A0E17' },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.xl, gap: spacing.sm, marginBottom: spacing.lg },
   filterChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs + 2, borderRadius: borderRadius.full },
-  filterChipText: { ...typography.labelSmall, fontWeight: '600' },
-
-  // List
+  filterChipText: { ...typography.labelSmall, fontWeight: '600' },
   listPad: { paddingHorizontal: spacing.xl },
-  resultsCount: { ...typography.bodySmall, marginBottom: spacing.md },
-
-  // States
+  resultsCount: { ...typography.bodySmall, marginBottom: spacing.md },
   centerState: { alignItems: 'center', paddingVertical: 80, paddingHorizontal: spacing.xl },
   stateIcon: { fontSize: 64, marginBottom: spacing.md },
   stateTitle: { ...typography.headlineSmall, fontWeight: '700', marginBottom: spacing.sm },

@@ -1,16 +1,12 @@
-/**
- * HealthSync Production Cluster
- * Handles multiple concurrent users with Node.js clustering
- */
+
 
 const cluster = require('cluster');
 const numCPUs = require('os').cpus().length;
 const path = require('path');
 
-// Determine optimal worker count for production
 const workerCount = process.env.NODE_ENV === 'production' 
-  ? Math.min(numCPUs, 8) // Max 8 workers in production
-  : 1; // Single worker in development
+  ? Math.min(numCPUs, 8) 
+  : 1; 
 
 if (cluster.isMaster || cluster.isPrimary) {
   console.log('🚀 HealthSync Production Cluster Starting');
@@ -21,13 +17,11 @@ if (cluster.isMaster || cluster.isPrimary) {
   console.log(`   • Master PID: ${process.pid}`);
   console.log('');
 
-  // Fork workers
   for (let i = 0; i < workerCount; i++) {
     const worker = cluster.fork();
     console.log(`✅ Worker ${worker.process.pid} started (${i + 1}/${workerCount})`);
   }
 
-  // Handle worker crashes
   cluster.on('exit', (worker, code, signal) => {
     console.error(`❌ Worker ${worker.process.pid} died (${signal || code})`);
     
@@ -38,12 +32,10 @@ if (cluster.isMaster || cluster.isPrimary) {
     }
   });
 
-  // Handle worker disconnections
   cluster.on('disconnect', (worker) => {
     console.warn(`⚠️ Worker ${worker.process.pid} disconnected`);
   });
 
-  // Graceful shutdown
   process.on('SIGTERM', () => {
     console.log('🛑 Received SIGTERM, shutting down gracefully...');
     
@@ -76,7 +68,7 @@ if (cluster.isMaster || cluster.isPrimary) {
   console.log('');
 
 } else {
-  // Worker process - load the main server
+
   require('./server.js');
   
   process.on('message', (msg) => {

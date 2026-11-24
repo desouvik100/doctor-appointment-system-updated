@@ -1,56 +1,32 @@
 const express = require('express');
 const MedicineReminder = require('../models/MedicineReminder');
 const router = express.Router();
-const path = require('path');
-
-// ============================================
-// MEDICINE REMINDER ROUTES ONLY
-// Note: Medicine selling/delivery removed for PayU compliance
-// ============================================
-
-// Common medicine names for prescription search autocomplete
-const COMMON_MEDICINES = [
-  // Antibiotics
+const path = require('path');
+const COMMON_MEDICINES = [
   'Amoxicillin', 'Azithromycin', 'Ciprofloxacin', 'Doxycycline', 'Metronidazole',
-  'Cephalexin', 'Clindamycin', 'Trimethoprim', 'Levofloxacin', 'Clarithromycin',
-  // Pain / Anti-inflammatory
+  'Cephalexin', 'Clindamycin', 'Trimethoprim', 'Levofloxacin', 'Clarithromycin',
   'Paracetamol', 'Ibuprofen', 'Diclofenac', 'Naproxen', 'Aspirin',
-  'Ketorolac', 'Meloxicam', 'Celecoxib', 'Tramadol', 'Aceclofenac',
-  // Antacids / GI
+  'Ketorolac', 'Meloxicam', 'Celecoxib', 'Tramadol', 'Aceclofenac',
   'Omeprazole', 'Pantoprazole', 'Ranitidine', 'Domperidone', 'Ondansetron',
-  'Metoclopramide', 'Esomeprazole', 'Rabeprazole', 'Sucralfate', 'Lactulose',
-  // Cardiovascular
+  'Metoclopramide', 'Esomeprazole', 'Rabeprazole', 'Sucralfate', 'Lactulose',
   'Amlodipine', 'Atenolol', 'Metoprolol', 'Lisinopril', 'Enalapril',
-  'Losartan', 'Telmisartan', 'Ramipril', 'Atorvastatin', 'Rosuvastatin',
-  // Diabetes
+  'Losartan', 'Telmisartan', 'Ramipril', 'Atorvastatin', 'Rosuvastatin',
   'Metformin', 'Glibenclamide', 'Glimepiride', 'Sitagliptin', 'Insulin',
-  'Vildagliptin', 'Dapagliflozin', 'Empagliflozin', 'Pioglitazone',
-  // Respiratory
+  'Vildagliptin', 'Dapagliflozin', 'Empagliflozin', 'Pioglitazone',
   'Salbutamol', 'Montelukast', 'Cetirizine', 'Loratadine', 'Fexofenadine',
-  'Budesonide', 'Fluticasone', 'Tiotropium', 'Ipratropium', 'Theophylline',
-  // Vitamins / Supplements
+  'Budesonide', 'Fluticasone', 'Tiotropium', 'Ipratropium', 'Theophylline',
   'Vitamin D3', 'Vitamin B12', 'Folic Acid', 'Iron Sulfate', 'Calcium Carbonate',
-  'Zinc Sulfate', 'Vitamin C', 'Multivitamin', 'Omega-3', 'Magnesium',
-  // Neurological / Psychiatric
+  'Zinc Sulfate', 'Vitamin C', 'Multivitamin', 'Omega-3', 'Magnesium',
   'Alprazolam', 'Clonazepam', 'Diazepam', 'Sertraline', 'Escitalopram',
-  'Amitriptyline', 'Gabapentin', 'Pregabalin', 'Levodopa', 'Phenytoin',
-  // Thyroid
-  'Levothyroxine', 'Carbimazole', 'Propylthiouracil',
-  // Steroids
-  'Prednisolone', 'Dexamethasone', 'Hydrocortisone', 'Betamethasone', 'Methylprednisolone',
-  // Antihistamines / Allergy
-  'Chlorpheniramine', 'Hydroxyzine', 'Promethazine', 'Diphenhydramine',
-  // Antifungals
-  'Fluconazole', 'Itraconazole', 'Clotrimazole', 'Terbinafine',
-  // Antivirals
-  'Acyclovir', 'Oseltamivir', 'Valacyclovir',
-  // Eye / Ear drops
-  'Ciprofloxacin Eye Drops', 'Tobramycin Eye Drops', 'Timolol Eye Drops',
-  // Topical
+  'Amitriptyline', 'Gabapentin', 'Pregabalin', 'Levodopa', 'Phenytoin',
+  'Levothyroxine', 'Carbimazole', 'Propylthiouracil',
+  'Prednisolone', 'Dexamethasone', 'Hydrocortisone', 'Betamethasone', 'Methylprednisolone',
+  'Chlorpheniramine', 'Hydroxyzine', 'Promethazine', 'Diphenhydramine',
+  'Fluconazole', 'Itraconazole', 'Clotrimazole', 'Terbinafine',
+  'Acyclovir', 'Oseltamivir', 'Valacyclovir',
+  'Ciprofloxacin Eye Drops', 'Tobramycin Eye Drops', 'Timolol Eye Drops',
   'Mupirocin', 'Fusidic Acid', 'Betamethasone Cream', 'Clotrimazole Cream'
-];
-
-// Search medicines for prescription autocomplete
+];
 router.get('/search', async (req, res) => {
   try {
     const { q, limit = 10 } = req.query;
@@ -60,9 +36,7 @@ router.get('/search', async (req, res) => {
     }
 
     const query = q.trim().toLowerCase();
-    const limitNum = Math.min(parseInt(limit) || 10, 20);
-
-    // Filter from common medicines list
+    const limitNum = Math.min(parseInt(limit) || 10, 20);
     const results = COMMON_MEDICINES
       .filter(name => name.toLowerCase().includes(query))
       .slice(0, limitNum)
@@ -73,9 +47,7 @@ router.get('/search', async (req, res) => {
     console.error('Error searching medicines:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
-});
-
-// Get all medicines for a user
+});
 router.get('/user/:userId', async (req, res) => {
   try {
     const medicines = await MedicineReminder.find({ 
@@ -88,9 +60,7 @@ router.get('/user/:userId', async (req, res) => {
     console.error('Error fetching medicines:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get today's reminders for a user
+});
 router.get('/user/:userId/today', async (req, res) => {
   try {
     const today = new Date();
@@ -104,14 +74,11 @@ router.get('/user/:userId/today', async (req, res) => {
         { endDate: null },
         { endDate: { $gte: today } }
       ]
-    });
-
-    // Build today's schedule
+    });
     const reminders = [];
     medicines.forEach(med => {
       if (med.frequency !== 'asNeeded') {
-        med.times.forEach(time => {
-          // Check if already taken today
+        med.times.forEach(time => {
           const takenToday = med.takenHistory.find(h => 
             new Date(h.date).toDateString() === today.toDateString() && 
             h.time === time
@@ -128,9 +95,7 @@ router.get('/user/:userId/today', async (req, res) => {
           });
         });
       }
-    });
-
-    // Sort by time
+    });
     reminders.sort((a, b) => a.time.localeCompare(b.time));
     
     res.json(reminders);
@@ -138,9 +103,7 @@ router.get('/user/:userId/today', async (req, res) => {
     console.error('Error fetching today reminders:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Add new medicine
+});
 router.post('/', async (req, res) => {
   try {
     const { userId, name, dosage, frequency, times, startDate, endDate, notes, color, emailReminders } = req.body;
@@ -171,9 +134,7 @@ router.post('/', async (req, res) => {
     console.error('Error creating medicine:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Mark medicine as taken
+});
 router.post('/:id/taken', async (req, res) => {
   try {
     const { time } = req.body;
@@ -184,9 +145,7 @@ router.post('/:id/taken', async (req, res) => {
     }
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Check if already marked as taken
+    today.setHours(0, 0, 0, 0);
     const alreadyTaken = medicine.takenHistory.find(h => 
       new Date(h.date).toDateString() === today.toDateString() && 
       h.time === time
@@ -209,9 +168,7 @@ router.post('/:id/taken', async (req, res) => {
     console.error('Error marking medicine as taken:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Update medicine
+});
 router.put('/:id', async (req, res) => {
   try {
     const medicine = await MedicineReminder.findByIdAndUpdate(
@@ -229,9 +186,7 @@ router.put('/:id', async (req, res) => {
     console.error('Error updating medicine:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Delete medicine (soft delete)
+});
 router.delete('/:id', async (req, res) => {
   try {
     const medicine = await MedicineReminder.findByIdAndUpdate(
@@ -249,9 +204,7 @@ router.delete('/:id', async (req, res) => {
     console.error('Error deleting medicine:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Toggle email reminders
+});
 router.put('/:id/email-reminders', async (req, res) => {
   try {
     const { enabled } = req.body;

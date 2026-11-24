@@ -9,7 +9,7 @@ const reviewReplySchema = new mongoose.Schema({
   parentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ReviewReply',
-    default: null // null if direct reply to review
+    default: null 
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -29,7 +29,7 @@ const reviewReplySchema = new mongoose.Schema({
   },
   depth: {
     type: Number,
-    default: 1, // 1 = reply to review, 2 = reply to reply, 3 = reply to reply to reply
+    default: 1, 
     min: 1,
     max: 3
   }
@@ -37,7 +37,6 @@ const reviewReplySchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for hierarchical reply tree generation
 reviewReplySchema.index({ reviewId: 1, parentId: 1, createdAt: 1 });
 
 module.exports = mongoose.model('ReviewReply', reviewReplySchema);

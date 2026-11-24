@@ -1,7 +1,4 @@
-/**
- * DICOM / Medical Image Viewer
- * Shows images in-app with zoom, pan, rotate tools.
- */
+
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -61,9 +58,7 @@ const DicomViewer = ({ imageUrl, metadata = {}, onClose, showToolbar = true, sho
     setPan({ x: 0, y: 0 });
     setRotation(0);
     setInvert(false);
-  };
-
-  // Raw .dcm file with no render endpoint — cannot display natively
+  };
   const isRawDicom = imageUrl &&
     (imageUrl.toLowerCase().endsWith('.dcm') || imageUrl.toLowerCase().endsWith('.dicom')) &&
     !imageUrl.includes('/render/');

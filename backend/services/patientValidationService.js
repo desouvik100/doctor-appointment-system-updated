@@ -1,15 +1,7 @@
-/**
- * Patient Validation Service
- * Validates DICOM patient information against EMR patient records
- */
+
 
 const User = require('../models/User');
 
-/**
- * Normalize a string for comparison (lowercase, remove special chars, trim)
- * @param {string} str - String to normalize
- * @returns {string} Normalized string
- */
 function normalizeString(str) {
   if (!str) return '';
   return str.toLowerCase()
@@ -17,11 +9,6 @@ function normalizeString(str) {
     .trim();
 }
 
-/**
- * Normalize a patient ID for comparison
- * @param {string} id - Patient ID to normalize
- * @returns {string} Normalized ID
- */
 function normalizePatientId(id) {
   if (!id) return '';
   return id.toString()
@@ -30,13 +17,6 @@ function normalizePatientId(id) {
     .trim();
 }
 
-/**
- * Calculate similarity between two strings (0-1)
- * Uses Levenshtein distance
- * @param {string} str1 
- * @param {string} str2 
- * @returns {number} Similarity score 0-1
- */
 function calculateSimilarity(str1, str2) {
   const s1 = normalizeString(str1);
   const s2 = normalizeString(str2);
@@ -54,9 +34,6 @@ function calculateSimilarity(str1, str2) {
   return (longerLength - distance) / longerLength;
 }
 
-/**
- * Calculate Levenshtein distance between two strings
- */
 function levenshteinDistance(str1, str2) {
   const matrix = [];
   
@@ -85,12 +62,6 @@ function levenshteinDistance(str1, str2) {
   return matrix[str2.length][str1.length];
 }
 
-/**
- * Compare dates for matching (same day)
- * @param {Date} date1 
- * @param {Date} date2 
- * @returns {boolean}
- */
 function datesMatch(date1, date2) {
   if (!date1 || !date2) return false;
   
@@ -102,12 +73,6 @@ function datesMatch(date1, date2) {
          d1.getDate() === d2.getDate();
 }
 
-/**
- * Validate DICOM patient info against EMR patient record
- * @param {Object} dicomPatient - Patient info from DICOM metadata
- * @param {Object} emrPatient - Patient record from EMR database
- * @returns {Object} Validation result with match details
- */
 function validatePatientMatch(dicomPatient, emrPatient) {
   const result = {
     isMatch: false,
@@ -125,42 +90,32 @@ function validatePatientMatch(dicomPatient, emrPatient) {
   if (!dicomPatient || !emrPatient) {
     result.warnings.push('Missing patient information');
     return result;
-  }
-  
-  // Check Patient ID
+  }
   const dicomId = normalizePatientId(dicomPatient.patientId);
   const emrId = normalizePatientId(emrPatient._id?.toString() || emrPatient.patientId);
   
   result.matchDetails.patientId.dicom = dicomPatient.patientId;
-  result.matchDetails.patientId.emr = emrPatient._id?.toString() || emrPatient.patientId;
-  
-  // Also check against any stored patient IDs in EMR
+  result.matchDetails.patientId.emr = emrPatient._id?.toString() || emrPatient.patientId;
   const emrPatientIds = [
     emrId,
     normalizePatientId(emrPatient.patientNumber),
     normalizePatientId(emrPatient.medicalRecordNumber)
   ].filter(Boolean);
   
-  result.matchDetails.patientId.match = emrPatientIds.some(id => id === dicomId);
-  
-  // Check Name
+  result.matchDetails.patientId.match = emrPatientIds.some(id => id === dicomId);
   const dicomName = dicomPatient.patientName;
   const emrName = emrPatient.name || `${emrPatient.firstName || ''} ${emrPatient.lastName || ''}`.trim();
   
   result.matchDetails.name.dicom = dicomName;
   result.matchDetails.name.emr = emrName;
   result.matchDetails.name.similarity = calculateSimilarity(dicomName, emrName);
-  result.matchDetails.name.match = result.matchDetails.name.similarity >= 0.8;
-  
-  // Check Birth Date
+  result.matchDetails.name.match = result.matchDetails.name.similarity >= 0.8;
   result.matchDetails.birthDate.dicom = dicomPatient.birthDate;
   result.matchDetails.birthDate.emr = emrPatient.dateOfBirth || emrPatient.birthDate;
   result.matchDetails.birthDate.match = datesMatch(
     dicomPatient.birthDate,
     emrPatient.dateOfBirth || emrPatient.birthDate
-  );
-  
-  // Check Sex
+  );
   const dicomSex = normalizeString(dicomPatient.sex);
   const emrSex = normalizeString(emrPatient.gender || emrPatient.sex);
   
@@ -168,37 +123,25 @@ function validatePatientMatch(dicomPatient, emrPatient) {
   result.matchDetails.sex.emr = emrPatient.gender || emrPatient.sex;
   result.matchDetails.sex.match = dicomSex === emrSex || 
     (dicomSex === 'm' && emrSex === 'male') ||
-    (dicomSex === 'f' && emrSex === 'female');
-  
-  // Calculate overall confidence
+    (dicomSex === 'f' && emrSex === 'female');
   let matchScore = 0;
-  let totalWeight = 0;
-  
-  // Patient ID has highest weight
+  let totalWeight = 0;
   if (result.matchDetails.patientId.match) {
     matchScore += 40;
   }
-  totalWeight += 40;
-  
-  // Name similarity
+  totalWeight += 40;
   matchScore += result.matchDetails.name.similarity * 30;
-  totalWeight += 30;
-  
-  // Birth date
+  totalWeight += 30;
   if (result.matchDetails.birthDate.match) {
     matchScore += 20;
   }
-  totalWeight += 20;
-  
-  // Sex
+  totalWeight += 20;
   if (result.matchDetails.sex.match) {
     matchScore += 10;
   }
   totalWeight += 10;
   
-  result.confidence = matchScore / totalWeight;
-  
-  // Determine if it's a match
+  result.confidence = matchScore / totalWeight;
   if (result.confidence >= 0.9) {
     result.isMatch = true;
   } else if (result.confidence >= 0.6) {
@@ -209,9 +152,7 @@ function validatePatientMatch(dicomPatient, emrPatient) {
     result.isMatch = false;
     result.requiresConfirmation = true;
     result.warnings.push('Patient information does not match - confirmation required');
-  }
-  
-  // Add specific warnings
+  }
   if (!result.matchDetails.patientId.match && dicomPatient.patientId) {
     result.warnings.push(`DICOM Patient ID "${dicomPatient.patientId}" does not match EMR record`);
   }
@@ -227,12 +168,6 @@ function validatePatientMatch(dicomPatient, emrPatient) {
   return result;
 }
 
-/**
- * Validate patient by ID from database
- * @param {Object} dicomPatient - Patient info from DICOM
- * @param {string} emrPatientId - EMR patient ID (MongoDB ObjectId)
- * @returns {Promise<Object>} Validation result
- */
 async function validatePatientById(dicomPatient, emrPatientId) {
   try {
     const emrPatient = await User.findById(emrPatientId)

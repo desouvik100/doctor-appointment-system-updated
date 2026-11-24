@@ -1,17 +1,10 @@
-/**
- * Refund Routes
- * Handles refund policy, preview, and processing
- */
+
 
 const express = require('express');
 const router = express.Router();
 const refundPolicyService = require('../services/refundPolicyService');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 
-/**
- * GET /api/refunds/policy
- * Get refund policy details (public)
- */
 router.get('/policy', (req, res) => {
   try {
     const policy = refundPolicyService.getRefundPolicyDetails();
@@ -25,10 +18,6 @@ router.get('/policy', (req, res) => {
   }
 });
 
-/**
- * GET /api/refunds/preview/:appointmentId
- * Preview refund amount before cancellation (authenticated)
- */
 router.get('/preview/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -38,9 +27,7 @@ router.get('/preview/:appointmentId', verifyToken, async (req, res) => {
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
-    }
-
-    // Role-based validation
+    }
     const tokenUserId = req.user.id || req.user._id;
     if (req.user.role === 'patient') {
       if (appointment.userId.toString() !== tokenUserId.toString()) {
@@ -77,10 +64,6 @@ router.get('/preview/:appointmentId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/refunds/process
- * Process refund for cancelled appointment (authenticated)
- */
 router.post('/process', verifyTokenWithRole(['admin', 'receptionist']), async (req, res) => {
   try {
     const { appointmentId, cancelledBy, reason } = req.body;
@@ -112,10 +95,6 @@ router.post('/process', verifyTokenWithRole(['admin', 'receptionist']), async (r
   }
 });
 
-/**
- * POST /api/refunds/request
- * Request refund (patient initiated)
- */
 router.post('/request', verifyToken, async (req, res) => {
   try {
     const { appointmentId, reason } = req.body;
@@ -126,9 +105,7 @@ router.post('/request', verifyToken, async (req, res) => {
         success: false, 
         message: 'Appointment ID is required' 
       });
-    }
-    
-    // Verify user owns this appointment
+    }
     const Appointment = require('../models/Appointment');
     const appointment = await Appointment.findById(appointmentId);
     
@@ -144,20 +121,14 @@ router.post('/request', verifyToken, async (req, res) => {
         success: false, 
         message: 'You can only request refund for your own appointments' 
       });
-    }
-    
-    // Preview refund first
-    const preview = await refundPolicyService.previewRefund(appointmentId, 'patient');
-    
-    // If eligible, process the refund
+    }
+    const preview = await refundPolicyService.previewRefund(appointmentId, 'patient');
     if (preview.eligible) {
       const result = await refundPolicyService.processRefund(
         appointmentId,
         'patient',
         reason || 'Patient requested cancellation'
-      );
-      
-      // Also cancel the appointment
+      );
       appointment.status = 'cancelled';
       appointment.cancellationReason = reason || 'Patient requested cancellation';
       appointment.cancelledBy = 'patient';
@@ -187,10 +158,6 @@ router.post('/request', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/refunds/doctor-cancel
- * Doctor cancels appointment (triggers full refund + compensation)
- */
 router.post('/doctor-cancel', verifyTokenWithRole(['doctor', 'admin', 'receptionist']), async (req, res) => {
   try {
     const { appointmentId, reason } = req.body;
@@ -212,23 +179,17 @@ router.post('/doctor-cancel', verifyTokenWithRole(['doctor', 'admin', 'reception
         success: false, 
         message: 'Appointment not found' 
       });
-    }
-    
-    // Process refund with doctor cancellation policy
+    }
     const result = await refundPolicyService.processRefund(
       appointmentId,
       'doctor',
       reason || 'Doctor cancelled the appointment'
-    );
-    
-    // Cancel the appointment
+    );
     appointment.status = 'cancelled';
     appointment.cancellationReason = reason || 'Doctor cancelled the appointment';
     appointment.cancelledBy = 'doctor';
     appointment.cancelledAt = new Date();
-    await appointment.save();
-    
-    // Send notification to patient
+    await appointment.save();
     try {
       const { sendCancellationEmail } = require('../services/emailService');
       await sendCancellationEmail({
@@ -262,16 +223,10 @@ router.post('/doctor-cancel', verifyTokenWithRole(['doctor', 'admin', 'reception
   }
 });
 
-/**
- * GET /api/refunds/history/:userId
- * Get refund history for a user (authenticated)
- */
 router.get('/history/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
-    const requestingUserId = req.user.id || req.user._id;
-    
-    // Users can only view their own history (unless admin)
+    const requestingUserId = req.user.id || req.user._id;
     if (req.user.role !== 'admin' && userId !== requestingUserId.toString()) {
       return res.status(403).json({ 
         success: false, 

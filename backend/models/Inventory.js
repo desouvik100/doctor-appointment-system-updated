@@ -32,9 +32,7 @@ const inventorySchema = new mongoose.Schema({
     performedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now }
   }]
-}, { timestamps: true });
-
-// Check if low stock
+}, { timestamps: true });
 inventorySchema.methods.isLowStock = function() {
   return this.quantity <= this.minStockLevel;
 };

@@ -1,6 +1,4 @@
-/**
- * FilterChip Component - Animated filter chips - Dynamic Theme Edition
- */
+
 
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';

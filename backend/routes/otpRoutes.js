@@ -2,12 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { sendOTP, verifyOTP } = require('../services/emailService');
-const { otpLimiter } = require('../middleware/rateLimiter');
-
-
-// ===============================
-// CHECK EMAIL CONFIG ROUTE (for debugging)
-// ===============================
+const { otpLimiter } = require('../middleware/rateLimiter');
 router.get('/check-config', (req, res) => {
   const config = {
     emailUser: process.env.EMAIL_USER ? 'configured' : 'missing',
@@ -22,17 +17,11 @@ router.get('/check-config', (req, res) => {
     config: config,
     message: 'Configuration check complete'
   });
-});
-
-// ===============================
-// SEND OTP ROUTE
-// ===============================
+});
 router.post('/send-otp', otpLimiter, async (req, res) => {
 
   try {
-    const { email, type } = req.body;
-    
-    // Normalize email
+    const { email, type } = req.body;
     const cleanEmail = email?.toLowerCase().trim();
     const otpType = type || 'register';
 
@@ -57,10 +46,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
         success: false,
         message: "Invalid email or phone format"
       });
-    }
-
-    // For staff registration OTP: check if account already exists and give helpful messages
-    // Wrapped in try/catch with timeout — never block OTP sending if DB is slow
+    }
     if (otpType === 'staff-registration') {
       try {
         const existingUser = await Promise.race([
@@ -90,30 +76,25 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
                 rejected: true
               });
             }
-          }
-          // Email used by a patient or other account type
+          }
           return res.status(400).json({
             success: false,
             message: 'This email is already registered under a different account type. Please use a different email address.',
           });
         }
-      } catch (dbErr) {
-        // DB check failed or timed out — log and proceed with OTP sending
+      } catch (dbErr) {
         console.warn('⚠️ DB duplicate check skipped:', dbErr.message);
       }
     }
 
     const result = await sendOTP(cleanEmail, otpType);
 
-    console.log('📧 OTP send result for', cleanEmail, ':', result);
-
-    // Always return success — NEVER expose OTP in production
+    console.log('📧 OTP send result for', cleanEmail, ':', result);
     const response = {
       success: true,
       message: isPhone
         ? "Verification code sent. Please check your SMS."
-        : "Verification code sent. Please check your email.",
-      // Only expose OTP in development for testing — NEVER in production
+        : "Verification code sent. Please check your email.",
       ...(process.env.NODE_ENV === 'development' && { otp: result.otp, note: "DEV ONLY — OTP not returned in production" }),
     };
 
@@ -131,18 +112,11 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
     });
   }
 
-});
-
-
-// ===============================
-// VERIFY OTP ROUTE
-// ===============================
+});
 router.post('/verify-otp', async (req, res) => {
 
   try {
-    const { email, otp, type } = req.body;
-    
-    // Normalize email and use provided type or default
+    const { email, otp, type } = req.body;
     const cleanEmail = email?.toLowerCase().trim();
     const otpType = type || 'register';
 
@@ -159,9 +133,7 @@ router.post('/verify-otp', async (req, res) => {
         success: false,
         message: "Email and OTP are required"
       });
-    }
-
-    // Clean the OTP - remove any spaces
+    }
     const cleanOtp = otp.toString().trim().replace(/\s/g, '');
     
     if (!/^\d{6}$/.test(cleanOtp)) {

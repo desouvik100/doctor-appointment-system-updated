@@ -7,8 +7,7 @@
   <meta name="theme-color" content="#0ea5e9" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#1e1b4b" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
-  
-  <!-- SEO Meta Tags - Optimized for India Healthcare Market -->
+
   <title>HealthSync — Clinic Appointment & Patient Management Platform | Book Doctor Online India</title>
   <meta name="description" content="HealthSync is India's clinic-first healthcare management platform. Book doctor appointments online, manage clinic queues, patient records & scheduling. Smart healthcare software for clinics in Bankura, West Bengal & across India." />
   <meta name="keywords" content="clinic appointment system India, doctor appointment booking platform, healthcare management software for clinics, book doctor online India, clinic queue management, patient management system, HealthSync, HealthSyncPro, online doctor consultation, clinic scheduling software, healthcare platform India, medical appointment booking, Bankura clinic software, West Bengal healthcare, digital clinic management, OPD management system" />
@@ -16,15 +15,13 @@
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <meta name="googlebot" content="index, follow" />
   <link rel="canonical" href="https://healthsyncpro.in" />
-  
-  <!-- Additional SEO Meta -->
+
   <meta name="subject" content="Clinic Appointment & Patient Management Software" />
   <meta name="classification" content="Healthcare Software" />
   <meta name="rating" content="General" />
   <meta name="referrer" content="origin-when-cross-origin" />
   <meta name="format-detection" content="telephone=yes" />
-  
-  <!-- Open Graph / Facebook -->
+
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://healthsyncpro.in/" />
   <meta property="og:title" content="HealthSync — Clinic Appointment & Patient Management Platform | India" />
@@ -35,22 +32,19 @@
   <meta property="og:image:alt" content="HealthSync - Clinic Appointment & Patient Management Platform" />
   <meta property="og:site_name" content="HealthSync" />
   <meta property="og:locale" content="en_IN" />
-  
-  <!-- Twitter -->
+
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="https://healthsyncpro.in/" />
   <meta name="twitter:title" content="HealthSync — Clinic Appointment & Patient Management Platform" />
   <meta name="twitter:description" content="India's clinic-first healthcare platform. Book doctor appointments online, manage queues & patient records." />
   <meta name="twitter:image" content="https://healthsyncpro.in/og-image.png" />
   <meta name="twitter:creator" content="@healthsyncpro" />
-  
-  <!-- Additional SEO -->
+
   <meta name="geo.region" content="IN-WB" />
   <meta name="geo.placename" content="Bankura" />
   <meta name="geo.position" content="23.2324;87.0649" />
   <meta name="ICBM" content="23.2324, 87.0649" />
-  
-  <!-- Structured Data - Software Application -->
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -107,8 +101,7 @@
     }
   }
   </script>
-  
-  <!-- Structured Data - Organization -->
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -149,8 +142,7 @@
     ]
   }
   </script>
-  
-  <!-- Structured Data - WebSite with SearchAction -->
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -169,8 +161,7 @@
     }
   }
   </script>
-  
-  <!-- Structured Data - FAQPage for SEO -->
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -206,8 +197,7 @@
     }]
   }
   </script>
-  
-  <!-- Structured Data - BreadcrumbList -->
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -232,13 +222,11 @@
   </script>
   
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-  
-  <!-- Font Awesome -->
+
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-  <!-- Critical CSS - ANTI-FLICKER OPTIMIZED -->
   <style>
-    /* ── SCROLL MUST WORK — highest priority, set before any stylesheet ── */
+    
     html {
       overflow-y: scroll !important;
       overflow-x: hidden !important;
@@ -268,21 +256,18 @@
       background: transparent !important;
       opacity: 1;
     }
-    
-    /* Force landing page containers transparent - NO FLICKER */
+
     .App,
     .medical-bg,
     .dark-theme {
       background: transparent !important;
     }
-    
-    /* Dark mode override - INSTANT */
+
     html[data-theme="dark"] {
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
       background-attachment: fixed !important;
     }
-    
-    /* Prevent animation flicker on load */
+
     .fade-in-up,
     .premium-title,
     .premium-subtitle,
@@ -291,8 +276,7 @@
     .trust-indicators {
       animation-fill-mode: both !important;
     }
-    
-    /* Hide content until loaded to prevent flicker */
+
     html:not(.loaded) .fade-in-up {
       opacity: 0 !important;
       visibility: hidden !important;
@@ -303,26 +287,18 @@
       visibility: visible !important;
     }
   </style>
-  
-  <!-- ANTI-FLICKER: Instant theme application -->
+
   <script>
-    (function() {
-      // Get saved theme immediately - BEFORE any rendering
+    (function() {
       var savedTheme = localStorage.getItem('darkMode');
-      var theme = savedTheme === 'true' ? 'dark' : 'light';
-      
-      // Apply theme attribute INSTANTLY
+      var theme = savedTheme === 'true' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', theme);
-      document.documentElement.classList.add('loading');
-      
-      // Apply gradient only - no overflow styles
+      document.documentElement.classList.add('loading');
       var applyGradient = function() {
         var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
         var gradient = currentTheme === 'dark' 
           ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
-          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-        
-        // Only set background, let CSS handle overflow
+          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         document.documentElement.style.background = gradient;
         document.documentElement.style.backgroundAttachment = 'fixed';
         
@@ -331,20 +307,14 @@
         }
       };
       
-      applyGradient();
-      
-      // Re-apply when body is ready
+      applyGradient();
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', applyGradient);
-      }
-      
-      // Mark as loaded after a brief delay to prevent animation flicker
+      }
       setTimeout(function() {
         document.documentElement.classList.remove('loading');
         document.documentElement.classList.add('loaded');
-      }, 50);
-      
-      // Watch for theme changes - NO FLICKER
+      }, 50);
       var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
           if (mutation.attributeName === 'data-theme') {
@@ -393,7 +363,7 @@
     </div>
   </noscript>
   <div id="root"></div>
-  <!-- Razorpay Checkout Script -->
+  
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
 

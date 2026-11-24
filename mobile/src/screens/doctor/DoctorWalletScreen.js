@@ -1,7 +1,4 @@
-/**
- * Doctor Wallet Screen - Earnings & Withdrawals
- * 100% Parity with Web Doctor Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -122,7 +119,7 @@ const DoctorWalletScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
-        {/* Balance Card */}
+        {}
         <View style={[styles.balanceCard, { backgroundColor: '#6C5CE7' }]}>
           <Text style={styles.balanceLabel}>Available Balance</Text>
           <Text style={styles.balanceAmount}>₹{(wallet?.availableBalance || 0).toLocaleString()}</Text>
@@ -144,7 +141,7 @@ const DoctorWalletScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Stats */}
+        {}
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.statIcon}>📅</Text>
@@ -163,7 +160,7 @@ const DoctorWalletScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Transactions */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Transactions</Text>
           
@@ -191,7 +188,7 @@ const DoctorWalletScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Withdraw Modal */}
+      {}
       <Modal visible={withdrawModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>

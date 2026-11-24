@@ -1,38 +1,30 @@
-/**
- * HealthSync Mobile - Enterprise Color System
- * Premium, accessible, and consistent color palette
- */
 
-export const colors = {
-  // Primary Brand Colors (Vibrant Teal/Cyan)
+
+export const colors = {
   primary: {
     50: '#E0F7F4',
     100: '#B2EBF2',
     200: '#80DEEA',
     300: '#4DD0E1',
     400: '#26C6DA',
-    500: '#00D4AA', // Main brand color
+    500: '#00D4AA', 
     600: '#00B894',
     700: '#009688',
     800: '#00796B',
     900: '#004D40',
-  },
-
-  // Secondary Brand Colors (Premium Purple)
+  },
   secondary: {
     50: '#F3E5F5',
     100: '#E1BEE7',
     200: '#CE93D8',
     300: '#BA68C8',
     400: '#AB47BC',
-    500: '#6C5CE7', // Main secondary color
+    500: '#6C5CE7', 
     600: '#5B4ED1',
     700: '#4C3EC7',
     800: '#6A1B9A',
     900: '#4A148C',
-  },
-
-  // Success
+  },
   success: {
     50: '#ECFDF5',
     100: '#D1FAE5',
@@ -44,9 +36,7 @@ export const colors = {
     700: '#047857',
     800: '#065F46',
     900: '#064E3B',
-  },
-
-  // Warning
+  },
   warning: {
     50: '#FFF7ED',
     100: '#FFEDD5',
@@ -58,9 +48,7 @@ export const colors = {
     700: '#C2410C',
     800: '#9A3412',
     900: '#7C2D12',
-  },
-
-  // Error
+  },
   error: {
     50: '#FEF2F2',
     100: '#FEE2E2',
@@ -72,9 +60,7 @@ export const colors = {
     700: '#B91C1C',
     800: '#991B1B',
     900: '#7F1D1D',
-  },
-
-  // Info
+  },
   info: {
     50: '#EFF6FF',
     100: '#DBEAFE',
@@ -86,9 +72,7 @@ export const colors = {
     700: '#1D4ED8',
     800: '#1E40AF',
     900: '#1E3A8A',
-  },
-
-  // Neutrals
+  },
   neutral: {
     0: '#FFFFFF',
     50: '#F9FAFB',
@@ -102,10 +86,8 @@ export const colors = {
     800: '#1F2937',
     900: '#111827',
     950: '#030712',
-  },
-
-  // Semantic Colors
-  background: '#0A0E17', // Dark ambient background by default for 2026 dark gradient style
+  },
+  background: '#0A0E17', 
   backgroundLight: '#121826',
   backgroundCard: '#1A1F2E',
   backgroundElevated: '#232A3D',
@@ -121,25 +103,19 @@ export const colors = {
     tertiary: '#6B7280',
     disabled: '#D1D5DB',
     inverse: '#0A0E17',
-  },
-
-  // Status Colors
+  },
   status: {
     online: '#10B981',
     offline: '#6B7280',
     busy: '#F97316',
     away: '#FBBF24',
-  },
-
-  // Overlay
+  },
   overlay: {
     light: 'rgba(10, 14, 23, 0.5)',
     medium: 'rgba(10, 14, 23, 0.8)',
     dark: 'rgba(0, 0, 0, 0.7)',
     darker: 'rgba(0, 0, 0, 0.9)',
-  },
-
-  // Gradients
+  },
   gradients: {
     primary: ['#00D4AA', '#00B894', '#009B77'],
     secondary: ['#6C5CE7', '#5B4ED1', '#4C3EC7'],
@@ -148,9 +124,7 @@ export const colors = {
     sunset: ['#F97316', '#FB923C'],
     dark: ['#1A1F2E', '#0A0E17'],
   },
-};
-
-// Light theme (default)
+};
 export const lightTheme = {
   primary: colors.primary[500],
   primaryLight: colors.primary[100],
@@ -178,23 +152,17 @@ export const lightTheme = {
   textDisabled: colors.text.disabled,
   textInverse: colors.text.inverse,
   
-  overlay: colors.overlay,
-  
-  // Component-specific
+  overlay: colors.overlay,
   card: colors.neutral[0],
   cardBorder: colors.neutral[200],
   input: colors.neutral[0],
   inputBorder: colors.neutral[300],
-  inputFocused: colors.primary[500],
-  
-  // Status
+  inputFocused: colors.primary[500],
   statusOnline: colors.status.online,
   statusOffline: colors.status.offline,
   statusBusy: colors.status.busy,
   statusAway: colors.status.away,
-};
-
-// Dark theme
+};
 export const darkTheme = {
   primary: colors.primary[400],
   primaryLight: colors.primary[300],
@@ -239,9 +207,7 @@ export const darkTheme = {
   statusOffline: colors.status.offline,
   statusBusy: colors.status.busy,
   statusAway: colors.status.away,
-};
-
-// Legacy aliases for backward compatibility
+};
 colors.gradientPrimary = colors.gradients.primary;
 colors.gradientSecondary = colors.gradients.secondary;
 colors.gradientDark = ['#1A1F2E', '#0A0E17'];

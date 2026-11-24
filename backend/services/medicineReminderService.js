@@ -3,9 +3,6 @@ const MedicineReminder = require('../models/MedicineReminder');
 const User = require('../models/User');
 const { sendEmail } = require('./emailService');
 
-/**
- * Send medicine reminder email
- */
 async function sendMedicineReminderEmail(user, medicine, time) {
   const formattedTime = formatTime(time);
   
@@ -99,9 +96,6 @@ Remember to take your medicine with water and as prescribed by your doctor.
   }
 }
 
-/**
- * Format time from HH:MM to readable format
- */
 function formatTime(time) {
   const [hours, minutes] = time.split(':');
   const hour = parseInt(hours);
@@ -110,19 +104,12 @@ function formatTime(time) {
   return `${hour12}:${minutes} ${ampm}`;
 }
 
-/**
- * Check and send medicine reminders
- * Runs every minute to check for upcoming reminders
- */
 async function checkAndSendReminders() {
   try {
     const now = new Date();
     const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Find all active medicines with email reminders enabled
-    // Note: times is an array of strings like ["08:00", "14:00", "20:00"]
+    today.setHours(0, 0, 0, 0);
     const medicines = await MedicineReminder.find({
       isActive: true,
       emailReminders: true,
@@ -131,9 +118,7 @@ async function checkAndSendReminders() {
         { endDate: null },
         { endDate: { $gte: today } }
       ]
-    }).populate('userId', 'name email');
-    
-    // Filter medicines that have the current time in their times array
+    }).populate('userId', 'name email');
     const medicinesForCurrentTime = medicines.filter(m => 
       Array.isArray(m.times) && m.times.includes(currentTime)
     );
@@ -141,33 +126,25 @@ async function checkAndSendReminders() {
     for (const medicine of medicinesForCurrentTime) {
       if (!medicine.userId || !medicine.userId.email) {
         continue;
-      }
-
-      // Check if we already sent email for this time today
+      }
       const lastSent = medicine.lastEmailSent;
-      if (lastSent && new Date(lastSent).toDateString() === today.toDateString()) {
-        // Check if it was for this specific time
+      if (lastSent && new Date(lastSent).toDateString() === today.toDateString()) {
         const lastSentTime = `${String(new Date(lastSent).getHours()).padStart(2, '0')}:${String(new Date(lastSent).getMinutes()).padStart(2, '0')}`;
         if (lastSentTime === currentTime) {
-          continue; // Already sent for this time
+          continue; 
         }
-      }
-
-      // Check if already taken
+      }
       const alreadyTaken = medicine.takenHistory.find(h => 
         new Date(h.date).toDateString() === today.toDateString() && 
         h.time === currentTime
       );
 
       if (alreadyTaken) {
-        continue; // Already taken, no need to remind
-      }
-
-      // Send reminder email
+        continue; 
+      }
       const sent = await sendMedicineReminderEmail(medicine.userId, medicine, currentTime);
       
-      if (sent) {
-        // Update last email sent time
+      if (sent) {
         medicine.lastEmailSent = now;
         await medicine.save();
       }
@@ -177,13 +154,8 @@ async function checkAndSendReminders() {
   }
 }
 
-/**
- * Initialize the medicine reminder scheduler
- */
 function initializeMedicineReminders() {
-  console.log('💊 Initializing medicine reminder service...');
-  
-  // Run every minute to check for reminders
+  console.log('💊 Initializing medicine reminder service...');
   cron.schedule('* * * * *', () => {
     checkAndSendReminders();
   });
@@ -191,9 +163,6 @@ function initializeMedicineReminders() {
   console.log('✅ Medicine reminder service initialized - checking every minute');
 }
 
-/**
- * Send test reminder email
- */
 async function sendTestReminder(userId, medicineId) {
   try {
     const medicine = await MedicineReminder.findById(medicineId).populate('userId', 'name email');

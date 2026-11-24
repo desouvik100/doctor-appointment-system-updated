@@ -7,8 +7,7 @@ router.post('/symptom-check', async (req, res) => {
     const { symptoms } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    if (!apiKey) {
-      // Fallback response
+    if (!apiKey) {
       return res.json({
         success: true,
         severity: 'moderate',
@@ -38,17 +37,14 @@ Keep it professional, helpful, and include appropriate disclaimers.`;
       contents: [{ parts: [{ text: prompt }] }]
     }, { timeout: 15000 });
 
-    const aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    
-    // Try to parse JSON from response
+    const aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     let result;
     try {
       const jsonMatch = aiText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         result = JSON.parse(jsonMatch[0]);
       }
-    } catch (e) {
-      // If parsing fails, create structured response from text
+    } catch (e) {
       result = {
         severity: aiText.toLowerCase().includes('urgent') || aiText.toLowerCase().includes('emergency') ? 'high' : 
                   aiText.toLowerCase().includes('mild') ? 'low' : 'moderate',
@@ -65,9 +61,7 @@ Keep it professional, helpful, and include appropriate disclaimers.`;
     });
 
   } catch (error) {
-    console.error('Symptom check error:', error.message);
-    
-    // Intelligent fallback based on keywords
+    console.error('Symptom check error:', error.message);
     const symptoms = req.body.symptoms?.toLowerCase() || '';
     let severity = 'moderate';
     let specialty = 'General Practitioner';
@@ -91,13 +85,9 @@ Keep it professional, helpful, and include appropriate disclaimers.`;
       disclaimer: 'This is a preliminary assessment. Always consult a healthcare professional.'
     });
   }
-});
-
-// Live stats endpoint
+});
 router.get('/live', async (req, res) => {
-  try {
-    // In production, fetch from database
-    // For now, return demo stats with some randomization
+  try {
     const baseStats = {
       patientsToday: 247,
       activeDoctors: 34,
@@ -105,9 +95,7 @@ router.get('/live', async (req, res) => {
       surgeriesHandled: 1847,
       appointmentsCompleted: 15234,
       satisfactionRate: 98
-    };
-
-    // Add slight variation to make it feel live
+    };
     const stats = {
       patientsToday: baseStats.patientsToday + Math.floor(Math.random() * 10),
       activeDoctors: baseStats.activeDoctors + Math.floor(Math.random() * 5),

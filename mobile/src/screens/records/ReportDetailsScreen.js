@@ -1,7 +1,4 @@
-/**
- * ReportDetailsScreen - Premium detailed view for Lab Reports
- * Displays patient details, sample info, parameter results, and verification info
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -110,8 +107,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
     });
   };
 
-  const handleOpenPdf = () => {
-    // Check if there are attachments
+  const handleOpenPdf = () => {
     const pdfUrl = report?.pdfUrl || report?.attachments?.[0]?.fileUrl;
     if (pdfUrl) {
       Linking.openURL(pdfUrl).catch(() =>
@@ -140,16 +136,14 @@ const ReportDetailsScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
     );
-  }
-
-  // Determine if PDF download should be shown
+  }
   const hasPdf = !!(report.pdfUrl || report.attachments?.[0]?.fileUrl);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
@@ -166,7 +160,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
-        {/* Test Name & Status */}
+        {}
         <Card variant="gradient" style={styles.mainCard}>
           <View style={styles.mainHeader}>
             <View style={styles.mainIconContainer}>
@@ -193,7 +187,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
           </View>
         </Card>
 
-        {/* Info Grid */}
+        {}
         <Card variant="default" style={styles.infoCard}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>General Information</Text>
           
@@ -227,19 +221,19 @@ const ReportDetailsScreen = ({ navigation, route }) => {
           </View>
         </Card>
 
-        {/* Results Section */}
+        {}
         {report.results && report.results.length > 0 && (
           <View style={styles.resultsContainer}>
             <Text style={[styles.sectionHeading, { color: colors.textPrimary }]}>Test Results</Text>
             
-            {/* Table Headers */}
+            {}
             <View style={[styles.tableHeader, { borderBottomColor: colors.divider }]}>
               <Text style={[styles.colHeader, styles.colParam, { color: colors.textSecondary }]}>Parameter</Text>
               <Text style={[styles.colHeader, styles.colVal, { color: colors.textSecondary }]}>Value</Text>
               <Text style={[styles.colHeader, styles.colRef, { color: colors.textSecondary }]}>Reference Range</Text>
             </View>
 
-            {/* Table Rows */}
+            {}
             {report.results.map((res, index) => (
               <View key={index} style={[styles.tableRow, { borderBottomColor: colors.divider }]}>
                 <View style={styles.colParam}>
@@ -268,7 +262,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Interpretation & Comments */}
+        {}
         {report.interpretation && (
           <Card variant="default" style={styles.commentCard}>
             <Text style={[styles.commentTitle, { color: colors.primary }]}>Clinical Interpretation</Text>
@@ -283,7 +277,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
           </Card>
         )}
 
-        {/* Verification Doctor Card */}
+        {}
         {report.status === 'verified' && (
           <Card variant="default" style={styles.verificationCard}>
             <View style={styles.verificationRow}>
@@ -323,9 +317,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   loadingText: { ...typography.bodyMedium, marginTop: spacing.md },
   errorText: { ...typography.bodyLarge, color: colors.error, marginBottom: spacing.lg },
   backButton: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md, backgroundColor: colors.primary, borderRadius: borderRadius.lg },
-  backButtonText: { ...typography.button, color: colors.textInverse },
-  
-  // Header
+  backButtonText: { ...typography.button, color: colors.textInverse },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -350,9 +342,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   },
   headerTitle: { ...typography.headlineMedium, fontWeight: '700' },
   
-  scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
-
-  // Main Card
+  scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
   mainCard: { padding: spacing.lg, marginBottom: spacing.lg },
   mainHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   mainIconContainer: {
@@ -372,16 +362,12 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   statusBadge: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   statusText: { ...typography.labelSmall, fontWeight: '700', fontSize: 11 },
   priorityBadge: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
-  priorityText: { ...typography.labelSmall, fontWeight: '700', fontSize: 11 },
-
-  // Info Card
+  priorityText: { ...typography.labelSmall, fontWeight: '700', fontSize: 11 },
   infoCard: { padding: spacing.lg, marginBottom: spacing.lg },
   sectionTitle: { ...typography.headlineSmall, fontWeight: '700', marginBottom: spacing.md },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1 },
   infoLabel: { ...typography.bodyMedium },
-  infoValue: { ...typography.bodyMedium, fontWeight: '600' },
-
-  // Results Table
+  infoValue: { ...typography.bodyMedium, fontWeight: '600' },
   resultsContainer: { marginBottom: spacing.xl },
   sectionHeading: { ...typography.headlineSmall, fontWeight: '700', marginBottom: spacing.md },
   tableHeader: { flexDirection: 'row', paddingVertical: spacing.sm, borderBottomWidth: 2, marginBottom: spacing.xs },
@@ -397,14 +383,10 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   paramUnit: { ...typography.bodySmall, fontWeight: '400' },
   refRangeText: { ...typography.bodyMedium },
   flagBadge: { alignSelf: 'flex-start', paddingHorizontal: 6, paddingVertical: 2, borderRadius: borderRadius.sm },
-  flagText: { fontSize: 9, fontWeight: '800' },
-
-  // Comment Cards
+  flagText: { fontSize: 9, fontWeight: '800' },
   commentCard: { padding: spacing.lg, marginBottom: spacing.md },
   commentTitle: { ...typography.labelLarge, fontWeight: '700', marginBottom: spacing.sm },
-  commentText: { ...typography.bodyMedium, lineHeight: 22 },
-
-  // Verification Card
+  commentText: { ...typography.bodyMedium, lineHeight: 22 },
   verificationCard: { padding: spacing.lg, marginBottom: spacing.lg },
   verificationRow: { flexDirection: 'row', alignItems: 'center' },
   checkIconContainer: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },

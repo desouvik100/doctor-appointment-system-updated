@@ -5,42 +5,7 @@ const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 const aiSecurityService = require('../services/aiSecurityService');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-const { emitWalletTransaction } = require('../services/socketManager');
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     WalletBalance:
- *       type: object
- *       properties:
- *         success:
- *           type: boolean
- *         balance:
- *           type: number
- *         currency:
- *           type: string
- *           default: INR
- *     WalletTransaction:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         type:
- *           type: string
- *           enum: [credit, debit]
- *         amount:
- *           type: number
- *         description:
- *           type: string
- *         reference:
- *           type: string
- *         createdAt:
- *           type: string
- *           format: date-time
- */
-
-// Security helper - log financial operations
+const { emitWalletTransaction } = require('../services/socketManager');
 const logFinancialActivity = async (req, action, details) => {
   try {
     const doctor = req.doctor || await Doctor.findById(req.params.doctorId);
@@ -61,41 +26,18 @@ const logFinancialActivity = async (req, action, details) => {
   } catch (error) {
     console.error('Security logging error:', error);
   }
-};
+};
 
-// ============ PATIENT WALLET ROUTES ============
-
-/**
- * @swagger
- * /wallet/balance:
- *   get:
- *     summary: Get patient wallet balance
- *     description: Returns the current wallet balance for the authenticated patient
- *     tags: [Wallet]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Wallet balance
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/WalletBalance'
- */
 router.get('/balance', async (req, res) => {
-  try {
-    // Check for auth token
+  try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      // Return zero balance for unauthenticated users
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.json({
         success: true,
         balance: 0,
         currency: 'INR'
       });
-    }
-
-    // Verify token manually
+    }
     const jwt = require('jsonwebtoken');
     const token = authHeader.split(' ')[1];
     
@@ -136,47 +78,6 @@ router.get('/balance', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /wallet/transactions:
- *   get:
- *     summary: Get wallet transactions
- *     description: Returns paginated list of wallet transactions for the authenticated user
- *     tags: [Wallet]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *     responses:
- *       200:
- *         description: List of transactions
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 transactions:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/WalletTransaction'
- *                 balance:
- *                   type: number
- *                 pagination:
- *                   type: object
- *       401:
- *         description: Unauthorized
- */
 router.get('/transactions', verifyToken, async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
@@ -206,11 +107,6 @@ router.get('/transactions', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * POST /wallet/add/create-order
- * Step 1: Create a Razorpay order for wallet top-up.
- * Wallet is NOT credited here — only after payment verification.
- */
 router.post('/add/create-order', verifyToken, async (req, res) => {
   try {
     const { amount } = req.body;
@@ -237,7 +133,7 @@ router.post('/add/create-order', verifyToken, async (req, res) => {
     const razorpay = new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET });
 
     const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // paise
+      amount: Math.round(amount * 100), 
       currency: 'INR',
       receipt: `wallet_${req.user.id}_${Date.now()}`,
       notes: {
@@ -263,10 +159,6 @@ router.post('/add/create-order', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * POST /wallet/add/verify
- * Step 2: Verify Razorpay payment signature and credit the wallet.
- */
 router.post('/add/verify', verifyToken, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
@@ -290,9 +182,7 @@ router.post('/add/verify', verifyToken, async (req, res) => {
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    // Idempotency: prevent double-crediting the same payment
+    }
     const alreadyProcessed = (user.walletHistory || []).some(
       t => t.referenceId === razorpay_payment_id
     );
@@ -327,9 +217,7 @@ router.post('/add/verify', verifyToken, async (req, res) => {
     console.error('Error verifying wallet top-up:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Pay from wallet
+});
 router.post('/pay', verifyToken, async (req, res) => {
   try {
     const { amount, appointmentId } = req.body;
@@ -361,9 +249,7 @@ router.post('/pay', verifyToken, async (req, res) => {
       createdAt: new Date()
     });
     
-    await user.save();
-    
-    // Emit socket event for real-time sync
+    await user.save();
     emitWalletTransaction(req.user.id, {
       type: 'debit',
       amount: -amount,
@@ -380,12 +266,9 @@ router.post('/pay', verifyToken, async (req, res) => {
     console.error('Error paying from wallet:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get loyalty points (placeholder)
+});
 router.get('/loyalty-points', async (req, res) => {
-  try {
-    // Placeholder - integrate with loyalty system
+  try {
     res.json({
       success: true,
       points: 0,
@@ -401,14 +284,9 @@ router.get('/loyalty-points', async (req, res) => {
       tier: 'Bronze'
     });
   }
-});
-
-// ============ DOCTOR WALLET ROUTES ============
-
-// Get doctor's wallet
+});
 router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
-  try {
-    // Only the doctor themselves or an admin can view a wallet
+  try {
     if (
       req.user.role !== 'admin' &&
       req.user.role !== 'superadmin' &&
@@ -437,9 +315,7 @@ router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
     console.error('Error fetching wallet:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get wallet transactions
+});
 router.get('/doctor/:doctorId/transactions', verifyToken, async (req, res) => {
   try {
     if (
@@ -473,9 +349,7 @@ router.get('/doctor/:doctorId/transactions', verifyToken, async (req, res) => {
     console.error('Error fetching transactions:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update bank details
+});
 router.put('/doctor/:doctorId/bank-details', verifyToken, async (req, res) => {
   try {
     if (
@@ -508,11 +382,7 @@ router.put('/doctor/:doctorId/bank-details', verifyToken, async (req, res) => {
     console.error('Error updating bank details:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ============ WITHDRAWAL REQUEST ROUTES ============
-
-// Create withdrawal request (Doctor)
+});
 router.post('/doctor/:doctorId/withdraw', verifyToken, async (req, res) => {
   try {
     if (
@@ -530,9 +400,7 @@ router.post('/doctor/:doctorId/withdraw', verifyToken, async (req, res) => {
     }
     
     const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
-    const doctor = await Doctor.findById(req.params.doctorId);
-    
-    // Check if bank details are added
+    const doctor = await Doctor.findById(req.params.doctorId);
     if (!wallet.bankDetails?.accountNumber && method === 'bank_transfer') {
       return res.status(400).json({ 
         success: false, 
@@ -541,9 +409,7 @@ router.post('/doctor/:doctorId/withdraw', verifyToken, async (req, res) => {
     }
     
     const request = wallet.createWithdrawalRequest(amount, method || 'bank_transfer', notes);
-    await wallet.save();
-    
-    // Log financial activity for security monitoring
+    await wallet.save();
     await logFinancialActivity(req, 'withdrawal_request', { amount, method });
     
     console.log(`💸 Withdrawal request created by Dr. ${doctor?.name}: ₹${amount}`);
@@ -557,9 +423,7 @@ router.post('/doctor/:doctorId/withdraw', verifyToken, async (req, res) => {
     console.error('Error creating withdrawal request:', error);
     res.status(400).json({ success: false, message: error.message });
   }
-});
-
-// Get withdrawal requests (Doctor)
+});
 router.get('/doctor/:doctorId/withdrawals', verifyToken, async (req, res) => {
   try {
     const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
@@ -576,9 +440,7 @@ router.get('/doctor/:doctorId/withdrawals', verifyToken, async (req, res) => {
     console.error('Error fetching withdrawal requests:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Cancel withdrawal request (Doctor)
+});
 router.delete('/doctor/:doctorId/withdraw/:requestId', verifyToken, async (req, res) => {
   try {
     const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
@@ -603,11 +465,7 @@ router.delete('/doctor/:doctorId/withdraw/:requestId', verifyToken, async (req, 
     console.error('Error cancelling withdrawal:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ============ ADMIN ROUTES ============
-
-// Get all pending withdrawal requests (Admin)
+});
 router.get('/admin/withdrawals', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const wallets = await DoctorWallet.find({
@@ -627,9 +485,7 @@ router.get('/admin/withdrawals', verifyTokenWithRole(['admin', 'superadmin']), a
             walletBalance: wallet.pendingAmount
           });
         });
-    });
-    
-    // Sort by request date
+    });
     pendingRequests.sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt));
     
     res.json({
@@ -642,9 +498,7 @@ router.get('/admin/withdrawals', verifyTokenWithRole(['admin', 'superadmin']), a
     console.error('Error fetching pending withdrawals:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Process withdrawal request (Admin - Approve/Reject)
+});
 router.put('/admin/withdrawals/:walletId/:requestId', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const { action, reference, rejectionReason, adminId } = req.body;
@@ -668,9 +522,7 @@ router.put('/admin/withdrawals/:walletId/:requestId', verifyTokenWithRole(['admi
       rejectionReason
     );
     
-    await wallet.save();
-    
-    // Send email notification
+    await wallet.save();
     try {
       const { sendEmail } = require('../services/emailService');
       const doctor = wallet.doctorId;
@@ -727,9 +579,7 @@ router.put('/admin/withdrawals/:walletId/:requestId', verifyTokenWithRole(['admi
     console.error('Error processing withdrawal:', error);
     res.status(400).json({ success: false, message: error.message });
   }
-});
-
-// Get all doctors' wallets (Admin)
+});
 router.get('/admin/all', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const wallets = await DoctorWallet.find()
@@ -762,9 +612,7 @@ router.get('/admin/all', verifyTokenWithRole(['admin', 'superadmin']), async (re
     console.error('Error fetching all wallets:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Process payout to doctor (Admin)
+});
 router.post('/admin/payout', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const { doctorId, amount, method, reference, adminId } = req.body;
@@ -803,9 +651,7 @@ router.post('/admin/payout', verifyTokenWithRole(['admin', 'superadmin']), async
     console.error('Error processing payout:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update commission rate (Admin)
+});
 router.put('/admin/commission/:doctorId', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const { commissionRate } = req.body;
@@ -830,9 +676,7 @@ router.put('/admin/commission/:doctorId', verifyTokenWithRole(['admin', 'superad
     console.error('Error updating commission:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Add bonus to doctor (Admin)
+});
 router.post('/admin/bonus', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const { doctorId, amount, description, adminId } = req.body;
@@ -874,17 +718,13 @@ router.post('/admin/bonus', verifyTokenWithRole(['admin', 'superadmin']), async 
     console.error('Error adding bonus:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get wallet statistics for dashboard
+});
 router.get('/admin/stats', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const wallets = await DoctorWallet.find().populate('doctorId', 'name');
     
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
-    // Calculate monthly earnings from transactions
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     let thisMonthEarnings = 0;
     let thisMonthPayouts = 0;
     
@@ -898,9 +738,7 @@ router.get('/admin/stats', verifyTokenWithRole(['admin', 'superadmin']), async (
           }
         }
       });
-    });
-    
-    // Top earning doctors
+    });
     const topDoctors = wallets
       .sort((a, b) => b.totalEarnings - a.totalEarnings)
       .slice(0, 5)

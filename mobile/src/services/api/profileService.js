@@ -1,28 +1,17 @@
-/**
- * Profile Service - User profile management
- */
+
 
 import apiClient from './apiClient';
 
-/**
- * Get user profile
- */
 export const getProfile = async (userId) => {
   const response = await apiClient.get(`/profile/profile/${userId}`);
   return response.data;
 };
 
-/**
- * Update user profile
- */
 export const updateProfile = async (userId, profileData) => {
   const response = await apiClient.put(`/profile/update/${userId}`, profileData);
   return response.data;
 };
 
-/**
- * Update profile photo
- */
 export const updateProfilePhoto = async (userId, photoBase64) => {
   const response = await apiClient.post('/profile/update-photo', {
     userId,
@@ -31,17 +20,11 @@ export const updateProfilePhoto = async (userId, photoBase64) => {
   return response.data;
 };
 
-/**
- * Delete profile photo
- */
 export const deleteProfilePhoto = async (userId) => {
   const response = await apiClient.delete(`/profile/delete-photo/${userId}`);
   return response.data;
 };
 
-/**
- * Get user's medical history
- */
 export const getMedicalHistory = async (userId) => {
   try {
     const response = await apiClient.get(`/emr/patients/${userId}/summary`);
@@ -51,13 +34,8 @@ export const getMedicalHistory = async (userId) => {
   }
 };
 
-/**
- * Get user's insurance details
- */
 export const getInsuranceDetails = async (userId) => {
-  try {
-    // Note: Backend doesn't have patient insurance endpoint
-    // Insurance routes are for clinic claim management
+  try {
     const response = await apiClient.get(`/insurance/patient/${userId}`).catch(() => null);
     return response?.data || { success: true, policies: [] };
   } catch (error) {
@@ -65,12 +43,8 @@ export const getInsuranceDetails = async (userId) => {
   }
 };
 
-/**
- * Get user's family members
- */
 export const getFamilyMembers = async (userId) => {
-  try {
-    // Backend route is /family/user/:userId
+  try {
     const response = await apiClient.get(`/family/user/${userId}`);
     return { success: true, members: Array.isArray(response.data) ? response.data : [] };
   } catch (error) {
@@ -78,11 +52,7 @@ export const getFamilyMembers = async (userId) => {
   }
 };
 
-/**
- * Add family member
- */
-export const addFamilyMember = async (userId, memberData) => {
-  // Backend route is POST /family with primaryUserId in body
+export const addFamilyMember = async (userId, memberData) => {
   const response = await apiClient.post('/family', {
     ...memberData,
     primaryUserId: userId,
@@ -90,9 +60,6 @@ export const addFamilyMember = async (userId, memberData) => {
   return response.data;
 };
 
-/**
- * Get health reports
- */
 export const getHealthReports = async (userId) => {
   try {
     const response = await apiClient.get(`/lab-reports/patient/${userId}`);
@@ -102,9 +69,6 @@ export const getHealthReports = async (userId) => {
   }
 };
 
-/**
- * Get appointment statistics
- */
 export const getAppointmentStats = async (userId) => {
   try {
     const response = await apiClient.get(`/appointments/user/${userId}`);

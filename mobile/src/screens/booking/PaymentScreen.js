@@ -1,7 +1,4 @@
-/**
- * PaymentScreen - Clean Swiggy/Zomato-style payment UI
- * UPI: native app intent (direct launch) | Card/NetBanking: Razorpay WebView
- */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -20,9 +17,7 @@ import apiClient, {
 } from '../../services/api/apiClient';
 import { useUser } from '../../context/UserContext';
 import UpiAppIcon from '../../components/payment/UpiAppIcon';
-import Svg, { Path, Rect, G, Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 'react-native-svg';
-
-// Official NPCI UPI logo
+import Svg, { Path, Rect, G, Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 'react-native-svg';
 const UpiLogo = ({ size = 40 }) => (
   <Svg width={size} height={size * 0.5} viewBox="0 0 80 40">
     <Defs>
@@ -32,9 +27,9 @@ const UpiLogo = ({ size = 40 }) => (
       </SvgGradient>
     </Defs>
     <Rect width="80" height="40" rx="6" fill="url(#upiGrad)" />
-    {/* UPI text */}
+    {}
     <SvgText x="40" y="26" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold" letterSpacing="2">UPI</SvgText>
-    {/* Arrows */}
+    {}
     <Path d="M8 20 L16 12 L16 17 L24 17 L24 23 L16 23 L16 28 Z" fill="white" opacity="0.9" />
     <Path d="M72 20 L64 12 L64 17 L56 17 L56 23 L64 23 L64 28 Z" fill="white" opacity="0.9" />
   </Svg>
@@ -76,9 +71,7 @@ const UPI_APPS = [
 const PaymentScreen = ({ navigation, route }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
-  const { doctor, date, time, queueNumber, consultationType, patient, appointmentId, reason, pendingBooking } = route.params || {};
-
-  // appointmentId ref — set after we create the appointment just before payment
+  const { doctor, date, time, queueNumber, consultationType, patient, appointmentId, reason, pendingBooking } = route.params || {};
   const createdAppointmentId = useRef(appointmentId || null);
 
   const [selectedMethod, setSelectedMethod] = useState('upi');
@@ -90,12 +83,8 @@ const PaymentScreen = ({ navigation, route }) => {
   const [couponError, setCouponError] = useState('');
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [showCoupon, setShowCoupon] = useState(false);
-
-  // Rotating messages for full-screen loading overlay
-  const [loadingMessage, setLoadingMessage] = useState('Initializing secure gateway...');
-
-  // For UPI intent polling
+  const [showCoupon, setShowCoupon] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Initializing secure gateway...');
   const pendingOrderId = useRef(null);
   const appStateRef = useRef(AppState.currentState);
   const pollingTimer = useRef(null);
@@ -107,16 +96,13 @@ const PaymentScreen = ({ navigation, route }) => {
   const totalAmount = Math.max(0, subtotal - couponDiscount);
 
   useEffect(() => {
-    fetchWalletBalance();
-    // Listen for app coming back to foreground after UPI app
+    fetchWalletBalance();
     const sub = AppState.addEventListener('change', handleAppStateChange);
     return () => {
       sub.remove();
       if (pollingTimer.current) clearTimeout(pollingTimer.current);
     };
-  }, []);
-
-  // Update loading messages periodically when loading is true
+  }, []);
   useEffect(() => {
     if (!loading) return;
     const messages = [
@@ -135,9 +121,7 @@ const PaymentScreen = ({ navigation, route }) => {
   }, [loading]);
 
   const handleAppStateChange = async (nextState) => {
-    if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
-      // App came back to foreground — check if UPI payment completed
-      // Only poll if pendingOrderId is set (UPI payment flow) and not already polling
+    if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
       if (pendingOrderId.current && createdAppointmentId.current && !pollingInProgress.current) {
         pollingInProgress.current = true;
         console.log('🔄 App returned to foreground, polling UPI payment status...');
@@ -185,17 +169,9 @@ const PaymentScreen = ({ navigation, route }) => {
     try {
       const res = await apiClient.get('/wallet/balance');
       setWalletBalance(res.data?.balance || 0);
-    } catch { /* silent */ }
+    } catch {  }
   };
 
-  /**
-   * Verify payment completion for an appointment
-   * This is called as a safety net to detect payments that completed
-   * in external apps (UPI, banking apps) and ensure the appointment is confirmed.
-   *
-   * @param {string} appointmentId - The appointment to verify
-   * @returns {Promise<boolean>} true if payment was verified and appointment confirmed
-   */
   const verifyPaymentCompletion = async (appointmentId) => {
     if (!appointmentId) return false;
     try {
@@ -213,11 +189,6 @@ const PaymentScreen = ({ navigation, route }) => {
     }
   };
 
-  /**
-   * Safety check on mount: if there's a pending appointment from a previous session,
-   * verify its payment status. This handles cases where payment succeeded but
-   * app crashed or user force-closed before seeing confirmation.
-   */
   useEffect(() => {
     const checkPendingPayment = async () => {
       if (!createdAppointmentId.current && appointmentId) {
@@ -242,30 +213,13 @@ const PaymentScreen = ({ navigation, route }) => {
     checkPendingPayment();
   }, [appointmentId]);
 
-  /**
-   * Pre-flight session guard.
-   * Validates the stored access token *before* firing the checkout request.
-   * If the token is absent or the storage read indicates an expired session,
-   * we proactively await a refresh cycle so the subsequent HTTP call is sent
-   * with a guaranteed-fresh Authorization header.
-   * This eliminates the synchronization race-condition that caused
-   * POST /appointments/queue-booking to fail with a backend state mismatch.
-   *
-   * @returns {Promise<boolean>} true if a valid session is confirmed
-   * @throws {Error}            when no refresh token exists and we cannot recover
-   */
   const ensureFreshToken = async () => {
     try {
       const currentToken = await getAuthToken();
-      if (currentToken) {
-        // Token exists — pass through; the Axios request interceptor will
-        // attach it. If the server still returns 401 the response interceptor
-        // handles the refresh automatically.
+      if (currentToken) {
         console.log('🔑 [Checkout Guard] Valid session token confirmed');
         return true;
-      }
-
-      // No token found in either storage — attempt a proactive refresh
+      }
       console.log('⚠️ [Checkout Guard] No access token found. Attempting proactive refresh...');
       const refreshToken = await getRefreshToken();
       if (!refreshToken) {
@@ -287,20 +241,11 @@ const PaymentScreen = ({ navigation, route }) => {
       console.error('❌ [Checkout Guard] Session validation failed:', err.message);
       throw err;
     }
-  };
-
-  // Create the appointment right before payment — queue only increments on confirmed payment
+  };
   const createAppointmentNow = async () => {
     if (createdAppointmentId.current) return createdAppointmentId.current;
-    if (!pendingBooking) return null;
-
-    // ── Pre-flight token validation ──────────────────────────────────────
-    await ensureFreshToken();
-    // ─────────────────────────────────────────────────────────────────────
-
-    // Map the frontend paymentMethod to a valid backend schema enum value.
-    // Backend payment.paymentMethod enum: ["card", "upi", "netbanking", "wallet"]
-    // 'razorpay' is NOT a valid enum — map it to 'card' (Razorpay default gateway).
+    if (!pendingBooking) return null;
+    await ensureFreshToken();
     const rawMethod = selectedMethod || 'upi';
     const backendPaymentMethod = rawMethod === 'wallet'
       ? 'wallet'
@@ -308,9 +253,7 @@ const PaymentScreen = ({ navigation, route }) => {
         ? 'upi'
         : rawMethod === 'netbanking'
           ? 'netbanking'
-          : 'card'; // card / razorpay / anything else → 'card'
-
-    // Safe ID extraction helper
+          : 'card'; 
     const extractId = (obj) => {
       if (!obj) return '';
       if (typeof obj === 'string') return String(obj).trim();
@@ -318,9 +261,7 @@ const PaymentScreen = ({ navigation, route }) => {
         return String(obj._id || obj.id).trim();
       }
       return '';
-    };
-
-    // Force clean database string primitives for IDs
+    };
     const cleanUserId = extractId(pendingBooking.userId || user?.id || user?._id || user?.userId);
     const cleanDoctorId = extractId(pendingBooking.doctorId || doctor?._id || doctor?.id);
     const cleanClinicId = extractId(pendingBooking.clinicId || doctor?.clinicId?._id || doctor?.clinicId) || null;
@@ -330,38 +271,26 @@ const PaymentScreen = ({ navigation, route }) => {
 
     const consultationFee = Number(pendingBooking.consultationFee || doctor?.consultationFee || doctor?.fee || 500);
     const platformFee = Number(pendingBooking.platformFee || Math.round(consultationFee * 0.05));
-    const totalAmount = Number(pendingBooking.amount || (consultationFee + platformFee));
-
-    // Build the final payload — all fields the backend queue-booking controller needs
+    const totalAmount = Number(pendingBooking.amount || (consultationFee + platformFee));
     const bookingPayload = {
       userId: cleanUserId,
       doctorId: cleanDoctorId,
-      clinicId: cleanClinicId,
-
-      // Date & time — both required by Appointment schema
+      clinicId: cleanClinicId,
       date: pendingBooking.date || date,
-      time: selectedTime,
-
-      // Slot metadata
+      time: selectedTime,
       ...(cleanSlotId ? { slotId: cleanSlotId } : {}),
-      slotType: pendingBooking.slotType || (pendingBooking.consultationType === 'online' ? 'online' : 'clinic'),
-
-      // Appointment details
+      slotType: pendingBooking.slotType || (pendingBooking.consultationType === 'online' ? 'online' : 'clinic'),
       reason: pendingBooking.reason || 'General Consultation',
       consultationType: pendingBooking.consultationType || 'in_person',
-      urgencyLevel: pendingBooking.urgencyLevel || 'normal',
-
-      // Payment initialization — required for pending_payment status
+      urgencyLevel: pendingBooking.urgencyLevel || 'normal',
       status: 'pending_payment',
       paymentStatus: 'pending',
-      paymentMethod: backendPaymentMethod,   // valid enum: card | upi | netbanking | wallet
+      paymentMethod: backendPaymentMethod,   
       amount: Number(totalAmount),
       amountInPaisa: Number(totalAmount * 100),
       consultationFee: Number(consultationFee),
       platformFee: Number(platformFee),
-      gst: 0,
-
-      // Notification prefs
+      gst: 0,
       reminderPreference: 'email',
       sendEstimatedTimeEmail: false,
     };
@@ -412,15 +341,7 @@ const PaymentScreen = ({ navigation, route }) => {
     if (!pendingBooking && !createdAppointmentId.current) {
       Alert.alert('Error', 'Appointment info missing. Please try again.');
       return;
-    }
-
-    // ── Top-level session validation guard ──────────────────────────────────
-    // Validate the access token BEFORE any network call in this function:
-    // create-order, wallet/pay, and the RazorpayPayment navigation all require
-    // a live Authorization header. A token that expired between the user
-    // landing on this screen and pressing Pay would cause silent 401 failures
-    // on any of those calls. We pause execution here and proactively refresh
-    // so the entire payment handshake runs with a guaranteed-fresh token.
+    }
     try {
       await ensureFreshToken();
     } catch (sessionErr) {
@@ -430,10 +351,7 @@ const PaymentScreen = ({ navigation, route }) => {
         [{ text: 'Log In', onPress: () => navigation.navigate('Welcome') }]
       );
       return;
-    }
-    // ────────────────────────────────────────────────────────────────────────
-
-    // Extract userId with multiple fallbacks
+    }
     const userId = user?.id || user?._id || user?.userId;
     
     if (!userId) { 
@@ -505,17 +423,12 @@ const PaymentScreen = ({ navigation, route }) => {
       
       console.log('✅ Order created successfully:', { orderId, keyId: keyId?.substring(0, 15) + '...' });
 
-      if (selectedMethod === 'upi') {
-        // ⚠️ IMPORTANT: Direct UPI deep-links require a valid business UPI VPA
-        // Since we're using Razorpay, route UPI payments through their WebView
-        // which handles VPA routing internally
+      if (selectedMethod === 'upi') {
         
         console.log('🔍 UPI Payment - Routing through Razorpay WebView');
         console.log('   Selected UPI App:', selectedUpiApp);
         console.log('   Order ID:', orderId);
-        console.log('   Amount:', totalAmount);
-        
-        // Clear pending order ID (WebView handles verification)
+        console.log('   Amount:', totalAmount);
         pendingOrderId.current = null;
         createdAppointmentId.current = null;
         
@@ -529,8 +442,7 @@ const PaymentScreen = ({ navigation, route }) => {
           upiApp: selectedUpiApp !== 'other' ? selectedUpiApp : null,
         });
 
-      } else {
-        // Clear pending order ID for non-UPI payments (WebView handles verification)
+      } else {
         pendingOrderId.current = null;
         createdAppointmentId.current = null;
         
@@ -547,9 +459,7 @@ const PaymentScreen = ({ navigation, route }) => {
       setLoading(false);
       Alert.alert('Payment Failed', error?.response?.data?.message || error?.message || 'Something went wrong.');
     }
-  };
-
-  // Build UPI intent URL using the app's own URI scheme to bypass the chooser
+  };
   const buildUpiUrl = ({ orderId, amount, merchantName, merchantVpa, note, app }) => {
     const params = [
       `pa=${encodeURIComponent(merchantVpa)}`,
@@ -632,7 +542,7 @@ const PaymentScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Trust Header */}
+      {}
       <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={[styles.trustHeader, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIconWhite}>←</Text>
@@ -644,7 +554,7 @@ const PaymentScreen = ({ navigation, route }) => {
         <View style={{ width: 36 }} />
       </LinearGradient>
 
-      {/* Trust Badges */}
+      {}
       <View style={[styles.trustBadgesRow, { backgroundColor: colors.success + '08', borderBottomWidth: 1, borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F1F5F9' }]}>
         <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🛡️ SSL Secured</Text></View>
         <View style={styles.trustDot} />
@@ -655,7 +565,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-        {/* Amount Hero */}
+        {}
         <LinearGradient colors={colors.gradientSecondary || ['#6C5CE7', '#5B4ED1']} style={styles.amountHero}>
           <Text style={styles.amountLabel}>Total Payable Amount</Text>
           <Text style={styles.amountValue}>₹{totalAmount.toLocaleString('en-IN')}</Text>
@@ -668,10 +578,10 @@ const PaymentScreen = ({ navigation, route }) => {
           </View>
         </LinearGradient>
 
-        {/* Payment Methods */}
+        {}
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Select Payment Option</Text>
 
-        {/* UPI Option */}
+        {}
         {renderMethodCard(
           'upi',
           <UpiLogo size={32} />,
@@ -730,7 +640,7 @@ const PaymentScreen = ({ navigation, route }) => {
           ) : null
         )}
 
-        {/* Card Option */}
+        {}
         {renderMethodCard(
           'card',
           <Text style={styles.methodIconText}>💳</Text>,
@@ -746,7 +656,7 @@ const PaymentScreen = ({ navigation, route }) => {
           ) : null
         )}
 
-        {/* Netbanking Option */}
+        {}
         {renderMethodCard(
           'netbanking',
           <Text style={styles.methodIconText}>🏦</Text>,
@@ -756,7 +666,7 @@ const PaymentScreen = ({ navigation, route }) => {
           null
         )}
 
-        {/* Health Wallet Option */}
+        {}
         {renderMethodCard(
           'wallet',
           <Text style={styles.methodIconText}>💰</Text>,
@@ -787,7 +697,7 @@ const PaymentScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Coupon validation block */}
+        {}
         <View style={[styles.couponCard, { backgroundColor: colors.surface }, shadows.md]}>
           <TouchableOpacity style={styles.couponHeader} onPress={() => setShowCoupon(!showCoupon)} activeOpacity={0.75}>
             <View style={[styles.methodIconBox, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#EBFDF5' }]}>
@@ -834,7 +744,7 @@ const PaymentScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Bill Summary */}
+        {}
         <View style={[styles.billCard, { backgroundColor: colors.surface }, shadows.md]}>
           <Text style={[styles.breakdownTitle, { color: colors.textPrimary }]}>Detailed Invoice Summary</Text>
           
@@ -872,7 +782,7 @@ const PaymentScreen = ({ navigation, route }) => {
         <View style={{ height: 160 }} />
       </ScrollView>
 
-      {/* Pay Button Sticky Bar */}
+      {}
       <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#F1F5F9', paddingBottom: insets.bottom + spacing.md }]}>
         <Animated.View style={{ transform: [{ scale: payBtnScale }] }}>
           <TouchableOpacity
@@ -895,7 +805,7 @@ const PaymentScreen = ({ navigation, route }) => {
         </Text>
       </View>
 
-      {/* Premium Full Screen Processing Overlay */}
+      {}
       {loading && (
         <View style={[StyleSheet.absoluteFillObject, styles.loadingOverlay]}>
           <View style={[styles.loadingBox, { backgroundColor: colors.surface }, shadows.xl]}>
@@ -917,9 +827,7 @@ const PaymentScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-
-  // Trust Header
+  container: { flex: 1 },
   trustHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -937,9 +845,7 @@ const styles = StyleSheet.create({
   backIconWhite: { fontSize: 18, color: '#fff', fontWeight: '700' },
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
-  headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2, fontSize: 10 },
-
-  // Trust Badges
+  headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2, fontSize: 10 },
   trustBadgesRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -951,9 +857,7 @@ const styles = StyleSheet.create({
   trustBadgeText: { fontSize: 11, fontWeight: '700' },
   trustDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#10B981', opacity: 0.3, marginHorizontal: 12 },
 
-  scrollContent: { paddingBottom: 20 },
-
-  // Amount Hero
+  scrollContent: { paddingBottom: 20 },
   amountHero: {
     marginHorizontal: spacing.xl,
     marginTop: spacing.lg,
@@ -967,12 +871,8 @@ const styles = StyleSheet.create({
   amountSub: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: spacing.sm, textAlign: 'center', fontWeight: '500' },
   amountBadgesRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   amountBadge: { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
-  amountBadgeText: { fontSize: 11, color: '#fff', fontWeight: '700' },
-
-  // Section label
-  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginHorizontal: spacing.xl, marginBottom: spacing.md, marginTop: spacing.sm },
-
-  // Method Cards
+  amountBadgeText: { fontSize: 11, color: '#fff', fontWeight: '700' },
+  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginHorizontal: spacing.xl, marginBottom: spacing.md, marginTop: spacing.sm },
   methodCard: {
     marginHorizontal: spacing.xl,
     marginBottom: spacing.md,
@@ -993,9 +893,7 @@ const styles = StyleSheet.create({
   recommendedBadge: { borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 },
   recommendedText: { fontSize: 9, fontWeight: '800' },
   checkCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  checkMark: { color: '#fff', fontSize: 11, fontWeight: '900' },
-
-  // UPI apps grid - Optimized for 4-column dynamic grid
+  checkMark: { color: '#fff', fontSize: 11, fontWeight: '900' },
   upiAppsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1017,14 +915,10 @@ const styles = StyleSheet.create({
   upiCheck: { position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   upiCheckText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
   moreAppsIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  moreAppsEmoji: { fontSize: 18, fontWeight: '900' },
-
-  // Card logos
+  moreAppsEmoji: { fontSize: 18, fontWeight: '900' },
   cardLogosRow: { flexDirection: 'row', gap: 8, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, marginTop: -4 },
   cardLogoPill: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' },
-  cardLogoText: { color: '#fff', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
-
-  // Wallet
+  cardLogoText: { color: '#fff', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
   walletDetailsContainer: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
@@ -1050,9 +944,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderWidth: 1,
   },
-  addMoneyText: { fontSize: 11, fontWeight: '700' },
-
-  // Coupon
+  addMoneyText: { fontSize: 11, fontWeight: '700' },
   couponCard: {
     marginHorizontal: spacing.xl,
     marginBottom: spacing.md,
@@ -1072,9 +964,7 @@ const styles = StyleSheet.create({
   couponInput: { flex: 1, ...typography.bodyMedium, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 13, height: 48 },
   couponBtn: { paddingHorizontal: spacing.lg, height: 48, alignItems: 'center', justifyContent: 'center', minWidth: 80 },
   couponBtnText: { ...typography.labelMedium, color: '#fff', fontWeight: '800' },
-  couponMsg: { fontSize: 11, fontWeight: '600', marginTop: spacing.xs, paddingLeft: 2 },
-
-  // Bill Breakdown
+  couponMsg: { fontSize: 11, fontWeight: '600', marginTop: spacing.xs, paddingLeft: 2 },
   billCard: {
     marginHorizontal: spacing.xl,
     marginBottom: spacing.md,
@@ -1090,9 +980,7 @@ const styles = StyleSheet.create({
   breakdownTotal: { ...typography.bodyLarge, fontWeight: '700', fontSize: 16 },
   breakdownTotalValue: { fontSize: 22, fontWeight: '700' },
   refundNote: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  refundNoteText: { fontSize: 11, fontWeight: '500', lineHeight: 16 },
-
-  // Bottom action bar
+  refundNoteText: { fontSize: 11, fontWeight: '500', lineHeight: 16 },
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -1110,9 +998,7 @@ const styles = StyleSheet.create({
   payBtn: { borderRadius: borderRadius.xl, overflow: 'hidden' },
   payBtnGradient: { paddingVertical: spacing.lg, alignItems: 'center', justifyContent: 'center' },
   payBtnText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 0.2 },
-  secureNote: { textAlign: 'center', fontSize: 10, marginTop: spacing.sm, fontWeight: '500' },
-
-  // Loading Overlay
+  secureNote: { textAlign: 'center', fontSize: 10, marginTop: spacing.sm, fontWeight: '500' },
   loadingOverlay: {
     backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'center',

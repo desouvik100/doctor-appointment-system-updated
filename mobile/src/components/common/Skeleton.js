@@ -1,7 +1,4 @@
-/**
- * Enterprise Skeleton Loader
- * Smooth loading states for better perceived performance
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
@@ -11,7 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 const Skeleton = ({
   width = '100%',
   height = 20,
-  variant = 'rect', // rect, circle, text
+  variant = 'rect', 
   style,
 }) => {
   const { colors } = useTheme();
@@ -53,7 +50,6 @@ const Skeleton = ({
   return <Animated.View style={skeletonStyles} />;
 };
 
-// Preset skeleton components
 export const SkeletonText = ({ lines = 3, style }) => (
   <View style={style}>
     {Array.from({ length: lines }).map((_, index) => (

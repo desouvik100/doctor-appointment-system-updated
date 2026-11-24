@@ -1,8 +1,6 @@
-// Admin Email Service - Analytics, Alerts, and Notifications
-const nodemailer = require('nodemailer');
-const cron = require('node-cron');
 
-// Models
+const nodemailer = require('nodemailer');
+const cron = require('node-cron');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
@@ -27,11 +25,7 @@ function getTransporter() {
   return transporter;
 }
 
-const adminEmail = () => process.env.ADMIN_EMAIL || 'admin@healthsyncpro.in';
-
-// ============================================
-// 1. DAILY/WEEKLY ANALYTICS EMAIL REPORT
-// ============================================
+const adminEmail = () => process.env.ADMIN_EMAIL || 'admin@healthsyncpro.in';
 async function sendAnalyticsReport(period = 'daily') {
   const transport = getTransporter();
   if (!transport) return { success: false, reason: 'Email not configured' };
@@ -44,9 +38,7 @@ async function sendAnalyticsReport(period = 'daily') {
       startDate.setDate(startDate.getDate() - 1);
     } else {
       startDate.setDate(startDate.getDate() - 7);
-    }
-
-    // Gather analytics data
+    }
     const [
       totalUsers,
       newUsers,
@@ -67,9 +59,7 @@ async function sendAnalyticsReport(period = 'daily') {
       Appointment.countDocuments({ status: 'completed', createdAt: { $gte: startDate } }),
       Appointment.countDocuments({ status: 'cancelled', createdAt: { $gte: startDate } }),
       Appointment.countDocuments({ status: 'pending' })
-    ]);
-
-    // Calculate revenue
+    ]);
     const revenueData = await Appointment.aggregate([
       { $match: { status: 'completed', createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
@@ -190,12 +180,7 @@ async function sendAnalyticsReport(period = 'daily') {
     console.error('Error sending analytics report:', error);
     return { success: false, error: error.message };
   }
-}
-
-
-// ============================================
-// 2. SYSTEM HEALTH ALERTS
-// ============================================
+}
 async function sendSystemHealthAlert(alertType, details) {
   const transport = getTransporter();
   if (!transport) return { success: false, reason: 'Email not configured' };
@@ -274,11 +259,7 @@ async function sendSystemHealthAlert(alertType, details) {
     console.error('Error sending system health alert:', error);
     return { success: false, error: error.message };
   }
-}
-
-// ============================================
-// 3. NEW DOCTOR REGISTRATION APPROVAL EMAIL
-// ============================================
+}
 async function sendNewDoctorRegistrationAlert(doctor) {
   const transport = getTransporter();
   if (!transport) return { success: false, reason: 'Email not configured' };
@@ -370,12 +351,7 @@ async function sendNewDoctorRegistrationAlert(doctor) {
     console.error('Error sending doctor registration alert:', error);
     return { success: false, error: error.message };
   }
-}
-
-
-// ============================================
-// 4. REVENUE SUMMARY EMAIL
-// ============================================
+}
 async function sendRevenueSummary(period = 'monthly') {
   const transport = getTransporter();
   if (!transport) return { success: false, reason: 'Email not configured' };
@@ -388,23 +364,17 @@ async function sendRevenueSummary(period = 'monthly') {
       startDate.setDate(startDate.getDate() - 7);
     } else {
       startDate.setMonth(startDate.getMonth() - 1);
-    }
-
-    // Get revenue by doctor
+    }
     const revenueByDoctor = await Appointment.aggregate([
       { $match: { status: 'completed', createdAt: { $gte: startDate } } },
       { $group: { _id: '$doctorId', total: { $sum: '$amount' }, count: { $sum: 1 } } },
       { $sort: { total: -1 } },
       { $limit: 10 }
-    ]);
-
-    // Populate doctor names
+    ]);
     const doctorIds = revenueByDoctor.map(r => r._id);
     const doctors = await Doctor.find({ _id: { $in: doctorIds } }).select('name specialization');
     const doctorMap = {};
-    doctors.forEach(d => { doctorMap[d._id.toString()] = d; });
-
-    // Get daily revenue for chart
+    doctors.forEach(d => { doctorMap[d._id.toString()] = d; });
     const dailyRevenue = await Appointment.aggregate([
       { $match: { status: 'completed', createdAt: { $gte: startDate } } },
       { $group: { 
@@ -413,18 +383,14 @@ async function sendRevenueSummary(period = 'monthly') {
         count: { $sum: 1 }
       }},
       { $sort: { _id: 1 } }
-    ]);
-
-    // Calculate totals
+    ]);
     const totalRevenue = revenueByDoctor.reduce((sum, r) => sum + r.total, 0);
     const totalAppointments = revenueByDoctor.reduce((sum, r) => sum + r.count, 0);
     const platformFee = totalRevenue * (parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || 7) / 100);
     const gst = platformFee * (parseFloat(process.env.GST_PERCENTAGE || 18) / 100);
 
     const periodLabel = period === 'weekly' ? 'Weekly' : 'Monthly';
-    const dateRange = `${startDate.toLocaleDateString('en-IN')} - ${now.toLocaleDateString('en-IN')}`;
-
-    // Generate doctor rows
+    const dateRange = `${startDate.toLocaleDateString('en-IN')} - ${now.toLocaleDateString('en-IN')}`;
     let doctorRows = '';
     revenueByDoctor.forEach((r, i) => {
       const doc = doctorMap[r._id?.toString()] || { name: 'Unknown', specialization: 'N/A' };
@@ -545,31 +511,20 @@ async function sendRevenueSummary(period = 'monthly') {
     console.error('Error sending revenue summary:', error);
     return { success: false, error: error.message };
   }
-}
-
-// ============================================
-// SCHEDULED JOBS
-// ============================================
-function initializeScheduledEmails() {
-  // Daily analytics report at 8 AM IST
+}
+function initializeScheduledEmails() {
   cron.schedule('0 8 * * *', async () => {
     console.log('📊 Sending daily analytics report...');
     await sendAnalyticsReport('daily');
-  }, { timezone: 'Asia/Kolkata' });
-
-  // Weekly analytics report on Monday at 9 AM IST
+  }, { timezone: 'Asia/Kolkata' });
   cron.schedule('0 9 * * 1', async () => {
     console.log('📊 Sending weekly analytics report...');
     await sendAnalyticsReport('weekly');
-  }, { timezone: 'Asia/Kolkata' });
-
-  // Weekly revenue summary on Sunday at 10 AM IST
+  }, { timezone: 'Asia/Kolkata' });
   cron.schedule('0 10 * * 0', async () => {
     console.log('💰 Sending weekly revenue summary...');
     await sendRevenueSummary('weekly');
-  }, { timezone: 'Asia/Kolkata' });
-
-  // Monthly revenue summary on 1st of each month at 10 AM IST
+  }, { timezone: 'Asia/Kolkata' });
   cron.schedule('0 10 1 * *', async () => {
     console.log('💰 Sending monthly revenue summary...');
     await sendRevenueSummary('monthly');

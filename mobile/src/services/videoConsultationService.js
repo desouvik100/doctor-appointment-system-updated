@@ -1,16 +1,10 @@
-/**
- * Video Consultation Service
- * Handles video call functionality using WebRTC and Jitsi Meet
- */
+
 
 import { Linking, Platform } from 'react-native';
 import apiClient from './api/apiClient';
 
-const BACKEND_URL = 'https://doctor-appointment-system-updated.onrender.com'; // Update with your backend URL
+const BACKEND_URL = 'https://doctor-appointment-system-updated.onrender.com'; 
 
-/**
- * Generate meeting link for an appointment
- */
 export const generateMeetingLink = async (appointmentId) => {
   try {
     const response = await apiClient.post(`/consultations/${appointmentId}/generate-meet`);
@@ -22,8 +16,7 @@ export const generateMeetingLink = async (appointmentId) => {
       provider: response.data.provider || 'jitsi',
     };
   } catch (error) {
-    console.error('Error generating meeting link:', error);
-    // Fallback to local Jitsi link generation
+    console.error('Error generating meeting link:', error);
     const roomName = `HealthSync-${appointmentId}-${Date.now()}`;
     return {
       success: true,
@@ -33,9 +26,6 @@ export const generateMeetingLink = async (appointmentId) => {
   }
 };
 
-/**
- * Get existing meeting link for an appointment
- */
 export const getMeetingLink = async (appointmentId) => {
   try {
     const response = await apiClient.get(`/appointments/${appointmentId}`);
@@ -49,9 +39,7 @@ export const getMeetingLink = async (appointmentId) => {
         patientLink: appointment.patientLink,
         provider: appointment.meetProvider || 'unknown',
       };
-    }
-    
-    // Generate new link if none exists
+    }
     return generateMeetingLink(appointmentId);
   } catch (error) {
     console.error('Error getting meeting link:', error);
@@ -59,21 +47,15 @@ export const getMeetingLink = async (appointmentId) => {
   }
 };
 
-/**
- * Join video consultation
- */
 export const joinConsultation = async (meetLink, userType = 'patient') => {
-  try {
-    // Check if Jitsi Meet app is installed
+  try {
     const jitsiAppUrl = meetLink.replace('https://meet.jit.si/', 'org.jitsi.meet://');
     
     const canOpenJitsi = await Linking.canOpenURL(jitsiAppUrl);
     
-    if (canOpenJitsi && Platform.OS === 'android') {
-      // Open in Jitsi Meet app
+    if (canOpenJitsi && Platform.OS === 'android') {
       await Linking.openURL(jitsiAppUrl);
-    } else {
-      // Open in browser
+    } else {
       await Linking.openURL(meetLink);
     }
     
@@ -84,9 +66,6 @@ export const joinConsultation = async (meetLink, userType = 'patient') => {
   }
 };
 
-/**
- * Start consultation (for doctors)
- */
 export const startConsultation = async (appointmentId) => {
   try {
     const response = await apiClient.post(`/consultations/${appointmentId}/start`);
@@ -101,9 +80,6 @@ export const startConsultation = async (appointmentId) => {
   }
 };
 
-/**
- * End consultation
- */
 export const endConsultation = async (appointmentId, notes = '') => {
   try {
     const response = await apiClient.post(`/consultations/${appointmentId}/end`, {
@@ -117,9 +93,6 @@ export const endConsultation = async (appointmentId, notes = '') => {
   }
 };
 
-/**
- * Get consultation status
- */
 export const getConsultationStatus = async (appointmentId) => {
   try {
     const response = await apiClient.get(`/consultations/${appointmentId}/status`);
@@ -136,9 +109,6 @@ export const getConsultationStatus = async (appointmentId) => {
   }
 };
 
-/**
- * Notify when user joins consultation
- */
 export const notifyJoined = async (appointmentId, userType) => {
   try {
     await apiClient.post(`/consultations/${appointmentId}/joined`, { userType });

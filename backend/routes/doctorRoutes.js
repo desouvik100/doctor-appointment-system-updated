@@ -7,11 +7,7 @@ const { sendNewDoctorRegistrationAlert } = require('../services/adminEmailServic
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const { verifyClinicAccess, verifyDoctorAccess } = require('../middleware/clinicIsolation');
 const cacheService = require('../services/cacheService');
-const router = express.Router();
-
-// ─── Doctor self-profile (authenticated) ─────────────────────────────────
-
-// GET /api/doctors/me — get current doctor's own profile
+const router = express.Router();
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const doctorId = req.user.id || req.user.userId;
@@ -28,9 +24,7 @@ router.get('/me', verifyToken, async (req, res) => {
     console.error('Get doctor profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// PUT /api/doctors/me — update current doctor's own profile
+});
 router.put('/me', verifyToken, async (req, res) => {
   try {
     const doctorId = req.user.id || req.user.userId;
@@ -68,9 +62,7 @@ router.put('/me', verifyToken, async (req, res) => {
     console.error('Update doctor profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// GET /api/doctors/earnings — get current doctor's earnings
+});
 router.get('/earnings', verifyToken, async (req, res) => {
   try {
     const doctorId = req.user.id || req.user.userId;
@@ -101,9 +93,7 @@ router.get('/earnings', verifyToken, async (req, res) => {
     console.error('Get doctor earnings error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// GET /api/doctors/stats — get current doctor's dashboard stats
+});
 router.get('/stats', verifyToken, async (req, res) => {
   try {
     const doctorId = req.user.id || req.user.userId;
@@ -159,9 +149,7 @@ router.get('/stats', verifyToken, async (req, res) => {
     console.error('Get doctor stats error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// GET /api/doctors/patients — get current doctor's patients
+});
 router.get('/patients', verifyToken, async (req, res) => {
   try {
     const doctorId = req.user.id || req.user.userId;
@@ -187,9 +175,7 @@ router.get('/patients', verifyToken, async (req, res) => {
     console.error('Get doctor patients error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// GET /api/doctors/appointments — get current doctor's appointments
+});
 router.get('/appointments', verifyToken, async (req, res) => {
   try {
     const doctorId = req.user.id || req.user.userId;
@@ -230,47 +216,7 @@ router.get('/appointments', verifyToken, async (req, res) => {
     console.error('Get doctor appointments error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Doctor:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         name:
- *           type: string
- *         email:
- *           type: string
- *           format: email
- *         phone:
- *           type: string
- *         specialization:
- *           type: string
- *         qualification:
- *           type: string
- *         experience:
- *           type: number
- *         consultationFee:
- *           type: number
- *         rating:
- *           type: number
- *         availability:
- *           type: string
- *           enum: [Available, Busy, On Leave]
- *         profilePhoto:
- *           type: string
- *         clinicId:
- *           type: string
- *         isActive:
- *           type: boolean
- */
-
-// Security helper - log doctor account operations
+});
 const logDoctorOperation = async (req, action, doctor, details = {}) => {
   try {
     await aiSecurityService.analyzeActivity({
@@ -290,44 +236,13 @@ const logDoctorOperation = async (req, action, doctor, details = {}) => {
   }
 };
 
-/**
- * @swagger
- * /doctors/summary:
- *   get:
- *     summary: Get doctors statistics
- *     description: Returns summary statistics about doctors
- *     tags: [Doctors]
- *     responses:
- *       200:
- *         description: Doctor statistics
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 totalDoctors:
- *                   type: number
- *                 availableDoctors:
- *                   type: number
- *                 bySpecialization:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       specialization:
- *                         type: string
- *                       count:
- *                         type: number
- */
 router.get('/summary', async (req, res) => {
   try {
     const totalDoctors = await Doctor.countDocuments({ isActive: true });
     const availableDoctors = await Doctor.countDocuments({ 
       isActive: true, 
       availability: 'Available' 
-    });
-    
-    // Get doctors grouped by specialization
+    });
     const bySpecialization = await Doctor.aggregate([
       { $match: { isActive: true } },
       { $group: { 
@@ -351,70 +266,6 @@ router.get('/summary', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /doctors:
- *   get:
- *     summary: Get all doctors with filters
- *     description: Retrieves a list of doctors with optional filtering and sorting
- *     tags: [Doctors]
- *     parameters:
- *       - in: query
- *         name: specialization
- *         schema:
- *           type: string
- *         description: Filter by specialization
- *       - in: query
- *         name: city
- *         schema:
- *           type: string
- *         description: Filter by city
- *       - in: query
- *         name: minFee
- *         schema:
- *           type: number
- *         description: Minimum consultation fee
- *       - in: query
- *         name: maxFee
- *         schema:
- *           type: number
- *         description: Maximum consultation fee
- *       - in: query
- *         name: minRating
- *         schema:
- *           type: number
- *         description: Minimum rating
- *       - in: query
- *         name: availability
- *         schema:
- *           type: string
- *           enum: [Available, Busy, On Leave]
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *         description: Search by name
- *       - in: query
- *         name: sortBy
- *         schema:
- *           type: string
- *           default: name
- *       - in: query
- *         name: sortOrder
- *         schema:
- *           type: string
- *           enum: [asc, desc]
- *           default: asc
- *     responses:
- *       200:
- *         description: List of doctors
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Doctor'
- */
 router.get('/', async (req, res) => {
   try {
     const { 
@@ -427,20 +278,14 @@ router.get('/', async (req, res) => {
       search,
       sortBy = 'name',
       sortOrder = 'asc'
-    } = req.query;
-
-    // Create cache key from query params
-    const cacheKey = `doctors:list:${JSON.stringify(req.query)}`;
-    
-    // Try to get from cache first (30 second TTL for doctor list)
+    } = req.query;
+    const cacheKey = `doctors:list:${JSON.stringify(req.query)}`;
     const cached = await cacheService.get(cacheKey);
     if (cached) {
       return res.json(cached);
     }
 
-    const query = { isActive: true };
-
-    // Apply filters
+    const query = { isActive: true };
     if (specialization) query.specialization = specialization;
     if (availability) query.availability = availability;
     if (minRating) query.rating = { $gte: parseFloat(minRating) };
@@ -458,14 +303,10 @@ router.get('/', async (req, res) => {
 
     let doctors = await Doctor.find(query)
       .populate('clinicId', 'name address city phone')
-      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 });
-
-    // Filter by city (from populated clinic)
+      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 });
     if (city) {
       doctors = doctors.filter(d => d.clinicId?.city?.toLowerCase().includes(city.toLowerCase()));
-    }
-    
-    // Cache the result for 30 seconds
+    }
     await cacheService.set(cacheKey, doctors, 30);
     
     res.json(doctors);
@@ -473,9 +314,7 @@ router.get('/', async (req, res) => {
     console.error('Error fetching doctors:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get nearby doctors by city
+});
 router.get('/nearby', async (req, res) => {
   try {
     const { city, specialization, limit = 10 } = req.query;
@@ -484,9 +323,7 @@ router.get('/nearby', async (req, res) => {
       return res.status(400).json({ message: 'City is required' });
     }
 
-    const Clinic = require('../models/Clinic');
-
-    // Find clinics in the city
+    const Clinic = require('../models/Clinic');
     const clinics = await Clinic.find({
       $or: [
         { city: { $regex: city, $options: 'i' } },
@@ -523,9 +360,7 @@ router.get('/nearby', async (req, res) => {
     console.error('Error fetching nearby doctors:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get all specializations
+});
 router.get('/specializations/list', async (req, res) => {
   try {
     const specializations = await Doctor.distinct('specialization', { isActive: true });
@@ -533,24 +368,17 @@ router.get('/specializations/list', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get online status of multiple doctors (MUST be before /:id route)
+});
 router.get('/online-status', async (req, res) => {
   try {
-    const { doctorIds } = req.query;
-    
-    // If no doctorIds provided, return empty status
+    const { doctorIds } = req.query;
     if (!doctorIds || doctorIds.trim() === '') {
       return res.json({ success: true, status: {} });
-    }
-    
-    // Consider doctor offline if no heartbeat in last 2 minutes
+    }
     const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
     
     let query = { isActive: true };
-    const ids = doctorIds.split(',').filter(id => {
-      // Validate ObjectId format
+    const ids = doctorIds.split(',').filter(id => {
       return id && /^[0-9a-fA-F]{24}$/.test(id.trim());
     });
     
@@ -562,9 +390,7 @@ router.get('/online-status', async (req, res) => {
     
     const doctors = await Doctor.find(query)
       .select('_id name isOnline lastActiveAt')
-      .lean();
-    
-    // Check if doctor is truly online (had heartbeat within threshold)
+      .lean();
     const statusMap = {};
     doctors.forEach(doc => {
       const isReallyOnline = doc.isOnline && doc.lastActiveAt && new Date(doc.lastActiveAt) > offlineThreshold;
@@ -579,9 +405,7 @@ router.get('/online-status', async (req, res) => {
     console.error('Error fetching online status:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch status' });
   }
-});
-
-// Get doctor by ID
+});
 router.get('/:id', async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id)
@@ -596,9 +420,7 @@ router.get('/:id', async (req, res) => {
     console.error('Error fetching doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get doctors by clinic
+});
 router.get('/clinic/:clinicId', async (req, res) => {
   try {
     const doctors = await Doctor.find({ 
@@ -611,9 +433,7 @@ router.get('/clinic/:clinicId', async (req, res) => {
     console.error('Error fetching doctors by clinic:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Create new doctor (admin or receptionist or self-registration)
+});
 router.post('/', async (req, res) => {
   try {
     const {
@@ -630,9 +450,7 @@ router.post('/', async (req, res) => {
       password
     } = req.body;
 
-    console.log('📋 Creating doctor:', { name, email, clinicId, clinicName });
-
-    // Check if doctor with email already exists
+    console.log('📋 Creating doctor:', { name, email, clinicId, clinicName });
     if (email) {
       const existingDoctor = await Doctor.findOne({ email });
       if (existingDoctor) {
@@ -640,13 +458,10 @@ router.post('/', async (req, res) => {
       }
     }
 
-    let finalClinicId = clinicId;
-
-    // If no clinicId provided but clinicName is provided, try to find or create clinic
+    let finalClinicId = clinicId;
     if (!clinicId && clinicName) {
       let clinic = await Clinic.findOne({ name: { $regex: new RegExp(`^${clinicName}$`, 'i') } });
-      if (!clinic) {
-        // Create a new clinic
+      if (!clinic) {
         clinic = new Clinic({
           name: clinicName,
           address: 'Address to be updated',
@@ -658,9 +473,7 @@ router.post('/', async (req, res) => {
         console.log('✅ Created new clinic:', clinic._id);
       }
       finalClinicId = clinic._id;
-    }
-
-    // Verify clinic exists if clinicId is provided
+    }
     if (finalClinicId) {
       const clinic = await Clinic.findById(finalClinicId);
       if (!clinic) {
@@ -668,9 +481,7 @@ router.post('/', async (req, res) => {
       }
     } else {
       return res.status(400).json({ message: 'No clinic assigned. Please contact admin to assign you to a clinic first.' });
-    }
-
-    // Hash password if provided
+    }
     let hashedPassword = null;
     if (password) {
       const salt = await bcrypt.genSalt(10);
@@ -688,8 +499,7 @@ router.post('/', async (req, res) => {
       experience: experience || 0,
       qualification: qualification || 'MBBS',
       password: hashedPassword,
-      approvalStatus: 'pending', // New doctors need admin approval
-      // Terms and conditions acceptance
+      approvalStatus: 'pending', 
       termsAccepted: true,
       termsAcceptedAt: new Date(),
       privacyPolicyAccepted: true,
@@ -701,9 +511,7 @@ router.post('/', async (req, res) => {
     const populatedDoctor = await Doctor.findById(doctor._id)
       .populate('clinicId', 'name address city phone');
     
-    console.log('✅ Doctor created with pending status:', doctor.name);
-    
-    // Send email notification to admin about new doctor registration
+    console.log('✅ Doctor created with pending status:', doctor.name);
     sendNewDoctorRegistrationAlert({
       name: doctor.name,
       email: doctor.email,
@@ -722,9 +530,7 @@ router.post('/', async (req, res) => {
     console.error('Error creating doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Update doctor
+});
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const {
@@ -740,9 +546,7 @@ router.put('/:id', verifyToken, async (req, res) => {
       languages,
       education,
       awards
-    } = req.body;
-
-    // Only allow doctors to update their own profile, admins can update any
+    } = req.body;
     const requestingUser = req.user;
     if (
       requestingUser.role !== 'admin' &&
@@ -774,12 +578,8 @@ router.put('/:id', verifyToken, async (req, res) => {
 
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
-    }
-
-    // Log the update for security monitoring
-    await logDoctorOperation(req, 'update_profile', doctor, { fields: Object.keys(updateData) });
-
-    // Invalidate doctor cache
+    }
+    await logDoctorOperation(req, 'update_profile', doctor, { fields: Object.keys(updateData) });
     await cacheService.del(`doctors:list:*`);
 
     res.json(doctor);
@@ -787,12 +587,9 @@ router.put('/:id', verifyToken, async (req, res) => {
     console.error('Error updating doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Delete doctor (soft delete)
+});
 router.delete('/:id', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
-  try {
-    // Get doctor before deletion for logging
+  try {
     const doctorToDelete = await Doctor.findById(req.params.id);
     
     const doctor = await Doctor.findByIdAndUpdate(
@@ -803,9 +600,7 @@ router.delete('/:id', verifyTokenWithRole(['admin', 'doctor']), async (req, res)
 
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
-    }
-
-    // Log doctor deletion for security monitoring
+    }
     await logDoctorOperation(req, 'delete_user', doctorToDelete, { action: 'deactivate' });
 
     res.json({ message: 'Doctor deactivated successfully' });
@@ -813,13 +608,7 @@ router.delete('/:id', verifyTokenWithRole(['admin', 'doctor']), async (req, res)
     console.error('Error deleting doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// ==========================================
-// ADMIN APPROVAL ROUTES
-// ==========================================
-
-// Get pending doctors (admin only)
+});
 router.get('/admin/pending', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const pendingDoctors = await Doctor.find({ approvalStatus: 'pending' })
@@ -831,9 +620,7 @@ router.get('/admin/pending', verifyTokenWithRole(['admin']), async (req, res) =>
     console.error('Error fetching pending doctors:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Approve doctor (admin only)
+});
 router.put('/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id);
@@ -844,9 +631,7 @@ router.put('/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
 
     doctor.approvalStatus = 'approved';
     doctor.approvedAt = new Date();
-    await doctor.save();
-
-    // Audit log
+    await doctor.save();
     try {
       const auditService = require('../services/auditService');
       await auditService.doctorApproved(doctor, req.user || { name: 'Admin', role: 'admin' }, req);
@@ -863,9 +648,7 @@ router.put('/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
     console.error('Error approving doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Reject doctor (admin only)
+});
 router.put('/:id/reject', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { reason } = req.body;
@@ -877,9 +660,7 @@ router.put('/:id/reject', verifyTokenWithRole(['admin']), async (req, res) => {
 
     doctor.approvalStatus = 'rejected';
     doctor.rejectionReason = reason || 'No reason provided';
-    await doctor.save();
-
-    // Audit log
+    await doctor.save();
     try {
       const auditService = require('../services/auditService');
       await auditService.doctorRejected(doctor, req.user || { name: 'Admin', role: 'admin' }, reason, req);
@@ -893,9 +674,7 @@ router.put('/:id/reject', verifyTokenWithRole(['admin']), async (req, res) => {
     console.error('Error rejecting doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Check doctors without email (for debugging)
+});
 router.get('/admin/check-emails', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const doctorsWithoutEmail = await Doctor.find({ 
@@ -926,9 +705,7 @@ router.get('/admin/check-emails', verifyTokenWithRole(['admin']), async (req, re
     console.error('Error checking doctor emails:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Update doctor email
+});
 router.put('/:id/email', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { email } = req.body;
@@ -959,11 +736,7 @@ router.put('/:id/email', verifyTokenWithRole(['admin']), async (req, res) => {
     console.error('Error updating doctor email:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// ============ AVAILABILITY CALENDAR ENDPOINTS ============
-
-// Get doctor's weekly schedule
+});
 router.get('/:id/schedule', async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id)
@@ -978,9 +751,7 @@ router.get('/:id/schedule', async (req, res) => {
     console.error('Error fetching schedule:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch schedule' });
   }
-});
-
-// Update doctor's weekly schedule
+});
 router.put('/:id/schedule', verifyToken, async (req, res) => {
   try {
     const { weeklySchedule, consultationSettings, consultationDuration } = req.body;
@@ -1005,9 +776,7 @@ router.put('/:id/schedule', verifyToken, async (req, res) => {
     console.error('Error updating schedule:', error);
     res.status(500).json({ success: false, message: 'Failed to update schedule' });
   }
-});
-
-// Update consultation duration only
+});
 router.put('/:id/consultation-duration', verifyToken, async (req, res) => {
   try {
     const { consultationDuration } = req.body;
@@ -1038,9 +807,7 @@ router.put('/:id/consultation-duration', verifyToken, async (req, res) => {
     console.error('Error updating consultation duration:', error);
     res.status(500).json({ success: false, message: 'Failed to update consultation duration' });
   }
-});
-
-// Add special date (holiday, leave, special hours)
+});
 router.post('/:id/special-dates', verifyToken, async (req, res) => {
   try {
     const { date, isAvailable, reason, slots } = req.body;
@@ -1073,9 +840,7 @@ router.post('/:id/special-dates', verifyToken, async (req, res) => {
     console.error('Error adding special date:', error);
     res.status(500).json({ success: false, message: 'Failed to add special date' });
   }
-});
-
-// Remove special date
+});
 router.delete('/:id/special-dates/:dateId', verifyToken, async (req, res) => {
   try {
     const doctor = await Doctor.findByIdAndUpdate(
@@ -1093,9 +858,7 @@ router.delete('/:id/special-dates/:dateId', verifyToken, async (req, res) => {
     console.error('Error removing special date:', error);
     res.status(500).json({ success: false, message: 'Failed to remove special date' });
   }
-});
-
-// Get available slots for a specific date (for patients booking)
+});
 router.get('/:id/available-slots', async (req, res) => {
   try {
     const { date } = req.query;
@@ -1111,9 +874,7 @@ router.get('/:id/available-slots', async (req, res) => {
     }
 
     const requestedDate = new Date(date);
-    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][requestedDate.getDay()];
-
-    // Check for special date override
+    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][requestedDate.getDay()];
     const specialDate = doctor.specialDates?.find(sd => {
       const sdDate = new Date(sd.date);
       return sdDate.toDateString() === requestedDate.toDateString();
@@ -1144,9 +905,7 @@ router.get('/:id/available-slots', async (req, res) => {
         reason: `Doctor not available on ${dayOfWeek}s`,
         slots: []
       });
-    }
-
-    // Fetch already-booked appointments for this doctor on this date
+    }
     const Appointment = require('../models/Appointment');
     const startOfDay = new Date(requestedDate);
     startOfDay.setHours(0, 0, 0, 0);
@@ -1159,9 +918,7 @@ router.get('/:id/available-slots', async (req, res) => {
       status: { $nin: ['cancelled'] }
     }).select('time');
 
-    const bookedTimes = new Set(bookedAppointments.map(a => a.time));
-
-    // Generate time slots based on schedule
+    const bookedTimes = new Set(bookedAppointments.map(a => a.time));
     const slots = [];
     const slotDuration = doctor.consultationSettings?.slotDuration || 15;
     const bufferTime = doctor.consultationSettings?.bufferTime || 5;
@@ -1204,9 +961,7 @@ router.get('/:id/available-slots', async (req, res) => {
     console.error('Error fetching available slots:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch available slots' });
   }
-});
-
-// Get doctor's calendar view (for doctor dashboard)
+});
 router.get('/:id/calendar', async (req, res) => {
   try {
     const { month, year } = req.query;
@@ -1219,18 +974,14 @@ router.get('/:id/calendar', async (req, res) => {
     
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
-    }
-    
-    // Generate calendar data for the month
+    }
     const firstDay = new Date(targetYear, targetMonth, 1);
     const lastDay = new Date(targetYear, targetMonth + 1, 0);
     const calendarDays = [];
     
     for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
       const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][d.getDay()];
-      const dateStr = d.toISOString().split('T')[0];
-      
-      // Check for special date
+      const dateStr = d.toISOString().split('T')[0];
       const specialDate = doctor.specialDates?.find(sd => {
         const sdDate = new Date(sd.date);
         return sdDate.toDateString() === d.toDateString();
@@ -1269,11 +1020,7 @@ router.get('/:id/calendar', async (req, res) => {
     console.error('Error fetching calendar:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch calendar' });
   }
-});
-
-// ===== ONLINE STATUS ROUTES =====
-
-// Update doctor online status (heartbeat)
+});
 router.post('/:id/heartbeat', verifyToken, async (req, res) => {
   try {
     const doctor = await Doctor.findByIdAndUpdate(
@@ -1295,9 +1042,7 @@ router.post('/:id/heartbeat', verifyToken, async (req, res) => {
     console.error('Error updating heartbeat:', error);
     res.status(500).json({ success: false, message: 'Failed to update status' });
   }
-});
-
-// Set doctor offline
+});
 router.post('/:id/go-offline', verifyToken, async (req, res) => {
   try {
     const doctor = await Doctor.findByIdAndUpdate(
@@ -1318,9 +1063,7 @@ router.post('/:id/go-offline', verifyToken, async (req, res) => {
     console.error('Error setting offline:', error);
     res.status(500).json({ success: false, message: 'Failed to update status' });
   }
-});
-
-// Get single doctor online status
+});
 router.get('/:id/online-status', async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id)
@@ -1329,9 +1072,7 @@ router.get('/:id/online-status', async (req, res) => {
     
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
-    }
-    
-    // Consider offline if no heartbeat in last 2 minutes
+    }
     const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
     const isReallyOnline = doctor.isOnline && doctor.lastActiveAt && new Date(doctor.lastActiveAt) > offlineThreshold;
     
@@ -1344,52 +1085,24 @@ router.get('/:id/online-status', async (req, res) => {
     console.error('Error fetching online status:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch status' });
   }
-});
+});
 
-// ===== PATIENTS ROUTES =====
-
-/**
- * @swagger
- * /doctors/{id}/patients:
- *   get:
- *     summary: Get doctor's patients
- *     description: Returns list of patients who have had appointments with this doctor
- *     tags: [Doctors]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Doctor ID
- *     responses:
- *       200:
- *         description: List of patients
- */
 router.get('/:id/patients', async (req, res) => {
   try {
     const doctorId = req.params.id;
     const Appointment = require('../models/Appointment');
-    const User = require('../models/User');
-    
-    // Find all unique patients who have had appointments with this doctor
+    const User = require('../models/User');
     const appointments = await Appointment.find({ doctorId: doctorId })
       .select('userId')
-      .lean();
-    
-    // Get unique patient IDs
+      .lean();
     const patientIds = [...new Set(appointments.map(a => a.userId?.toString()).filter(Boolean))];
     
     if (patientIds.length === 0) {
       return res.json({ success: true, patients: [], total: 0 });
-    }
-    
-    // Fetch patient details
+    }
     const patients = await User.find({ _id: { $in: patientIds } })
       .select('name email phone profilePhoto bloodType dateOfBirth gender createdAt')
-      .lean();
-    
-    // Add appointment count for each patient
+      .lean();
     const patientsWithStats = await Promise.all(patients.map(async (patient) => {
       const appointmentCount = await Appointment.countDocuments({ 
         doctorId: doctorId, 

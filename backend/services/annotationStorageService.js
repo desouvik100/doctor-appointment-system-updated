@@ -1,11 +1,6 @@
-/**
- * Annotation Storage Service
- * Handles saving and retrieving DICOM image annotations
- */
 
-const mongoose = require('mongoose');
 
-// Annotation Schema (embedded in DicomStudy or standalone)
+const mongoose = require('mongoose');
 const annotationSchema = new mongoose.Schema({
   annotationId: {
     type: String,
@@ -71,14 +66,9 @@ const annotationSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   }
-});
-
-// Create model if it doesn't exist
+});
 const Annotation = mongoose.models.Annotation || mongoose.model('Annotation', annotationSchema);
 
-/**
- * Save a new annotation
- */
 async function saveAnnotation(annotationData) {
   const annotation = new Annotation({
     ...annotationData,
@@ -89,9 +79,6 @@ async function saveAnnotation(annotationData) {
   return annotation;
 }
 
-/**
- * Update an existing annotation
- */
 async function updateAnnotation(annotationId, updates) {
   const annotation = await Annotation.findOneAndUpdate(
     { annotationId },
@@ -106,17 +93,12 @@ async function updateAnnotation(annotationId, updates) {
   return annotation;
 }
 
-/**
- * Delete an annotation
- */
 async function deleteAnnotation(annotationId, userId) {
   const annotation = await Annotation.findOne({ annotationId });
   
   if (!annotation) {
     throw new Error('Annotation not found');
-  }
-  
-  // Only creator can delete (unless admin)
+  }
   if (annotation.createdBy.toString() !== userId.toString()) {
     throw new Error('Not authorized to delete this annotation');
   }
@@ -125,9 +107,6 @@ async function deleteAnnotation(annotationId, userId) {
   return { success: true };
 }
 
-/**
- * Get annotations for a specific image
- */
 async function getAnnotationsForImage(studyId, sopInstanceUID) {
   return Annotation.find({
     studyId,
@@ -136,18 +115,12 @@ async function getAnnotationsForImage(studyId, sopInstanceUID) {
   }).populate('createdBy', 'name role');
 }
 
-/**
- * Get all annotations for a study
- */
 async function getAnnotationsForStudy(studyId) {
   return Annotation.find({
     studyId
   }).populate('createdBy', 'name role');
 }
 
-/**
- * Get annotations by user
- */
 async function getAnnotationsByUser(userId, options = {}) {
   const query = { createdBy: userId };
   
@@ -160,9 +133,6 @@ async function getAnnotationsByUser(userId, options = {}) {
     .limit(options.limit || 100);
 }
 
-/**
- * Toggle annotation visibility
- */
 async function toggleAnnotationVisibility(annotationId) {
   const annotation = await Annotation.findOne({ annotationId });
   
@@ -177,17 +147,12 @@ async function toggleAnnotationVisibility(annotationId) {
   return annotation;
 }
 
-/**
- * Lock/unlock annotation
- */
 async function toggleAnnotationLock(annotationId, userId) {
   const annotation = await Annotation.findOne({ annotationId });
   
   if (!annotation) {
     throw new Error('Annotation not found');
-  }
-  
-  // Only creator can lock/unlock
+  }
   if (annotation.createdBy.toString() !== userId.toString()) {
     throw new Error('Not authorized to modify this annotation');
   }
@@ -199,9 +164,6 @@ async function toggleAnnotationLock(annotationId, userId) {
   return annotation;
 }
 
-/**
- * Bulk save annotations
- */
 async function bulkSaveAnnotations(annotations) {
   const results = await Annotation.insertMany(annotations.map(a => ({
     ...a,
@@ -211,9 +173,6 @@ async function bulkSaveAnnotations(annotations) {
   return results;
 }
 
-/**
- * Export annotations for a study (for reports)
- */
 async function exportAnnotationsForReport(studyId) {
   const annotations = await Annotation.find({
     studyId,

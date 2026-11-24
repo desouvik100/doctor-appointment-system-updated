@@ -1,4 +1,4 @@
-// backend/routes/googleRoutes.js
+
 const express = require('express');
 const { google } = require('googleapis');
 const router = express.Router();
@@ -6,21 +6,15 @@ const router = express.Router();
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar',
   'https://www.googleapis.com/auth/calendar.events'
-];
-
-// Get OAuth2 client
+];
 function getOAuth2Client() {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5005/api/google/callback'
   );
-}
-
-// Check if value is placeholder
-const isPlaceholder = (val) => !val || val.includes('your_') || val === '';
-
-// Get authorization URL for Google OAuth
+}
+const isPlaceholder = (val) => !val || val.includes('your_') || val === '';
 router.get('/auth-url', (req, res) => {
   try {
     const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -132,9 +126,7 @@ router.get('/auth-url', (req, res) => {
     console.error('Error generating auth URL:', error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-// OAuth callback handler
+});
 router.get('/callback', async (req, res) => {
   try {
     const { code, error } = req.query;
@@ -297,9 +289,7 @@ router.get('/callback', async (req, res) => {
       </html>
     `);
   }
-});
-
-// Check Google configuration status
+});
 router.get('/status', (req, res) => {
   const { getGoogleStatus } = require('../services/googleMeetService');
   const status = getGoogleStatus();
@@ -312,9 +302,7 @@ router.get('/status', (req, res) => {
       : '⚠️ Google Meet needs configuration',
     setupUrl: status.fullyConfigured ? null : '/api/google/auth-url'
   });
-});
-
-// Test Google Meet link generation
+});
 router.post('/test-meet', async (req, res) => {
   try {
     const { generateGoogleMeetLink, isGoogleMeetConfigured } = require('../services/googleMeetService');
@@ -330,7 +318,7 @@ router.post('/test-meet', async (req, res) => {
 
     const testAppointment = {
       _id: 'test-' + Date.now(),
-      date: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+      date: new Date(Date.now() + 24 * 60 * 60 * 1000), 
       time: '10:00',
       userId: { 
         name: req.body.patientName || 'Test Patient', 

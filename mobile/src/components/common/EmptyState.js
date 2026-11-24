@@ -1,6 +1,4 @@
-/**
- * EmptyState Component - Beautiful empty state illustrations
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';

@@ -1,8 +1,4 @@
-/**
- * Medical File Routes
- * Secure upload, view, and management of medical documents
- * Files stored in Cloudinary, metadata in MongoDB
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -12,9 +8,7 @@ const fs = require('fs');
 const MedicalFile = require('../models/MedicalFile');
 const cloudinaryService = require('../services/cloudinaryService');
 const { verifyToken } = require('../middleware/auth');
-const { logAuditAction } = require('../services/auditService');
-
-// Configure multer for temporary file storage
+const { logAuditAction } = require('../services/auditService');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '../uploads/temp');
@@ -27,9 +21,7 @@ const storage = multer.diskStorage({
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
-});
-
-// File filter - only allow images and PDFs
+});
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
   if (allowedTypes.includes(file.mimetype)) {
@@ -43,17 +35,12 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB max
+    fileSize: 10 * 1024 * 1024 
   }
 });
 
-/**
- * POST /api/medical-files/upload
- * Upload a medical file
- */
 router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
-  try {
-    // Check if Cloudinary is configured
+  try {
     if (!cloudinaryService.isConfigured()) {
       return res.status(503).json({
         success: false,
@@ -77,19 +64,13 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
       description,
       visibleToDoctor = true,
       visibleToPatient = true
-    } = req.body;
-
-    // Determine patient ID (self-upload or doctor uploading for patient)
-    const targetPatientId = patientId || req.userId;
-
-    // Upload to Cloudinary
+    } = req.body;
+    const targetPatientId = patientId || req.userId;
     const uploadResult = await cloudinaryService.uploadMedicalFile(
       req.file.path,
       targetPatientId,
       category || 'general'
-    );
-
-    // Delete temp file after upload
+    );
     fs.unlink(req.file.path, (err) => {
       if (err) console.error('Error deleting temp file:', err);
     });
@@ -99,9 +80,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
         success: false,
         message: 'Failed to upload file to cloud storage'
       });
-    }
-
-    // Create medical file record in database
+    }
     const medicalFile = new MedicalFile({
       uploadedBy: {
         userId: req.userId,
@@ -134,9 +113,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
       }
     });
 
-    await medicalFile.save();
-
-    // Log audit action
+    await medicalFile.save();
     await logAuditAction({
       userId: req.userId,
       action: 'MEDICAL_FILE_UPLOAD',
@@ -165,8 +142,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
       }
     });
 
-  } catch (error) {
-    // Clean up temp file on error
+  } catch (error) {
     if (req.file?.path) {
       fs.unlink(req.file.path, () => {});
     }
@@ -178,10 +154,6 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   }
 });
 
-/**
- * GET /api/medical-files/my-files
- * Get current user's medical files
- */
 router.get('/my-files', verifyToken, async (req, res) => {
   try {
     const { category, page = 1, limit = 20 } = req.query;
@@ -199,11 +171,9 @@ router.get('/my-files', verifyToken, async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
-      .select('-file.publicId'); // Don't expose publicId to frontend
+      .select('-file.publicId'); 
 
-    const total = await MedicalFile.countDocuments(query);
-
-    // Add thumbnail URLs
+    const total = await MedicalFile.countDocuments(query);
     const filesWithThumbnails = files.map(file => ({
       id: file._id,
       title: file.title,
@@ -239,16 +209,10 @@ router.get('/my-files', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/medical-files/patient/:patientId
- * Get patient's medical files (for doctors)
- */
 router.get('/patient/:patientId', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
-    const { category } = req.query;
-    
-    // Only doctors and admins can view other patients' files
+    const { category } = req.query;
     if (req.userRole !== 'doctor' && req.userRole !== 'admin' && req.userId !== patientId) {
       return res.status(403).json({
         success: false,
@@ -303,10 +267,6 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/medical-files/appointment/:appointmentId
- * Get files related to an appointment
- */
 router.get('/appointment/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -349,10 +309,6 @@ router.get('/appointment/:appointmentId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/medical-files/:id
- * Get single file details
- */
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const file = await MedicalFile.findById(req.params.id)
@@ -364,17 +320,13 @@ router.get('/:id', verifyToken, async (req, res) => {
         success: false,
         message: 'File not found'
       });
-    }
-
-    // Check access permission
+    }
     if (!file.canView(req.userId, req.userRole)) {
       return res.status(403).json({
         success: false,
         message: 'Access denied'
       });
-    }
-
-    // Log view action
+    }
     await logAuditAction({
       userId: req.userId,
       action: 'MEDICAL_FILE_VIEW',
@@ -412,10 +364,6 @@ router.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/medical-files/:id
- * Soft delete a medical file
- */
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const file = await MedicalFile.findById(req.params.id);
@@ -425,9 +373,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
         success: false,
         message: 'File not found'
       });
-    }
-
-    // Only owner, uploading doctor, or admin can delete
+    }
     const canDelete = 
       file.patientId.toString() === req.userId ||
       file.uploadedBy.userId.toString() === req.userId ||
@@ -438,15 +384,8 @@ router.delete('/:id', verifyToken, async (req, res) => {
         success: false,
         message: 'Access denied'
       });
-    }
-
-    // Soft delete (keep record for audit)
-    await file.softDelete(req.userId);
-
-    // Optionally delete from Cloudinary (uncomment if you want hard delete)
-    // await cloudinaryService.deleteFile(file.file.publicId);
-
-    // Log audit action
+    }
+    await file.softDelete(req.userId);
     await logAuditAction({
       userId: req.userId,
       action: 'MEDICAL_FILE_DELETE',
@@ -469,10 +408,6 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * PATCH /api/medical-files/:id
- * Update file metadata
- */
 router.patch('/:id', verifyToken, async (req, res) => {
   try {
     const { title, description, category, visibility } = req.body;
@@ -484,9 +419,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
         success: false,
         message: 'File not found'
       });
-    }
-
-    // Only owner or admin can update
+    }
     const canUpdate = 
       file.patientId.toString() === req.userId ||
       file.uploadedBy.userId.toString() === req.userId ||
@@ -497,9 +430,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
         success: false,
         message: 'Access denied'
       });
-    }
-
-    // Update allowed fields
+    }
     if (title) file.title = title;
     if (description !== undefined) file.description = description;
     if (category) file.category = category;
@@ -529,9 +460,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
       message: 'Failed to update file'
     });
   }
-});
-
-// Helper function to get reference model
+});
 function getRefModel(type) {
   const modelMap = {
     'appointment': 'Appointment',

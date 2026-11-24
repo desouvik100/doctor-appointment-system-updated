@@ -1,6 +1,4 @@
-/**
- * SecondaryServices - Auxiliary support options for diagnostics, pharmacy, and emergency care
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';

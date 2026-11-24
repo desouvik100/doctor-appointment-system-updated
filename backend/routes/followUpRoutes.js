@@ -2,15 +2,11 @@ const express = require('express');
 const router = express.Router();
 const FollowUp = require('../models/FollowUp');
 const Appointment = require('../models/Appointment');
-const { sendEmail } = require('../services/emailService');
-
-// Create follow-up (by doctor)
+const { sendEmail } = require('../services/emailService');
 router.post('/', async (req, res) => {
   try {
     const followUp = new FollowUp(req.body);
-    await followUp.save();
-    
-    // Send reminder email to patient
+    await followUp.save();
     const appointment = await Appointment.findById(req.body.originalAppointmentId).populate('userId');
     if (appointment?.userId?.email) {
       await sendEmail({
@@ -36,9 +32,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get follow-ups for patient
+});
 router.get('/patient/:patientId', async (req, res) => {
   try {
     const followUps = await FollowUp.find({ patientId: req.params.patientId, status: 'scheduled' })
@@ -48,9 +42,7 @@ router.get('/patient/:patientId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get follow-ups created by doctor
+});
 router.get('/doctor/:doctorId', async (req, res) => {
   try {
     const followUps = await FollowUp.find({ doctorId: req.params.doctorId })
@@ -60,15 +52,11 @@ router.get('/doctor/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Book follow-up appointment
+});
 router.post('/book/:followUpId', async (req, res) => {
   try {
     const followUp = await FollowUp.findById(req.params.followUpId);
-    const { date, time, appointmentType } = req.body;
-    
-    // Create appointment with discount
+    const { date, time, appointmentType } = req.body;
     const originalApt = await Appointment.findById(followUp.originalAppointmentId);
     const discountedFee = originalApt.consultationFee * (1 - followUp.discountPercent / 100);
     

@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const FavoriteDoctor = require('../models/FavoriteDoctor');
-
-// Get user's favorite doctors
+const FavoriteDoctor = require('../models/FavoriteDoctor');
 router.get('/user/:userId', async (req, res) => {
   try {
     const favorites = await FavoriteDoctor.find({ userId: req.params.userId })
@@ -15,9 +13,7 @@ router.get('/user/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Add to favorites
+});
 router.post('/', async (req, res) => {
   try {
     const { userId, doctorId, notes } = req.body;
@@ -33,9 +29,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Remove from favorites
+});
 router.delete('/:userId/:doctorId', async (req, res) => {
   try {
     await FavoriteDoctor.findOneAndDelete({
@@ -46,9 +40,7 @@ router.delete('/:userId/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Check if doctor is favorite
+});
 router.get('/check/:userId/:doctorId', async (req, res) => {
   try {
     const favorite = await FavoriteDoctor.findOne({

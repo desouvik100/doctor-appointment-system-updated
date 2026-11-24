@@ -1,19 +1,13 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
-
-// Import User model
+require('dotenv').config();
 const User = require('../models/User');
 
 const testPassword = async () => {
   try {
-    console.log('🔐 Testing admin password...');
-    
-    // Connect to MongoDB
+    console.log('🔐 Testing admin password...');
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
-    
-    // Find admin user
+    console.log('✅ Connected to MongoDB');
     const adminEmail = 'admin@healthsyncpro.in';
     const testPassword = 'admin123';
     
@@ -21,18 +15,14 @@ const testPassword = async () => {
     
     if (admin) {
       console.log('✅ Admin user found');
-      console.log('🔐 Testing password:', testPassword);
-      
-      // Test password comparison
+      console.log('🔐 Testing password:', testPassword);
       const isMatch = await bcrypt.compare(testPassword, admin.password);
       console.log('🔍 Password match result:', isMatch);
       
       if (isMatch) {
         console.log('✅ Password is correct!');
       } else {
-        console.log('❌ Password does not match!');
-        
-        // Let's create a new hash and compare
+        console.log('❌ Password does not match!');
         console.log('🔧 Creating new hash for comparison...');
         const newHash = await bcrypt.hash(testPassword, 10);
         const newMatch = await bcrypt.compare(testPassword, newHash);

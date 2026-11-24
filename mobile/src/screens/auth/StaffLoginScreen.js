@@ -1,6 +1,4 @@
-/**
- * Staff Login Screen - Hospital Operations Portal
- */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -19,8 +17,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, borderRadius } from '../../theme/typography';
-import { authService } from '../../services/api';
-// Direct import as fallback
+import { authService } from '../../services/api';
 import { staffLogin } from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 import whatsappService from '../../services/whatsappService';
@@ -57,9 +54,7 @@ const StaffLoginScreen = ({ navigation }) => {
         duration: 600,
         useNativeDriver: true,
       }),
-    ]).start();
-
-    // Rotate animation for the icon
+    ]).start();
     Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
@@ -80,9 +75,7 @@ const StaffLoginScreen = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-    
-    // DEBUG: Log payload and URL
+    setLoading(true);
     const payload = {
       email: employeeId.trim().toLowerCase(),
       password,
@@ -90,36 +83,29 @@ const StaffLoginScreen = ({ navigation }) => {
     console.log('🔵 [STAFF LOGIN] PAYLOAD:', { email: payload.email, password: '***' });
     console.log('🔵 [STAFF LOGIN] ENDPOINT: /auth/clinic/login');
     
-    try {
-      // Use direct import of staffLogin function
-      const { user, token } = await staffLogin(payload);
-      
-      // DEBUG: Log success
+    try {
+      const { user, token } = await staffLogin(payload);
       console.log('✅ [STAFF LOGIN] SUCCESS');
       console.log('✅ [STAFF LOGIN] TOKEN RECEIVED:', token ? 'YES' : 'NO');
       console.log('✅ [STAFF LOGIN] USER:', user?.email, user?.role);
       
       await login(user, token);
       navigation.replace('Main');
-    } catch (error) {
-      // DEBUG: Log full error details
+    } catch (error) {
       console.log('❌ [STAFF LOGIN] ERROR STATUS:', error.statusCode);
       console.log('❌ [STAFF LOGIN] ERROR MESSAGE:', error.message);
       console.log('❌ [STAFF LOGIN] ERROR CODE:', error.code);
       console.log('❌ [STAFF LOGIN] FULL ERROR:', JSON.stringify(error, null, 2));
       
       let message = 'Login failed. Please check your credentials.';
-      let title = 'Login Failed';
-      
-      // Check for network/connection errors
+      let title = 'Login Failed';
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         title = 'Server Starting Up';
         message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
       } else if (error.code === 'ERR_NETWORK' || error.statusCode === 0) {
         title = 'Connection Error';
         message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
-      } else if (error.statusCode === 403) {
-        // Handle suspended/pending/rejected accounts
+      } else if (error.statusCode === 403) {
         if (error.message?.includes('suspended')) {
           title = 'Account Suspended';
         } else if (error.message?.includes('pending')) {
@@ -144,7 +130,7 @@ const StaffLoginScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
       
-      {/* Background */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={['#0A0A0F', '#1A1A2E', '#0A0A0F']}
@@ -163,7 +149,7 @@ const StaffLoginScreen = ({ navigation }) => {
           />
         </View>
         
-        {/* Animated Grid */}
+        {}
         <Animated.View style={[styles.gridOverlay, { transform: [{ rotate: spin }] }]}>
           <View style={styles.gridCircle} />
           <View style={[styles.gridCircle, styles.gridCircle2]} />
@@ -179,7 +165,7 @@ const StaffLoginScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Back Button */}
+          {}
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -196,7 +182,7 @@ const StaffLoginScreen = ({ navigation }) => {
               },
             ]}
           >
-            {/* Header */}
+            {}
             <View style={styles.header}>
               <View style={styles.iconContainer}>
                 <LinearGradient
@@ -213,7 +199,7 @@ const StaffLoginScreen = ({ navigation }) => {
               <Text style={styles.title}>Staff Portal</Text>
               <Text style={styles.subtitle}>Hospital Operations Access</Text>
               
-              {/* Live Clock */}
+              {}
               <View style={styles.clockContainer}>
                 <Text style={styles.clockIcon}>🕐</Text>
                 <Text style={styles.clockText}>
@@ -229,7 +215,7 @@ const StaffLoginScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Department Selection */}
+            {}
             <View style={styles.departmentSection}>
               <Text style={styles.sectionLabel}>Select Department</Text>
               <View style={styles.departmentGrid}>
@@ -254,7 +240,7 @@ const StaffLoginScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Login Form */}
+            {}
             <View style={styles.formContainer}>
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Employee ID</Text>
@@ -289,7 +275,7 @@ const StaffLoginScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Login Button */}
+              {}
               <TouchableOpacity
                 style={styles.loginButton}
                 onPress={handleLogin}
@@ -313,7 +299,7 @@ const StaffLoginScreen = ({ navigation }) => {
                 </LinearGradient>
               </TouchableOpacity>
 
-              {/* Quick Stats */}
+              {}
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>24</Text>
@@ -332,7 +318,7 @@ const StaffLoginScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Footer */}
+            {}
             <View style={styles.footer}>
               <TouchableOpacity 
                 style={styles.helpButton}

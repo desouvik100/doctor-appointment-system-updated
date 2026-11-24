@@ -1,17 +1,12 @@
-/**
- * Add Test Slots for Doctors
- * Run: node add-test-slots.js
- */
+
 
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-// Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// Slot Schema
 const slotSchema = new mongoose.Schema({
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   date: { type: Date, required: true },
@@ -27,7 +22,7 @@ const Slot = mongoose.model('Slot', slotSchema);
 
 async function addTestSlots() {
   try {
-    // Get all doctors
+
     const User = mongoose.model('User');
     const doctors = await User.find({ role: 'doctor' }).limit(5);
     
@@ -37,8 +32,7 @@ async function addTestSlots() {
     }
     
     console.log(`Found ${doctors.length} doctors`);
-    
-    // Generate slots for next 7 days
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -65,8 +59,7 @@ async function addTestSlots() {
       for (let i = 0; i < 7; i++) {
         const slotDate = new Date(today);
         slotDate.setDate(today.getDate() + i);
-        
-        // Skip Sundays
+
         if (slotDate.getDay() === 0) continue;
         
         for (const time of timeSlots) {
@@ -76,7 +69,7 @@ async function addTestSlots() {
             startTime: time.start,
             endTime: time.end,
             isBooked: false,
-            type: 'both', // Available for both online and in-clinic
+            type: 'both', 
             status: 'available',
           });
           

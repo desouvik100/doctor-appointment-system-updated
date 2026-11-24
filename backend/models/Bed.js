@@ -1,11 +1,8 @@
 const mongoose = require('mongoose');
 
-const bedSchema = new mongoose.Schema({
-  // Bed Identification
+const bedSchema = new mongoose.Schema({
   bedNumber: { type: String, required: true },
-  bedCode: { type: String }, // Unique code like ICU-01, GEN-A-05
-  
-  // Location
+  bedCode: { type: String }, 
   wardType: { 
     type: String, 
     enum: ['general', 'semi_private', 'private', 'icu', 'nicu', 'picu', 'ccu', 'isolation', 'emergency', 'maternity', 'pediatric', 'surgical', 'orthopedic'],
@@ -14,9 +11,7 @@ const bedSchema = new mongoose.Schema({
   wardName: { type: String },
   roomNumber: { type: String },
   floorNumber: { type: String },
-  building: { type: String },
-  
-  // Bed Details
+  building: { type: String },
   bedType: { 
     type: String, 
     enum: ['standard', 'electric', 'icu', 'pediatric', 'bariatric', 'labor_delivery', 'stretcher'],
@@ -25,70 +20,48 @@ const bedSchema = new mongoose.Schema({
   hasOxygen: { type: Boolean, default: false },
   hasMonitor: { type: Boolean, default: false },
   hasVentilator: { type: Boolean, default: false },
-  hasSuction: { type: Boolean, default: false },
-  
-  // Pricing
+  hasSuction: { type: Boolean, default: false },
   dailyRate: { type: Number, required: true },
-  hourlyRate: { type: Number },
-  
-  // Status
+  hourlyRate: { type: Number },
   status: { 
     type: String, 
     enum: ['available', 'occupied', 'reserved', 'maintenance', 'cleaning', 'blocked'],
     default: 'available'
-  },
-  
-  // Current Occupant (if occupied)
+  },
   currentPatientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   currentAdmissionId: { type: mongoose.Schema.Types.ObjectId, ref: 'IPDAdmission' },
   occupiedSince: { type: Date },
-  expectedDischarge: { type: Date },
-  
-  // Reservation (if reserved)
+  expectedDischarge: { type: Date },
   reservedFor: {
     patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     patientName: { type: String },
     reservedFrom: { type: Date },
     reservedUntil: { type: Date },
     reservedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-  },
-  
-  // Maintenance
+  },
   lastCleanedAt: { type: Date },
   lastMaintenanceAt: { type: Date },
-  maintenanceNotes: { type: String },
-  
-  // Clinic/Hospital
-  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
-  
-  // Active status
+  maintenanceNotes: { type: String },
+  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
   isActive: { type: Boolean, default: true }
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 bedSchema.index({ clinicId: 1, status: 1 });
 bedSchema.index({ clinicId: 1, wardType: 1, status: 1 });
-bedSchema.index({ bedCode: 1, clinicId: 1 }, { unique: true });
-
-// Generate bed code
+bedSchema.index({ bedCode: 1, clinicId: 1 }, { unique: true });
 bedSchema.pre('save', async function(next) {
   if (!this.bedCode) {
     const wardPrefix = this.wardType.substring(0, 3).toUpperCase();
     this.bedCode = `${wardPrefix}-${this.floorNumber || '1'}-${this.bedNumber}`;
   }
   next();
-});
-
-// Static method to get available beds by ward
+});
 bedSchema.statics.getAvailableBeds = async function(clinicId, wardType = null) {
   const query = { clinicId, status: 'available', isActive: true };
   if (wardType) query.wardType = wardType;
   return this.find(query).sort({ wardType: 1, bedNumber: 1 });
-};
-
-// Static method to get bed occupancy stats
+};
 bedSchema.statics.getOccupancyStats = async function(clinicId) {
   const stats = await this.aggregate([
     { $match: { clinicId: new mongoose.Types.ObjectId(clinicId), isActive: true } },

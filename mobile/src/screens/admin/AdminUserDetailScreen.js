@@ -1,7 +1,4 @@
-/**
- * Admin User Detail Screen - Patient/User Profile
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -71,7 +68,6 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
     }
   };
 
-
   const isActive = user?.isActive !== false;
 
   if (loading) {
@@ -111,7 +107,7 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}>
-        {/* Profile Card */}
+        {}
         <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
           <View style={styles.avatarLarge}>
             <Text style={styles.avatarText}>{user.name?.charAt(0) || 'U'}</Text>
@@ -125,7 +121,7 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Info Card */}
+        {}
         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Email</Text>
@@ -147,7 +143,7 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Action Buttons */}
+        {}
         <View style={styles.actionButtons}>
           {isActive ? (
             <TouchableOpacity style={[styles.actionBtn, styles.suspendBtn]} onPress={handleSuspend}>

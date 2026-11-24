@@ -1,16 +1,10 @@
-/**
- * EMR Visit Service
- * Handles visit creation, updates, and clinical documentation
- */
+
 
 const EMRVisit = require('../models/EMRVisit');
 const EMRAuditLog = require('../models/EMRAuditLog');
 
 class EMRVisitService {
-  
-  /**
-   * Create a new visit
-   */
+
   static async createVisit(visitData, userId) {
     try {
       const {
@@ -20,9 +14,7 @@ class EMRVisitService {
         visitType,
         appointmentId,
         chiefComplaint
-      } = visitData;
-      
-      // Get next token number for today
+      } = visitData;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -47,9 +39,7 @@ class EMRVisitService {
         createdBy: userId
       });
       
-      await visit.save();
-      
-      // Populate for response
+      await visit.save();
       await visit.populate('patientId', 'name phone age gender');
       await visit.populate('doctorId', 'name specialization');
       
@@ -59,10 +49,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Update visit status
-   */
+
   static async updateStatus(visitId, status, userId) {
     try {
       const visit = await EMRVisit.findById(visitId);
@@ -73,18 +60,14 @@ class EMRVisitService {
       
       const oldStatus = visit.status;
       visit.status = status;
-      visit.updatedBy = userId;
-      
-      // Set timing based on status
+      visit.updatedBy = userId;
       if (status === 'in_progress' && !visit.consultationStartTime) {
         visit.consultationStartTime = new Date();
       } else if (status === 'completed' && !visit.consultationEndTime) {
         visit.consultationEndTime = new Date();
       }
       
-      await visit.save();
-      
-      // Log status change
+      await visit.save();
       await this.logAudit(visit.clinicId, userId, 'status_change', 'EMRVisit', visitId, {
         from: oldStatus,
         to: status
@@ -96,19 +79,14 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Record vital signs
-   */
+
   static async recordVitals(visitId, vitals, userId) {
     try {
       const visit = await EMRVisit.findById(visitId);
       
       if (!visit) {
         throw new Error('Visit not found');
-      }
-      
-      // Calculate BMI if height and weight provided
+      }
       if (vitals.weight?.value && vitals.height?.value) {
         const heightInMeters = vitals.height.value / 100;
         vitals.bmi = Math.round((vitals.weight.value / (heightInMeters * heightInMeters)) * 10) / 10;
@@ -128,10 +106,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Add clinical notes (SOAP format)
-   */
+
   static async addClinicalNotes(visitId, notes, userId) {
     try {
       const visit = await EMRVisit.findById(visitId);
@@ -148,9 +123,7 @@ class EMRVisitService {
       };
       visit.updatedBy = userId;
       
-      await visit.save();
-      
-      // Log notes update
+      await visit.save();
       await this.logAudit(visit.clinicId, userId, 'update', 'EMRVisit', visitId, {
         field: 'clinicalNotes',
         oldValue: oldNotes,
@@ -163,10 +136,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Add diagnosis
-   */
+
   static async addDiagnosis(visitId, diagnosis, userId) {
     try {
       const visit = await EMRVisit.findById(visitId);
@@ -190,10 +160,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Link prescription to visit
-   */
+
   static async linkPrescription(visitId, prescriptionId, userId) {
     try {
       const visit = await EMRVisit.findByIdAndUpdate(
@@ -211,10 +178,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Schedule follow-up
-   */
+
   static async scheduleFollowUp(visitId, followUpData, userId) {
     try {
       const visit = await EMRVisit.findById(visitId);
@@ -239,10 +203,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Add lab order
-   */
+
   static async addLabOrder(visitId, labOrder, userId) {
     try {
       const visit = await EMRVisit.findById(visitId);
@@ -269,10 +230,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Get visit by ID
-   */
+
   static async getVisit(visitId) {
     try {
       const visit = await EMRVisit.findById(visitId)
@@ -288,10 +246,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Get patient visits
-   */
+
   static async getPatientVisits(patientId, options = {}) {
     try {
       return EMRVisit.getPatientHistory(patientId, options);
@@ -300,10 +255,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Get today's clinic visits
-   */
+
   static async getTodayVisits(clinicId) {
     try {
       return EMRVisit.getTodayVisits(clinicId);
@@ -312,10 +264,7 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Get clinic visits by date range
-   */
+
   static async getClinicVisits(clinicId, startDate, endDate, options = {}) {
     try {
       const { doctorId, status, limit = 100, skip = 0 } = options;
@@ -344,13 +293,9 @@ class EMRVisitService {
       throw error;
     }
   }
-  
-  /**
-   * Log audit entry
-   */
+
   static async logAudit(clinicId, userId, action, entityType, entityId, changes) {
-    try {
-      // Only log if EMRAuditLog model exists
+    try {
       if (EMRAuditLog) {
         await EMRAuditLog.create({
           clinicId,
@@ -363,14 +308,10 @@ class EMRVisitService {
         });
       }
     } catch (error) {
-      console.error('Error logging audit:', error);
-      // Don't throw - audit logging shouldn't break main flow
+      console.error('Error logging audit:', error);
     }
   }
-  
-  /**
-   * Soft delete visit
-   */
+
   static async deleteVisit(visitId, userId, reason) {
     try {
       const visit = await EMRVisit.findByIdAndUpdate(
@@ -381,9 +322,7 @@ class EMRVisitService {
           deletedBy: userId
         },
         { new: true }
-      );
-      
-      // Log deletion
+      );
       await this.logAudit(visit.clinicId, userId, 'delete', 'EMRVisit', visitId, {
         reason
       });

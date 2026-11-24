@@ -1,4 +1,4 @@
-// backend/routes/reminderRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
@@ -8,9 +8,7 @@ const {
   sendMedicineReminder, 
   sendWaterReminder,
   sendHealthCheckupReminder 
-} = require('../services/reminderEmailService');
-
-// Get user's reminder preferences
+} = require('../services/reminderEmailService');
 router.get('/preferences/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -34,9 +32,7 @@ router.get('/preferences/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update reminder preferences
+});
 router.put('/preferences/:userId', async (req, res) => {
   try {
     const { preferences } = req.body;
@@ -59,25 +55,20 @@ router.put('/preferences/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Send test appointment reminder
+});
 router.post('/test/appointment/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    // Get user's next appointment
+    }
     const appointment = await Appointment.findOne({
       userId: req.params.userId,
       date: { $gte: new Date() },
       status: { $ne: 'cancelled' }
     }).populate('doctorId').sort({ date: 1 });
 
-    if (!appointment) {
-      // Send test with dummy data
+    if (!appointment) {
       const result = await sendAppointmentReminder(
         {
           date: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -96,9 +87,7 @@ router.post('/test/appointment/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Send test medicine reminder
+});
 router.post('/test/medicine/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -117,9 +106,7 @@ router.post('/test/medicine/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Send water reminder
+});
 router.post('/test/water/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -132,9 +119,7 @@ router.post('/test/water/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Send health checkup reminder
+});
 router.post('/test/checkup/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -148,9 +133,7 @@ router.post('/test/checkup/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Send all reminders for a user (manual trigger)
+});
 router.post('/send-all/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -163,9 +146,7 @@ router.post('/send-all/:userId', async (req, res) => {
       medicine: false,
       water: false,
       checkup: false
-    };
-
-    // Send appointment reminder if there's an upcoming appointment
+    };
     const appointment = await Appointment.findOne({
       userId: req.params.userId,
       date: { $gte: new Date() },
@@ -175,9 +156,7 @@ router.post('/send-all/:userId', async (req, res) => {
     if (appointment) {
       const aptResult = await sendAppointmentReminder(appointment, user, appointment.doctorId);
       results.appointment = aptResult.success;
-    }
-
-    // Send other reminders based on preferences
+    }
     if (user.notificationPreferences?.medicineReminders !== false) {
       const medResult = await sendMedicineReminder(user, [
         { name: 'Your scheduled medicines', dosage: 'As prescribed', time: 'Today' }

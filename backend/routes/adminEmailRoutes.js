@@ -1,4 +1,4 @@
-// Admin Email Routes - Send custom emails to users, doctors, staff
+
 const express = require('express');
 const router = express.Router();
 const { sendEmail } = require('../services/emailService');
@@ -9,9 +9,7 @@ const {
   sendRevenueSummary 
 } = require('../services/adminEmailService');
 const User = require('../models/User');
-const Doctor = require('../models/Doctor');
-
-// Send custom email to specific recipient
+const Doctor = require('../models/Doctor');
 router.post('/send', async (req, res) => {
   try {
     const { recipientEmail, recipientName, subject, message, recipientType } = req.body;
@@ -54,9 +52,7 @@ router.post('/send', async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Send bulk email to all users of a type
+});
 router.post('/send-bulk', async (req, res) => {
   try {
     const { recipientType, subject, message } = req.body;
@@ -95,9 +91,7 @@ router.post('/send-bulk', async (req, res) => {
         name: s.name, 
         type: 'staff' 
       })));
-    }
-
-    // Filter out invalid emails
+    }
     recipients = recipients.filter(r => r.email && r.email.includes('@'));
 
     let successCount = 0;
@@ -144,9 +138,7 @@ router.post('/send-bulk', async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Get all recipients for dropdown
+});
 router.get('/recipients', async (req, res) => {
   try {
     const doctors = await Doctor.find({ isActive: true }).select('name email specialization');
@@ -186,9 +178,7 @@ router.get('/recipients', async (req, res) => {
       message: 'Failed to fetch recipients' 
     });
   }
-});
-
-// Generate professional email template
+});
 function generateEmailTemplate({ recipientName, subject, message, recipientType }) {
   const typeColors = {
     doctor: '#059669',
@@ -209,13 +199,12 @@ function generateEmailTemplate({ recipientName, subject, message, recipientType 
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6;">
   <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-    <!-- Header -->
+    
     <div style="background: linear-gradient(135deg, ${color} 0%, #1e293b 100%); border-radius: 16px 16px 0 0; padding: 30px; text-align: center;">
       <h1 style="color: white; margin: 0; font-size: 28px;">🏥 HealthSync</h1>
       <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">Healthcare Management Platform</p>
     </div>
-    
-    <!-- Content -->
+
     <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 22px;">Hello ${recipientName}! 👋</h2>
       
@@ -230,8 +219,7 @@ function generateEmailTemplate({ recipientName, subject, message, recipientType 
         If you have any questions, please contact us at <a href="mailto:support@healthsyncpro.in" style="color: ${color};">support@healthsyncpro.in</a>
       </p>
     </div>
-    
-    <!-- Footer -->
+
     <div style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
       <p style="margin: 0;">© ${new Date().getFullYear()} HealthSync. All rights reserved.</p>
       <p style="margin: 5px 0 0 0;">Bankura, West Bengal, India - 722101</p>
@@ -241,13 +229,7 @@ function generateEmailTemplate({ recipientName, subject, message, recipientType 
 </body>
 </html>
   `;
-}
-
-// ============================================
-// MANUAL TEST ENDPOINTS FOR ADMIN REPORTS
-// ============================================
-
-// Test daily/weekly analytics report
+}
 router.post('/test/analytics', async (req, res) => {
   try {
     const { period = 'daily' } = req.body;
@@ -264,9 +246,7 @@ router.post('/test/analytics', async (req, res) => {
     console.error('Error sending analytics report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Test system health alert
+});
 router.post('/test/health-alert', async (req, res) => {
   try {
     const { alertType = 'server_restart', details = 'Manual test alert from admin panel' } = req.body;
@@ -283,9 +263,7 @@ router.post('/test/health-alert', async (req, res) => {
     console.error('Error sending health alert:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Test doctor registration alert
+});
 router.post('/test/doctor-registration', async (req, res) => {
   try {
     const testDoctor = req.body.doctor || {
@@ -311,9 +289,7 @@ router.post('/test/doctor-registration', async (req, res) => {
     console.error('Error sending doctor registration alert:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Test revenue summary
+});
 router.post('/test/revenue', async (req, res) => {
   try {
     const { period = 'weekly' } = req.body;
@@ -330,9 +306,7 @@ router.post('/test/revenue', async (req, res) => {
     console.error('Error sending revenue summary:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get available alert types
+});
 router.get('/alert-types', (req, res) => {
   res.json({
     success: true,

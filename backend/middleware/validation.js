@@ -1,20 +1,13 @@
-/**
- * Input Validation Middleware
- * Schema-based validation using custom validators
- */
 
-const { ValidationError } = require('./errorHandler');
 
-// Common validation patterns
+const { ValidationError } = require('./errorHandler');
 const PATTERNS = {
   email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  phone: /^[6-9]\d{9}$/,  // Indian phone number
+  phone: /^[6-9]\d{9}$/,  
   objectId: /^[0-9a-fA-F]{24}$/,
   time24: /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/,
   date: /^\d{4}-\d{2}-\d{2}$/
-};
-
-// Validation rules
+};
 const rules = {
   required: (value, fieldName) => {
     if (value === undefined || value === null || value === '') {
@@ -134,11 +127,6 @@ const rules = {
   }
 };
 
-/**
- * Create validation middleware from schema
- * @param {Object} schema - Validation schema
- * @param {string} source - 'body', 'query', or 'params'
- */
 const validate = (schema, source = 'body') => {
   return (req, res, next) => {
     const data = req[source];
@@ -158,7 +146,7 @@ const validate = (schema, source = 'body') => {
 
         if (error) {
           errors.push({ field, message: error });
-          break; // Stop at first error for this field
+          break; 
         }
       }
     }
@@ -169,74 +157,52 @@ const validate = (schema, source = 'body') => {
 
     next();
   };
-};
-
-// Pre-built validation schemas
-const schemas = {
-  // Appointment booking
+};
+const schemas = {
   createAppointment: {
     doctorId: { rules: ['required', 'objectId'], label: 'Doctor' },
     date: { rules: ['required', 'date', 'futureDate'], label: 'Appointment date' },
     consultationType: { rules: ['required', rules.enum(['video', 'in-clinic', 'clinic'])], label: 'Consultation type' },
     reason: { rules: [rules.maxLength(500)], label: 'Reason' }
-  },
-
-  // User registration
+  },
   register: {
     name: { rules: ['required', 'string', rules.minLength(2), rules.maxLength(100)], label: 'Name' },
     email: { rules: ['required', 'email'], label: 'Email' },
     password: { rules: ['required', rules.minLength(6)], label: 'Password' },
     phone: { rules: ['phone'], label: 'Phone number' }
-  },
-
-  // Login
+  },
   login: {
     email: { rules: ['required', 'email'], label: 'Email' },
     password: { rules: ['required'], label: 'Password' }
-  },
-
-  // Payment
+  },
   payment: {
     appointmentId: { rules: ['required', 'objectId'], label: 'Appointment' },
     amount: { rules: ['required', 'number', rules.min(1)], label: 'Amount' }
-  },
-
-  // Doctor schedule
+  },
   schedule: {
     doctorId: { rules: ['required', 'objectId'], label: 'Doctor' },
     date: { rules: ['required', 'date'], label: 'Date' }
-  },
-
-  // Slot booking
+  },
   bookSlot: {
     slotId: { rules: ['required', 'objectId'], label: 'Slot' },
     patientId: { rules: ['objectId'], label: 'Patient' }
-  },
-
-  // Commission config
+  },
   commissionConfig: {
     onlineCommissionPercent: { rules: ['number', rules.min(0), rules.max(100)], label: 'Online commission' },
     clinicCommissionFlat: { rules: ['number', rules.min(0)], label: 'Clinic commission' },
     gstPercent: { rules: ['number', rules.min(0), rules.max(100)], label: 'GST percent' }
-  },
-
-  // Pagination
+  },
   pagination: {
     page: { rules: ['number', rules.min(1)], label: 'Page' },
     limit: { rules: ['number', rules.min(1), rules.max(100)], label: 'Limit' }
   }
-};
-
-// Middleware factory for common schemas
+};
 const validateBody = (schemaName) => validate(schemas[schemaName], 'body');
 const validateQuery = (schemaName) => validate(schemas[schemaName], 'query');
-const validateParams = (schemaName) => validate(schemas[schemaName], 'params');
-
-// Sanitize input - remove dangerous characters
+const validateParams = (schemaName) => validate(schemas[schemaName], 'params');
 const sanitize = (req, res, next) => {
   const sanitizeValue = (value) => {
-    if (typeof value === 'string') {
-      // Remove potential XSS characters
+    if (typeof value === 'string') {
       return value.replace(/[<>]/g, '').trim();
     }
     if (typeof value === 'object' && value !== null) {

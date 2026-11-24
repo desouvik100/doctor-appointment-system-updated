@@ -1,9 +1,4 @@
-/**
- * Property-Based Tests for Patient Validation Service
- * Feature: advanced-imaging
- * Property 3: Patient ID Validation
- * Validates: Requirements 1.3
- */
+
 
 const fc = require('fast-check');
 const {
@@ -14,9 +9,7 @@ const {
   datesMatch
 } = require('../services/patientValidationService');
 
-describe('Patient Validation Service - Property Tests', () => {
-  
-  // Property 3: Patient ID Validation
+describe('Patient Validation Service - Property Tests', () => {
   describe('Property 3: Patient ID Validation', () => {
     
     test('matching patient IDs result in high confidence match', () => {
@@ -39,9 +32,7 @@ describe('Patient Validation Service - Property Tests', () => {
               gender: 'male'
             };
             
-            const result = validatePatientMatch(dicomPatient, emrPatient);
-            
-            // When all fields match, confidence should be high
+            const result = validatePatientMatch(dicomPatient, emrPatient);
             expect(result.confidence).toBeGreaterThanOrEqual(0.9);
             expect(result.isMatch).toBe(true);
           }
@@ -56,8 +47,7 @@ describe('Patient Validation Service - Property Tests', () => {
           fc.string({ minLength: 5, maxLength: 20 }).filter(s => /^[a-zA-Z0-9]+$/.test(s)),
           fc.string({ minLength: 5, maxLength: 20 }).filter(s => /^[a-zA-Z0-9]+$/.test(s)),
           fc.string({ minLength: 2, maxLength: 30 }).filter(s => s.trim().length > 0),
-          (dicomId, emrId, name) => {
-            // Ensure IDs are different
+          (dicomId, emrId, name) => {
             fc.pre(normalizePatientId(dicomId) !== normalizePatientId(emrId));
             
             const dicomPatient = {
@@ -74,9 +64,7 @@ describe('Patient Validation Service - Property Tests', () => {
               gender: 'male'
             };
             
-            const result = validatePatientMatch(dicomPatient, emrPatient);
-            
-            // When patient IDs don't match, should have warning
+            const result = validatePatientMatch(dicomPatient, emrPatient);
             expect(result.warnings.length).toBeGreaterThan(0);
             expect(result.warnings.some(w => w.includes('Patient ID') || w.includes('match'))).toBe(true);
           }
@@ -92,8 +80,7 @@ describe('Patient Validation Service - Property Tests', () => {
           fc.string({ minLength: 5, maxLength: 15 }).filter(s => /^[a-zA-Z0-9]+$/.test(s)),
           fc.string({ minLength: 3, maxLength: 20 }).filter(s => /^[a-zA-Z]+$/.test(s)),
           fc.string({ minLength: 3, maxLength: 20 }).filter(s => /^[a-zA-Z]+$/.test(s)),
-          (dicomId, emrId, dicomName, emrName) => {
-            // Ensure everything is different
+          (dicomId, emrId, dicomName, emrName) => {
             fc.pre(normalizePatientId(dicomId) !== normalizePatientId(emrId));
             fc.pre(calculateSimilarity(dicomName, emrName) < 0.5);
             
@@ -111,9 +98,7 @@ describe('Patient Validation Service - Property Tests', () => {
               gender: 'female'
             };
             
-            const result = validatePatientMatch(dicomPatient, emrPatient);
-            
-            // Completely different patients should have low confidence
+            const result = validatePatientMatch(dicomPatient, emrPatient);
             expect(result.confidence).toBeLessThan(0.6);
             expect(result.isMatch).toBe(false);
             expect(result.requiresConfirmation).toBe(true);
@@ -122,9 +107,7 @@ describe('Patient Validation Service - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-  });
-  
-  // Helper function tests
+  });
   describe('String Normalization', () => {
     test('normalization is idempotent', () => {
       fc.assert(
@@ -231,9 +214,7 @@ describe('Patient Validation Service - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-  });
-  
-  // Edge case unit tests
+  });
   describe('Edge Cases', () => {
     test('handles null/undefined inputs gracefully', () => {
       expect(validatePatientMatch(null, null).isMatch).toBe(false);

@@ -1,6 +1,4 @@
-/**
- * Wallet Screen - Patient Health Wallet
- */
+
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -37,9 +35,7 @@ const WalletScreen = ({ navigation, route }) => {
   const [addAmount, setAddAmount] = useState('');
   const [adding, setAdding] = useState(false);
 
-  const quickAmounts = [100, 200, 500, 1000, 2000];
-
-  // Animations
+  const quickAmounts = [100, 200, 500, 1000, 2000];
   const balanceOpacity = useRef(new Animated.Value(0)).current;
   const balanceScale = useRef(new Animated.Value(0.8)).current;
   const statsAnimations = useRef([
@@ -56,9 +52,7 @@ const WalletScreen = ({ navigation, route }) => {
         getTransactions(),
       ]);
       setBalance(balRes?.balance || 0);
-      setTransactions(txnRes?.transactions || []);
-      
-      // Animate balance card
+      setTransactions(txnRes?.transactions || []);
       Animated.parallel([
         fadeIn(balanceOpacity, 400),
         Animated.spring(balanceScale, {
@@ -67,9 +61,7 @@ const WalletScreen = ({ navigation, route }) => {
           friction: 7,
           useNativeDriver: true,
         }),
-      ]).start();
-      
-      // Stagger stats cards
+      ]).start();
       stagger(statsAnimations, fadeIn, 100).start();
       
     } catch {
@@ -81,9 +73,7 @@ const WalletScreen = ({ navigation, route }) => {
     }
   }, []);
 
-  useEffect(() => { fetchWallet(); }, [fetchWallet]);
-
-  // Re-fetch when screen comes into focus (e.g. returning from payment flow)
+  useEffect(() => { fetchWallet(); }, [fetchWallet]);
   useFocusEffect(
     useCallback(() => {
       fetchWallet();
@@ -106,7 +96,7 @@ const WalletScreen = ({ navigation, route }) => {
             await addMoney(amount, 'upi');
             setAddMoneyVisible(false);
             setAddAmount('');
-            await fetchWallet(); // re-fetch real balance + transactions
+            await fetchWallet(); 
             Alert.alert('Success', `₹${amount} added to your wallet`);
           } catch (err) {
             Alert.alert('Failed', err?.response?.data?.message || 'Could not add money. Please try again.');
@@ -137,7 +127,7 @@ const WalletScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
@@ -157,7 +147,7 @@ const WalletScreen = ({ navigation, route }) => {
           />
         }
       >
-        {/* Balance Card */}
+        {}
         <Animated.View style={{ opacity: balanceOpacity, transform: [{ scale: balanceScale }] }}>
           <LinearGradient colors={colors.gradientPrimary} style={styles.balanceCard}>
             <Text style={styles.balanceLabel}>Available Balance</Text>
@@ -169,7 +159,7 @@ const WalletScreen = ({ navigation, route }) => {
           </LinearGradient>
         </Animated.View>
 
-        {/* Quick Stats */}
+        {}
         <View style={styles.statsRow}>
           {[
             { icon: '💸', value: transactions.filter(t => t.type === 'debit').reduce((s, t) => s + Number(t.amount), 0), label: 'Total Spent' },
@@ -203,7 +193,7 @@ const WalletScreen = ({ navigation, route }) => {
           ))}
         </View>
 
-        {/* Transactions */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Transaction History</Text>
           {transactions.length === 0 ? (
@@ -234,7 +224,7 @@ const WalletScreen = ({ navigation, route }) => {
         </View>
       </ScrollView>
 
-      {/* Add Money Modal */}
+      {}
       <Modal visible={addMoneyVisible} transparent animationType="slide" onRequestClose={() => setAddMoneyVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { backgroundColor: colors.backgroundCard }]}>

@@ -1,14 +1,9 @@
-/**
- * Staff Schedule Routes
- * API endpoints for staff scheduling and attendance management
- */
+
 
 const express = require('express');
 const router = express.Router();
 const StaffSchedule = require('../models/StaffSchedule');
-const { verifyToken } = require('../middleware/auth');
-
-// Get schedule for date range
+const { verifyToken } = require('../middleware/auth');
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate, staffId, role, shift } = req.query;
@@ -28,9 +23,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get single staff schedule
+});
 router.get('/staff/:staffId', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -46,9 +39,7 @@ router.get('/staff/:staffId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Create schedule
+});
 router.post('/create', verifyToken, async (req, res) => {
   try {
     const schedule = new StaffSchedule({ ...req.body, createdBy: req.user?.id });
@@ -60,9 +51,7 @@ router.post('/create', verifyToken, async (req, res) => {
     }
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Bulk create schedules
+});
 router.post('/bulk-create', verifyToken, async (req, res) => {
   try {
     const { schedules } = req.body;
@@ -74,9 +63,7 @@ router.post('/bulk-create', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update schedule
+});
 router.put('/schedule/:scheduleId', verifyToken, async (req, res) => {
   try {
     const schedule = await StaffSchedule.findByIdAndUpdate(
@@ -89,9 +76,7 @@ router.put('/schedule/:scheduleId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Check in
+});
 router.post('/schedule/:scheduleId/check-in', verifyToken, async (req, res) => {
   try {
     const schedule = await StaffSchedule.findById(req.params.scheduleId);
@@ -102,9 +87,7 @@ router.post('/schedule/:scheduleId/check-in', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Check out
+});
 router.post('/schedule/:scheduleId/check-out', verifyToken, async (req, res) => {
   try {
     const schedule = await StaffSchedule.findById(req.params.scheduleId);
@@ -115,9 +98,7 @@ router.post('/schedule/:scheduleId/check-out', verifyToken, async (req, res) => 
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Mark absent
+});
 router.post('/schedule/:scheduleId/absent', verifyToken, async (req, res) => {
   try {
     const schedule = await StaffSchedule.findByIdAndUpdate(
@@ -130,9 +111,7 @@ router.post('/schedule/:scheduleId/absent', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Apply leave
+});
 router.post('/schedule/:scheduleId/leave', verifyToken, async (req, res) => {
   try {
     const schedule = await StaffSchedule.findByIdAndUpdate(
@@ -149,9 +128,7 @@ router.post('/schedule/:scheduleId/leave', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Swap shift
+});
 router.post('/schedule/:scheduleId/swap', verifyToken, async (req, res) => {
   try {
     const { swappedWith, reason } = req.body;
@@ -168,9 +145,7 @@ router.post('/schedule/:scheduleId/swap', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get attendance summary
+});
 router.get('/clinic/:clinicId/attendance-summary', verifyToken, async (req, res) => {
   try {
     const { staffId, month, year } = req.query;
@@ -182,9 +157,7 @@ router.get('/clinic/:clinicId/attendance-summary', verifyToken, async (req, res)
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get today's attendance
+});
 router.get('/clinic/:clinicId/today', verifyToken, async (req, res) => {
   try {
     const today = new Date();
@@ -208,9 +181,7 @@ router.get('/clinic/:clinicId/today', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Delete schedule
+});
 router.delete('/schedule/:scheduleId', verifyToken, async (req, res) => {
   try {
     const schedule = await StaffSchedule.findByIdAndDelete(req.params.scheduleId);

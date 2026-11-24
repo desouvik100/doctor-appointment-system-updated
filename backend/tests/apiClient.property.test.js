@@ -1,25 +1,8 @@
-/**
- * Property-Based Tests for API Client
- * Feature: api-standardization-realtime-sync
- * 
- * Property 1: Authorization Header Attachment
- * Validates: Requirements 1.2
- * 
- * Property 2: Error Response Consistency
- * Validates: Requirements 1.4, 5.1, 5.2
- * 
- * These tests validate the core logic of the API client's request interceptor
- * and error transformation functions without React Native dependencies.
- */
+
 
 const fc = require('fast-check');
 
-/**
- * Simulated transformError function matching mobile/src/services/api/apiClient.js
- * This is a pure function that can be tested independently
- */
-const transformError = (error) => {
-  // Handle null/undefined errors
+const transformError = (error) => {
   if (!error) {
     return {
       success: false,
@@ -29,9 +12,7 @@ const transformError = (error) => {
       errors: [],
       originalError: error,
     };
-  }
-
-  // Server responded with an error status
+  }
   if (error.response) {
     const { status, data } = error.response;
     return {
@@ -42,9 +23,7 @@ const transformError = (error) => {
       errors: data?.errors || [],
       originalError: error,
     };
-  }
-
-  // Request was made but no response received (network error)
+  }
   if (error.request) {
     return {
       success: false,
@@ -54,9 +33,7 @@ const transformError = (error) => {
       errors: [],
       originalError: error,
     };
-  }
-
-  // Something else happened during request setup
+  }
   return {
     success: false,
     message: error.message || 'An unexpected error occurred.',
@@ -67,9 +44,6 @@ const transformError = (error) => {
   };
 };
 
-/**
- * Get default error message based on HTTP status code
- */
 const getDefaultErrorMessage = (status) => {
   const messages = {
     400: 'Invalid request. Please check your input.',
@@ -87,10 +61,6 @@ const getDefaultErrorMessage = (status) => {
   return messages[status] || 'Something went wrong.';
 };
 
-/**
- * Simulated request interceptor logic for attaching Authorization header
- * This mirrors the logic in apiClient.js request interceptor
- */
 const attachAuthorizationHeader = (config, token) => {
   const newConfig = { ...config, headers: { ...config.headers } };
   if (token) {
@@ -99,9 +69,6 @@ const attachAuthorizationHeader = (config, token) => {
   return newConfig;
 };
 
-/**
- * Check if an error is a standardized API error
- */
 const isApiError = (error) => {
   return (
     error &&
@@ -113,23 +80,13 @@ const isApiError = (error) => {
 };
 
 describe('API Client - Property Tests', () => {
-  
-  /**
-   * Property 1: Authorization Header Attachment
-   * Feature: api-standardization-realtime-sync, Property 1: Authorization Header Attachment
-   * Validates: Requirements 1.2
-   * 
-   * For any API request made through the API_Client when a valid token exists,
-   * the request SHALL include an `Authorization: Bearer <token>` header.
-   */
+
   describe('Property 1: Authorization Header Attachment', () => {
     
     test('when token exists, Authorization header is attached with Bearer prefix', () => {
       fc.assert(
-        fc.property(
-          // Generate random JWT-like tokens (base64-ish strings)
-          fc.string({ minLength: 10, maxLength: 500 }).filter(s => s.trim().length > 0 && !s.includes(' ')),
-          // Generate random request configs
+        fc.property(
+          fc.string({ minLength: 10, maxLength: 500 }).filter(s => s.trim().length > 0 && !s.includes(' ')),
           fc.record({
             url: fc.webUrl(),
             method: fc.constantFrom('GET', 'POST', 'PUT', 'PATCH', 'DELETE'),
@@ -139,13 +96,9 @@ describe('API Client - Property Tests', () => {
             )
           }),
           (token, config) => {
-            const result = attachAuthorizationHeader(config, token);
-            
-            // Authorization header must be present
-            expect(result.headers.Authorization).toBeDefined();
-            // Must have Bearer prefix
-            expect(result.headers.Authorization).toBe(`Bearer ${token}`);
-            // Original config should not be mutated
+            const result = attachAuthorizationHeader(config, token);
+            expect(result.headers.Authorization).toBeDefined();
+            expect(result.headers.Authorization).toBe(`Bearer ${token}`);
             expect(config.headers.Authorization).toBeUndefined();
           }
         ),
@@ -166,9 +119,7 @@ describe('API Client - Property Tests', () => {
             )
           }),
           (token, config) => {
-            const result = attachAuthorizationHeader(config, token);
-            
-            // Authorization header should not be added for falsy tokens
+            const result = attachAuthorizationHeader(config, token);
             expect(result.headers.Authorization).toBeUndefined();
           }
         ),
@@ -189,12 +140,9 @@ describe('API Client - Property Tests', () => {
             })
           }),
           (token, config) => {
-            const result = attachAuthorizationHeader(config, token);
-            
-            // Original headers should be preserved
+            const result = attachAuthorizationHeader(config, token);
             expect(result.headers['Content-Type']).toBe('application/json');
-            expect(result.headers['X-Custom-Header']).toBe('custom-value');
-            // Authorization should be added
+            expect(result.headers['X-Custom-Header']).toBe('custom-value');
             expect(result.headers.Authorization).toBe(`Bearer ${token}`);
           }
         ),
@@ -204,16 +152,12 @@ describe('API Client - Property Tests', () => {
     
     test('Authorization header format is always "Bearer <token>"', () => {
       fc.assert(
-        fc.property(
-          // Generate various token formats (alphanumeric strings simulating JWT tokens)
+        fc.property(
           fc.stringMatching(/^[a-zA-Z0-9._-]{10,200}$/),
           (token) => {
             const config = { url: '/test', method: 'GET', headers: {} };
-            const result = attachAuthorizationHeader(config, token);
-            
-            // Must start with "Bearer "
-            expect(result.headers.Authorization.startsWith('Bearer ')).toBe(true);
-            // Token should be exactly after "Bearer "
+            const result = attachAuthorizationHeader(config, token);
+            expect(result.headers.Authorization.startsWith('Bearer ')).toBe(true);
             expect(result.headers.Authorization.substring(7)).toBe(token);
           }
         ),
@@ -222,26 +166,14 @@ describe('API Client - Property Tests', () => {
     });
   });
 
-  /**
-   * Property 2: Error Response Consistency
-   * Feature: api-standardization-realtime-sync, Property 2: Error Response Consistency
-   * Validates: Requirements 1.4, 5.1, 5.2
-   * 
-   * For any error returned by the Backend or API_Client, the error object
-   * SHALL contain at minimum: { success: false, message: string, statusCode: number }
-   */
   describe('Property 2: Error Response Consistency', () => {
     
     test('server errors (with response) produce standardized error format', () => {
       fc.assert(
-        fc.property(
-          // Generate random HTTP status codes (4xx and 5xx)
-          fc.integer({ min: 400, max: 599 }),
-          // Generate random error messages
-          fc.string({ minLength: 1, maxLength: 200 }),
-          // Generate optional error code
-          fc.option(fc.string({ minLength: 3, maxLength: 20 }).filter(s => /^[A-Z_]+$/.test(s))),
-          // Generate optional field errors
+        fc.property(
+          fc.integer({ min: 400, max: 599 }),
+          fc.string({ minLength: 1, maxLength: 200 }),
+          fc.option(fc.string({ minLength: 3, maxLength: 20 }).filter(s => /^[A-Z_]+$/.test(s))),
           fc.array(
             fc.record({
               field: fc.string({ minLength: 1, maxLength: 30 }).filter(s => /^[a-zA-Z]+$/.test(s)),
@@ -261,19 +193,13 @@ describe('API Client - Property Tests', () => {
               }
             };
             
-            const result = transformError(error);
-            
-            // Must have required fields
+            const result = transformError(error);
             expect(result.success).toBe(false);
             expect(typeof result.message).toBe('string');
             expect(result.message.length).toBeGreaterThan(0);
             expect(typeof result.statusCode).toBe('number');
-            expect(result.statusCode).toBe(status);
-            
-            // Must be a valid API error
-            expect(isApiError(result)).toBe(true);
-            
-            // Original error should be preserved
+            expect(result.statusCode).toBe(status);
+            expect(isApiError(result)).toBe(true);
             expect(result.originalError).toBe(error);
           }
         ),
@@ -285,7 +211,7 @@ describe('API Client - Property Tests', () => {
       fc.assert(
         fc.property(
           fc.record({
-            request: fc.constant({}), // Request was made
+            request: fc.constant({}), 
             message: fc.string({ minLength: 1, maxLength: 100 })
           }),
           (errorProps) => {
@@ -294,16 +220,12 @@ describe('API Client - Property Tests', () => {
               message: errorProps.message
             };
             
-            const result = transformError(error);
-            
-            // Must have required fields
+            const result = transformError(error);
             expect(result.success).toBe(false);
             expect(typeof result.message).toBe('string');
             expect(result.message).toBe('Network error. Please check your connection.');
             expect(result.statusCode).toBe(0);
-            expect(result.code).toBe('NETWORK_ERROR');
-            
-            // Must be a valid API error
+            expect(result.code).toBe('NETWORK_ERROR');
             expect(isApiError(result)).toBe(true);
           }
         ),
@@ -318,15 +240,11 @@ describe('API Client - Property Tests', () => {
           (errorMessage) => {
             const error = new Error(errorMessage);
             
-            const result = transformError(error);
-            
-            // Must have required fields
+            const result = transformError(error);
             expect(result.success).toBe(false);
             expect(typeof result.message).toBe('string');
             expect(result.statusCode).toBe(-1);
-            expect(result.code).toBe('UNKNOWN_ERROR');
-            
-            // Must be a valid API error
+            expect(result.code).toBe('UNKNOWN_ERROR');
             expect(isApiError(result)).toBe(true);
           }
         ),
@@ -334,10 +252,8 @@ describe('API Client - Property Tests', () => {
       );
     });
     
-    test('all transformed errors have consistent structure', () => {
-      // Generate various error types
-      const errorArbitrary = fc.oneof(
-        // Server error with response
+    test('all transformed errors have consistent structure', () => {
+      const errorArbitrary = fc.oneof(
         fc.record({
           response: fc.record({
             status: fc.integer({ min: 400, max: 599 }),
@@ -350,13 +266,11 @@ describe('API Client - Property Tests', () => {
               }), { maxLength: 3 })
             })
           })
-        }),
-        // Network error
+        }),
         fc.record({
           request: fc.constant({}),
           message: fc.string({ minLength: 1, maxLength: 100 })
-        }),
-        // Unknown error
+        }),
         fc.record({
           message: fc.string({ minLength: 1, maxLength: 100 })
         })
@@ -364,20 +278,14 @@ describe('API Client - Property Tests', () => {
       
       fc.assert(
         fc.property(errorArbitrary, (error) => {
-          const result = transformError(error);
-          
-          // All errors must have these exact fields
+          const result = transformError(error);
           expect(result).toHaveProperty('success', false);
           expect(result).toHaveProperty('message');
           expect(result).toHaveProperty('statusCode');
-          expect(result).toHaveProperty('originalError');
-          
-          // Type checks
+          expect(result).toHaveProperty('originalError');
           expect(typeof result.success).toBe('boolean');
           expect(typeof result.message).toBe('string');
-          expect(typeof result.statusCode).toBe('number');
-          
-          // Message should never be empty
+          expect(typeof result.statusCode).toBe('number');
           expect(result.message.length).toBeGreaterThan(0);
         }),
         { numRuns: 100 }
@@ -392,13 +300,11 @@ describe('API Client - Property Tests', () => {
             const error = {
               response: {
                 status,
-                data: {} // No message provided
+                data: {} 
               }
             };
             
-            const result = transformError(error);
-            
-            // Should use default message
+            const result = transformError(error);
             expect(result.message).toBe(getDefaultErrorMessage(status));
             expect(result.message.length).toBeGreaterThan(0);
           }
@@ -415,8 +321,7 @@ describe('API Client - Property Tests', () => {
               response: fc.record({
                 status: fc.integer({ min: 400, max: 599 }),
                 data: fc.record({
-                  message: fc.string({ minLength: 1, maxLength: 50 })
-                  // No errors field
+                  message: fc.string({ minLength: 1, maxLength: 50 })
                 })
               })
             }),
@@ -428,9 +333,7 @@ describe('API Client - Property Tests', () => {
             })
           ),
           (error) => {
-            const result = transformError(error);
-            
-            // errors should always be an array
+            const result = transformError(error);
             expect(Array.isArray(result.errors)).toBe(true);
           }
         ),
@@ -439,9 +342,6 @@ describe('API Client - Property Tests', () => {
     });
   });
 
-  /**
-   * Edge Cases and Unit Tests
-   */
   describe('Edge Cases', () => {
     test('handles null error gracefully', () => {
       const result = transformError(null);

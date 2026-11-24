@@ -1,14 +1,8 @@
-// backend/services/aiHealthService.js
-// Advanced AI Health Services for HealthSync
+
 
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
-const User = require('../models/User');
-
-// ============================================
-// 2. PREDICTIVE HEALTH INSIGHTS
-// Analyze patient history to predict health risks
-// ============================================
+const User = require('../models/User');
 
 const healthRiskFactors = {
   diabetes: {
@@ -43,13 +37,8 @@ const healthRiskFactors = {
   }
 };
 
-
-/**
- * Analyze patient's appointment history for health insights
- */
 async function getPredictiveHealthInsights(userId) {
-  try {
-    // Get patient's appointment history
+  try {
     const appointments = await Appointment.find({ userId })
       .populate('doctorId', 'specialization')
       .sort({ date: -1 })
@@ -63,12 +52,8 @@ async function getPredictiveHealthInsights(userId) {
       healthTrends: [],
       upcomingCheckups: [],
       wellnessTips: []
-    };
-
-    // Analyze symptoms from appointment reasons
-    const allReasons = appointments.map(a => a.reason?.toLowerCase() || '').join(' ');
-    
-    // Check for risk patterns
+    };
+    const allReasons = appointments.map(a => a.reason?.toLowerCase() || '').join(' ');
     for (const [condition, data] of Object.entries(healthRiskFactors)) {
       const matchedKeywords = data.keywords.filter(k => allReasons.includes(k));
       if (matchedKeywords.length >= 2) {
@@ -81,9 +66,7 @@ async function getPredictiveHealthInsights(userId) {
           preventiveTips: data.preventiveTips
         });
       }
-    }
-
-    // Analyze visit frequency trends
+    }
     const monthlyVisits = {};
     appointments.forEach(apt => {
       const month = new Date(apt.date).toISOString().slice(0, 7);
@@ -95,9 +78,7 @@ async function getPredictiveHealthInsights(userId) {
       visits: count
     }));
 
-    insights.healthTrends = visitTrend;
-
-    // Specialization-based recommendations
+    insights.healthTrends = visitTrend;
     const specializations = [...new Set(appointments.map(a => a.doctorId?.specialization).filter(Boolean))];
     
     if (specializations.includes('Cardiologist')) {
@@ -106,9 +87,7 @@ async function getPredictiveHealthInsights(userId) {
         recommended: 'Every 6 months',
         reason: 'Based on your cardiology visits'
       });
-    }
-
-    // General wellness tips based on age
+    }
     const age = user?.dateOfBirth ? 
       Math.floor((Date.now() - new Date(user.dateOfBirth)) / (365.25 * 24 * 60 * 60 * 1000)) : 30;
 
@@ -131,23 +110,14 @@ async function getPredictiveHealthInsights(userId) {
     console.error('Error getting health insights:', error);
     return { success: false, error: error.message };
   }
-}
+}
 
-
-// ============================================
-// 3. SMART DOCTOR MATCHING
-// AI matches patients to best-suited doctors
-// ============================================
-
-const symptomToSpecialization = {
-  // General symptoms
+const symptomToSpecialization = {
   'fever': ['General Physician', 'Internal Medicine'],
   'cold': ['General Physician', 'ENT'],
   'cough': ['General Physician', 'Pulmonologist'],
   'headache': ['General Physician', 'Neurologist'],
-  'body pain': ['General Physician', 'Orthopedic'],
-  
-  // Specific symptoms
+  'body pain': ['General Physician', 'Orthopedic'],
   'chest pain': ['Cardiologist', 'General Physician'],
   'heart': ['Cardiologist'],
   'breathing': ['Pulmonologist', 'Cardiologist'],
@@ -186,47 +156,31 @@ const symptomToSpecialization = {
   'brain': ['Neurologist', 'Neurosurgeon']
 };
 
-/**
- * Match patient symptoms to best doctors
- * @param {string} symptoms - Patient symptoms description
- * @param {object|null} location - Optional location for filtering (city, state, coordinates)
- * @param {object} preferences - Optional preferences (gender, experience, fee range)
- */
 async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
   try {
     const symptomText = symptoms.toLowerCase();
-    const matchedSpecializations = new Set();
-    
-    // Use location for filtering if provided
+    const matchedSpecializations = new Set();
     const locationFilter = location?.city || location?.state ? {
       $or: [
         { 'clinicId.city': location.city },
         { 'clinicId.state': location.state }
       ]
-    } : {};
-    
-    // Use preferences for filtering
+    } : {};
     const preferenceFilter = {};
     if (preferences.maxFee) {
       preferenceFilter.consultationFee = { $lte: preferences.maxFee };
     }
     if (preferences.minExperience) {
       preferenceFilter.experience = { $gte: preferences.minExperience };
-    }
-    
-    // Find matching specializations
+    }
     for (const [keyword, specs] of Object.entries(symptomToSpecialization)) {
       if (symptomText.includes(keyword)) {
         specs.forEach(s => matchedSpecializations.add(s));
       }
-    }
-    
-    // Default to General Physician if no match
+    }
     if (matchedSpecializations.size === 0) {
       matchedSpecializations.add('General Physician');
-    }
-
-    // Find doctors with matching specializations
+    }
     const query = {
       specialization: { $in: Array.from(matchedSpecializations) },
       isActive: { $ne: false },
@@ -236,30 +190,20 @@ async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
 
     const doctors = await Doctor.find(query)
       .populate('clinicId', 'name address')
-      .limit(10);
-
-    // Score and rank doctors
+      .limit(10);
     const rankedDoctors = await Promise.all(doctors.map(async (doc) => {
-      let score = 50; // Base score
-      
-      // Experience bonus
+      let score = 50; 
       if (doc.experience) {
         score += Math.min(doc.experience * 2, 20);
-      }
-      
-      // Rating bonus
+      }
       if (doc.rating) {
         score += doc.rating * 5;
-      }
-      
-      // Completed appointments (success indicator)
+      }
       const completedCount = await Appointment.countDocuments({
         doctorId: doc._id,
         status: 'completed'
       });
-      score += Math.min(completedCount / 10, 15);
-      
-      // Availability bonus (fewer pending = more available)
+      score += Math.min(completedCount / 10, 15);
       const pendingCount = await Appointment.countDocuments({
         doctorId: doc._id,
         status: { $in: ['pending', 'confirmed'] },
@@ -282,9 +226,7 @@ async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
         matchReason: `Specializes in ${doc.specialization}`,
         completedConsultations: completedCount
       };
-    }));
-
-    // Sort by score
+    }));
     rankedDoctors.sort((a, b) => b.matchScore - a.matchScore);
 
     return {
@@ -297,13 +239,7 @@ async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
     console.error('Error in smart doctor match:', error);
     return { success: false, error: error.message };
   }
-}
-
-
-// ============================================
-// 4. VOICE CONSULTATION NOTES (Transcription)
-// Generate structured notes from text input
-// ============================================
+}
 
 const medicalTerms = {
   symptoms: ['pain', 'fever', 'cough', 'headache', 'nausea', 'fatigue', 'dizziness', 'swelling'],
@@ -312,9 +248,6 @@ const medicalTerms = {
   instructions: ['take', 'apply', 'avoid', 'rest', 'follow-up', 'review']
 };
 
-/**
- * Parse consultation notes and generate structured summary
- */
 function parseConsultationNotes(rawText) {
   const text = rawText.toLowerCase();
   const structured = {
@@ -326,16 +259,12 @@ function parseConsultationNotes(rawText) {
     instructions: [],
     followUp: null,
     rawNotes: rawText
-  };
-
-  // Extract symptoms
+  };
   medicalTerms.symptoms.forEach(symptom => {
     if (text.includes(symptom)) {
       structured.symptoms.push(symptom);
     }
-  });
-
-  // Extract vitals using regex
+  });
   const bpMatch = text.match(/bp[:\s]*(\d{2,3})[\/](\d{2,3})/i);
   if (bpMatch) {
     structured.vitals.bloodPressure = `${bpMatch[1]}/${bpMatch[2]}`;
@@ -349,15 +278,11 @@ function parseConsultationNotes(rawText) {
   const pulseMatch = text.match(/(?:pulse|heart rate)[:\s]*(\d{2,3})/i);
   if (pulseMatch) {
     structured.vitals.pulse = `${pulseMatch[1]} bpm`;
-  }
-
-  // Extract follow-up
+  }
   const followUpMatch = text.match(/(?:follow[- ]?up|review|come back)[:\s]*(?:in|after)?\s*(\d+)\s*(day|week|month)/i);
   if (followUpMatch) {
     structured.followUp = `${followUpMatch[1]} ${followUpMatch[2]}(s)`;
-  }
-
-  // Extract chief complaint (first sentence or line)
+  }
   const firstLine = rawText.split(/[.\n]/)[0];
   if (firstLine && firstLine.length < 200) {
     structured.chiefComplaint = firstLine.trim();
@@ -366,9 +291,6 @@ function parseConsultationNotes(rawText) {
   return structured;
 }
 
-/**
- * Generate prescription template from notes
- */
 function generatePrescriptionTemplate(structuredNotes, doctorName, patientName) {
   const date = new Date().toLocaleDateString('en-IN');
   
@@ -412,13 +334,7 @@ ${structuredNotes.instructions.map((inst, i) => `  ${i + 1}. ${inst}`).join('\n'
 Follow-up: ${structuredNotes.followUp || 'As needed'}
     `.trim()
   };
-}
-
-
-// ============================================
-// 6. SENTIMENT ANALYSIS FOR FEEDBACK
-// Analyze patient reviews and feedback
-// ============================================
+}
 
 const sentimentWords = {
   positive: ['excellent', 'great', 'good', 'amazing', 'wonderful', 'best', 'helpful', 'caring', 
@@ -439,9 +355,6 @@ const aspectKeywords = {
   cost: ['cost', 'fee', 'expensive', 'cheap', 'price', 'affordable', 'value']
 };
 
-/**
- * Analyze sentiment of a review
- */
 function analyzeSentiment(text) {
   const words = text.toLowerCase().split(/\s+/);
   let positiveCount = 0;
@@ -470,9 +383,6 @@ function analyzeSentiment(text) {
   };
 }
 
-/**
- * Extract aspects mentioned in review
- */
 function extractAspects(text) {
   const lowerText = text.toLowerCase();
   const mentionedAspects = [];
@@ -491,13 +401,8 @@ function extractAspects(text) {
   return mentionedAspects;
 }
 
-/**
- * Analyze multiple reviews for a doctor
- */
 async function analyzeDoctorReviews(doctorId) {
-  try {
-    // This would typically fetch from a Reviews collection
-    // For now, we'll analyze appointment feedback/notes
+  try {
     const appointments = await Appointment.find({
       doctorId,
       status: 'completed',
@@ -531,14 +436,10 @@ async function analyzeDoctorReviews(doctorId) {
         if (a.sentiment === 'positive') analysis.aspectScores[a.aspect].positive++;
         if (a.sentiment === 'negative') analysis.aspectScores[a.aspect].negative++;
       });
-    });
-
-    // Calculate overall sentiment
+    });
     const { positive, negative } = analysis.sentimentBreakdown;
     if (positive > negative * 2) analysis.overallSentiment = 'positive';
-    else if (negative > positive * 2) analysis.overallSentiment = 'negative';
-
-    // Generate insights
+    else if (negative > positive * 2) analysis.overallSentiment = 'negative';
     for (const [aspect, scores] of Object.entries(analysis.aspectScores)) {
       const ratio = scores.positive / (scores.total || 1);
       if (ratio > 0.7) {
@@ -553,81 +454,53 @@ async function analyzeDoctorReviews(doctorId) {
     console.error('Error analyzing reviews:', error);
     return { success: false, error: error.message };
   }
-}
+}
 
-
-// ============================================
-// 7. SMART APPOINTMENT RESCHEDULING
-// AI suggests optimal reschedule times
-// ============================================
-
-/**
- * Find optimal reschedule slots when appointment is cancelled
- * @param {string} doctorId - Doctor's ID
- * @param {Date} originalDate - Original appointment date (used for context)
- * @param {object} patientPreferences - Patient preferences for rescheduling
- */
 async function findOptimalRescheduleSlots(doctorId, originalDate, patientPreferences = {}) {
   try {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) throw new Error('Doctor not found');
 
     const slotDuration = doctor.consultationDuration || 30;
-    const suggestions = [];
-    
-    // Use originalDate to prioritize similar time slots
-    const originalHour = originalDate ? new Date(originalDate).getHours() : null;
-    
-    // Use patient preferences for scoring
-    const preferredTimeOfDay = patientPreferences.preferredTime || null; // 'morning', 'afternoon', 'evening'
-    const preferSameDay = patientPreferences.preferSameDay || false;
-    
-    // Check next 7 days
+    const suggestions = [];
+    const originalHour = originalDate ? new Date(originalDate).getHours() : null;
+    const preferredTimeOfDay = patientPreferences.preferredTime || null; 
+    const preferSameDay = patientPreferences.preferSameDay || false;
     for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
       const checkDate = new Date();
       checkDate.setDate(checkDate.getDate() + dayOffset);
       checkDate.setHours(0, 0, 0, 0);
       
       const dayOfWeek = checkDate.getDay();
-      if (dayOfWeek === 0) continue; // Skip Sunday
+      if (dayOfWeek === 0) continue; 
       
       const startOfDay = new Date(checkDate);
       const endOfDay = new Date(checkDate);
-      endOfDay.setHours(23, 59, 59, 999);
-      
-      // Get existing appointments
+      endOfDay.setHours(23, 59, 59, 999);
       const existingApts = await Appointment.find({
         doctorId,
         date: { $gte: startOfDay, $lte: endOfDay },
         status: { $in: ['pending', 'confirmed', 'in_progress'] }
       }).select('time');
       
-      const bookedTimes = existingApts.map(a => a.time);
-      
-      // Find available slots
+      const bookedTimes = existingApts.map(a => a.time);
       const availableSlots = [];
       for (let hour = 9; hour < 19; hour++) {
-        if (hour === 13) continue; // Skip lunch
+        if (hour === 13) continue; 
         
         for (let min = 0; min < 60; min += slotDuration) {
           const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
           if (!bookedTimes.includes(timeStr)) {
-            let score = 50;
-            
-            // Prefer mid-morning and mid-afternoon
+            let score = 50;
             if (hour >= 10 && hour <= 12) score += 15;
-            if (hour >= 15 && hour <= 17) score += 10;
-            
-            // Penalize early/late slots
+            if (hour >= 15 && hour <= 17) score += 10;
             if (hour < 10) score -= 10;
             if (hour >= 18) score -= 15;
             
             availableSlots.push({ time: timeStr, score });
           }
         }
-      }
-      
-      // Sort by score and take top 3
+      }
       availableSlots.sort((a, b) => b.score - a.score);
       const topSlots = availableSlots.slice(0, 3);
       
@@ -657,14 +530,8 @@ async function findOptimalRescheduleSlots(doctorId, originalDate, patientPrefere
   }
 }
 
-/**
- * Auto-fill cancelled slot from waitlist
- */
 async function autoFillCancelledSlot(doctorId, date, time) {
-  try {
-    // Find patients who wanted this doctor but couldn't get a slot
-    // This would typically check a waitlist collection
-    // For now, we'll return a suggestion
+  try {
     
     return {
       success: true,
@@ -683,13 +550,7 @@ function formatTimeDisplay(time) {
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const hour12 = hour % 12 || 12;
   return `${hour12}:${minutes} ${ampm}`;
-}
-
-
-// ============================================
-// 8. HEALTH REPORT ANALYZER
-// Extract and summarize key findings from reports
-// ============================================
+}
 
 const normalRanges = {
   hemoglobin: { min: 12, max: 17, unit: 'g/dL', name: 'Hemoglobin' },
@@ -718,9 +579,6 @@ const normalRanges = {
   calcium: { min: 8.5, max: 10.5, unit: 'mg/dL', name: 'Calcium' }
 };
 
-/**
- * Analyze health report values
- */
 function analyzeHealthReport(reportData) {
   const analysis = {
     summary: [],
@@ -749,9 +607,7 @@ function analyzeHealthReport(reportData) {
     if (numValue < normalRange.min) {
       result.status = 'low';
       result.deviation = ((normalRange.min - numValue) / normalRange.min * 100).toFixed(1);
-      analysis.abnormal.push(result);
-      
-      // Check if critical
+      analysis.abnormal.push(result);
       if (numValue < normalRange.min * 0.7) {
         result.status = 'critical_low';
         analysis.critical.push(result);
@@ -759,9 +615,7 @@ function analyzeHealthReport(reportData) {
     } else if (numValue > normalRange.max) {
       result.status = 'high';
       result.deviation = ((numValue - normalRange.max) / normalRange.max * 100).toFixed(1);
-      analysis.abnormal.push(result);
-      
-      // Check if critical
+      analysis.abnormal.push(result);
       if (numValue > normalRange.max * 1.5) {
         result.status = 'critical_high';
         analysis.critical.push(result);
@@ -771,9 +625,7 @@ function analyzeHealthReport(reportData) {
     }
 
     analysis.summary.push(result);
-  }
-
-  // Generate recommendations
+  }
   if (analysis.abnormal.some(a => a.test.includes('Glucose') || a.test.includes('HbA1c'))) {
     analysis.recommendations.push('Consult an Endocrinologist for blood sugar management');
   }
@@ -791,9 +643,7 @@ function analyzeHealthReport(reportData) {
   }
   if (analysis.abnormal.some(a => a.test.includes('SGPT') || a.test.includes('SGOT') || a.test.includes('Bilirubin'))) {
     analysis.recommendations.push('Liver function needs evaluation - see a Gastroenterologist');
-  }
-
-  // Set overall status
+  }
   if (analysis.critical.length > 0) {
     analysis.overallStatus = 'critical';
   } else if (analysis.abnormal.length > 3) {
@@ -805,55 +655,32 @@ function analyzeHealthReport(reportData) {
   return analysis;
 }
 
-/**
- * Track health metrics over time
- * @param {string} userId - User's ID for tracking
- * @param {string} metric - Metric name (e.g., 'blood_pressure', 'weight')
- * @param {number|string} newValue - New metric value
- */
 async function trackHealthMetrics(userId, metric, newValue) {
-  try {
-    // Log the tracking for audit purposes
-    console.log(`📊 Health metric tracked for user ${userId}: ${metric} = ${newValue}`);
-    
-    // This would store in a HealthMetrics collection
-    // For now, return tracking info
+  try {
+    console.log(`📊 Health metric tracked for user ${userId}: ${metric} = ${newValue}`);
     return {
       success: true,
       userId,
       metric,
       currentValue: newValue,
-      trend: 'stable', // Would calculate from historical data
+      trend: 'stable', 
       message: `${metric} recorded successfully`,
       timestamp: new Date().toISOString()
     };
   } catch (error) {
     return { success: false, error: error.message };
   }
-}
-
-// Export all functions
-module.exports = {
-  // Predictive Health
-  getPredictiveHealthInsights,
-  
-  // Smart Doctor Matching
-  smartDoctorMatch,
-  
-  // Voice/Consultation Notes
+}
+module.exports = {
+  getPredictiveHealthInsights,
+  smartDoctorMatch,
   parseConsultationNotes,
-  generatePrescriptionTemplate,
-  
-  // Sentiment Analysis
+  generatePrescriptionTemplate,
   analyzeSentiment,
   extractAspects,
-  analyzeDoctorReviews,
-  
-  // Smart Rescheduling
+  analyzeDoctorReviews,
   findOptimalRescheduleSlots,
-  autoFillCancelledSlot,
-  
-  // Health Report Analysis
+  autoFillCancelledSlot,
   analyzeHealthReport,
   trackHealthMetrics,
   normalRanges

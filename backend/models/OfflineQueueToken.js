@@ -1,50 +1,32 @@
 const mongoose = require('mongoose');
 
-/**
- * Offline-First Queue Token System
- * Requirement 2: Offline-First Queue Token System
- */
-
-const offlineQueueTokenSchema = new mongoose.Schema({
-  // Clinic info
+const offlineQueueTokenSchema = new mongoose.Schema({
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
     required: true
-  },
-  
-  // Doctor info
+  },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true
-  },
-  
-  // Token details
+  },
   tokenNumber: {
     type: Number,
     required: true
-  },
-  
-  // Display token (e.g., "A-001", "B-015")
+  },
   displayToken: {
     type: String,
     required: true
-  },
-  
-  // Token prefix (A, B, C for different doctors/departments)
+  },
   tokenPrefix: {
     type: String,
     default: 'A'
-  },
-  
-  // Date for this token
+  },
   tokenDate: {
     type: Date,
     required: true
-  },
-  
-  // Patient info
+  },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -56,73 +38,51 @@ const offlineQueueTokenSchema = new mongoose.Schema({
   patientPhone: {
     type: String,
     required: true
-  },
-  
-  // Walk-in or booked
+  },
   bookingType: {
     type: String,
     enum: ['walk_in', 'online_booking', 'phone_booking'],
     default: 'walk_in'
-  },
-  
-  // Related appointment (if booked online)
+  },
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment'
-  },
-  
-  // Status
+  },
   status: {
     type: String,
     enum: ['waiting', 'called', 'in_consultation', 'completed', 'no_show', 'cancelled', 'skipped'],
     default: 'waiting'
-  },
-  
-  // Queue position (dynamic)
+  },
   queuePosition: {
     type: Number,
     default: 0
-  },
-  
-  // Estimated wait time in minutes
+  },
   estimatedWaitTime: {
     type: Number,
     default: 0
-  },
-  
-  // Timestamps
+  },
   issuedAt: {
     type: Date,
     default: Date.now
   },
   calledAt: Date,
   consultationStartedAt: Date,
-  consultationEndedAt: Date,
-  
-  // Offline sync tracking
-  offlineSync: {
-    // Was this token created offline?
+  consultationEndedAt: Date,
+  offlineSync: {
     createdOffline: {
       type: Boolean,
       default: false
-    },
-    // Device ID that created this token
-    deviceId: String,
-    // Local timestamp when created offline
-    localCreatedAt: Date,
-    // When synced to server
-    syncedAt: Date,
-    // Sync status
+    },
+    deviceId: String,
+    localCreatedAt: Date,
+    syncedAt: Date,
     syncStatus: {
       type: String,
       enum: ['pending', 'synced', 'conflict', 'resolved'],
       default: 'synced'
-    },
-    // Conflict resolution details
+    },
     conflictDetails: String
-  },
-  
-  // SMS notifications sent
+  },
   notifications: [{
     type: {
       type: String,
@@ -139,34 +99,24 @@ const offlineQueueTokenSchema = new mongoose.Schema({
       enum: ['sms', 'whatsapp', 'app'],
       default: 'sms'
     }
-  }],
-  
-  // Priority (for emergency cases)
+  }],
   priority: {
     type: String,
     enum: ['normal', 'priority', 'emergency'],
     default: 'normal'
-  },
-  
-  // Notes
-  notes: String,
-  
-  // Consultation duration (for analytics)
-  consultationDuration: Number, // in minutes
+  },
+  notes: String,
+  consultationDuration: Number, 
   
   isActive: {
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
-
-// Compound indexes
+}, { timestamps: true });
 offlineQueueTokenSchema.index({ clinicId: 1, doctorId: 1, tokenDate: 1 });
 offlineQueueTokenSchema.index({ clinicId: 1, tokenDate: 1, status: 1 });
 offlineQueueTokenSchema.index({ patientPhone: 1, tokenDate: 1 });
-offlineQueueTokenSchema.index({ 'offlineSync.syncStatus': 1 });
-
-// Generate next token number
+offlineQueueTokenSchema.index({ 'offlineSync.syncStatus': 1 });
 offlineQueueTokenSchema.statics.generateToken = async function(clinicId, doctorId, prefix = 'A') {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -182,25 +132,19 @@ offlineQueueTokenSchema.statics.generateToken = async function(clinicId, doctorI
   const displayToken = `${prefix}-${nextNumber.toString().padStart(3, '0')}`;
   
   return { tokenNumber: nextNumber, displayToken, tokenPrefix: prefix };
-};
-
-// Create token (handles offline creation)
+};
 offlineQueueTokenSchema.statics.createToken = async function(data, isOffline = false, deviceId = null) {
   const { clinicId, doctorId, tokenPrefix = 'A' } = data;
   const { tokenNumber, displayToken } = await this.generateToken(clinicId, doctorId, tokenPrefix);
   
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  // Calculate queue position
+  today.setHours(0, 0, 0, 0);
   const waitingCount = await this.countDocuments({
     clinicId,
     doctorId,
     tokenDate: { $gte: today },
     status: 'waiting'
-  });
-  
-  // Estimate wait time (assume 10 min per patient)
+  });
   const avgConsultationTime = 10;
   const estimatedWaitTime = waitingCount * avgConsultationTime;
   
@@ -222,9 +166,7 @@ offlineQueueTokenSchema.statics.createToken = async function(data, isOffline = f
   });
   
   return await token.save();
-};
-
-// Sync offline tokens
+};
 offlineQueueTokenSchema.statics.syncOfflineTokens = async function(tokens, deviceId) {
   const results = {
     synced: [],
@@ -233,8 +175,7 @@ offlineQueueTokenSchema.statics.syncOfflineTokens = async function(tokens, devic
   };
   
   for (const tokenData of tokens) {
-    try {
-      // Check for conflicts (same patient, same doctor, same day)
+    try {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -246,17 +187,14 @@ offlineQueueTokenSchema.statics.syncOfflineTokens = async function(tokens, devic
         status: { $nin: ['completed', 'cancelled', 'no_show'] }
       });
       
-      if (existing) {
-        // Conflict - patient already has a token
+      if (existing) {
         results.conflicts.push({
           offlineToken: tokenData,
           existingToken: existing,
           resolution: 'Patient already has an active token'
         });
         continue;
-      }
-      
-      // Create synced token
+      }
       const token = await this.createToken({
         ...tokenData,
         offlineSync: {
@@ -278,9 +216,7 @@ offlineQueueTokenSchema.statics.syncOfflineTokens = async function(tokens, devic
   }
   
   return results;
-};
-
-// Get current queue for display
+};
 offlineQueueTokenSchema.statics.getCurrentQueue = async function(clinicId, doctorId) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -292,9 +228,7 @@ offlineQueueTokenSchema.statics.getCurrentQueue = async function(clinicId, docto
     status: { $in: ['waiting', 'called', 'in_consultation'] }
   })
   .sort({ priority: -1, tokenNumber: 1 })
-  .select('displayToken patientName status queuePosition estimatedWaitTime priority');
-  
-  // Get current token being served
+  .select('displayToken patientName status queuePosition estimatedWaitTime priority');
   const currentToken = queue.find(t => t.status === 'in_consultation');
   const calledToken = queue.find(t => t.status === 'called');
   const waitingTokens = queue.filter(t => t.status === 'waiting');
@@ -303,30 +237,22 @@ offlineQueueTokenSchema.statics.getCurrentQueue = async function(clinicId, docto
     currentToken: currentToken || calledToken,
     waitingQueue: waitingTokens,
     totalWaiting: waitingTokens.length,
-    estimatedWaitTime: waitingTokens.length * 10 // 10 min average
+    estimatedWaitTime: waitingTokens.length * 10 
   };
-};
-
-// Call next patient
+};
 offlineQueueTokenSchema.methods.callPatient = function() {
   this.status = 'called';
-  this.calledAt = new Date();
-  
-  // Add notification
+  this.calledAt = new Date();
   this.notifications.push({
     type: 'your_turn_now',
     sentAt: new Date(),
     status: 'pending'
   });
-};
-
-// Start consultation
+};
 offlineQueueTokenSchema.methods.startConsultation = function() {
   this.status = 'in_consultation';
   this.consultationStartedAt = new Date();
-};
-
-// Complete consultation
+};
 offlineQueueTokenSchema.methods.completeConsultation = function() {
   this.status = 'completed';
   this.consultationEndedAt = new Date();
@@ -336,14 +262,10 @@ offlineQueueTokenSchema.methods.completeConsultation = function() {
       (this.consultationEndedAt - this.consultationStartedAt) / (1000 * 60)
     );
   }
-};
-
-// Mark as no-show
+};
 offlineQueueTokenSchema.methods.markNoShow = function() {
   this.status = 'no_show';
-};
-
-// Skip patient (will be called later)
+};
 offlineQueueTokenSchema.methods.skipPatient = function() {
   this.status = 'skipped';
   this.notifications.push({

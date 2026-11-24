@@ -1,7 +1,4 @@
-/**
- * Staff Doctors Screen - Clinic Doctors List
- * 100% Parity with Web Staff Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -120,7 +117,7 @@ const StaffDoctorsScreen = ({ navigation }) => {
         </View>
       </TouchableOpacity>
       
-      {/* Availability Buttons */}
+      {}
       <View style={styles.availabilityRow}>
         {['Available', 'Busy', 'On Leave'].map((status) => (
           <TouchableOpacity
@@ -141,7 +138,7 @@ const StaffDoctorsScreen = ({ navigation }) => {
         ))}
       </View>
       
-      {/* Action Buttons */}
+      {}
       <View style={styles.actionRow}>
         <TouchableOpacity
           style={[styles.actionBtn, { backgroundColor: '#3B82F620' }]}

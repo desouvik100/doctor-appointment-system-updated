@@ -1,6 +1,4 @@
-/**
- * LocationDisplay - Shows user location with animated detection
- */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -24,9 +22,7 @@ const LocationDisplay = ({ compact = false }) => {
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState(null);
   const [detecting, setDetecting] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Animation values
+  const [error, setError] = useState(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -41,8 +37,7 @@ const LocationDisplay = ({ compact = false }) => {
     requestLocation();
   }, []);
 
-  const startDetectingAnimation = () => {
-    // Pulse animation for the icon
+  const startDetectingAnimation = () => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -58,9 +53,7 @@ const LocationDisplay = ({ compact = false }) => {
           useNativeDriver: true,
         }),
       ])
-    ).start();
-
-    // Rotation animation
+    ).start();
     Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
@@ -68,9 +61,7 @@ const LocationDisplay = ({ compact = false }) => {
         easing: Easing.linear,
         useNativeDriver: true,
       })
-    ).start();
-
-    // Ripple animations
+    ).start();
     startRippleAnimation(ripple1, 0);
     startRippleAnimation(ripple2, 600);
     startRippleAnimation(ripple3, 1200);
@@ -97,14 +88,10 @@ const LocationDisplay = ({ compact = false }) => {
   };
 
   const showLocationFound = () => {
-    setDetecting(false);
-    
-    // Stop pulse and rotate
+    setDetecting(false);
     pulseAnim.stopAnimation();
     rotateAnim.stopAnimation();
-    pulseAnim.setValue(1);
-
-    // Animate in the location info
+    pulseAnim.setValue(1);
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -157,9 +144,7 @@ const LocationDisplay = ({ compact = false }) => {
     Geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        setLocation({ latitude, longitude });
-        
-        // Reverse geocode to get address
+        setLocation({ latitude, longitude });
         try {
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
@@ -180,8 +165,7 @@ const LocationDisplay = ({ compact = false }) => {
               full: `${locality}${locality && city ? ', ' : ''}${city}`,
             });
           }
-        } catch (e) {
-          // Fallback to coordinates
+        } catch (e) {
           setAddress({
             locality: 'Location detected',
             city: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
@@ -242,11 +226,10 @@ const LocationDisplay = ({ compact = false }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}>
-      {detecting ? (
-        // Detecting Animation
+      {detecting ? (
         <View style={styles.detectingContainer}>
           <View style={styles.animatedIconWrapper}>
-            {/* Ripple effects */}
+            {}
             <Animated.View style={[
               styles.ripple,
               { 
@@ -272,7 +255,7 @@ const LocationDisplay = ({ compact = false }) => {
               }
             ]} />
             
-            {/* Animated icon */}
+            {}
             <Animated.View style={[
               styles.iconContainer,
               { 
@@ -296,8 +279,7 @@ const LocationDisplay = ({ compact = false }) => {
             </View>
           </View>
         </View>
-      ) : (
-        // Location Found
+      ) : (
         <Animated.View style={[
           styles.foundContainer,
           {

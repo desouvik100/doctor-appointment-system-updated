@@ -1,12 +1,8 @@
-/**
- * EMR Visit Model
- * Records patient visits and clinical documentation
- */
+
 
 const mongoose = require('mongoose');
 
-const emrVisitSchema = new mongoose.Schema({
-  // References
+const emrVisitSchema = new mongoose.Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -25,9 +21,7 @@ const emrVisitSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true
-  },
-  
-  // Visit details
+  },
   visitDate: {
     type: Date,
     required: true,
@@ -44,31 +38,21 @@ const emrVisitSchema = new mongoose.Schema({
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment'
-  },
-  
-  // Token/Queue number
-  tokenNumber: Number,
-  
-  // Visit status
+  },
+  tokenNumber: Number,
   status: {
     type: String,
     enum: ['waiting', 'in_progress', 'completed', 'cancelled', 'no_show'],
     default: 'waiting'
-  },
-  
-  // Chief complaint
+  },
   chiefComplaint: {
     type: String,
     trim: true
-  },
-  
-  // Systematic history reference
+  },
   systematicHistoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'SystematicHistory'
-  },
-  
-  // Vital signs
+  },
   vitalSigns: {
     bloodPressure: {
       systolic: Number,
@@ -117,20 +101,16 @@ const emrVisitSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }
-  },
-  
-  // Clinical notes (Standard plan)
+  },
   clinicalNotes: {
-    subjective: String,  // Patient's description
-    objective: String,   // Doctor's observations
-    assessment: String,  // Diagnosis/assessment
-    plan: String,        // Treatment plan
+    subjective: String,  
+    objective: String,   
+    assessment: String,  
+    plan: String,        
     additionalNotes: String
-  },
-  
-  // Diagnosis (Standard plan)
+  },
   diagnosis: [{
-    code: String,        // ICD-10 code
+    code: String,        
     description: String,
     type: {
       type: String,
@@ -151,15 +131,11 @@ const emrVisitSchema = new mongoose.Schema({
       ref: 'Doctor'
     },
     updatedAt: Date
-  }],
-  
-  // Prescription reference
+  }],
   prescriptionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prescription'
-  },
-  
-  // Lab orders
+  },
   labOrders: [{
     testName: String,
     testCode: String,
@@ -170,17 +146,13 @@ const emrVisitSchema = new mongoose.Schema({
     },
     notes: String,
     orderedAt: { type: Date, default: Date.now }
-  }],
-  
-  // Procedures performed
+  }],
   procedures: [{
     name: String,
     code: String,
     notes: String,
     performedAt: Date
-  }],
-  
-  // Follow-up
+  }],
   followUp: {
     required: { type: Boolean, default: false },
     scheduledDate: Date,
@@ -189,18 +161,14 @@ const emrVisitSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Appointment'
     }
-  },
-  
-  // Referrals
+  },
   referrals: [{
     specialization: String,
     doctorName: String,
     reason: String,
     urgency: String,
     referredAt: { type: Date, default: Date.now }
-  }],
-  
-  // Attachments (reports, images)
+  }],
   attachments: [{
     name: String,
     type: String,
@@ -210,9 +178,7 @@ const emrVisitSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }
-  }],
-  
-  // Billing
+  }],
   billing: {
     consultationFee: Number,
     procedureFees: Number,
@@ -224,14 +190,10 @@ const emrVisitSchema = new mongoose.Schema({
     },
     paymentMethod: String,
     paidAt: Date
-  },
-  
-  // Timing
+  },
   checkInTime: Date,
   consultationStartTime: Date,
-  consultationEndTime: Date,
-  
-  // Audit fields
+  consultationEndTime: Date,
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -240,9 +202,7 @@ const emrVisitSchema = new mongoose.Schema({
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  },
-  
-  // Soft delete
+  },
   isDeleted: {
     type: Boolean,
     default: false
@@ -256,31 +216,23 @@ const emrVisitSchema = new mongoose.Schema({
   
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 emrVisitSchema.index({ clinicId: 1, visitDate: -1 });
 emrVisitSchema.index({ patientId: 1, visitDate: -1 });
 emrVisitSchema.index({ doctorId: 1, visitDate: -1 });
-emrVisitSchema.index({ clinicId: 1, status: 1, visitDate: -1 });
-
-// Virtual for consultation duration
+emrVisitSchema.index({ clinicId: 1, status: 1, visitDate: -1 });
 emrVisitSchema.virtual('consultationDuration').get(function() {
   if (this.consultationStartTime && this.consultationEndTime) {
-    return Math.round((this.consultationEndTime - this.consultationStartTime) / 60000); // minutes
+    return Math.round((this.consultationEndTime - this.consultationStartTime) / 60000); 
   }
   return null;
-});
-
-// Virtual for wait time
+});
 emrVisitSchema.virtual('waitTime').get(function() {
   if (this.checkInTime && this.consultationStartTime) {
-    return Math.round((this.consultationStartTime - this.checkInTime) / 60000); // minutes
+    return Math.round((this.consultationStartTime - this.checkInTime) / 60000); 
   }
   return null;
-});
-
-// Method to generate visit summary
+});
 emrVisitSchema.methods.generateSummary = function() {
   return {
     visitId: this._id,
@@ -292,9 +244,7 @@ emrVisitSchema.methods.generateSummary = function() {
     hasFollowUp: this.followUp?.required,
     status: this.status
   };
-};
-
-// Static method to get patient visit history
+};
 emrVisitSchema.statics.getPatientHistory = async function(patientId, options = {}) {
   const { clinicId, limit = 20, skip = 0 } = options;
   
@@ -307,9 +257,7 @@ emrVisitSchema.statics.getPatientHistory = async function(patientId, options = {
     .sort({ visitDate: -1 })
     .skip(skip)
     .limit(limit);
-};
-
-// Static method to get today's visits for clinic
+};
 emrVisitSchema.statics.getTodayVisits = async function(clinicId) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -325,9 +273,7 @@ emrVisitSchema.statics.getTodayVisits = async function(clinicId) {
     .populate('patientId', 'name phone age gender')
     .populate('doctorId', 'name specialization')
     .sort({ tokenNumber: 1, visitDate: 1 });
-};
-
-// Include virtuals in JSON
+};
 emrVisitSchema.set('toJSON', { virtuals: true });
 emrVisitSchema.set('toObject', { virtuals: true });
 

@@ -1,13 +1,6 @@
-/**
- 
-/**
- * Audit Service - Centralized logging for critical actions
- * "Who did what, when, from where"
- */
+
 const auditService = {
-  /**
-   * Log an action with full context
-   */
+  
   async log(action, performer, target, details = {}, req = null) {
     const data = {
       action,
@@ -38,9 +31,7 @@ const auditService = {
     };
 
     return AuditLog.log(data);
-  },
-
-  // ==================== APPOINTMENT ACTIONS ====================
+  },
   
   async appointmentCreated(appointment, performer, req) {
     return this.log('appointment_created', performer, {
@@ -90,9 +81,7 @@ const auditService = {
       id: appointment._id,
       name: appointment.patientName
     }, { clinicId: appointment.clinicId }, req);
-  },
-
-  // ==================== DOCTOR ACTIONS ====================
+  },
 
   async doctorAdded(doctor, performer, req) {
     return this.log('doctor_added', performer, {
@@ -143,9 +132,7 @@ const auditService = {
       name: doctor.name,
       email: doctor.email
     }, { clinicId: doctor.clinicId, reason }, req);
-  },
-
-  // ==================== STAFF ACTIONS ====================
+  },
 
   async staffAdded(staff, performer, req) {
     return this.log('staff_added', performer, {
@@ -193,9 +180,7 @@ const auditService = {
       before: { role: oldRole },
       after: { role: newRole }
     }, req);
-  },
-
-  // ==================== PRESCRIPTION ACTIONS ====================
+  },
 
   async prescriptionCreated(prescription, patient, performer, req) {
     return this.log('prescription_created', performer, {
@@ -214,9 +199,7 @@ const auditService = {
       id: prescription._id,
       name: patient.name
     }, { clinicId: prescription.clinicId }, req);
-  },
-
-  // ==================== PAYMENT ACTIONS ====================
+  },
 
   async paymentReceived(payment, performer, req) {
     return this.log('payment_received', performer, {
@@ -250,9 +233,7 @@ const auditService = {
       before: { status: oldStatus },
       after: { status: newStatus }
     }, req);
-  },
-
-  // ==================== CLINIC OPERATIONS ====================
+  },
 
   async clinicDayOpened(clinicId, performer, req) {
     return this.log('clinic_day_opened', performer, {
@@ -267,11 +248,9 @@ const auditService = {
       id: clinicId
     }, {
       clinicId,
-      after: stats // { totalAppointments, completed, cancelled, revenue }
+      after: stats 
     }, req);
-  },
-
-  // ==================== USER MANAGEMENT ====================
+  },
 
   async userSuspended(user, performer, reason, req) {
     return this.log('user_suspended', performer, {
@@ -298,9 +277,7 @@ const auditService = {
       name: user.name,
       email: user.email
     }, { reason }, req);
-  },
-
-  // ==================== SECURITY ====================
+  },
 
   async loginSuccess(user, req) {
     return this.log('login_success', user, {

@@ -1,16 +1,8 @@
-/**
- * Drug Interaction Service
- * Checks for drug-drug interactions, allergy cross-checking, and provides severity information
- * Requirements: 5.1, 5.2, 5.3, 5.4, 5.6, 5.7
- */
 
-const drugInteractionData = require('../data/drugInteractions.json');
 
-// Build lookup maps for efficient searching
+const drugInteractionData = require('../data/drugInteractions.json');
 const drugClassMap = new Map();
-const drugToClassMap = new Map();
-
-// Initialize lookup maps
+const drugToClassMap = new Map();
 function initializeMaps() {
   drugInteractionData.drugClasses.forEach(drugClass => {
     drugClassMap.set(drugClass.id, drugClass);
@@ -22,37 +14,19 @@ function initializeMaps() {
       drugToClassMap.get(normalizedDrug).push(drugClass.id);
     });
   });
-}
-
-// Initialize on module load
+}
 initializeMaps();
 
-/**
- * Normalize drug name for comparison
- * @param {string} drugName - Drug name to normalize
- * @returns {string} Normalized drug name
- */
 function normalizeDrugName(drugName) {
   if (!drugName || typeof drugName !== 'string') return '';
   return drugName.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
 }
 
-/**
- * Get drug classes for a given drug
- * @param {string} drugName - Drug name
- * @returns {Array} Array of drug class IDs
- */
 function getDrugClasses(drugName) {
   const normalized = normalizeDrugName(drugName);
   return drugToClassMap.get(normalized) || [];
 }
 
-/**
- * Check if two drugs interact
- * @param {string} drug1 - First drug name
- * @param {string} drug2 - Second drug name
- * @returns {Object|null} Interaction details or null if no interaction
- */
 function checkDrugPair(drug1, drug2) {
   const normalized1 = normalizeDrugName(drug1);
   const normalized2 = normalizeDrugName(drug2);
@@ -62,23 +36,16 @@ function checkDrugPair(drug1, drug2) {
   }
   
   const classes1 = getDrugClasses(drug1);
-  const classes2 = getDrugClasses(drug2);
-  
-  // Check all interactions
-  for (const interaction of drugInteractionData.interactions) {
-    // Check direct drug-to-drug match
+  const classes2 = getDrugClasses(drug2);
+  for (const interaction of drugInteractionData.interactions) {
     const directMatch = checkDirectMatch(interaction, normalized1, normalized2);
     if (directMatch) {
       return formatInteraction(interaction, drug1, drug2, 'direct');
-    }
-    
-    // Check drug-to-class match
+    }
     const drugClassMatch = checkDrugClassMatch(interaction, normalized1, normalized2, classes1, classes2);
     if (drugClassMatch) {
       return formatInteraction(interaction, drug1, drug2, 'drug-class');
-    }
-    
-    // Check class-to-class match
+    }
     const classMatch = checkClassMatch(interaction, classes1, classes2);
     if (classMatch) {
       return formatInteraction(interaction, drug1, drug2, 'class-class');
@@ -88,9 +55,6 @@ function checkDrugPair(drug1, drug2) {
   return null;
 }
 
-/**
- * Check for direct drug-to-drug match
- */
 function checkDirectMatch(interaction, normalized1, normalized2) {
   const interactionDrug1 = normalizeDrugName(interaction.drug1 || '');
   const interactionDrug2 = normalizeDrugName(interaction.drug2 || '');
@@ -103,28 +67,19 @@ function checkDirectMatch(interaction, normalized1, normalized2) {
   );
 }
 
-/**
- * Check for drug-to-class match
- */
 function checkDrugClassMatch(interaction, normalized1, normalized2, classes1, classes2) {
   const interactionDrug1 = normalizeDrugName(interaction.drug1 || '');
   const interactionDrug2 = normalizeDrugName(interaction.drug2 || '');
   const interactionClass1 = interaction.drug1Class;
-  const interactionClass2 = interaction.drug2Class;
-  
-  // Drug1 matches specific drug, Drug2 matches class
+  const interactionClass2 = interaction.drug2Class;
   if (interactionDrug1 && interactionClass2 && !interactionDrug2) {
     if (interactionDrug1 === normalized1 && classes2.includes(interactionClass2)) return true;
     if (interactionDrug1 === normalized2 && classes1.includes(interactionClass2)) return true;
-  }
-  
-  // Drug2 matches specific drug, Drug1 matches class
+  }
   if (interactionDrug2 && interactionClass1 && !interactionDrug1) {
     if (interactionDrug2 === normalized1 && classes2.includes(interactionClass1)) return true;
     if (interactionDrug2 === normalized2 && classes1.includes(interactionClass1)) return true;
-  }
-  
-  // One specific drug, one class
+  }
   if (interactionDrug1 && interactionClass2) {
     if (interactionDrug1 === normalized1 && classes2.includes(interactionClass2)) return true;
     if (interactionDrug1 === normalized2 && classes1.includes(interactionClass2)) return true;
@@ -138,15 +93,12 @@ function checkDrugClassMatch(interaction, normalized1, normalized2, classes1, cl
   return false;
 }
 
-/**
- * Check for class-to-class match
- */
 function checkClassMatch(interaction, classes1, classes2) {
   const interactionClass1 = interaction.drug1Class;
   const interactionClass2 = interaction.drug2Class;
   
   if (!interactionClass1 || !interactionClass2) return false;
-  if (interaction.drug1 || interaction.drug2) return false; // Has specific drugs, not pure class match
+  if (interaction.drug1 || interaction.drug2) return false; 
   
   return (
     (classes1.includes(interactionClass1) && classes2.includes(interactionClass2)) ||
@@ -154,9 +106,6 @@ function checkClassMatch(interaction, classes1, classes2) {
   );
 }
 
-/**
- * Format interaction result
- */
 function formatInteraction(interaction, drug1, drug2, matchType) {
   const severityInfo = drugInteractionData.severityLevels[interaction.severity];
   
@@ -176,26 +125,17 @@ function formatInteraction(interaction, drug1, drug2, matchType) {
   };
 }
 
-/**
- * Check interactions for a list of drugs
- * @param {Array} drugs - Array of drug names
- * @returns {Array} Array of interactions found
- */
 function checkInteractions(drugs) {
   if (!Array.isArray(drugs) || drugs.length < 2) {
     return [];
   }
   
   const interactions = [];
-  const checkedPairs = new Set();
-  
-  // Check all pairs
+  const checkedPairs = new Set();
   for (let i = 0; i < drugs.length; i++) {
     for (let j = i + 1; j < drugs.length; j++) {
       const drug1 = drugs[i];
-      const drug2 = drugs[j];
-      
-      // Create a consistent key for the pair
+      const drug2 = drugs[j];
       const pairKey = [normalizeDrugName(drug1), normalizeDrugName(drug2)].sort().join('|');
       
       if (checkedPairs.has(pairKey)) continue;
@@ -206,20 +146,12 @@ function checkInteractions(drugs) {
         interactions.push(interaction);
       }
     }
-  }
-  
-  // Sort by severity (most severe first)
+  }
   interactions.sort((a, b) => a.severityLevel - b.severityLevel);
   
   return interactions;
 }
 
-/**
- * Check interactions between new drug and existing medications
- * @param {string} newDrug - New drug being prescribed
- * @param {Array} currentMedications - Array of current medication names
- * @returns {Array} Array of interactions found
- */
 function checkNewDrugInteractions(newDrug, currentMedications) {
   if (!newDrug || !Array.isArray(currentMedications)) {
     return [];
@@ -232,53 +164,28 @@ function checkNewDrugInteractions(newDrug, currentMedications) {
     if (interaction) {
       interactions.push(interaction);
     }
-  }
-  
-  // Sort by severity
+  }
   interactions.sort((a, b) => a.severityLevel - b.severityLevel);
   
   return interactions;
 }
 
-/**
- * Get severity information
- * @param {string} severity - Severity level
- * @returns {Object} Severity details
- */
 function getSeverityInfo(severity) {
   return drugInteractionData.severityLevels[severity] || null;
 }
 
-/**
- * Get all severity levels
- * @returns {Object} All severity levels
- */
 function getAllSeverityLevels() {
   return drugInteractionData.severityLevels;
 }
 
-/**
- * Get drug class information
- * @param {string} classId - Drug class ID
- * @returns {Object|null} Drug class details
- */
 function getDrugClassInfo(classId) {
   return drugClassMap.get(classId) || null;
 }
 
-/**
- * Get all drug classes
- * @returns {Array} All drug classes
- */
 function getAllDrugClasses() {
   return drugInteractionData.drugClasses;
 }
 
-/**
- * Search for drugs by name
- * @param {string} searchTerm - Search term
- * @returns {Array} Matching drugs with their classes
- */
 function searchDrugs(searchTerm) {
   if (!searchTerm || typeof searchTerm !== 'string') {
     return [];
@@ -302,23 +209,15 @@ function searchDrugs(searchTerm) {
   return results;
 }
 
-/**
- * Check if a drug has any known interactions
- * @param {string} drugName - Drug name
- * @returns {boolean} True if drug has known interactions
- */
 function hasKnownInteractions(drugName) {
   const normalized = normalizeDrugName(drugName);
   const classes = getDrugClasses(drugName);
   
-  for (const interaction of drugInteractionData.interactions) {
-    // Check direct drug match
+  for (const interaction of drugInteractionData.interactions) {
     if (normalizeDrugName(interaction.drug1 || '') === normalized ||
         normalizeDrugName(interaction.drug2 || '') === normalized) {
       return true;
-    }
-    
-    // Check class match
+    }
     if (classes.includes(interaction.drug1Class) || classes.includes(interaction.drug2Class)) {
       return true;
     }
@@ -327,10 +226,6 @@ function hasKnownInteractions(drugName) {
   return false;
 }
 
-/**
- * Get interaction statistics
- * @returns {Object} Statistics about the interaction database
- */
 function getInteractionStats() {
   const severityCounts = {};
   
@@ -346,16 +241,8 @@ function getInteractionStats() {
     lastUpdated: drugInteractionData.lastUpdated,
     version: drugInteractionData.version
   };
-}
+}
 
-// ============================================
-// Allergy Cross-Checking Functions
-// Requirements: 5.6, 5.7
-// ============================================
-
-/**
- * Allergy severity levels for cross-checking
- */
 const allergySeverityLevels = {
   severe: {
     level: 1,
@@ -387,12 +274,6 @@ const allergySeverityLevels = {
   }
 };
 
-/**
- * Check if a drug matches an allergy (by name or class)
- * @param {string} drugName - Drug being prescribed
- * @param {Object} allergy - Allergy object with allergen and optional severity
- * @returns {Object|null} Allergy alert or null if no match
- */
 function checkDrugAllergyMatch(drugName, allergy) {
   if (!drugName || !allergy || !allergy.allergen) {
     return null;
@@ -403,25 +284,17 @@ function checkDrugAllergyMatch(drugName, allergy) {
   
   if (!normalizedDrug || !normalizedAllergen) {
     return null;
-  }
-  
-  // Get drug classes for the prescribed drug
-  const drugClasses = getDrugClasses(drugName);
-  
-  // Check for direct drug name match
+  }
+  const drugClasses = getDrugClasses(drugName);
   if (normalizedDrug === normalizedAllergen) {
     return formatAllergyAlert(drugName, allergy, 'direct', 'Exact drug match');
-  }
-  
-  // Check if allergen is a drug class
-  const allergenAsClass = normalizedAllergen.replace(/s$/, ''); // Remove trailing 's' for class matching
+  }
+  const allergenAsClass = normalizedAllergen.replace(/s$/, ''); 
   for (const classId of drugClasses) {
     const drugClass = drugClassMap.get(classId);
     if (drugClass) {
       const normalizedClassName = normalizeDrugName(drugClass.name);
-      const normalizedClassId = normalizeDrugName(classId);
-      
-      // Match class name or ID
+      const normalizedClassId = normalizeDrugName(classId);
       if (normalizedClassName === normalizedAllergen || 
           normalizedClassId === normalizedAllergen ||
           normalizedClassName.includes(allergenAsClass) ||
@@ -429,9 +302,7 @@ function checkDrugAllergyMatch(drugName, allergy) {
         return formatAllergyAlert(drugName, allergy, 'class', `Drug belongs to ${drugClass.name} class`);
       }
     }
-  }
-  
-  // Check if allergen is a drug in the same class as the prescribed drug
+  }
   const allergenClasses = getDrugClasses(allergy.allergen);
   for (const drugClassId of drugClasses) {
     if (allergenClasses.includes(drugClassId)) {
@@ -444,9 +315,6 @@ function checkDrugAllergyMatch(drugName, allergy) {
   return null;
 }
 
-/**
- * Format allergy alert result
- */
 function formatAllergyAlert(drugName, allergy, matchType, matchReason) {
   const severity = allergy.severity?.toLowerCase() || 'unknown';
   const severityInfo = allergySeverityLevels[severity] || allergySeverityLevels.unknown;
@@ -467,12 +335,6 @@ function formatAllergyAlert(drugName, allergy, matchType, matchReason) {
   };
 }
 
-/**
- * Check a single drug against patient allergies
- * @param {string} drugName - Drug being prescribed
- * @param {Array} allergies - Array of patient allergy objects [{allergen, severity, reaction}]
- * @returns {Array} Array of allergy alerts
- */
 function checkDrugAllergies(drugName, allergies) {
   if (!drugName || !Array.isArray(allergies) || allergies.length === 0) {
     return [];
@@ -485,20 +347,12 @@ function checkDrugAllergies(drugName, allergies) {
     if (alert) {
       alerts.push(alert);
     }
-  }
-  
-  // Sort by severity (most severe first)
+  }
   alerts.sort((a, b) => a.severityLevel - b.severityLevel);
   
   return alerts;
 }
 
-/**
- * Check multiple drugs against patient allergies
- * @param {Array} drugs - Array of drug names being prescribed
- * @param {Array} allergies - Array of patient allergy objects
- * @returns {Array} Array of allergy alerts for all drugs
- */
 function checkMultipleDrugAllergies(drugs, allergies) {
   if (!Array.isArray(drugs) || !Array.isArray(allergies)) {
     return [];
@@ -509,30 +363,16 @@ function checkMultipleDrugAllergies(drugs, allergies) {
   for (const drug of drugs) {
     const alerts = checkDrugAllergies(drug, allergies);
     allAlerts.push(...alerts);
-  }
-  
-  // Sort by severity
+  }
   allAlerts.sort((a, b) => a.severityLevel - b.severityLevel);
   
   return allAlerts;
 }
 
-/**
- * Comprehensive prescription safety check
- * Checks both drug interactions and allergies
- * @param {string|Array} newDrugs - New drug(s) being prescribed
- * @param {Array} currentMedications - Current medications
- * @param {Array} allergies - Patient allergies
- * @returns {Object} Combined safety check results
- */
 function checkPrescriptionSafety(newDrugs, currentMedications = [], allergies = []) {
-  const drugsToCheck = Array.isArray(newDrugs) ? newDrugs : [newDrugs];
-  
-  // Check drug-drug interactions
+  const drugsToCheck = Array.isArray(newDrugs) ? newDrugs : [newDrugs];
   const allDrugs = [...drugsToCheck, ...currentMedications];
-  const interactions = checkInteractions(allDrugs);
-  
-  // Filter to only interactions involving new drugs
+  const interactions = checkInteractions(allDrugs);
   const relevantInteractions = interactions.filter(interaction => {
     const normalized1 = normalizeDrugName(interaction.drug1);
     const normalized2 = normalizeDrugName(interaction.drug2);
@@ -540,12 +380,8 @@ function checkPrescriptionSafety(newDrugs, currentMedications = [], allergies = 
       const normalizedNew = normalizeDrugName(drug);
       return normalizedNew === normalized1 || normalizedNew === normalized2;
     });
-  });
-  
-  // Check allergies
-  const allergyAlerts = checkMultipleDrugAllergies(drugsToCheck, allergies);
-  
-  // Determine overall safety status
+  });
+  const allergyAlerts = checkMultipleDrugAllergies(drugsToCheck, allergies);
   const hasContraindicated = relevantInteractions.some(i => i.severity === 'contraindicated');
   const hasSevereAllergy = allergyAlerts.some(a => a.severity === 'severe');
   const hasMajorIssue = relevantInteractions.some(i => i.severity === 'major') || 
@@ -570,9 +406,6 @@ function checkPrescriptionSafety(newDrugs, currentMedications = [], allergies = 
   };
 }
 
-/**
- * Generate a human-readable safety summary
- */
 function generateSafetySummary(status, interactions, allergyAlerts) {
   const parts = [];
   
@@ -610,19 +443,10 @@ function generateSafetySummary(status, interactions, allergyAlerts) {
   return parts.join(', ') + '.';
 }
 
-/**
- * Get allergy severity information
- * @param {string} severity - Severity level
- * @returns {Object} Severity details
- */
 function getAllergySeverityInfo(severity) {
   return allergySeverityLevels[severity?.toLowerCase()] || allergySeverityLevels.unknown;
 }
 
-/**
- * Get all allergy severity levels
- * @returns {Object} All allergy severity levels
- */
 function getAllAllergySeverityLevels() {
   return allergySeverityLevels;
 }
@@ -639,8 +463,7 @@ module.exports = {
   searchDrugs,
   hasKnownInteractions,
   getInteractionStats,
-  normalizeDrugName,
-  // Allergy cross-checking exports
+  normalizeDrugName,
   checkDrugAllergies,
   checkMultipleDrugAllergies,
   checkDrugAllergyMatch,

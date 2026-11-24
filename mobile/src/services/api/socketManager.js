@@ -1,95 +1,54 @@
-/**
- * Socket.IO Manager for Mobile
- * 
- * Manages WebSocket connections with JWT authentication,
- * exponential backoff reconnection, and room subscriptions.
- * 
- * @module socketManager
- */
+
 
 import { io } from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState } from 'react-native';
-import { API_URL } from '../../config/env';
-
-// Socket events - mirrors backend/config/socketConfig.js
-export const SOCKET_EVENTS = {
-  // Connection events
+import { API_URL } from '../../config/env';
+export const SOCKET_EVENTS = {
   CONNECTION: 'connection',
   DISCONNECT: 'disconnect',
   ERROR: 'error',
-  CONNECT_ERROR: 'connect_error',
-  
-  // Authentication events
+  CONNECT_ERROR: 'connect_error',
   AUTHENTICATE: 'authenticate',
   AUTHENTICATED: 'authenticated',
-  AUTH_ERROR: 'auth_error',
-  
-  // Room events
+  AUTH_ERROR: 'auth_error',
   JOIN_ROOM: 'join_room',
   LEAVE_ROOM: 'leave_room',
   ROOM_JOINED: 'room_joined',
-  ROOM_LEFT: 'room_left',
-  
-  // Appointment events
+  ROOM_LEFT: 'room_left',
   APPOINTMENT_CREATED: 'appointment:created',
   APPOINTMENT_UPDATED: 'appointment:updated',
   APPOINTMENT_CANCELLED: 'appointment:cancelled',
-  APPOINTMENT_STATUS_CHANGED: 'appointment:status_changed',
-  
-  // Wallet events
+  APPOINTMENT_STATUS_CHANGED: 'appointment:status_changed',
   WALLET_TRANSACTION: 'wallet:transaction',
-  WALLET_BALANCE_UPDATED: 'wallet:balance_updated',
-  
-  // Prescription events
+  WALLET_BALANCE_UPDATED: 'wallet:balance_updated',
   PRESCRIPTION_CREATED: 'prescription:created',
-  PRESCRIPTION_UPDATED: 'prescription:updated',
-  
-  // Notification events
+  PRESCRIPTION_UPDATED: 'prescription:updated',
   NOTIFICATION_NEW: 'notification:new',
-  NOTIFICATION_READ: 'notification:read',
-  
-  // Queue events
+  NOTIFICATION_READ: 'notification:read',
   QUEUE_UPDATED: 'queue:updated',
   QUEUE_POSITION_CHANGED: 'queue:position_changed',
-  QUEUE_YOUR_TURN: 'queue:your_turn',
-  
-  // Chat events
+  QUEUE_YOUR_TURN: 'queue:your_turn',
   CHAT_MESSAGE: 'chat:message',
-  CHAT_TYPING: 'chat:typing',
-  
-  // Lab report events
-  LAB_REPORT_READY: 'lab_report:ready',
-  
-  // Imaging events
+  CHAT_TYPING: 'chat:typing',
+  LAB_REPORT_READY: 'lab_report:ready',
   IMAGING_REPORT_READY: 'imaging:report_ready',
-};
-
-// Reconnection configuration with exponential backoff
+};
 const RECONNECT_CONFIG = {
-  maxAttempts: 15,         // More attempts for mobile networks
-  initialDelay: 1000,      // 1 second
-  maxDelay: 30000,         // 30 seconds max
+  maxAttempts: 15,         
+  initialDelay: 1000,      
+  maxDelay: 30000,         
   multiplier: 1.5,
-};
-
-// Heartbeat configuration to keep connection alive
+};
 const HEARTBEAT_CONFIG = {
-  interval: 25000,         // Send ping every 25 seconds
-  timeout: 10000,          // Wait 10 seconds for pong
+  interval: 25000,         
+  timeout: 10000,          
 };
 
-/**
- * Calculate reconnection delay with exponential backoff
- * @param {number} attempt - Current attempt number
- * @returns {number} Delay in milliseconds
- */
 const getReconnectDelay = (attempt) => {
   const delay = RECONNECT_CONFIG.initialDelay * Math.pow(RECONNECT_CONFIG.multiplier, attempt);
   return Math.min(delay, RECONNECT_CONFIG.maxDelay);
-};
-
-// Extract base URL from API_URL (remove /api suffix)
+};
 const getSocketUrl = () => {
   const baseUrl = API_URL.replace(/\/api\/?$/, '');
   console.log('🔌 [Socket] URL:', baseUrl);
@@ -113,16 +72,10 @@ class SocketManager {
     this.userType = null;
     this.clinicId = null;
     this.authToken = null;
-    this.isAuthPaused = false;
-    // Listeners notified when a fresh token is installed via updateToken()
+    this.isAuthPaused = false;
     this.tokenUpdateListeners = new Set();
   }
 
-  /**
-   * Initialize socket connection with JWT token
-   * @param {string} token - JWT authentication token
-   * @returns {Promise<boolean>} Connection success
-   */
   async connect(token) {
     if (this.isConnecting) {
       console.log('🔌 [Socket] Connection already in progress');
@@ -132,9 +85,7 @@ class SocketManager {
     if (this.isConnected && this.socket?.connected) {
       console.log('🔌 [Socket] Already connected');
       return true;
-    }
-
-    // Get token from storage if not provided
+    }
     const authToken = token || await AsyncStorage.getItem('token');
     if (!authToken) {
       console.log('🔌 [Socket] No auth token available');
@@ -154,35 +105,26 @@ class SocketManager {
           try {
             console.log('🔌 [Socket] Disconnecting existing socket before creating new one');
             this.socket.disconnect();
-          } catch (e) {
-            // Ignore Hermes non-configurable property errors
+          } catch (e) {
           }
         }
 
         this.socket = io(socketUrl, {
           auth: { token: authToken },
-          transports: ['websocket', 'polling'],
-          // Disable Socket.io's own reconnection engine.
-          // We own the entire backoff schedule via _handleReconnect()
-          // to prevent uncontrolled 1000ms polling loops.
+          transports: ['websocket', 'polling'],
           reconnection: false,
           timeout: 20000,
           forceNew: true,
           pingInterval: 25000,
           pingTimeout: 10000,
-        });
-
-        // Single-resolution guard — ensures the Promise resolves only once
-        // regardless of how many events fire on the same connection attempt.
+        });
         let settled = false;
         const settle = (value) => {
           if (!settled) {
             settled = true;
             resolve(value);
           }
-        };
-
-        // Connection successful
+        };
         this.socket.on('connect', () => {
           console.log('🔌 [Socket] Connected:', this.socket.id);
           this.isConnected = true;
@@ -192,27 +134,18 @@ class SocketManager {
           this._startHeartbeat();
           this._setupAppStateListener();
           settle(true);
-        });
-
-        // Authentication success
+        });
         this.socket.on(SOCKET_EVENTS.AUTHENTICATED, (data) => {
           console.log('🔌 [Socket] Authenticated:', data);
           this.userId = data.userId;
           this.userType = data.userType;
-          this.clinicId = data.clinicId;
-          
-          // Rejoin previously subscribed rooms
+          this.clinicId = data.clinicId;
           this.subscribedRooms.forEach(roomId => {
             this.socket.emit(SOCKET_EVENTS.JOIN_ROOM, roomId);
-          });
-          
-          // Emit to listeners
+          });
           this._emitToListeners(SOCKET_EVENTS.AUTHENTICATED, data);
-        });
-
-        // Connection error
-        this.socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {
-          // Only log in dev mode to avoid spamming console
+        });
+        this.socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {
           if (__DEV__) {
             console.log('🔌 [Socket] Connection error:', error.message);
           }
@@ -231,22 +164,16 @@ class SocketManager {
             this._handleReconnect();
           }
           settle(false);
-        });
-
-        // Disconnection
+        });
         this.socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
           console.log('🔌 [Socket] Disconnected:', reason);
           this.isConnected = false;
           this._stopHeartbeat();
-          this._emitToListeners(SOCKET_EVENTS.DISCONNECT, { reason });
-          
-          // Auto-reconnect unless intentional disconnect
+          this._emitToListeners(SOCKET_EVENTS.DISCONNECT, { reason });
           if (reason !== 'io client disconnect') {
             this._handleReconnect();
           }
-        });
-
-        // Handle reconnect events from socket.io
+        });
         this.socket.on('reconnect', (attemptNumber) => {
           console.log('🔌 [Socket] Reconnected after', attemptNumber, 'attempts');
           this.isConnected = true;
@@ -260,17 +187,13 @@ class SocketManager {
         this.socket.on('reconnect_failed', () => {
           console.log('🔌 [Socket] Reconnect failed, trying manual reconnect');
           this._handleReconnect();
-        });
-
-        // Error handling
+        });
         this.socket.on(SOCKET_EVENTS.ERROR, (error) => {
           if (__DEV__) {
             console.log('🔌 [Socket] Error:', error);
           }
           this._emitToListeners(SOCKET_EVENTS.ERROR, error);
-        });
-
-        // Room events
+        });
         this.socket.on(SOCKET_EVENTS.ROOM_JOINED, (data) => {
           console.log('🔌 [Socket] Joined room:', data.roomId);
           this._emitToListeners(SOCKET_EVENTS.ROOM_JOINED, data);
@@ -279,9 +202,7 @@ class SocketManager {
         this.socket.on(SOCKET_EVENTS.ROOM_LEFT, (data) => {
           console.log('🔌 [Socket] Left room:', data.roomId);
           this._emitToListeners(SOCKET_EVENTS.ROOM_LEFT, data);
-        });
-
-        // Setup event forwarding for all business events
+        });
         this._setupEventForwarding();
 
       } catch (error) {
@@ -292,10 +213,6 @@ class SocketManager {
     });
   }
 
-  /**
-   * Setup forwarding for all business events to registered listeners
-   * @private
-   */
   _setupEventForwarding() {
     const businessEvents = [
       SOCKET_EVENTS.APPOINTMENT_CREATED,
@@ -325,9 +242,6 @@ class SocketManager {
     });
   }
 
-  /**
-   * Disconnect socket
-   */
   disconnect() {
     console.log('🔌 [Socket] Disconnecting...');
     this._clearReconnectTimer();
@@ -337,8 +251,7 @@ class SocketManager {
     if (this.socket) {
       try {
         this.socket.disconnect();
-      } catch (error) {
-        // Ignore "property is not configurable" error from Hermes
+      } catch (error) {
         if (!error.message?.includes('not configurable')) {
           console.log('🔌 [Socket] Disconnect error:', error.message);
         }
@@ -356,19 +269,11 @@ class SocketManager {
     this.authToken = null;
   }
 
-  /**
-   * Subscribe to a socket event
-   * @param {string} event - Event name
-   * @param {Function} callback - Event handler
-   * @returns {Function} Unsubscribe function
-   */
   subscribe(event, callback) {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    this.eventListeners.get(event).add(callback);
-
-    // Return unsubscribe function
+    this.eventListeners.get(event).add(callback);
     return () => {
       const listeners = this.eventListeners.get(event);
       if (listeners) {
@@ -377,11 +282,6 @@ class SocketManager {
     };
   }
 
-  /**
-   * Unsubscribe from a socket event
-   * @param {string} event - Event name
-   * @param {Function} [callback] - Specific callback to remove (removes all if not provided)
-   */
   unsubscribe(event, callback) {
     if (callback) {
       const listeners = this.eventListeners.get(event);
@@ -393,10 +293,6 @@ class SocketManager {
     }
   }
 
-  /**
-   * Join a room
-   * @param {string} roomId - Room identifier
-   */
   joinRoom(roomId) {
     this.subscribedRooms.add(roomId);
     if (this.isConnected && this.socket) {
@@ -404,10 +300,6 @@ class SocketManager {
     }
   }
 
-  /**
-   * Leave a room
-   * @param {string} roomId - Room identifier
-   */
   leaveRoom(roomId) {
     this.subscribedRooms.delete(roomId);
     if (this.isConnected && this.socket) {
@@ -415,11 +307,6 @@ class SocketManager {
     }
   }
 
-  /**
-   * Emit an event to the server
-   * @param {string} event - Event name
-   * @param {any} data - Event data
-   */
   emit(event, data) {
     if (this.isConnected && this.socket) {
       this.socket.emit(event, data);
@@ -428,10 +315,6 @@ class SocketManager {
     }
   }
 
-  /**
-   * Get connection status
-   * @returns {Object} Connection status
-   */
   getStatus() {
     return {
       isConnected: this.isConnected,
@@ -445,12 +328,6 @@ class SocketManager {
     };
   }
 
-  /**
-   * Update auth token and resume reconnection if paused.
-   * Also notifies all registered tokenUpdateListeners so dependent subsystems
-   * (e.g. background sync hooks) can react immediately.
-   * @param {string} token - Fresh JWT token
-   */
   updateToken(token) {
     if (!token) return;
     console.log('🔌 [Socket] Updating auth token and resetting paused state');
@@ -462,35 +339,21 @@ class SocketManager {
     }
     if (!this.isConnected && !this.isConnecting) {
       this.connect(token);
-    }
-    // Notify all registered listeners that a fresh token is available
+    }
     this.tokenUpdateListeners.forEach((cb) => {
-      try { cb(token); } catch (e) { /* listener errors must not block others */ }
+      try { cb(token); } catch (e) {  }
     });
   }
 
-  /**
-   * Register a listener that fires whenever the socket receives a new token.
-   * @param {Function} callback - Receives (token: string)
-   * @returns {Function} Unsubscribe function
-   */
   onTokenUpdated(callback) {
     this.tokenUpdateListeners.add(callback);
     return () => this.tokenUpdateListeners.delete(callback);
   }
 
-  /**
-   * Remove a previously registered token-update listener.
-   * @param {Function} callback
-   */
   offTokenUpdated(callback) {
     this.tokenUpdateListeners.delete(callback);
   }
 
-  /**
-   * Emit event to all registered listeners
-   * @private
-   */
   _emitToListeners(event, data) {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
@@ -504,10 +367,6 @@ class SocketManager {
     }
   }
 
-  /**
-   * Handle reconnection with exponential backoff
-   * @private
-   */
   _handleReconnect() {
     if (this.isConnecting) {
       return;
@@ -520,7 +379,7 @@ class SocketManager {
 
     if (this.reconnectAttempts >= RECONNECT_CONFIG.maxAttempts) {
       console.log('🔌 [Socket] Max reconnect attempts reached, will retry on app foreground');
-      this.reconnectAttempts = 0; // Reset for next foreground event
+      this.reconnectAttempts = 0; 
       return;
     }
 
@@ -538,10 +397,6 @@ class SocketManager {
     }, delay);
   }
 
-  /**
-   * Clear reconnection timer
-   * @private
-   */
   _clearReconnectTimer() {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -549,16 +404,11 @@ class SocketManager {
     }
   }
 
-  /**
-   * Start heartbeat to keep connection alive
-   * @private
-   */
   _startHeartbeat() {
     this._stopHeartbeat();
     
     this.heartbeatTimer = setInterval(() => {
-      if (this.isConnected && this.socket) {
-        // Socket.io handles ping/pong automatically, but we can check connection
+      if (this.isConnected && this.socket) {
         if (!this.socket.connected) {
           console.log('🔌 [Socket] Heartbeat detected disconnection');
           this.isConnected = false;
@@ -569,10 +419,6 @@ class SocketManager {
     }, HEARTBEAT_CONFIG.interval);
   }
 
-  /**
-   * Stop heartbeat timer
-   * @private
-   */
   _stopHeartbeat() {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
@@ -584,10 +430,6 @@ class SocketManager {
     }
   }
 
-  /**
-   * Setup app state listener for reconnection on foreground
-   * @private
-   */
   _setupAppStateListener() {
     if (this.appStateSubscription) return;
 
@@ -595,8 +437,7 @@ class SocketManager {
       if (this.lastAppState.match(/inactive|background/) && nextAppState === 'active') {
         if (__DEV__) {
           console.log('🔌 [Socket] App came to foreground');
-        }
-        // Do not attempt reconnect while waiting for a fresh auth token
+        }
         if (!this.isAuthPaused && !this.isConnected && !this.isConnecting) {
           await this.connect();
         }
@@ -605,19 +446,13 @@ class SocketManager {
     });
   }
 
-  /**
-   * Remove app state listener
-   * @private
-   */
   _removeAppStateListener() {
     if (this.appStateSubscription) {
       this.appStateSubscription.remove();
       this.appStateSubscription = null;
     }
   }
-}
-
-// Singleton instance
+}
 const socketManager = new SocketManager();
 
 export default socketManager;

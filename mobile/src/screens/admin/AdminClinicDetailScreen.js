@@ -1,7 +1,4 @@
-/**
- * Admin Clinic Detail Screen - Clinic Profile & Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -66,7 +63,6 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
       }},
     ]);
   };
-
 
   const handleDeactivate = async () => {
     Alert.alert('Deactivate Clinic', 'This will deactivate the clinic.', [
@@ -203,7 +199,6 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

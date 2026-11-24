@@ -34,7 +34,7 @@ const HealthReportsScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'reports', 'vitals'
+  const [activeTab, setActiveTab] = useState('all'); 
   
   const [reports, setReports] = useState([]);
   const [vitals, setVitals] = useState([]);
@@ -44,10 +44,8 @@ const HealthReportsScreen = ({ navigation }) => {
     lastCheckup: null,
   });
 
-  // Animation opacity values for list items
   const [listAnimations, setListAnimations] = useState([]);
-  
-  // Preview modal/bottom sheet state
+
   const [selectedReport, setSelectedReport] = useState(null);
   const [previewVisible, setPreviewVisible] = useState(false);
 
@@ -58,10 +56,9 @@ const HealthReportsScreen = ({ navigation }) => {
     if (!userId) return;
 
     try {
-      // Fetch lab reports
+
       const reportsRes = await apiClient.get(`/lab-reports/patient/${userId}`).catch(() => ({ data: { reports: [] } }));
-      
-      // Fetch vitals history
+
       const vitalsRes = await apiClient.get(`/emr/patients/${userId}/vitals/trends`).catch(() => ({ data: { data: [] } }));
 
       const reportsList = reportsRes.data?.reports || reportsRes.data || [];
@@ -85,7 +82,6 @@ const HealthReportsScreen = ({ navigation }) => {
     fetchData();
   }, [fetchData]);
 
-  // Handle staggered list item animation
   useEffect(() => {
     if (!loading) {
       const itemsCount = getFilteredItems().length;
@@ -135,7 +131,6 @@ const HealthReportsScreen = ({ navigation }) => {
     }
   };
 
-  // Get filtered mixed timeline items
   const getFilteredItems = () => {
     const formattedReports = reports.map(r => ({
       ...r,
@@ -157,7 +152,6 @@ const HealthReportsScreen = ({ navigation }) => {
       merged = formattedVitals;
     }
 
-    // Sort descending by date
     return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
   };
 
@@ -262,7 +256,7 @@ const HealthReportsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
@@ -278,7 +272,7 @@ const HealthReportsScreen = ({ navigation }) => {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {/* Stats Banner */}
+        {}
         <LinearGradient
           colors={isDarkMode ? ['#059669', '#064E3B'] : ['#10B981', '#059669']}
           start={{ x: 0, y: 0 }}
@@ -305,7 +299,7 @@ const HealthReportsScreen = ({ navigation }) => {
           </View>
         </LinearGradient>
 
-        {/* Reusable Filter Chips */}
+        {}
         <View style={styles.chipsWrapper}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
             <FilterChip
@@ -329,7 +323,7 @@ const HealthReportsScreen = ({ navigation }) => {
           </ScrollView>
         </View>
 
-        {/* Timeline Timeline List */}
+        {}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Medical History Timeline</Text>
         {filteredItems.length > 0 ? (
           <View style={styles.timelineContainer}>
@@ -349,7 +343,7 @@ const HealthReportsScreen = ({ navigation }) => {
 
               return (
                 <View key={item._id || index} style={styles.timelineItem}>
-                  {/* Left node date line */}
+                  {}
                   <View style={styles.timelineLeftNode}>
                     <View style={styles.timelineBadge}>
                       <Text style={[styles.timelineDateDay, { color: colors.textPrimary }]}>
@@ -364,7 +358,7 @@ const HealthReportsScreen = ({ navigation }) => {
                     )}
                   </View>
 
-                  {/* Right card content */}
+                  {}
                   <View style={styles.timelineContentRight}>
                     {item.itemType === 'report' ? renderReportCard(item, animStyle) : renderVitalCard(item, animStyle)}
                   </View>
@@ -390,7 +384,7 @@ const HealthReportsScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Quick Actions */}
+        {}
         <View style={styles.quickActionsContainer}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: spacing.md }]}>Quick Actions</Text>
           <QuickActionsGrid
@@ -406,7 +400,7 @@ const HealthReportsScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Reusable BottomSheet for Report Details Preview */}
+      {}
       <BottomSheet
         visible={previewVisible}
         onClose={() => setPreviewVisible(false)}
@@ -504,8 +498,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   chipsWrapper: { marginVertical: spacing.sm, marginBottom: spacing.lg },
   chipsRow: { flexDirection: 'row', paddingVertical: 4 },
   sectionTitle: { ...typography.headlineSmall, fontWeight: '850', marginVertical: spacing.md },
-  
-  // Timeline layout
+
   timelineContainer: { marginTop: spacing.sm, paddingLeft: 4 },
   timelineItem: { flexDirection: 'row', minHeight: 120 },
   timelineLeftNode: { width: 60, alignItems: 'center' },
@@ -523,8 +516,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   timelineDateMonth: { fontSize: 10, fontWeight: '750', textTransform: 'uppercase', marginTop: 1 },
   timelineVerticalLine: { width: 2, flex: 1, marginVertical: spacing.xs },
   timelineContentRight: { flex: 1, paddingLeft: spacing.lg, paddingBottom: spacing.lg },
-  
-  // Timeline Cards
+
   timelineCard: { padding: spacing.lg, borderRadius: borderRadius.xl, borderWidth: 1, borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', ...shadows.sm },
   reportCard: {},
   vitalCard: {},
@@ -539,25 +531,21 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   reportSummaryText: { ...typography.bodySmall, fontSize: 12, lineHeight: 18, marginBottom: spacing.md },
   cardFooter: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', paddingTop: spacing.md },
   footerLink: { ...typography.labelMedium, fontWeight: '750' },
-  
-  // Vitals details
+
   vitalsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm },
   vitalIndicator: { alignItems: 'center', flex: 1 },
   indicatorVal: { ...typography.headlineSmall, fontSize: 16, fontWeight: '800' },
   indicatorLabel: { ...typography.labelSmall, fontSize: 10, marginTop: 2 },
-  
-  // Empty State
+
   emptyState: { alignItems: 'center', paddingVertical: spacing.huge },
   emptyIcon: { fontSize: 60, marginBottom: spacing.lg },
   emptyTitle: { ...typography.headlineSmall, fontWeight: '800', marginBottom: spacing.sm },
   emptyDesc: { ...typography.bodyMedium, textAlign: 'center', marginBottom: spacing.lg },
   bookBtn: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderRadius: borderRadius.full },
   bookBtnText: { ...typography.button, color: '#fff', fontWeight: '850' },
-  
-  // Quick actions
+
   quickActionsContainer: { marginTop: spacing.xl },
 
-  // BottomSheet Preview Container
   previewContainer: { flex: 1, paddingVertical: spacing.sm },
   previewInfoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1 },
   previewLabel: { ...typography.labelSmall, fontSize: 11, marginBottom: 2 },

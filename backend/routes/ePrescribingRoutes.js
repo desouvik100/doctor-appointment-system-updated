@@ -1,7 +1,4 @@
-/**
- * E-Prescribing Routes
- * Electronic prescription management and pharmacy integration
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -9,10 +6,6 @@ const { verifyToken } = require('../middleware/auth');
 const ePrescribingService = require('../services/ePrescribingService');
 const drugInteractionService = require('../services/drugInteractionService');
 
-/**
- * Create a new e-prescription
- * POST /api/e-prescribe/create
- */
 router.post('/create', verifyToken, async (req, res) => {
   try {
     const prescriptionData = {
@@ -35,15 +28,9 @@ router.post('/create', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Validate prescription before submission
- * POST /api/e-prescribe/validate
- */
 router.post('/validate', verifyToken, async (req, res) => {
   try {
-    const validation = ePrescribingService.validatePrescription(req.body);
-
-    // Also check for drug interactions
+    const validation = ePrescribingService.validatePrescription(req.body);
     const medications = req.body.medications || [];
     const drugNames = medications.map(m => m.drugName).filter(Boolean);
     const currentMeds = req.body.patient?.currentMedications || [];
@@ -56,9 +43,7 @@ router.post('/validate', verifyToken, async (req, res) => {
         currentMeds.map(m => m.name || m.drugName),
         allergies
       );
-    }
-
-    // Check therapeutic duplicates
+    }
     const duplicates = ePrescribingService.checkTherapeuticDuplicates(
       medications,
       currentMeds
@@ -78,10 +63,6 @@ router.post('/validate', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Transmit prescription to pharmacy
- * POST /api/e-prescribe/transmit
- */
 router.post('/transmit', verifyToken, async (req, res) => {
   try {
     const { prescription } = req.body;
@@ -107,10 +88,6 @@ router.post('/transmit', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Cancel a prescription
- * POST /api/e-prescribe/cancel
- */
 router.post('/cancel', verifyToken, async (req, res) => {
   try {
     const { prescription, reason } = req.body;
@@ -140,10 +117,6 @@ router.post('/cancel', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Request prescription refill
- * POST /api/e-prescribe/refill
- */
 router.post('/refill', verifyToken, async (req, res) => {
   try {
     const { prescription } = req.body;
@@ -166,10 +139,6 @@ router.post('/refill', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Check drug formulary coverage
- * POST /api/e-prescribe/formulary
- */
 router.post('/formulary', verifyToken, async (req, res) => {
   try {
     const { drugName, rxcui, ndc, insurancePlan } = req.body;
@@ -200,10 +169,6 @@ router.post('/formulary', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Search for pharmacies
- * GET /api/e-prescribe/pharmacies
- */
 router.get('/pharmacies', verifyToken, async (req, res) => {
   try {
     const { zipCode, radius, name, type } = req.query;
@@ -228,10 +193,6 @@ router.get('/pharmacies', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get frequency codes reference
- * GET /api/e-prescribe/frequency-codes
- */
 router.get('/frequency-codes', (req, res) => {
   res.json({
     success: true,
@@ -241,10 +202,6 @@ router.get('/frequency-codes', (req, res) => {
   });
 });
 
-/**
- * Get prescription status options
- * GET /api/e-prescribe/statuses
- */
 router.get('/statuses', (req, res) => {
   res.json({
     success: true,

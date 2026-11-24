@@ -1,13 +1,9 @@
-/**
- * Insurance & TPA Integration Routes
- */
+
 
 const express = require('express');
 const router = express.Router();
 const InsuranceClaim = require('../models/InsuranceClaim');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// Create new claim
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 router.post('/claims', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const claim = new InsuranceClaim({ ...req.body, createdBy: req.user?.userId });
@@ -16,9 +12,7 @@ router.post('/claims', verifyTokenWithRole(['admin', 'clinic', 'receptionist']),
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all claims for clinic
+});
 router.get('/claims/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { status, insuranceProvider, claimType, page = 1, limit = 20 } = req.query;
@@ -38,9 +32,7 @@ router.get('/claims/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get claim by ID
+});
 router.get('/claims/:id', verifyToken, async (req, res) => {
   try {
     const claim = await InsuranceClaim.findById(req.params.id)
@@ -52,9 +44,7 @@ router.get('/claims/:id', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update claim
+});
 router.put('/claims/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const claim = await InsuranceClaim.findByIdAndUpdate(
@@ -66,9 +56,7 @@ router.put('/claims/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist'
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Submit claim
+});
 router.post('/claims/:id/submit', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const claim = await InsuranceClaim.findByIdAndUpdate(
@@ -80,9 +68,7 @@ router.post('/claims/:id/submit', verifyTokenWithRole(['admin', 'clinic', 'recep
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Pre-authorization request
+});
 router.post('/claims/:id/pre-auth', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { preAuthAmount } = req.body;
@@ -100,9 +86,7 @@ router.post('/claims/:id/pre-auth', verifyTokenWithRole(['admin', 'clinic', 'rec
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Add query response
+});
 router.post('/claims/:id/query-response', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { queryIndex, response } = req.body;
@@ -117,9 +101,7 @@ router.post('/claims/:id/query-response', verifyTokenWithRole(['admin', 'clinic'
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get claim statistics
+});
 router.get('/stats/:clinicId', verifyToken, async (req, res) => {
   try {
     const stats = await InsuranceClaim.aggregate([
@@ -147,13 +129,10 @@ router.get('/stats/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Verify insurance eligibility (mock)
+});
 router.post('/verify-eligibility', verifyToken, async (req, res) => {
   try {
-    const { policyNumber, insuranceProvider, patientName, dob } = req.body;
-    // In production, this would call the insurance provider's API
+    const { policyNumber, insuranceProvider, patientName, dob } = req.body;
     const eligibility = {
       isEligible: true,
       policyNumber,

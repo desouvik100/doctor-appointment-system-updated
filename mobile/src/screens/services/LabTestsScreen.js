@@ -1,6 +1,4 @@
-/**
- * Lab Tests Screen - With API integration
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -33,9 +31,7 @@ const LabTestsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [popularTests, setPopularTests] = useState([]);
   const [healthPackages, setHealthPackages] = useState([]);
-  const [cartModalVisible, setCartModalVisible] = useState(false);
-
-  // Default data as fallback
+  const [cartModalVisible, setCartModalVisible] = useState(false);
   const defaultTests = [
     { _id: '1', name: 'Complete Blood Count (CBC)', price: 299, originalPrice: 450, discount: 33, icon: '🩸', category: 'blood' },
     { _id: '2', name: 'Thyroid Profile (T3, T4, TSH)', price: 499, originalPrice: 800, discount: 38, icon: '🦋', category: 'hormone' },
@@ -81,11 +77,8 @@ const LabTestsScreen = ({ navigation }) => {
   ];
 
   const fetchLabTests = useCallback(async () => {
-    try {
-      // Use EMR catalog endpoint — /lab-tests/available doesn't exist
-      const testsRes = await apiClient.get('/emr/lab-tests/catalog').catch(() => ({ data: null }));
-
-      // Map catalog tests to our format if available
+    try {
+      const testsRes = await apiClient.get('/emr/lab-tests/catalog').catch(() => ({ data: null }));
       const catalogTests = testsRes.data?.catalog?.tests;
       if (Array.isArray(catalogTests) && catalogTests.length > 0) {
         const mapped = catalogTests.slice(0, 20).map((t, i) => ({
@@ -221,7 +214,7 @@ const LabTestsScreen = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
         }
       >
-        {/* Banner */}
+        {}
         <LinearGradient
           colors={['#10B981', '#059669']}
           start={{ x: 0, y: 0 }}
@@ -238,7 +231,7 @@ const LabTestsScreen = ({ navigation }) => {
           <Text style={styles.bannerEmoji}>🧪</Text>
         </LinearGradient>
 
-        {/* Health Packages */}
+        {}
         {!searchQuery && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -292,7 +285,7 @@ const LabTestsScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Popular Tests */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{searchQuery ? 'Search Results' : 'Popular Tests'}</Text>
           
@@ -332,7 +325,7 @@ const LabTestsScreen = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      {/* Cart Footer */}
+      {}
       {cart.length > 0 && (
         <View style={styles.cartFooter}>
           <View style={styles.cartInfo}>
@@ -353,7 +346,7 @@ const LabTestsScreen = ({ navigation }) => {
         </View>
       )}
 
-      {/* Cart Modal */}
+      {}
       <Modal visible={cartModalVisible} transparent animationType="slide" onRequestClose={() => setCartModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
@@ -420,7 +413,6 @@ const LabTestsScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
@@ -491,8 +483,7 @@ const makeStyles = (colors) => StyleSheet.create({
   checkoutBtn: { borderRadius: borderRadius.lg, overflow: 'hidden' },
   checkoutBtnGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xxl, paddingVertical: spacing.md },
   checkoutBtnText: { ...typography.button, color: colors.textInverse, marginRight: spacing.sm },
-  checkoutArrow: { fontSize: 18, color: colors.textInverse },
-  // Cart Modal
+  checkoutArrow: { fontSize: 18, color: colors.textInverse },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalSheet: { backgroundColor: colors.backgroundCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: spacing.xl, paddingHorizontal: spacing.xl, paddingBottom: 40, maxHeight: '80%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl },

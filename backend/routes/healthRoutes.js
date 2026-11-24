@@ -3,13 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const Prescription = require('../models/Prescription');
-const LabReport = require('../models/LabReport');
-
-// ==========================================
-// VITALS MANAGEMENT
-// ==========================================
-
-// Get vitals history
+const LabReport = require('../models/LabReport');
 router.get('/vitals/:userId', async (req, res) => {
   try {
     const { type, dateRange } = req.query;
@@ -19,14 +13,10 @@ router.get('/vitals/:userId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    let vitals = user.vitalsHistory || [];
-    
-    // Filter by type if specified
+    let vitals = user.vitalsHistory || [];
     if (type) {
       vitals = vitals.filter(v => v.type === type);
-    }
-    
-    // Filter by date range
+    }
     if (dateRange) {
       const now = new Date();
       let startDate;
@@ -47,18 +37,14 @@ router.get('/vitals/:userId', async (req, res) => {
       if (startDate) {
         vitals = vitals.filter(v => new Date(v.recordedAt) >= startDate);
       }
-    }
-    
-    // Sort by date descending
+    }
     vitals.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
     
     res.json({ vitals });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching vitals', error: error.message });
   }
-});
-
-// Add vital reading
+});
 router.post('/vitals/:userId', async (req, res) => {
   try {
     const { type, value, unit, systolic, diastolic, numericValue, notes, source } = req.body;
@@ -70,9 +56,7 @@ router.post('/vitals/:userId', async (req, res) => {
     const user = await User.findById(req.params.userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Determine status based on vital type and value
+    }
     let status = 'normal';
     if (type === 'bp' && systolic && diastolic) {
       if (systolic >= 180 || diastolic >= 120) status = 'critical';
@@ -107,9 +91,7 @@ router.post('/vitals/:userId', async (req, res) => {
     };
 
     user.vitalsHistory = user.vitalsHistory || [];
-    user.vitalsHistory.push(vitalReading);
-    
-    // Also add to medical timeline
+    user.vitalsHistory.push(vitalReading);
     user.medicalTimeline = user.medicalTimeline || [];
     user.medicalTimeline.push({
       type: 'vitals',
@@ -128,9 +110,7 @@ router.post('/vitals/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error recording vital', error: error.message });
   }
-});
-
-// Get latest vitals summary
+});
 router.get('/vitals/:userId/latest', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select('vitalsHistory');
@@ -156,9 +136,7 @@ router.get('/vitals/:userId/latest', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching latest vitals', error: error.message });
   }
-});
-
-// Helper functions
+});
 function getVitalLabel(type) {
   const labels = {
     bp: 'Blood Pressure',
@@ -185,13 +163,7 @@ function getVitalIcon(type) {
     bmi: '📊'
   };
   return icons[type] || '📋';
-}
-
-// ==========================================
-// MEDICAL TIMELINE
-// ==========================================
-
-// Get medical timeline
+}
 router.get('/timeline/:userId', async (req, res) => {
   try {
     const { filter, page = 1, limit = 20 } = req.query;
@@ -201,9 +173,7 @@ router.get('/timeline/:userId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    let events = user.medicalTimeline || [];
-    
-    // Also fetch appointments, prescriptions, and reports
+    let events = user.medicalTimeline || [];
     const [appointments, prescriptions, labReports] = await Promise.all([
       Appointment.find({ patientId: req.params.userId })
         .populate('doctorId', 'name specialization')
@@ -218,10 +188,8 @@ router.get('/timeline/:userId', async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(50)
         .lean()
-        .catch(() => []) // Handle if model doesn't exist
-    ]);
-
-    // Convert appointments to timeline events
+        .catch(() => []) 
+    ]);
     appointments.forEach(apt => {
       events.push({
         type: 'appointment',
@@ -233,9 +201,7 @@ router.get('/timeline/:userId', async (req, res) => {
         icon: '👨‍⚕️',
         metadata: { status: apt.status }
       });
-    });
-
-    // Convert prescriptions to timeline events
+    });
     prescriptions.forEach(rx => {
       const meds = rx.medications?.slice(0, 2).map(m => m.name).join(', ') || 'Medications';
       events.push({
@@ -247,9 +213,7 @@ router.get('/timeline/:userId', async (req, res) => {
         referenceModel: 'Prescription',
         icon: '💊'
       });
-    });
-
-    // Convert lab reports to timeline events
+    });
     labReports.forEach(report => {
       events.push({
         type: 'report',
@@ -260,9 +224,7 @@ router.get('/timeline/:userId', async (req, res) => {
         referenceModel: 'LabReport',
         icon: '🔬'
       });
-    });
-
-    // Filter by type if specified
+    });
     if (filter && filter !== 'all') {
       const typeMap = {
         appointments: 'appointment',
@@ -271,9 +233,7 @@ router.get('/timeline/:userId', async (req, res) => {
         vitals: 'vitals'
       };
       events = events.filter(e => e.type === typeMap[filter] || e.type === filter);
-    }
-
-    // Sort by date descending and paginate
+    }
     events.sort((a, b) => new Date(b.date) - new Date(a.date));
     const total = events.length;
     const startIndex = (page - 1) * limit;
@@ -291,13 +251,7 @@ router.get('/timeline/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching timeline', error: error.message });
   }
-});
-
-// ==========================================
-// INSURANCE POLICIES
-// ==========================================
-
-// Get patient insurance policies
+});
 router.get('/insurance/patient/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select('insurancePolicies');
@@ -311,9 +265,7 @@ router.get('/insurance/patient/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching insurance policies', error: error.message });
   }
-});
-
-// Add insurance policy
+});
 router.post('/insurance/patient/:userId', async (req, res) => {
   try {
     const { 
@@ -358,9 +310,7 @@ router.post('/insurance/patient/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error adding insurance policy', error: error.message });
   }
-});
-
-// Update insurance policy
+});
 router.put('/insurance/patient/:userId/:policyId', async (req, res) => {
   try {
     const { userId, policyId } = req.params;
@@ -386,9 +336,7 @@ router.put('/insurance/patient/:userId/:policyId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error updating insurance policy', error: error.message });
   }
-});
-
-// Delete insurance policy
+});
 router.delete('/insurance/patient/:userId/:policyId', async (req, res) => {
   try {
     const { userId, policyId } = req.params;
@@ -405,13 +353,7 @@ router.delete('/insurance/patient/:userId/:policyId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error removing insurance policy', error: error.message });
   }
-});
-
-// ==========================================
-// EXISTING ROUTES
-// ==========================================
-
-// Get user's medical history
+});
 router.get('/medical-history/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select('medicalHistory');
@@ -422,9 +364,7 @@ router.get('/medical-history/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching medical history', error: error.message });
   }
-});
-
-// Update medical history
+});
 router.put('/medical-history/:userId', async (req, res) => {
   try {
     const { bloodGroup, allergies, chronicConditions, currentMedications, pastSurgeries, emergencyContact } = req.body;
@@ -449,9 +389,7 @@ router.put('/medical-history/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error updating medical history', error: error.message });
   }
-});
-
-// Get health reports
+});
 router.get('/reports/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select('healthReports');
@@ -462,9 +400,7 @@ router.get('/reports/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching health reports', error: error.message });
   }
-});
-
-// Add health report
+});
 router.post('/reports/:userId', async (req, res) => {
   try {
     const { name, type, fileUrl, notes } = req.body;
@@ -496,9 +432,7 @@ router.post('/reports/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error adding health report', error: error.message });
   }
-});
-
-// Delete health report
+});
 router.delete('/reports/:userId/:reportId', async (req, res) => {
   try {
     const { userId, reportId } = req.params;
@@ -515,9 +449,7 @@ router.delete('/reports/:userId/:reportId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error removing health report', error: error.message });
   }
-});
-
-// Get notification preferences
+});
 router.get('/notifications/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select('notificationPreferences');
@@ -532,9 +464,7 @@ router.get('/notifications/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching preferences', error: error.message });
   }
-});
-
-// Update notification preferences
+});
 router.put('/notifications/:userId', async (req, res) => {
   try {
     const { emailReminders, smsReminders, reminderHoursBefore } = req.body;
@@ -555,9 +485,7 @@ router.put('/notifications/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error updating preferences', error: error.message });
   }
-});
-
-// Emergency SOS - Find nearest emergency services
+});
 router.get('/emergency/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select('loginLocation medicalHistory');

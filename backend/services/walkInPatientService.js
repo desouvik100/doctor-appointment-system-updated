@@ -1,20 +1,11 @@
-/**
- * Walk-in Patient Service
- * Handles registration and management of walk-in patients for EMR
- */
+
 
 const User = require('../models/User');
 const EMRVisit = require('../models/EMRVisit');
 const mongoose = require('mongoose');
 
 class WalkInPatientService {
-  /**
-   * Register a new walk-in patient
-   * @param {Object} patientData - Patient details
-   * @param {ObjectId} clinicId - Clinic registering the patient
-   * @param {ObjectId} staffId - Staff member registering
-   * @returns {Object} Created patient record
-   */
+  
   async registerWalkIn(patientData, clinicId, staffId) {
     const {
       name,
@@ -27,16 +18,13 @@ class WalkInPatientService {
       bloodGroup,
       emergencyContact,
       clinicPatientId
-    } = patientData;
-
-    // Check if patient already exists by phone
+    } = patientData;
     let existingPatient = await User.findOne({ 
       phone: phone,
       role: 'patient'
     });
 
-    if (existingPatient) {
-      // Link existing patient to this clinic if not already linked
+    if (existingPatient) {
       if (!existingPatient.registeredClinics) {
         existingPatient.registeredClinics = [];
       }
@@ -60,14 +48,12 @@ class WalkInPatientService {
         isNew: false,
         message: 'Existing patient linked to clinic'
       };
-    }
-
-    // Create new walk-in patient
+    }
     const newPatient = new User({
       name,
       phone,
       email: email || `walkin_${phone}@healthsync.local`,
-      password: 'WALK_IN_NO_PASSWORD', // Walk-ins don't have passwords initially
+      password: 'WALK_IN_NO_PASSWORD', 
       age,
       gender,
       dateOfBirth,
@@ -76,7 +62,7 @@ class WalkInPatientService {
       emergencyContact,
       role: 'patient',
       registrationType: 'walk_in',
-      isVerified: false, // Walk-ins not verified until phone confirmed
+      isVerified: false, 
       registeredClinics: [{
         clinicId,
         clinicPatientId: clinicPatientId || this.generateClinicPatientId(clinicId),
@@ -94,13 +80,6 @@ class WalkInPatientService {
     };
   }
 
-  /**
-   * Search for patients
-   * @param {String} query - Search query
-   * @param {ObjectId} clinicId - Clinic context
-   * @param {Object} options - Search options
-   * @returns {Array} Matching patients
-   */
   async searchPatients(query, clinicId, options = {}) {
     const { includeAllPatients = false } = options;
     
@@ -112,9 +91,7 @@ class WalkInPatientService {
         { email: { $regex: query, $options: 'i' } },
         { 'registeredClinics.clinicPatientId': { $regex: query, $options: 'i' } }
       ]
-    };
-
-    // If not including all patients, filter by clinic
+    };
     if (!includeAllPatients && clinicId) {
       searchConditions['registeredClinics.clinicId'] = clinicId;
     }
@@ -122,9 +99,7 @@ class WalkInPatientService {
     const patients = await User.find(searchConditions)
       .select('name phone email age gender dateOfBirth registeredClinics profilePhoto bloodGroup')
       .limit(20)
-      .lean();
-
-    // Add clinic-specific info
+      .lean();
     return patients.map(patient => {
       const clinicInfo = patient.registeredClinics?.find(
         c => c.clinicId?.toString() === clinicId?.toString()
@@ -139,9 +114,6 @@ class WalkInPatientService {
     });
   }
 
-  /**
-   * Search for existing patients (alias for searchPatients)
-   */
   async searchExisting(searchParams, clinicId) {
     const { query, phone, name, clinicPatientId } = searchParams;
     
@@ -179,19 +151,12 @@ class WalkInPatientService {
     });
   }
 
-  /**
-   * Get patient by ID
-   * @param {ObjectId} patientId - Patient ID
-   * @param {ObjectId} clinicId - Clinic context (optional)
-   */
   async getPatient(patientId, clinicId = null) {
     const patient = await User.findById(patientId)
       .select('-password')
       .lean();
 
-    if (!patient) return null;
-
-    // Add clinic-specific info if clinicId provided
+    if (!patient) return null;
     if (clinicId) {
       const clinicInfo = patient.registeredClinics?.find(
         c => c.clinicId?.toString() === clinicId.toString()
@@ -203,9 +168,6 @@ class WalkInPatientService {
     return patient;
   }
 
-  /**
-   * Get patient visit count at a clinic
-   */
   async getPatientVisitCount(patientId, clinicId) {
     return EMRVisit.countDocuments({
       patientId,
@@ -214,9 +176,6 @@ class WalkInPatientService {
     });
   }
 
-  /**
-   * Link an existing patient to a clinic
-   */
   async linkToClinic(patientId, clinicId, clinicPatientId = null) {
     const patient = await User.findById(patientId);
     
@@ -246,9 +205,6 @@ class WalkInPatientService {
     return patient;
   }
 
-  /**
-   * Get patient details with clinic context
-   */
   async getPatientDetails(patientId, clinicId) {
     const patient = await User.findById(patientId)
       .select('-password')
@@ -256,9 +212,7 @@ class WalkInPatientService {
 
     if (!patient) {
       throw new Error('Patient not found');
-    }
-
-    // Get visit history at this clinic
+    }
     const visits = await EMRVisit.find({
       patientId,
       clinicId,
@@ -282,9 +236,6 @@ class WalkInPatientService {
     };
   }
 
-  /**
-   * Update patient information
-   */
   async updatePatient(patientId, updateData, clinicId = null) {
     const allowedFields = [
       'name', 'phone', 'email', 'age', 'gender', 'dateOfBirth',
@@ -308,9 +259,6 @@ class WalkInPatientService {
     return patient;
   }
 
-  /**
-   * Generate a clinic-specific patient ID
-   */
   generateClinicPatientId(clinicId) {
     const prefix = clinicId.toString().slice(-4).toUpperCase();
     const timestamp = Date.now().toString(36).toUpperCase();
@@ -318,9 +266,6 @@ class WalkInPatientService {
     return `${prefix}-${timestamp}-${random}`;
   }
 
-  /**
-   * Get patients registered at a clinic
-   */
   async getClinicPatients(clinicId, options = {}) {
     const { 
       page = 1, 
@@ -355,9 +300,7 @@ class WalkInPatientService {
         .limit(limit)
         .lean(),
       User.countDocuments(query)
-    ]);
-
-    // Add clinic-specific info
+    ]);
     const enrichedPatients = patients.map(patient => {
       const clinicInfo = patient.registeredClinics?.find(
         c => c.clinicId?.toString() === clinicId.toString()
@@ -380,9 +323,6 @@ class WalkInPatientService {
     };
   }
 
-  /**
-   * Verify walk-in patient (convert to full account)
-   */
   async verifyWalkInPatient(patientId, verificationData) {
     const { email, password } = verificationData;
     
@@ -394,11 +334,8 @@ class WalkInPatientService {
     
     if (patient.isVerified) {
       throw new Error('Patient is already verified');
-    }
-
-    // Update with verification data
-    if (email) {
-      // Check if email is already in use
+    }
+    if (email) {
       const existingUser = await User.findOne({ 
         email: email.toLowerCase(),
         _id: { $ne: patientId }
@@ -417,7 +354,7 @@ class WalkInPatientService {
     }
     
     patient.isVerified = true;
-    patient.registrationType = 'online'; // Upgrade from walk_in
+    patient.registrationType = 'online'; 
     
     await patient.save();
     

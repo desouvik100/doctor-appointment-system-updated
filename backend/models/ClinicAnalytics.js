@@ -1,7 +1,4 @@
-/**
- * Clinic Analytics Model
- * Comprehensive analytics and reporting for clinic management
- */
+
 
 const mongoose = require('mongoose');
 
@@ -11,9 +8,7 @@ const clinicAnalyticsSchema = new mongoose.Schema({
     ref: 'Clinic',
     required: true,
     index: true
-  },
-  
-  // Period
+  },
   period: {
     type: {
       type: String,
@@ -26,9 +21,7 @@ const clinicAnalyticsSchema = new mongoose.Schema({
     },
     startDate: Date,
     endDate: Date
-  },
-  
-  // Patient metrics
+  },
   patients: {
     totalVisits: { type: Number, default: 0 },
     newPatients: { type: Number, default: 0 },
@@ -37,25 +30,21 @@ const clinicAnalyticsSchema = new mongoose.Schema({
     appointments: { type: Number, default: 0 },
     noShows: { type: Number, default: 0 },
     cancellations: { type: Number, default: 0 },
-    averageWaitTime: { type: Number, default: 0 }, // minutes
-    patientSatisfactionScore: { type: Number, default: 0 },
-    
-    // Demographics
+    averageWaitTime: { type: Number, default: 0 }, 
+    patientSatisfactionScore: { type: Number, default: 0 },
     demographics: {
       male: { type: Number, default: 0 },
       female: { type: Number, default: 0 },
       other: { type: Number, default: 0 },
       ageGroups: {
-        child: { type: Number, default: 0 },      // 0-12
-        teen: { type: Number, default: 0 },       // 13-19
-        adult: { type: Number, default: 0 },      // 20-40
-        middleAge: { type: Number, default: 0 },  // 41-60
-        senior: { type: Number, default: 0 }      // 60+
+        child: { type: Number, default: 0 },      
+        teen: { type: Number, default: 0 },       
+        adult: { type: Number, default: 0 },      
+        middleAge: { type: Number, default: 0 },  
+        senior: { type: Number, default: 0 }      
       }
     }
-  },
-  
-  // Revenue metrics
+  },
   revenue: {
     totalRevenue: { type: Number, default: 0 },
     consultationRevenue: { type: Number, default: 0 },
@@ -67,9 +56,7 @@ const clinicAnalyticsSchema = new mongoose.Schema({
     totalCollected: { type: Number, default: 0 },
     totalPending: { type: Number, default: 0 },
     totalRefunds: { type: Number, default: 0 },
-    totalDiscounts: { type: Number, default: 0 },
-    
-    // Payment methods
+    totalDiscounts: { type: Number, default: 0 },
     paymentMethods: {
       cash: { type: Number, default: 0 },
       card: { type: Number, default: 0 },
@@ -80,14 +67,10 @@ const clinicAnalyticsSchema = new mongoose.Schema({
     
     averageTicketSize: { type: Number, default: 0 },
     revenuePerPatient: { type: Number, default: 0 }
-  },
-  
-  // Doctor metrics
+  },
   doctors: {
     totalDoctors: { type: Number, default: 0 },
-    activeDoctors: { type: Number, default: 0 },
-    
-    // Per doctor stats (top performers)
+    activeDoctors: { type: Number, default: 0 },
     topPerformers: [{
       doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
       name: String,
@@ -99,35 +82,27 @@ const clinicAnalyticsSchema = new mongoose.Schema({
     
     averageConsultationTime: { type: Number, default: 0 },
     averageRating: { type: Number, default: 0 }
-  },
-  
-  // Appointment metrics
+  },
   appointments: {
     total: { type: Number, default: 0 },
     completed: { type: Number, default: 0 },
     cancelled: { type: Number, default: 0 },
     rescheduled: { type: Number, default: 0 },
-    noShow: { type: Number, default: 0 },
-    
-    // By type
+    noShow: { type: Number, default: 0 },
     byType: {
       online: { type: Number, default: 0 },
       inPerson: { type: Number, default: 0 },
       followUp: { type: Number, default: 0 },
       emergency: { type: Number, default: 0 }
-    },
-    
-    // By time slot
+    },
     peakHours: [{
       hour: Number,
       count: Number
     }],
     
-    averageBookingLeadTime: { type: Number, default: 0 }, // days
-    slotUtilization: { type: Number, default: 0 } // percentage
-  },
-  
-  // Inventory metrics
+    averageBookingLeadTime: { type: Number, default: 0 }, 
+    slotUtilization: { type: Number, default: 0 } 
+  },
   inventory: {
     totalItems: { type: Number, default: 0 },
     lowStockItems: { type: Number, default: 0 },
@@ -142,9 +117,7 @@ const clinicAnalyticsSchema = new mongoose.Schema({
       quantitySold: Number,
       revenue: Number
     }]
-  },
-  
-  // Disease/diagnosis trends
+  },
   clinicalTrends: {
     topDiagnoses: [{
       code: String,
@@ -163,35 +136,25 @@ const clinicAnalyticsSchema = new mongoose.Schema({
       name: String,
       count: Number
     }]
-  },
-  
-  // Staff metrics
+  },
   staff: {
     totalStaff: { type: Number, default: 0 },
     attendanceRate: { type: Number, default: 0 },
     averageWorkingHours: { type: Number, default: 0 },
     overtimeHours: { type: Number, default: 0 }
-  },
-  
-  // Operational metrics
+  },
   operations: {
     averageQueueLength: { type: Number, default: 0 },
     averageServiceTime: { type: Number, default: 0 },
-    peakQueueTime: String,
-    
-    // Efficiency scores
+    peakQueueTime: String,
     operationalEfficiency: { type: Number, default: 0 },
     resourceUtilization: { type: Number, default: 0 }
-  },
-  
-  // Comparison with previous period
+  },
   comparison: {
-    revenueChange: { type: Number, default: 0 }, // percentage
+    revenueChange: { type: Number, default: 0 }, 
     patientChange: { type: Number, default: 0 },
     appointmentChange: { type: Number, default: 0 }
-  },
-  
-  // Generated at
+  },
   generatedAt: {
     type: Date,
     default: Date.now
@@ -199,22 +162,15 @@ const clinicAnalyticsSchema = new mongoose.Schema({
   
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 clinicAnalyticsSchema.index({ clinicId: 1, 'period.type': 1, 'period.date': -1 });
-clinicAnalyticsSchema.index({ clinicId: 1, 'period.date': -1 });
-
-// Static: Generate daily analytics
+clinicAnalyticsSchema.index({ clinicId: 1, 'period.date': -1 });
 clinicAnalyticsSchema.statics.generateDailyAnalytics = async function(clinicId, date) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
   
   const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
-  
-  // This would aggregate data from various collections
-  // Implementation would query Appointments, EMRVisits, ClinicBilling, etc.
+  endOfDay.setHours(23, 59, 59, 999);
   
   const analytics = {
     clinicId,
@@ -223,8 +179,7 @@ clinicAnalyticsSchema.statics.generateDailyAnalytics = async function(clinicId, 
       date: startOfDay,
       startDate: startOfDay,
       endDate: endOfDay
-    },
-    // ... aggregate data from other collections
+    },
     generatedAt: new Date()
   };
   
@@ -233,18 +188,14 @@ clinicAnalyticsSchema.statics.generateDailyAnalytics = async function(clinicId, 
     analytics,
     { upsert: true, new: true }
   );
-};
-
-// Static: Get analytics for period
+};
 clinicAnalyticsSchema.statics.getAnalytics = function(clinicId, periodType, startDate, endDate) {
   return this.find({
     clinicId,
     'period.type': periodType,
     'period.date': { $gte: startDate, $lte: endDate }
   }).sort({ 'period.date': 1 });
-};
-
-// Static: Get dashboard summary
+};
 clinicAnalyticsSchema.statics.getDashboardSummary = async function(clinicId) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

@@ -1,6 +1,4 @@
-/**
- * Admin Login Screen - System Control Center
- */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -19,8 +17,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { spacing, borderRadius } from '../../theme/typography';
-import { authService } from '../../services/api';
-// Direct import as fallback
+import { authService } from '../../services/api';
 import { adminLogin } from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 
@@ -72,9 +69,7 @@ const AdminLoginScreen = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-    
-    // DEBUG: Log payload and URL
+    setLoading(true);
     const payload = {
       email: email.trim().toLowerCase(),
       password,
@@ -82,28 +77,22 @@ const AdminLoginScreen = ({ navigation }) => {
     console.log('🔵 [ADMIN LOGIN] PAYLOAD:', { email: payload.email, password: '***' });
     console.log('🔵 [ADMIN LOGIN] ENDPOINT: /auth/admin/login');
     
-    try {
-      // Use direct import of adminLogin function
-      const { user, token } = await adminLogin(payload);
-      
-      // DEBUG: Log success
+    try {
+      const { user, token } = await adminLogin(payload);
       console.log('✅ [ADMIN LOGIN] SUCCESS');
       console.log('✅ [ADMIN LOGIN] TOKEN RECEIVED:', token ? 'YES' : 'NO');
       console.log('✅ [ADMIN LOGIN] USER:', user?.email, user?.role);
       
       await login(user, token);
       navigation.replace('Main');
-    } catch (error) {
-      // DEBUG: Log full error details
+    } catch (error) {
       console.log('❌ [ADMIN LOGIN] ERROR STATUS:', error.statusCode);
       console.log('❌ [ADMIN LOGIN] ERROR MESSAGE:', error.message);
       console.log('❌ [ADMIN LOGIN] ERROR CODE:', error.code);
       console.log('❌ [ADMIN LOGIN] FULL ERROR:', JSON.stringify(error, null, 2));
       
       let message = 'Login failed. Please check your credentials.';
-      let title = 'Login Failed';
-      
-      // Check for network/connection errors
+      let title = 'Login Failed';
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         title = 'Server Starting Up';
         message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
@@ -136,7 +125,7 @@ const AdminLoginScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
       
-      {/* Background */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={['#0A0A0F', '#0F0F1A', '#0A0A0F']}

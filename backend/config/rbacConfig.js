@@ -1,97 +1,63 @@
-/**
- * RBAC Configuration - Hospital-Grade Permission System
- * =====================================================
- * This is the single source of truth for all permissions.
- * Every API endpoint MUST check permissions through this config.
- */
 
-// Permission definitions - granular actions
-const PERMISSIONS = {
-  // Patient Management
+const PERMISSIONS = {
   'patients:create': 'Create new patient records',
   'patients:view_basic': 'View patient basic info (name, phone, demographics)',
   'patients:view_clinical': 'View clinical data (diagnosis, prescriptions, reports)',
   'patients:update': 'Update patient information',
   'patients:delete': 'Delete patient records',
-  'patients:export': 'Export patient data',
-  
-  // Appointments
+  'patients:export': 'Export patient data',
   'appointments:create': 'Create appointments',
   'appointments:view': 'View appointments',
   'appointments:view_all': 'View all appointments (not just own)',
   'appointments:update': 'Update appointment details',
   'appointments:cancel': 'Cancel appointments',
-  'appointments:manage_queue': 'Manage queue (skip, call next)',
-  
-  // Prescriptions
+  'appointments:manage_queue': 'Manage queue (skip, call next)',
   'prescriptions:create': 'Create prescriptions',
   'prescriptions:view': 'View prescriptions',
   'prescriptions:edit': 'Edit prescriptions',
   'prescriptions:delete': 'Delete prescriptions',
-  'prescriptions:sign': 'Digitally sign prescriptions',
-  
-  // Billing
+  'prescriptions:sign': 'Digitally sign prescriptions',
   'billing:create': 'Create bills/invoices',
   'billing:view': 'View billing information',
   'billing:update': 'Update billing records',
   'billing:refund': 'Process refunds',
-  'billing:export': 'Export billing data',
-  
-  // Lab Reports
+  'billing:export': 'Export billing data',
   'reports:upload': 'Upload lab reports',
   'reports:view': 'View lab reports',
-  'reports:delete': 'Delete lab reports',
-  
-  // Staff Management
+  'reports:delete': 'Delete lab reports',
   'staff:create': 'Add new staff members',
   'staff:view': 'View staff list',
   'staff:update': 'Update staff details',
   'staff:delete': 'Remove staff members',
-  'staff:manage_roles': 'Assign/change staff roles',
-  
-  // Clinic Settings
+  'staff:manage_roles': 'Assign/change staff roles',
   'clinic:view': 'View clinic settings',
   'clinic:update': 'Update clinic settings',
-  'clinic:manage_doctors': 'Add/remove doctors',
-  
-  // Audit & Security
+  'clinic:manage_doctors': 'Add/remove doctors',
   'audit:view': 'View audit logs',
   'audit:export': 'Export audit logs',
   'security:view_alerts': 'View security alerts',
-  'security:manage': 'Manage security settings',
-  
-  // Analytics
+  'security:manage': 'Manage security settings',
   'analytics:view_basic': 'View basic analytics',
   'analytics:view_financial': 'View financial analytics',
-  'analytics:export': 'Export analytics data',
-  
-  // IPD (Inpatient)
+  'analytics:export': 'Export analytics data',
   'ipd:admit': 'Admit patients',
   'ipd:discharge': 'Discharge patients',
   'ipd:transfer': 'Transfer patients between beds/wards',
-  'ipd:view': 'View IPD records',
-  
-  // Inventory/Pharmacy
+  'ipd:view': 'View IPD records',
   'inventory:view': 'View inventory',
   'inventory:manage': 'Manage inventory (add/update stock)',
-  'inventory:order': 'Create purchase orders',
-  
-  // EMR Advanced
+  'inventory:order': 'Create purchase orders',
   'emr:vitals': 'Record patient vitals',
   'emr:notes': 'Create consultation notes',
   'emr:templates': 'Manage EMR templates'
-};
-
-// Role definitions with permissions
+};
 const ROLES = {
   superadmin: {
     name: 'Super Admin',
     description: 'Platform administrator with full access',
     level: 100,
-    permissions: Object.keys(PERMISSIONS) // All permissions
-  },
-  
-  // 'admin' matches User.role enum value used in JWT tokens
+    permissions: Object.keys(PERMISSIONS) 
+  },
   admin: {
     name: 'Admin',
     description: 'Clinic owner/administrator',
@@ -111,9 +77,7 @@ const ROLES = {
       'inventory:view', 'inventory:manage', 'inventory:order',
       'emr:vitals', 'emr:notes', 'emr:templates'
     ]
-  },
-  
-  // 'clinic_admin' is an alias for 'admin' — kept for backward compatibility
+  },
   clinic_admin: {
     name: 'Clinic Admin',
     description: 'Clinic owner/administrator (alias for admin)',
@@ -147,8 +111,7 @@ const ROLES = {
       'analytics:view_basic',
       'ipd:view',
       'emr:vitals', 'emr:notes', 'emr:templates'
-    ],
-    // Doctors can only see their own patients by default
+    ],
     dataScope: 'own_patients'
   },
   
@@ -175,12 +138,9 @@ const ROLES = {
       'patients:create', 'patients:view_basic', 'patients:update',
       'appointments:create', 'appointments:view', 'appointments:update', 'appointments:cancel', 'appointments:manage_queue',
       'billing:create', 'billing:view'
-    ],
-    // Receptionists cannot see clinical data
+    ],
     dataScope: 'clinic'
-  },
-  
-  // 'clinic' is an alias for 'receptionist' — used in legacy accounts where role was set to 'clinic'
+  },
   clinic: {
     name: 'Clinic Staff',
     description: 'Clinic staff (legacy role alias for receptionist)',
@@ -238,35 +198,26 @@ const ROLES = {
       'prescriptions:view',
       'reports:view',
       'billing:view'
-    ],
-    // Patients can only see their own data
+    ],
     dataScope: 'self'
   }
-};
-
-// Data scope definitions
+};
 const DATA_SCOPES = {
   all: 'Access all data across all clinics',
   clinic: 'Access data within own clinic only',
   assigned_department: 'Access data within assigned department',
   own_patients: 'Access only assigned/own patients',
   self: 'Access only own data'
-};
-
-// Sensitive fields that require special handling
+};
 const SENSITIVE_FIELDS = {
   patient: ['phone', 'email', 'address', 'aadhaar', 'pan', 'emergencyContact'],
   clinical: ['diagnosis', 'allergies', 'chronicConditions', 'medications', 'labResults'],
   financial: ['bankAccount', 'upi', 'cardDetails']
-};
-
-// Actions that require audit logging
+};
 const AUDITABLE_ACTIONS = [
   'create', 'update', 'delete', 'view', 'export', 'print',
   'sign', 'admit', 'discharge', 'transfer', 'refund'
-];
-
-// High-risk actions requiring additional verification
+];
 const HIGH_RISK_ACTIONS = [
   'patients:delete',
   'prescriptions:delete',
@@ -277,52 +228,34 @@ const HIGH_RISK_ACTIONS = [
   'ipd:discharge'
 ];
 
-/**
- * Check if a role has a specific permission
- */
 function hasPermission(role, permission) {
   const roleConfig = ROLES[role];
   if (!roleConfig) return false;
   return roleConfig.permissions.includes(permission);
 }
 
-/**
- * Get all permissions for a role
- */
 function getPermissions(role) {
   const roleConfig = ROLES[role];
   if (!roleConfig) return [];
   return roleConfig.permissions;
 }
 
-/**
- * Check if role level is sufficient
- */
 function hasMinimumLevel(role, requiredLevel) {
   const roleConfig = ROLES[role];
   if (!roleConfig) return false;
   return roleConfig.level >= requiredLevel;
 }
 
-/**
- * Get data scope for a role
- */
 function getDataScope(role) {
   const roleConfig = ROLES[role];
   if (!roleConfig) return 'self';
   return roleConfig.dataScope || 'clinic';
 }
 
-/**
- * Check if action is high-risk
- */
 function isHighRiskAction(permission) {
   return HIGH_RISK_ACTIONS.includes(permission);
 }
 
-/**
- * Check if action requires audit
- */
 function requiresAudit(action) {
   return AUDITABLE_ACTIONS.includes(action);
 }

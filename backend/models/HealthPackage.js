@@ -14,8 +14,7 @@ const healthPackageSchema = new mongoose.Schema({
     type: String,
     enum: ['consultation', 'checkup', 'wellness', 'corporate', 'family'],
     default: 'consultation'
-  },
-  // What's included
+  },
   includes: [{
     type: {
       type: String,
@@ -24,8 +23,7 @@ const healthPackageSchema = new mongoose.Schema({
     name: String,
     quantity: Number,
     description: String
-  }],
-  // Pricing
+  }],
   originalPrice: {
     type: Number,
     required: true
@@ -40,13 +38,11 @@ const healthPackageSchema = new mongoose.Schema({
   currency: {
     type: String,
     default: 'INR'
-  },
-  // Validity
+  },
   validityDays: {
     type: Number,
     default: 365
-  },
-  // Restrictions
+  },
   maxUsers: {
     type: Number,
     default: 1
@@ -57,8 +53,7 @@ const healthPackageSchema = new mongoose.Schema({
   applicableDoctors: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
-  }],
-  // Status
+  }],
   isActive: {
     type: Boolean,
     default: true
@@ -66,13 +61,11 @@ const healthPackageSchema = new mongoose.Schema({
   isFeatured: {
     type: Boolean,
     default: false
-  },
-  // Stats
+  },
   purchaseCount: {
     type: Number,
     default: 0
-  },
-  // Display
+  },
   icon: {
     type: String,
     default: 'fa-box'
@@ -82,13 +75,11 @@ const healthPackageSchema = new mongoose.Schema({
     default: '#6366f1'
   },
   badge: {
-    type: String // 'Best Seller', 'New', 'Limited'
+    type: String 
   }
 }, {
   timestamps: true
-});
-
-// User's purchased packages
+});
 const userPackageSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -119,8 +110,7 @@ const userPackageSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'expired', 'cancelled', 'fully_used'],
     default: 'active'
-  },
-  // Usage tracking
+  },
   usageDetails: [{
     itemType: String,
     itemName: String,

@@ -6,24 +6,19 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-});
-
-// optional: verify on startup
+});
 transporter.verify((error, success) => {
   if (error) {
     console.error('❌ Email transport error:', error.message);
   } else {
     console.log('✅ Email transport ready');
   }
-});
-
-// generate 6-digit OTP
+});
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendOtpEmail(to, otp, type = 'register') {
-  // Determine subject and message based on type
+async function sendOtpEmail(to, otp, type = 'register') {
   let subject, purpose, actionText;
   
   if (type === 'register' || type === 'registration') {

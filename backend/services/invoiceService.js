@@ -1,9 +1,6 @@
-// backend/services/invoiceService.js
-// Professional Invoice generation and email service
+
 
-const { sendEmail } = require('./emailService');
-
-// Generate unique invoice number
+const { sendEmail } = require('./emailService');
 function generateInvoiceNumber() {
   const date = new Date();
   const year = date.getFullYear().toString().slice(-2);
@@ -11,18 +8,14 @@ function generateInvoiceNumber() {
   const day = String(date.getDate()).padStart(2, '0');
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   return `HS-INV-${year}${month}${day}-${random}`;
-}
-
-// Format currency
+}
 function formatCurrency(amount) {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     minimumFractionDigits: 2
   }).format(amount || 0);
-}
-
-// Format date
+}
 function formatDate(date, format = 'long') {
   const d = new Date(date);
   if (format === 'long') {
@@ -38,9 +31,7 @@ function formatDate(date, format = 'long') {
     month: 'short',
     year: 'numeric'
   });
-}
-
-// Generate professional invoice HTML
+}
 function generateInvoiceHTML(invoiceData) {
   const {
     invoiceNumber,
@@ -53,9 +44,7 @@ function generateInvoiceHTML(invoiceData) {
   } = invoiceData;
 
   const invoiceDate = formatDate(generatedAt || Date.now());
-  const appointmentDate = appointment?.date ? formatDate(appointment.date) : invoiceDate;
-
-  // Calculate amounts
+  const appointmentDate = appointment?.date ? formatDate(appointment.date) : invoiceDate;
   const consultationFee = payment?.consultationFee || payment?.amount || doctor?.consultationFee || 500;
   const platformFee = payment?.platformFee || Math.round(consultationFee * 0.07);
   const subtotal = consultationFee + platformFee;
@@ -92,8 +81,7 @@ function generateInvoiceHTML(invoiceData) {
       overflow: hidden;
       box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     }
-    
-    /* Header Section */
+
     .invoice-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
       color: white;
@@ -188,8 +176,7 @@ function generateInvoiceHTML(invoiceData) {
       font-size: 13px;
       opacity: 0.9;
     }
-    
-    /* Status Badge */
+
     .status-ribbon {
       position: absolute;
       top: 25px;
@@ -205,12 +192,10 @@ function generateInvoiceHTML(invoiceData) {
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
 
-    /* Body Section */
     .invoice-body {
       padding: 50px;
     }
-    
-    /* Parties Section */
+
     .parties-section {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -254,8 +239,7 @@ function generateInvoiceHTML(invoiceData) {
       width: 20px;
       color: #667eea;
     }
-    
-    /* Appointment Details */
+
     .appointment-section {
       background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
       border-radius: 16px;
@@ -307,7 +291,6 @@ function generateInvoiceHTML(invoiceData) {
       color: #1a1a2e;
     }
 
-    /* Items Table */
     .items-section {
       margin-bottom: 40px;
     }
@@ -385,8 +368,7 @@ function generateInvoiceHTML(invoiceData) {
       color: #64748b;
       margin-top: 5px;
     }
-    
-    /* Totals Section */
+
     .totals-section {
       display: flex;
       justify-content: flex-end;
@@ -437,7 +419,6 @@ function generateInvoiceHTML(invoiceData) {
       border-top: 1px dashed #e2e8f0;
     }
 
-    /* Payment Info */
     .payment-info {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -491,8 +472,7 @@ function generateInvoiceHTML(invoiceData) {
     .payment-detail:last-child {
       border-bottom: none;
     }
-    
-    /* Terms Section */
+
     .terms-section {
       background: #f8fafc;
       border-radius: 12px;
@@ -526,8 +506,7 @@ function generateInvoiceHTML(invoiceData) {
       color: #667eea;
       font-weight: bold;
     }
-    
-    /* Footer */
+
     .invoice-footer {
       background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
       color: white;
@@ -568,8 +547,7 @@ function generateInvoiceHTML(invoiceData) {
       opacity: 0.7;
       line-height: 1.8;
     }
-    
-    /* QR Code Section */
+
     .qr-section {
       display: flex;
       align-items: center;
@@ -594,9 +572,7 @@ function generateInvoiceHTML(invoiceData) {
       text-align: left;
       font-size: 12px;
     }
-    
-    /* Print Styles */
-    /* Download Button */
+
     .download-bar {
       max-width: 850px;
       margin: 0 auto 20px;
@@ -650,7 +626,7 @@ function generateInvoiceHTML(invoiceData) {
   </style>
 </head>
 <body>
-  <!-- Download Buttons -->
+  
   <div class="download-bar">
     <button class="download-btn" onclick="window.print()">
       📄 Download as PDF
@@ -663,7 +639,6 @@ function generateInvoiceHTML(invoiceData) {
   <div class="invoice-wrapper">
     <div class="status-ribbon">${payment?.status === 'completed' || payment?.status === 'success' ? 'PAID' : 'PENDING'}</div>
 
-    <!-- Header -->
     <div class="invoice-header">
       <div class="header-content">
         <div class="company-brand">
@@ -683,9 +658,8 @@ function generateInvoiceHTML(invoiceData) {
       </div>
     </div>
 
-    <!-- Body -->
     <div class="invoice-body">
-      <!-- Parties -->
+      
       <div class="parties-section">
         <div class="party-card">
           <h3>📋 Billed To</h3>
@@ -704,7 +678,6 @@ function generateInvoiceHTML(invoiceData) {
         </div>
       </div>
 
-      <!-- Appointment Details -->
       <div class="appointment-section">
         <h3>📅 Appointment Details</h3>
         <div class="appointment-grid">
@@ -731,7 +704,6 @@ function generateInvoiceHTML(invoiceData) {
         </div>
       </div>
 
-      <!-- Items Table -->
       <div class="items-section">
         <h3>💰 Billing Details</h3>
         <table class="items-table">
@@ -771,7 +743,6 @@ function generateInvoiceHTML(invoiceData) {
         </table>
       </div>
 
-      <!-- Totals -->
       <div class="totals-section">
         <div class="totals-box">
           <div class="total-row subtotal">
@@ -802,7 +773,6 @@ function generateInvoiceHTML(invoiceData) {
         </div>
       </div>
 
-      <!-- Payment Info -->
       <div class="payment-info">
         <div class="payment-card">
           <h4>Payment Status</h4>
@@ -819,7 +789,6 @@ function generateInvoiceHTML(invoiceData) {
         </div>
       </div>
 
-      <!-- Terms -->
       <div class="terms-section">
         <h4>📜 Terms & Conditions</h4>
         <ul>
@@ -832,7 +801,6 @@ function generateInvoiceHTML(invoiceData) {
       </div>
     </div>
 
-    <!-- Footer -->
     <div class="invoice-footer">
       <div class="footer-brand">🏥 HealthSync</div>
       <p>Your Trusted Healthcare Management Platform</p>
@@ -865,10 +833,7 @@ function generateInvoiceHTML(invoiceData) {
 </body>
 </html>
   `;
-}
-
-
-// Convert number to words (Indian format)
+}
 function numberToWords(num) {
   if (num === 0) return 'Zero Rupees';
   
@@ -886,27 +851,19 @@ function numberToWords(num) {
   function convert(n) {
     if (n === 0) return '';
     
-    let result = '';
-    
-    // Crores (10 million)
+    let result = '';
     if (n >= 10000000) {
       result += convertLessThanThousand(Math.floor(n / 10000000)) + ' Crore ';
       n %= 10000000;
-    }
-    
-    // Lakhs (100 thousand)
+    }
     if (n >= 100000) {
       result += convertLessThanThousand(Math.floor(n / 100000)) + ' Lakh ';
       n %= 100000;
-    }
-    
-    // Thousands
+    }
     if (n >= 1000) {
       result += convertLessThanThousand(Math.floor(n / 1000)) + ' Thousand ';
       n %= 1000;
-    }
-    
-    // Hundreds and below
+    }
     if (n > 0) {
       result += convertLessThanThousand(n);
     }
@@ -923,9 +880,7 @@ function numberToWords(num) {
   }
   
   return result;
-}
-
-// Send invoice via email
+}
 async function sendInvoiceEmail(invoiceData) {
   const { patient, invoiceNumber, appointment } = invoiceData;
   
@@ -935,9 +890,7 @@ async function sendInvoiceEmail(invoiceData) {
   }
 
   const invoiceHTML = generateInvoiceHTML(invoiceData);
-  const totalAmount = invoiceData.payment?.totalAmount || invoiceData.payment?.amount || 0;
-  
-  // Get frontend URL from environment or use default
+  const totalAmount = invoiceData.payment?.totalAmount || invoiceData.payment?.amount || 0;
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:5005';
   const appointmentId = appointment?._id || appointment?.id || '';
@@ -1026,9 +979,7 @@ async function sendInvoiceEmail(invoiceData) {
       error: error.message 
     };
   }
-}
-
-// Generate and send invoice for an appointment
+}
 async function generateAndSendInvoice(appointment, patient, doctor, clinic, payment) {
   const invoiceNumber = generateInvoiceNumber();
   
@@ -1040,9 +991,7 @@ async function generateAndSendInvoice(appointment, patient, doctor, clinic, paym
     appointment,
     payment,
     generatedAt: new Date()
-  };
-
-  // Send email
+  };
   const emailResult = await sendInvoiceEmail(invoiceData);
 
   return {

@@ -1,7 +1,4 @@
-/**
- * Clinic Staff Service
- * Handles staff management for EMR clinics
- */
+
 
 const ClinicStaff = require('../models/ClinicStaff');
 const User = require('../models/User');
@@ -9,10 +6,7 @@ const Doctor = require('../models/Doctor');
 const crypto = require('crypto');
 
 class ClinicStaffService {
-  
-  /**
-   * Invite a new staff member
-   */
+
   static async inviteStaff(clinicId, staffData, invitedBy) {
     const {
       name,
@@ -22,9 +16,7 @@ class ClinicStaffService {
       department,
       permissions,
       doctorId
-    } = staffData;
-    
-    // Check if staff already exists at this clinic
+    } = staffData;
     const existingStaff = await ClinicStaff.findOne({
       clinicId,
       email: email.toLowerCase()
@@ -33,20 +25,15 @@ class ClinicStaffService {
     if (existingStaff) {
       if (existingStaff.isActive) {
         throw new Error('Staff member already exists at this clinic');
-      }
-      // Reactivate if previously deactivated
+      }
       existingStaff.isActive = true;
       existingStaff.invitedBy = invitedBy;
       existingStaff.invitedAt = new Date();
       existingStaff.generateInvitationToken();
       await existingStaff.save();
       return existingStaff;
-    }
-    
-    // Check if user exists in system
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    
-    // Check if doctor exists (for doctor role)
+    }
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     let doctor = null;
     if (role === 'doctor') {
       if (doctorId) {
@@ -54,9 +41,7 @@ class ClinicStaffService {
       } else {
         doctor = await Doctor.findOne({ email: email.toLowerCase() });
       }
-    }
-    
-    // Create staff record
+    }
     const staff = new ClinicStaff({
       clinicId,
       userId: existingUser?._id,
@@ -69,19 +54,14 @@ class ClinicStaffService {
       permissions: permissions || [],
       invitedBy,
       invitedAt: new Date()
-    });
-    
-    // Generate invitation token
+    });
     staff.generateInvitationToken();
     
     await staff.save();
     
     return staff;
   }
-  
-  /**
-   * Accept staff invitation
-   */
+
   static async acceptInvitation(token, userId) {
     const staff = await ClinicStaff.findByInvitationToken(token);
     
@@ -99,10 +79,7 @@ class ClinicStaffService {
     
     return staff;
   }
-  
-  /**
-   * Update staff role and permissions
-   */
+
   static async updateRole(staffId, updates, updatedBy) {
     const { role, permissions, deniedScreens, department } = updates;
     
@@ -121,10 +98,7 @@ class ClinicStaffService {
     
     return staff;
   }
-  
-  /**
-   * Update staff details
-   */
+
   static async updateStaff(staffId, updates) {
     const allowedFields = [
       'name', 'phone', 'department', 'workingHours', 
@@ -146,10 +120,7 @@ class ClinicStaffService {
     
     return staff;
   }
-  
-  /**
-   * Deactivate staff member
-   */
+
   static async deactivateStaff(staffId, deactivatedBy, reason) {
     const staff = await ClinicStaff.findByIdAndUpdate(
       staffId,
@@ -164,10 +135,7 @@ class ClinicStaffService {
     
     return staff;
   }
-  
-  /**
-   * Reactivate staff member
-   */
+
   static async reactivateStaff(staffId) {
     const staff = await ClinicStaff.findByIdAndUpdate(
       staffId,
@@ -182,10 +150,7 @@ class ClinicStaffService {
     
     return staff;
   }
-  
-  /**
-   * Get clinic staff list
-   */
+
   static async getClinicStaff(clinicId, options = {}) {
     const { 
       role, 
@@ -231,10 +196,7 @@ class ClinicStaffService {
       }
     };
   }
-  
-  /**
-   * Get staff member by ID
-   */
+
   static async getStaffById(staffId) {
     return ClinicStaff.findById(staffId)
       .populate('userId', 'name email phone profilePhoto')
@@ -242,10 +204,7 @@ class ClinicStaffService {
       .populate('clinicId', 'name')
       .populate('invitedBy', 'name');
   }
-  
-  /**
-   * Get staff member by user ID and clinic
-   */
+
   static async getStaffByUser(userId, clinicId) {
     return ClinicStaff.findOne({
       userId,
@@ -253,10 +212,7 @@ class ClinicStaffService {
       isActive: true
     });
   }
-  
-  /**
-   * Get staff member by doctor ID and clinic
-   */
+
   static async getStaffByDoctor(doctorId, clinicId) {
     return ClinicStaff.findOne({
       doctorId,
@@ -264,10 +220,7 @@ class ClinicStaffService {
       isActive: true
     });
   }
-  
-  /**
-   * Check if user is staff at clinic
-   */
+
   static async isStaffAtClinic(userId, clinicId) {
     const staff = await ClinicStaff.findOne({
       $or: [
@@ -279,10 +232,7 @@ class ClinicStaffService {
     
     return !!staff;
   }
-  
-  /**
-   * Get staff role at clinic
-   */
+
   static async getStaffRole(userId, clinicId) {
     const staff = await ClinicStaff.findOne({
       $or: [
@@ -294,19 +244,13 @@ class ClinicStaffService {
     
     return staff?.role || null;
   }
-  
-  /**
-   * Update last active timestamp
-   */
+
   static async updateLastActive(staffId) {
     await ClinicStaff.findByIdAndUpdate(staffId, {
       lastActiveAt: new Date()
     });
   }
-  
-  /**
-   * Get staff statistics for clinic
-   */
+
   static async getStaffStats(clinicId) {
     const stats = await ClinicStaff.aggregate([
       { $match: { clinicId: require('mongoose').Types.ObjectId(clinicId), isActive: true } },
@@ -330,10 +274,7 @@ class ClinicStaffService {
     
     return result;
   }
-  
-  /**
-   * Resend invitation
-   */
+
   static async resendInvitation(staffId) {
     const staff = await ClinicStaff.findById(staffId);
     
@@ -352,10 +293,7 @@ class ClinicStaffService {
     
     return staff;
   }
-  
-  /**
-   * Revoke invitation
-   */
+
   static async revokeInvitation(staffId) {
     const staff = await ClinicStaff.findByIdAndUpdate(
       staffId,

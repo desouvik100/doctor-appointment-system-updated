@@ -1,11 +1,6 @@
-/**
- * Recording Service
- * Handles telemedicine session recording with consent management
- */
 
-const mongoose = require('mongoose');
 
-// Recording status
+const mongoose = require('mongoose');
 const RECORDING_STATUS = {
   PENDING_CONSENT: 'pending_consent',
   RECORDING: 'recording',
@@ -13,9 +8,7 @@ const RECORDING_STATUS = {
   PROCESSING: 'processing',
   COMPLETED: 'completed',
   FAILED: 'failed'
-};
-
-// Recording schema
+};
 const recordingSchema = new mongoose.Schema({
   recordingId: {
     type: String,
@@ -81,9 +74,6 @@ const recordingSchema = new mongoose.Schema({
 
 const Recording = mongoose.models.Recording || mongoose.model('Recording', recordingSchema);
 
-/**
- * Create a new recording entry
- */
 async function createRecording(data) {
   const recording = new Recording({
     recordingId: `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -99,18 +89,12 @@ async function createRecording(data) {
   return recording;
 }
 
-/**
- * Calculate retention date (default: 7 years for medical records)
- */
 function calculateRetentionDate() {
   const date = new Date();
   date.setFullYear(date.getFullYear() + 7);
   return date;
 }
 
-/**
- * Record consent from a participant
- */
 async function recordConsent(recordingId, participantType, consent) {
   const recording = await Recording.findOne({ recordingId });
   if (!recording) {
@@ -131,16 +115,10 @@ async function recordConsent(recordingId, participantType, consent) {
   return recording;
 }
 
-/**
- * Check if recording can start (both consents required)
- */
 function canStartRecording(recording) {
   return recording.consent.doctorConsent && recording.consent.patientConsent;
 }
 
-/**
- * Start recording
- */
 async function startRecording(recordingId) {
   const recording = await Recording.findOne({ recordingId });
   if (!recording) {
@@ -159,9 +137,6 @@ async function startRecording(recordingId) {
   return recording;
 }
 
-/**
- * Stop recording
- */
 async function stopRecording(recordingId) {
   const recording = await Recording.findOne({ recordingId });
   if (!recording) {
@@ -181,34 +156,21 @@ async function stopRecording(recordingId) {
   return recording;
 }
 
-/**
- * Check if user can access recording
- */
-function canAccessRecording(recording, userId, userRole) {
-  // Admin can access all
-  if (userRole === 'admin') return true;
-  
-  // Doctor who conducted the session
-  if (recording.doctorId.toString() === userId.toString()) return true;
-  
-  // Patient from the session
+function canAccessRecording(recording, userId, userRole) {
+  if (userRole === 'admin') return true;
+  if (recording.doctorId.toString() === userId.toString()) return true;
   if (recording.patientId.toString() === userId.toString()) return true;
   
   return false;
 }
 
-/**
- * Access recording with logging
- */
 async function accessRecording(recordingId, userId, userRole, action = 'view') {
   const recording = await Recording.findOne({ recordingId });
   if (!recording) {
     throw new Error('Recording not found');
   }
   
-  const granted = canAccessRecording(recording, userId, userRole);
-  
-  // Log access attempt
+  const granted = canAccessRecording(recording, userId, userRole);
   recording.accessLog.push({
     userId,
     userRole,
@@ -226,24 +188,15 @@ async function accessRecording(recordingId, userId, userRole, action = 'view') {
   return recording;
 }
 
-/**
- * Get recordings for a visit
- */
 async function getRecordingsForVisit(visitId) {
   return Recording.find({ visitId, status: RECORDING_STATUS.COMPLETED });
 }
 
-/**
- * Get recordings for a patient
- */
 async function getRecordingsForPatient(patientId) {
   return Recording.find({ patientId, status: RECORDING_STATUS.COMPLETED })
     .sort({ createdAt: -1 });
 }
 
-/**
- * Link recording to visit
- */
 async function linkRecordingToVisit(recordingId, visitId) {
   const recording = await Recording.findOne({ recordingId });
   if (!recording) {
@@ -257,9 +210,6 @@ async function linkRecordingToVisit(recordingId, visitId) {
   return recording;
 }
 
-/**
- * Complete recording processing
- */
 async function completeRecording(recordingId, fileUrl, fileSize, encryptionKey) {
   const recording = await Recording.findOne({ recordingId });
   if (!recording) {

@@ -1,7 +1,4 @@
-/**
- * Swagger/OpenAPI Configuration
- * Auto-generates API documentation from JSDoc comments
- */
+
 
 const swaggerJsdoc = require('swagger-jsdoc');
 
@@ -45,8 +42,7 @@ const options = {
           description: 'Enter JWT token obtained from login endpoint'
         }
       },
-      schemas: {
-        // Error Responses
+      schemas: {
         Error400: {
           type: 'object',
           properties: {
@@ -94,8 +90,7 @@ const options = {
             message: { type: 'string', example: 'Internal server error' },
             error: { type: 'string' }
           }
-        },
-        // User Schema
+        },
         User: {
           type: 'object',
           properties: {
@@ -108,8 +103,7 @@ const options = {
             clinicId: { type: 'string', nullable: true },
             locationCaptured: { type: 'boolean' }
           }
-        },
-        // Auth Responses
+        },
         LoginResponse: {
           type: 'object',
           properties: {

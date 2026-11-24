@@ -1,6 +1,4 @@
-/**
- * Staff Register Patient Screen - Register new patients
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -81,14 +79,11 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
         clinicId: clinicId,
         registeredBy: user?.id || user?._id,
         role: 'patient',
-      };
-
-      // Try EMR patient registration first, fallback to user registration
+      };
       let response;
       try {
         response = await apiClient.post('/emr/patients/register', patientData);
-      } catch (emrError) {
-        // Fallback to regular user registration
+      } catch (emrError) {
         response = await apiClient.post('/users/register-patient', patientData);
       }
 
@@ -164,7 +159,7 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -173,7 +168,7 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
           <View style={{ width: 40 }} />
         </View>
 
-        {/* Form */}
+        {}
         <View style={[styles.formCard, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
           <View style={styles.formHeader}>
             <LinearGradient colors={['#FF6B6B', '#FF8E8E']} style={styles.formIcon}>
@@ -251,7 +246,7 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Register Button */}
+        {}
         <TouchableOpacity
           style={[styles.registerBtn, loading && styles.registerBtnDisabled]}
           onPress={handleRegister}

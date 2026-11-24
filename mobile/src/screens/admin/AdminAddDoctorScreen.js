@@ -1,7 +1,4 @@
-/**
- * Admin Add Doctor Screen - Create New Doctor
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -74,7 +71,6 @@ const AdminAddDoctorScreen = ({ navigation }) => {
     }
   };
 
-
   const InputField = ({ label, value, onChangeText, placeholder, keyboardType, secureTextEntry }) => (
     <View style={styles.inputContainer}>
       <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{label}</Text>
@@ -111,7 +107,7 @@ const AdminAddDoctorScreen = ({ navigation }) => {
         <InputField label="Experience (years)" value={form.experience} onChangeText={(v) => setForm({...form, experience: v})} placeholder="10" keyboardType="numeric" />
         <InputField label="Consultation Fee (₹)" value={form.consultationFee} onChangeText={(v) => setForm({...form, consultationFee: v})} placeholder="500" keyboardType="numeric" />
 
-        {/* Clinic Picker */}
+        {}
         <View style={styles.inputContainer}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Clinic *</Text>
           <TouchableOpacity style={[styles.pickerBtn, { backgroundColor: colors.surface }]} onPress={() => setShowClinicPicker(!showClinicPicker)}>
@@ -134,7 +130,7 @@ const AdminAddDoctorScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Submit Button */}
+        {}
         <TouchableOpacity style={[styles.submitBtn, loading && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={loading}>
           <Text style={styles.submitBtnText}>{loading ? 'Creating...' : 'Create Doctor'}</Text>
         </TouchableOpacity>

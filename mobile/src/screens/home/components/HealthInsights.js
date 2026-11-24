@@ -1,6 +1,4 @@
-/**
- * HealthInsights - Personalized daily wellness tips
- */
+
 
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
@@ -53,10 +51,10 @@ const HealthInsights = ({ userFirstName = 'there' }) => {
 
   const activeInsight = useMemo(() => {
     const hours = new Date().getHours();
-    if (hours >= 5 && hours < 12) return INSIGHTS[0]; // Morning
-    if (hours >= 12 && hours < 17) return INSIGHTS[1]; // Afternoon
-    if (hours >= 17 && hours < 21) return INSIGHTS[2]; // Evening
-    return INSIGHTS[3]; // Night
+    if (hours >= 5 && hours < 12) return INSIGHTS[0]; 
+    if (hours >= 12 && hours < 17) return INSIGHTS[1]; 
+    if (hours >= 17 && hours < 21) return INSIGHTS[2]; 
+    return INSIGHTS[3]; 
   }, []);
 
   const handlePressIn = () => {

@@ -1,7 +1,4 @@
-/**
- * Toast Component - Modern toast notifications
- * Usage: Toast.show({ message: 'Success!', type: 'success' })
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
@@ -18,8 +15,7 @@ const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => 
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (visible) {
-      // Show animation
+    if (visible) {
       Animated.parallel([
         Animated.spring(translateY, {
           toValue: 0,
@@ -32,9 +28,7 @@ const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => 
           duration: 200,
           useNativeDriver: true,
         }),
-      ]).start();
-
-      // Auto hide
+      ]).start();
       const timer = setTimeout(() => {
         hideToast();
       }, duration);
@@ -139,9 +133,7 @@ const makeStyles = (colors) => StyleSheet.create({
     flex: 1,
     fontWeight: '600',
   },
-});
-
-// Toast Manager (Singleton)
+});
 class ToastManager {
   static instance = null;
 

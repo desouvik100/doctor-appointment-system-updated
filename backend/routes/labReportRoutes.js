@@ -2,43 +2,7 @@ const express = require('express');
 const router = express.Router();
 const LabReport = require('../models/LabReport');
 const AuditLog = require('../models/AuditLog');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     LabReport:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         patientId:
- *           type: string
- *         patientName:
- *           type: string
- *         testCategory:
- *           type: string
- *         testName:
- *           type: string
- *         testCode:
- *           type: string
- *         sampleType:
- *           type: string
- *         status:
- *           type: string
- *           enum: [ordered, sample_collected, processing, completed, cancelled]
- *         priority:
- *           type: string
- *           enum: [routine, urgent, stat]
- *         results:
- *           type: object
- *         createdAt:
- *           type: string
- *           format: date-time
- */
-
-// Helper to log audit
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const logAudit = async (req, action, entityId, entityName, changes = {}, severity = 'low') => {
   try {
     await AuditLog.log({
@@ -61,44 +25,6 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
   }
 };
 
-/**
- * @swagger
- * /lab-reports/order:
- *   post:
- *     summary: Create a lab order
- *     description: Creates a new lab test order for a patient
- *     tags: [Lab Reports]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - patientId
- *               - testName
- *             properties:
- *               patientId:
- *                 type: string
- *               patientName:
- *                 type: string
- *               testCategory:
- *                 type: string
- *               testName:
- *                 type: string
- *               sampleType:
- *                 type: string
- *               priority:
- *                 type: string
- *                 enum: [routine, urgent, stat]
- *     responses:
- *       201:
- *         description: Lab order created
- *       401:
- *         description: Unauthorized
- */
 router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'nurse', 'clinic']), async (req, res) => {
   try {
     const {
@@ -137,46 +63,6 @@ router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'nurse', 'clinic']
   }
 });
 
-/**
- * @swagger
- * /lab-reports/clinic/{clinicId}:
- *   get:
- *     summary: Get lab reports for a clinic
- *     tags: [Lab Reports]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: clinicId
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *       - in: query
- *         name: testCategory
- *         schema:
- *           type: string
- *       - in: query
- *         name: patientId
- *         schema:
- *           type: string
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *     responses:
- *       200:
- *         description: List of lab reports
- */
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -206,9 +92,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
     console.error('Error fetching lab reports:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get current user's lab reports (self-lookup)
+});
 router.get('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -236,9 +120,7 @@ router.get('/', verifyToken, async (req, res) => {
     console.error('Get lab reports error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get patient's lab reports
+});
 router.get('/patient/:patientId', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -253,9 +135,7 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
     console.error('Error fetching patient lab reports:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get single report
+});
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const report = await LabReport.findById(req.params.id)
@@ -265,9 +145,7 @@ router.get('/:id', verifyToken, async (req, res) => {
 
     if (!report) {
       return res.status(404).json({ success: false, message: 'Report not found' });
-    }
-
-    // Log read action for sensitive data
+    }
     await logAudit(req, 'read', report._id, report.reportNumber, {}, 'low');
 
     res.json({ success: true, report });
@@ -275,9 +153,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     console.error('Error fetching lab report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update sample collection
+});
 router.put('/:id/sample-collected', verifyTokenWithRole(['admin', 'nurse', 'clinic']), async (req, res) => {
   try {
     const { sampleId, sampleCollectedBy } = req.body;
@@ -301,9 +177,7 @@ router.put('/:id/sample-collected', verifyTokenWithRole(['admin', 'nurse', 'clin
     console.error('Error updating sample collection:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Enter results
+});
 router.put('/:id/results', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
   try {
     const { results, interpretation, comments, performedBy } = req.body;
@@ -332,9 +206,7 @@ router.put('/:id/results', verifyTokenWithRole(['admin', 'clinic']), async (req,
     console.error('Error entering results:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Verify report
+});
 router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const report = await LabReport.findById(req.params.id);
@@ -361,9 +233,7 @@ router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req,
     console.error('Error verifying report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Sign report (digital signature)
+});
 router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const { signatureData } = req.body;
@@ -388,9 +258,7 @@ router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, r
     console.error('Error signing report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Lock report
+});
 router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const report = await LabReport.findById(req.params.id);
@@ -412,9 +280,7 @@ router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor']), async (req, r
     console.error('Error locking report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Upload attachment
+});
 router.post('/:id/attachment', verifyToken, async (req, res) => {
   try {
     const { fileName, fileUrl, fileType } = req.body;

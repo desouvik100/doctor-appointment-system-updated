@@ -1,7 +1,4 @@
-/**
- * Doctor Video Consultation Screen
- * Handles video call interface for doctors
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -36,23 +33,17 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
   const [doctorLink, setDoctorLink] = useState(null);
   const [consultationStatus, setConsultationStatus] = useState('waiting');
   const [error, setError] = useState(null);
-  const [patientJoined, setPatientJoined] = useState(false);
-
-  // Handle back button
+  const [patientJoined, setPatientJoined] = useState(false);
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       handleEndConsultation();
       return true;
     });
     return () => backHandler.remove();
-  }, []);
-
-  // Initialize consultation
+  }, []);
   useEffect(() => {
     initializeConsultation();
-  }, []);
-
-  // Poll for patient join status
+  }, []);
   useEffect(() => {
     if (consultationStatus === 'ready' || consultationStatus === 'in-call') {
       const interval = setInterval(checkPatientStatus, 10000);
@@ -68,17 +59,14 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
       const appointmentId = appointment?._id || appointment?.id;
       if (!appointmentId) {
         throw new Error('Appointment ID not found');
-      }
-
-      // Start consultation (generates meet link if needed)
+      }
       const result = await videoService.startConsultation(appointmentId);
       
       if (result.success) {
         setMeetLink(result.meetLink);
         setDoctorLink(result.doctorLink || result.meetLink);
         setConsultationStatus('ready');
-      } else {
-        // Fallback to getting existing link
+      } else {
         const linkResult = await videoService.getMeetingLink(appointmentId);
         if (linkResult.success) {
           setMeetLink(linkResult.meetLink);
@@ -117,13 +105,9 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
     }
 
     try {
-      setConsultationStatus('joining');
-      
-      // Notify backend that doctor is joining
+      setConsultationStatus('joining');
       const appointmentId = appointment?._id || appointment?.id;
-      await videoService.notifyJoined(appointmentId, 'doctor');
-      
-      // Open meeting link
+      await videoService.notifyJoined(appointmentId, 'doctor');
       const canOpen = await Linking.canOpenURL(linkToOpen);
       if (canOpen) {
         await Linking.openURL(linkToOpen);
@@ -216,7 +200,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.gradient}>
-        {/* Header */}
+        {}
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <TouchableOpacity 
             style={styles.closeButton} 
@@ -234,7 +218,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Patient Info */}
+          {}
           <View style={styles.participantCard}>
             <Avatar 
               name={patient?.name || appointment?.userId?.name || 'Patient'} 
@@ -248,7 +232,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
               {patient?.phone || patient?.email || 'Patient'}
             </Text>
             
-            {/* Patient Status */}
+            {}
             <View style={[styles.patientStatusBadge, { backgroundColor: patientJoined ? '#10B98120' : '#F39C1220' }]}>
               <Text style={[styles.patientStatusText, { color: patientJoined ? '#10B981' : '#F39C12' }]}>
                 {patientJoined ? '✓ Patient has joined' : '⏳ Waiting for patient'}
@@ -274,7 +258,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
             )}
           </View>
 
-          {/* Doctor Controls */}
+          {}
           <View style={styles.controlsCard}>
             <Text style={styles.controlsTitle}>🎥 Consultation Controls</Text>
             
@@ -317,7 +301,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
           </View>
         </ScrollView>
 
-        {/* Help Text */}
+        {}
         <Text style={styles.helpText}>
           The video call will open in your browser or Jitsi Meet app
         </Text>

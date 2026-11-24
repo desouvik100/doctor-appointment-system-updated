@@ -1,9 +1,4 @@
-/**
- * Systematic History Configuration
- * Shared constants for body systems, symptoms, and AI recommendation rules
- */
 
-// Body Systems with their symptoms
 const BODY_SYSTEMS = {
   general: {
     name: 'General',
@@ -149,9 +144,7 @@ const BODY_SYSTEMS = {
       'Unexplained Weight Changes'
     ]
   }
-};
-
-// Common past medical conditions for quick selection
+};
 const COMMON_CONDITIONS = [
   'Diabetes',
   'Hypertension',
@@ -171,9 +164,7 @@ const COMMON_CONDITIONS = [
   'GERD',
   'Anemia',
   'Osteoporosis'
-];
-
-// Common medications for auto-suggestions
+];
 const COMMON_MEDICATIONS = [
   'Metformin',
   'Amlodipine',
@@ -190,27 +181,21 @@ const COMMON_MEDICATIONS = [
   'Montelukast',
   'Salbutamol',
   'Insulin'
-];
-
-// Duration options
+];
 const DURATION_OPTIONS = [
   { value: 'days', label: '1-3 days' },
   { value: 'week', label: 'About 1 week' },
   { value: 'weeks', label: '2-3 weeks' },
   { value: 'month', label: 'About 1 month' },
   { value: 'months', label: 'More than 1 month' }
-];
-
-// Severity labels
+];
 const SEVERITY_LABELS = {
   1: 'Mild',
   2: 'Mild-Moderate',
   3: 'Moderate',
   4: 'Moderate-Severe',
   5: 'Severe'
-};
-
-// AI Specialization Rules for doctor matching
+};
 const SPECIALIZATION_RULES = [
   {
     id: 'respiratory',

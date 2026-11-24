@@ -1,20 +1,11 @@
-/**
- * Drug Interaction Routes
- * Real-time drug interaction checking using RxNorm API
- */
+
 
 const express = require('express');
 const router = express.Router();
-const { verifyToken } = require('../middleware/auth');
-
-// Import services
+const { verifyToken } = require('../middleware/auth');
 const rxNormService = require('../services/rxNormService');
 const localDrugService = require('../services/drugInteractionService');
 
-/**
- * Search drugs by name (autocomplete)
- * GET /api/drugs/search?q=aspirin
- */
 router.get('/search', async (req, res) => {
   try {
     const { q, limit = 10 } = req.query;
@@ -24,9 +15,7 @@ router.get('/search', async (req, res) => {
         success: false,
         message: 'Search query must be at least 2 characters'
       });
-    }
-    
-    // Try RxNorm first, fallback to local
+    }
     let results = [];
     try {
       results = await rxNormService.searchDrugs(q, parseInt(limit));
@@ -49,10 +38,6 @@ router.get('/search', async (req, res) => {
   }
 });
 
-/**
- * Validate a drug name
- * GET /api/drugs/validate?name=aspirin
- */
 router.get('/validate', async (req, res) => {
   try {
     const { name } = req.query;
@@ -78,10 +63,6 @@ router.get('/validate', async (req, res) => {
   }
 });
 
-/**
- * Get drug information by RxCUI
- * GET /api/drugs/info/:rxcui
- */
 router.get('/info/:rxcui', async (req, res) => {
   try {
     const { rxcui } = req.params;
@@ -113,10 +94,6 @@ router.get('/info/:rxcui', async (req, res) => {
   }
 });
 
-/**
- * Check interactions between multiple drugs (RxNorm API)
- * POST /api/drugs/interactions/check
- */
 router.post('/interactions/check', verifyToken, async (req, res) => {
   try {
     const { drugs, currentMedications = [], allergies = [], useRxNorm = true } = req.body;
@@ -134,13 +111,11 @@ router.post('/interactions/check', verifyToken, async (req, res) => {
     let source = 'local';
     
     if (useRxNorm) {
-      try {
-        // Try RxNorm API first
+      try {
         result = await rxNormService.getComprehensiveReport(allDrugs, allergies);
         source = 'rxnorm';
       } catch (rxError) {
-        console.warn('RxNorm API failed, falling back to local:', rxError.message);
-        // Fallback to local service
+        console.warn('RxNorm API failed, falling back to local:', rxError.message);
         result = localDrugService.checkPrescriptionSafety(drugs, currentMedications, allergies);
         source = 'local';
       }
@@ -161,10 +136,6 @@ router.post('/interactions/check', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Check interactions for a new drug against current medications
- * POST /api/drugs/interactions/check-new
- */
 router.post('/interactions/check-new', verifyToken, async (req, res) => {
   try {
     const { newDrug, currentMedications = [], allergies = [], useRxNorm = true } = req.body;
@@ -182,9 +153,7 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
     if (useRxNorm && currentMedications.length > 0) {
       try {
         result = await rxNormService.checkNewDrugInteractions(newDrug, currentMedications);
-        source = 'rxnorm';
-        
-        // Add allergy checking from local service
+        source = 'rxnorm';
         if (allergies.length > 0) {
           const allergyAlerts = localDrugService.checkDrugAllergies(newDrug, allergies);
           result.allergyAlerts = allergyAlerts;
@@ -211,19 +180,12 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get drug classes for a drug
- * GET /api/drugs/classes/:drugName
- */
 router.get('/classes/:drugName', async (req, res) => {
   try {
-    const { drugName } = req.params;
-    
-    // Get RxCUI first
+    const { drugName } = req.params;
     const rxcui = await rxNormService.getRxCUI(drugName);
     
-    if (!rxcui) {
-      // Fallback to local
+    if (!rxcui) {
       const localClasses = localDrugService.getDrugClasses(drugName);
       return res.json({
         success: true,
@@ -250,10 +212,6 @@ router.get('/classes/:drugName', async (req, res) => {
   }
 });
 
-/**
- * Get interaction statistics
- * GET /api/drugs/stats
- */
 router.get('/stats', (req, res) => {
   try {
     const stats = localDrugService.getInteractionStats();
@@ -282,10 +240,6 @@ router.get('/stats', (req, res) => {
   }
 });
 
-/**
- * Get all severity levels
- * GET /api/drugs/severity-levels
- */
 router.get('/severity-levels', (req, res) => {
   try {
     const drugSeverity = localDrugService.getAllSeverityLevels();

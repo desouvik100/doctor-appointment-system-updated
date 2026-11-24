@@ -1,7 +1,5 @@
-// backend/services/reminderEmailService.js
-const nodemailer = require('nodemailer');
 
-// Get transporter from email service or create new one
+const nodemailer = require('nodemailer');
 let transporter = null;
 
 function getTransporter() {
@@ -21,9 +19,7 @@ function getTransporter() {
   });
   
   return transporter;
-}
-
-// Send appointment reminder email
+}
 async function sendAppointmentReminder(appointment, user, doctor) {
   const transport = getTransporter();
   if (!transport) {
@@ -113,9 +109,7 @@ async function sendAppointmentReminder(appointment, user, doctor) {
     console.error('❌ Failed to send appointment reminder:', error.message);
     return { success: false, error: error.message };
   }
-}
-
-// Send medicine reminder email
+}
 async function sendMedicineReminder(user, medicines) {
   const transport = getTransporter();
   if (!transport) {
@@ -193,9 +187,7 @@ async function sendMedicineReminder(user, medicines) {
     console.error('❌ Failed to send medicine reminder:', error.message);
     return { success: false, error: error.message };
   }
-}
-
-// Send water intake reminder
+}
 async function sendWaterReminder(user) {
   const transport = getTransporter();
   if (!transport) return { success: false, reason: 'Email not configured' };
@@ -252,9 +244,7 @@ async function sendWaterReminder(user) {
   } catch (error) {
     return { success: false, error: error.message };
   }
-}
-
-// Send health checkup reminder
+}
 async function sendHealthCheckupReminder(user, checkupType = 'Annual') {
   const transport = getTransporter();
   if (!transport) return { success: false, reason: 'Email not configured' };

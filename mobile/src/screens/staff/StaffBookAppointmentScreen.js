@@ -1,7 +1,4 @@
-/**
- * Staff Book Appointment Screen - Book Appointment for Patient
- * 100% Parity with Web Staff Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -115,7 +112,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Patient Selection */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient</Text>
           {form.patientName ? (
@@ -136,7 +133,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Doctor Selection */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Doctor</Text>
           {form.doctorName ? (
@@ -167,7 +164,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Date Selection */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Date</Text>
           <TextInput
@@ -179,7 +176,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
           />
         </View>
 
-        {/* Time Slots */}
+        {}
         {form.doctorId && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Available Slots</Text>
@@ -209,7 +206,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Appointment Type */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Type</Text>
           <View style={styles.typeRow}>
@@ -231,7 +228,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Notes */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Notes (Optional)</Text>
           <TextInput
@@ -245,7 +242,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
           />
         </View>
 
-        {/* Submit Button */}
+        {}
         <TouchableOpacity
           style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
           onPress={handleSubmit}
@@ -261,7 +258,6 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

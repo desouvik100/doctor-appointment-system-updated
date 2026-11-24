@@ -40,12 +40,12 @@ const appointmentSchema = new mongoose.Schema(
       type: Number,
       default: 1
     },
-    // Queue-based booking fields
+
     queueNumber: {
       type: Number,
       default: null
     },
-    // Slot-based booking fields (for strict online/clinic separation)
+
     slotId: {
       type: mongoose.Schema.Types.ObjectId,
       refPath: 'slotModel',
@@ -75,13 +75,13 @@ const appointmentSchema = new mongoose.Schema(
       enum: ['email', 'sms', 'both'],
       default: 'email'
     },
-    // Booking source - online (app/website) or offline (walk-in at clinic)
+
     bookingSource: {
       type: String,
       enum: ['online', 'offline', 'phone', 'receptionist'],
       default: 'online'
     },
-    // For offline walk-in patients without app account
+
     walkInPatient: {
       name: { type: String, trim: true },
       phone: { type: String, trim: true },
@@ -89,12 +89,12 @@ const appointmentSchema = new mongoose.Schema(
       age: { type: Number },
       gender: { type: String, enum: ['male', 'female', 'other'] }
     },
-    // Flag to identify if this is a walk-in without user account
+
     isWalkIn: {
       type: Boolean,
       default: false
     },
-    // Added by (receptionist/doctor ID for offline bookings)
+
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
@@ -121,12 +121,12 @@ const appointmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Prescription'
     },
-    // For family member booking
+
     bookedFor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'FamilyMember'
     },
-    // Online Consultation Fields
+
     consultationType: {
       type: String,
       enum: ["in_person", "online"],
@@ -147,7 +147,7 @@ const appointmentSchema = new mongoose.Schema(
     meetingEndTime: {
       type: Date
     },
-    // Google Meet Integration
+
     googleMeetLink: {
       type: String,
       trim: true
@@ -156,7 +156,7 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
-    // Separate links for doctor (host) and patient
+
     doctorMeetLink: {
       type: String,
       trim: true
@@ -185,7 +185,7 @@ const appointmentSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
-    // WebRTC Consultation Fields
+
     consultationStatus: {
       type: String,
       enum: ["not_started", "in_progress", "completed"],
@@ -198,10 +198,10 @@ const appointmentSchema = new mongoose.Schema(
       type: Date
     },
     consultationDuration: {
-      type: Number, // Duration in seconds
+      type: Number, 
       default: 0
     },
-    // PayU Payment Integration
+
     payuTxnId: {
       type: String,
       index: true
@@ -210,7 +210,7 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       index: true
     },
-    // Legacy Razorpay fields (for backward compatibility)
+
     razorpayOrderId: {
       type: String,
       index: true
@@ -249,7 +249,7 @@ const appointmentSchema = new mongoose.Schema(
       processedAt: Date,
       error: String
     },
-    // Refund policy tracking
+
     refundPolicy: {
       policyApplied: {
         type: String,
@@ -266,7 +266,7 @@ const appointmentSchema = new mongoose.Schema(
       walletCreditProcessed: Boolean,
       reason: String
     },
-    // Legacy payment structure (for backward compatibility)
+
     payment: {
       consultationFee: {
         type: Number,
@@ -301,7 +301,7 @@ const appointmentSchema = new mongoose.Schema(
         type: Date
       }
     },
-    // Token + Queue Entry System
+
     token: {
       type: String,
       unique: true,
@@ -322,24 +322,24 @@ const appointmentSchema = new mongoose.Schema(
       default: null
     },
     estimatedWaitTime: {
-      type: Number, // in minutes
+      type: Number, 
       default: null
     },
     tokenExpiredAt: {
       type: Date
     },
-    // QR Code for check-in
+
     qrCode: {
-      type: String // Base64 encoded QR code or unique identifier
+      type: String 
     },
-    // Reminder tracking
+
     remindersSent: {
       email24h: { type: Boolean, default: false },
       sms24h: { type: Boolean, default: false },
       email1h: { type: Boolean, default: false },
       sms1h: { type: Boolean, default: false }
     },
-    // Cancellation tracking
+
     cancellationReason: {
       type: String,
       trim: true
@@ -358,9 +358,8 @@ const appointmentSchema = new mongoose.Schema(
   }
 );
 
-// Generate a random join code
 appointmentSchema.methods.generateJoinCode = function() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude similar looking chars
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; 
   let code = '';
   for (let i = 0; i < 8; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -369,32 +368,28 @@ appointmentSchema.methods.generateJoinCode = function() {
   return code;
 };
 
-// Generate appointment token
 appointmentSchema.methods.generateToken = function(doctorCode = 'GEN') {
-  // Format: HS-{DOCTORCODE}-{DDMM}-{4-digit-random}
+
   const date = new Date(this.date);
   const day = String(date.getDate()).padStart(2, '0');
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   
   this.token = `HS-${doctorCode.toUpperCase()}-${day}${month}-${randomNum}`;
-  this.tokenExpiredAt = new Date(date.getTime() + 2 * 60 * 60 * 1000); // 2 hours after appointment
+  this.tokenExpiredAt = new Date(date.getTime() + 2 * 60 * 60 * 1000); 
   return this.token;
 };
 
-// Check if online consultation is accessible
 appointmentSchema.methods.isConsultationAccessible = function() {
-  // Only for online consultations
+
   if (this.consultationType !== 'online') {
     return { accessible: false, reason: 'Not an online consultation' };
   }
 
-  // Must be confirmed or in_progress
   if (this.status !== 'confirmed' && this.status !== 'in_progress') {
     return { accessible: false, reason: 'Appointment not confirmed' };
   }
 
-  // Check time window (15 minutes before to 60 minutes after)
   const appointmentDateTime = new Date(this.date);
   const [hours, minutes] = this.time.split(':');
   appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -422,7 +417,6 @@ appointmentSchema.methods.isConsultationAccessible = function() {
   return { accessible: true, reason: 'Ready to join' };
 };
 
-// Virtual field for formatted appointment time
 appointmentSchema.virtual('appointmentDateTime').get(function() {
   const appointmentDate = new Date(this.date);
   const [hours, minutes] = this.time.split(':');
@@ -430,34 +424,22 @@ appointmentSchema.virtual('appointmentDateTime').get(function() {
   return appointmentDate;
 });
 
-// ===== PERFORMANCE INDEXES =====
-// Critical indexes for high-load scenarios
-
-// Most common query: Get appointments by doctor and date
 appointmentSchema.index({ doctorId: 1, date: 1, status: 1 });
 
-// Patient's appointments
 appointmentSchema.index({ userId: 1, date: -1, status: 1 });
 
-// Clinic's appointments
 appointmentSchema.index({ clinicId: 1, date: 1 });
 
-// Status-based queries (pending, confirmed, etc.)
 appointmentSchema.index({ status: 1, date: 1 });
 
-// Payment status queries
 appointmentSchema.index({ paymentStatus: 1, createdAt: -1 });
 
-// Token lookup (for queue system)
 appointmentSchema.index({ token: 1 });
 
-// Online consultation queries
 appointmentSchema.index({ consultationType: 1, date: 1, status: 1 });
 
-// Queue status queries
 appointmentSchema.index({ queueStatus: 1, doctorId: 1, date: 1 });
 
-// Compound index for conflict checking
 appointmentSchema.index({ doctorId: 1, date: 1, time: 1, status: 1 });
 
 module.exports = mongoose.model("Appointment", appointmentSchema);

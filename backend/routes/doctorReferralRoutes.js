@@ -1,15 +1,10 @@
-/**
- * Doctor Referral & Commission API Routes
- * Requirement 3: Doctor Earnings Protection (Zero-Commission Launch)
- */
+
 
 const express = require('express');
 const router = express.Router();
 const DoctorReferral = require('../models/DoctorReferral');
 const Doctor = require('../models/Doctor');
-const { authenticate, checkRole } = require('../middleware/roleMiddleware');
-
-// Get doctor's referral info
+const { authenticate, checkRole } = require('../middleware/roleMiddleware');
 router.get('/my-referral', authenticate, async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ 
@@ -35,9 +30,7 @@ router.get('/my-referral', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get competitor comparison
+});
 router.get('/comparison', authenticate, async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ 
@@ -63,9 +56,7 @@ router.get('/comparison', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get referral code for sharing
+});
 router.get('/share-code', authenticate, async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ 
@@ -94,28 +85,20 @@ router.get('/share-code', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Apply referral code (during doctor registration)
+});
 router.post('/apply-code', async (req, res) => {
   try {
-    const { referralCode, doctorId, doctorName } = req.body;
-    
-    // Find referrer
+    const { referralCode, doctorId, doctorName } = req.body;
     const referrer = await DoctorReferral.findOne({ referralCode: referralCode.toUpperCase() });
     
     if (!referrer) {
       return res.status(404).json({ message: 'Invalid referral code' });
-    }
-    
-    // Create referral record for new doctor
+    }
     const newDoctorReferral = await DoctorReferral.getOrCreateReferral(
       doctorId, 
       doctorName, 
       referralCode
-    );
-    
-    // Add to referrer's referred doctors
+    );
     referrer.referredDoctors.push({
       doctorId,
       name: doctorName,
@@ -135,9 +118,7 @@ router.post('/apply-code', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Record appointment and calculate commission
+});
 router.post('/record-appointment', authenticate, async (req, res) => {
   try {
     const { doctorId, consultationFee, isOnline, appointmentId } = req.body;
@@ -163,9 +144,7 @@ router.post('/record-appointment', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get referred doctors list
+});
 router.get('/referred-doctors', authenticate, async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ 
@@ -190,9 +169,7 @@ router.get('/referred-doctors', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get milestones and badges
+});
 router.get('/achievements', authenticate, async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ 
@@ -207,9 +184,7 @@ router.get('/achievements', authenticate, async (req, res) => {
     
     if (!referral) {
       return res.json({ milestones: [], badges: [] });
-    }
-    
-    // Calculate progress to next milestone
+    }
     const total = referral.appointmentCounts.totalAppointments;
     const milestoneTargets = [1, 50, 100, 500, 1000];
     const nextTarget = milestoneTargets.find(t => t > total) || 1000;
@@ -227,9 +202,7 @@ router.get('/achievements', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get tier benefits
+});
 router.get('/tier-benefits', async (req, res) => {
   try {
     const tiers = {
@@ -274,9 +247,7 @@ router.get('/tier-benefits', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Admin: Get all doctor referrals
+});
 router.get('/admin/all', authenticate, checkRole(['admin']), async (req, res) => {
   try {
     const { tier, page = 1, limit = 20 } = req.query;
@@ -301,9 +272,7 @@ router.get('/admin/all', authenticate, checkRole(['admin']), async (req, res) =>
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Admin: Get commission summary
+});
 router.get('/admin/summary', authenticate, checkRole(['admin']), async (req, res) => {
   try {
     const referrals = await DoctorReferral.find({});

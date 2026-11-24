@@ -1,26 +1,12 @@
-/**
- * RxNorm API Service
- * Real-time drug interaction checking using NIH's RxNorm and OpenFDA APIs
- * 
- * APIs Used:
- * - RxNorm: https://rxnav.nlm.nih.gov/REST/
- * - OpenFDA Drug Interactions: https://api.fda.gov/drug/
- */
 
-const axios = require('axios');
 
-// API Base URLs
+const axios = require('axios');
 const RXNORM_BASE_URL = 'https://rxnav.nlm.nih.gov/REST';
 const RXCLASS_BASE_URL = 'https://rxnav.nlm.nih.gov/REST/rxclass';
-const INTERACTION_BASE_URL = 'https://rxnav.nlm.nih.gov/REST/interaction';
-
-// Cache for drug lookups (TTL: 24 hours)
+const INTERACTION_BASE_URL = 'https://rxnav.nlm.nih.gov/REST/interaction';
 const drugCache = new Map();
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
-/**
- * Clear expired cache entries
- */
 function cleanCache() {
   const now = Date.now();
   for (const [key, value] of drugCache.entries()) {
@@ -28,23 +14,14 @@ function cleanCache() {
       drugCache.delete(key);
     }
   }
-}
-
-// Clean cache every hour
+}
 setInterval(cleanCache, 60 * 60 * 1000);
 
-/**
- * Get RxCUI (RxNorm Concept Unique Identifier) for a drug name
- * @param {string} drugName - Drug name to look up
- * @returns {Promise<string|null>} RxCUI or null if not found
- */
 async function getRxCUI(drugName) {
   if (!drugName || typeof drugName !== 'string') return null;
   
   const normalizedName = drugName.toLowerCase().trim();
-  const cacheKey = `rxcui:${normalizedName}`;
-  
-  // Check cache
+  const cacheKey = `rxcui:${normalizedName}`;
   if (drugCache.has(cacheKey)) {
     const cached = drugCache.get(cacheKey);
     if (Date.now() - cached.timestamp < CACHE_TTL) {
@@ -52,8 +29,7 @@ async function getRxCUI(drugName) {
     }
   }
   
-  try {
-    // Try approximate match first for better results
+  try {
     const response = await axios.get(`${RXNORM_BASE_URL}/approximateTerm.json`, {
       params: { term: drugName, maxEntries: 1 },
       timeout: 10000
@@ -63,8 +39,7 @@ async function getRxCUI(drugName) {
     
     if (response.data?.approximateGroup?.candidate?.[0]?.rxcui) {
       rxcui = response.data.approximateGroup.candidate[0].rxcui;
-    } else {
-      // Fallback to exact match
+    } else {
       const exactResponse = await axios.get(`${RXNORM_BASE_URL}/rxcui.json`, {
         params: { name: drugName },
         timeout: 10000
@@ -73,9 +48,7 @@ async function getRxCUI(drugName) {
       if (exactResponse.data?.idGroup?.rxnormId?.[0]) {
         rxcui = exactResponse.data.idGroup.rxnormId[0];
       }
-    }
-    
-    // Cache result
+    }
     drugCache.set(cacheKey, { data: rxcui, timestamp: Date.now() });
     return rxcui;
   } catch (error) {
@@ -84,11 +57,6 @@ async function getRxCUI(drugName) {
   }
 }
 
-/**
- * Get drug information from RxNorm
- * @param {string} rxcui - RxCUI to look up
- * @returns {Promise<Object|null>} Drug information
- */
 async function getDrugInfo(rxcui) {
   if (!rxcui) return null;
   
@@ -113,7 +81,7 @@ async function getDrugInfo(rxcui) {
       rxcui,
       name: properties.name,
       synonym: properties.synonym,
-      tty: properties.tty, // Term type
+      tty: properties.tty, 
       language: properties.language
     };
     
@@ -125,12 +93,6 @@ async function getDrugInfo(rxcui) {
   }
 }
 
-/**
- * Search for drugs by name (autocomplete)
- * @param {string} searchTerm - Search term
- * @param {number} maxResults - Maximum results to return
- * @returns {Promise<Array>} Array of drug suggestions
- */
 async function searchDrugs(searchTerm, maxResults = 10) {
   if (!searchTerm || searchTerm.length < 2) return [];
   
@@ -140,9 +102,7 @@ async function searchDrugs(searchTerm, maxResults = 10) {
       timeout: 8000
     });
     
-    const suggestions = response.data?.suggestionGroup?.suggestionList?.suggestion || [];
-    
-    // Get RxCUIs for top suggestions
+    const suggestions = response.data?.suggestionGroup?.suggestionList?.suggestion || [];
     const results = await Promise.all(
       suggestions.slice(0, maxResults).map(async (name) => {
         const rxcui = await getRxCUI(name);
@@ -157,11 +117,6 @@ async function searchDrugs(searchTerm, maxResults = 10) {
   }
 }
 
-/**
- * Get drug class information
- * @param {string} rxcui - RxCUI to look up
- * @returns {Promise<Array>} Array of drug classes
- */
 async function getDrugClasses(rxcui) {
   if (!rxcui) return [];
   
@@ -196,12 +151,6 @@ async function getDrugClasses(rxcui) {
   }
 }
 
-/**
- * Check interactions between two drugs using RxNorm Interaction API
- * @param {string} rxcui1 - First drug RxCUI
- * @param {string} rxcui2 - Second drug RxCUI
- * @returns {Promise<Array>} Array of interactions
- */
 async function checkPairInteraction(rxcui1, rxcui2) {
   if (!rxcui1 || !rxcui2) return [];
   
@@ -216,8 +165,7 @@ async function checkPairInteraction(rxcui1, rxcui2) {
     
     for (const group of interactionGroups) {
       for (const type of group.interactionType || []) {
-        for (const pair of type.interactionPair || []) {
-          // Check if this interaction involves the second drug
+        for (const pair of type.interactionPair || []) {
           const concepts = pair.interactionConcept || [];
           const involvesSecondDrug = concepts.some(c => 
             c.minConceptItem?.rxcui === rxcui2
@@ -245,18 +193,12 @@ async function checkPairInteraction(rxcui1, rxcui2) {
   }
 }
 
-/**
- * Check interactions for a list of drugs
- * @param {Array<string>} drugNames - Array of drug names
- * @returns {Promise<Object>} Interaction check results
- */
 async function checkInteractions(drugNames) {
   if (!Array.isArray(drugNames) || drugNames.length < 2) {
     return { interactions: [], drugs: [] };
   }
   
-  try {
-    // Get RxCUIs for all drugs
+  try {
     const drugsWithRxcui = await Promise.all(
       drugNames.map(async (name) => {
         const rxcui = await getRxCUI(name);
@@ -272,9 +214,7 @@ async function checkInteractions(drugNames) {
         drugs: drugsWithRxcui,
         warning: 'Could not find RxCUI for some drugs'
       };
-    }
-    
-    // Use RxNorm interaction list API for multiple drugs
+    }
     const rxcuiList = validDrugs.map(d => d.rxcui).join('+');
     
     const response = await axios.get(`${INTERACTION_BASE_URL}/list.json`, {
@@ -303,9 +243,7 @@ async function checkInteractions(drugNames) {
           });
         }
       }
-    }
-    
-    // Sort by severity
+    }
     interactions.sort((a, b) => a.severityLevel - b.severityLevel);
     
     return {
@@ -321,21 +259,13 @@ async function checkInteractions(drugNames) {
   }
 }
 
-/**
- * Check interactions for a new drug against existing medications
- * @param {string} newDrug - New drug name
- * @param {Array<string>} currentMedications - Current medication names
- * @returns {Promise<Object>} Interaction results
- */
 async function checkNewDrugInteractions(newDrug, currentMedications) {
   if (!newDrug || !Array.isArray(currentMedications) || currentMedications.length === 0) {
     return { interactions: [], newDrugRxcui: null };
   }
   
   const allDrugs = [newDrug, ...currentMedications];
-  const result = await checkInteractions(allDrugs);
-  
-  // Filter to only interactions involving the new drug
+  const result = await checkInteractions(allDrugs);
   const newDrugRxcui = result.drugs.find(d => 
     d.name.toLowerCase() === newDrug.toLowerCase()
   )?.rxcui;
@@ -352,9 +282,6 @@ async function checkNewDrugInteractions(newDrug, currentMedications) {
   };
 }
 
-/**
- * Map RxNorm severity to standard severity levels
- */
 function mapSeverity(rxnormSeverity) {
   if (!rxnormSeverity) return 'unknown';
   
@@ -376,9 +303,6 @@ function mapSeverity(rxnormSeverity) {
   return 'unknown';
 }
 
-/**
- * Get numeric severity level for sorting
- */
 function getSeverityLevel(severity) {
   const mapped = mapSeverity(severity);
   const levels = {
@@ -391,11 +315,6 @@ function getSeverityLevel(severity) {
   return levels[mapped] || 5;
 }
 
-/**
- * Get NDC (National Drug Code) for a drug
- * @param {string} rxcui - RxCUI
- * @returns {Promise<Array>} Array of NDC codes
- */
 async function getNDCCodes(rxcui) {
   if (!rxcui) return [];
   
@@ -411,11 +330,6 @@ async function getNDCCodes(rxcui) {
   }
 }
 
-/**
- * Get related drugs (brand names, generics, etc.)
- * @param {string} rxcui - RxCUI
- * @returns {Promise<Object>} Related drugs
- */
 async function getRelatedDrugs(rxcui) {
   if (!rxcui) return {};
   
@@ -444,11 +358,6 @@ async function getRelatedDrugs(rxcui) {
   }
 }
 
-/**
- * Validate drug name exists in RxNorm
- * @param {string} drugName - Drug name to validate
- * @returns {Promise<Object>} Validation result
- */
 async function validateDrug(drugName) {
   const rxcui = await getRxCUI(drugName);
   
@@ -471,16 +380,8 @@ async function validateDrug(drugName) {
   };
 }
 
-/**
- * Get comprehensive drug interaction report
- * @param {Array<string>} drugs - Array of drug names
- * @param {Array<Object>} allergies - Patient allergies
- * @returns {Promise<Object>} Comprehensive report
- */
 async function getComprehensiveReport(drugs, allergies = []) {
-  const result = await checkInteractions(drugs);
-  
-  // Get drug classes for each drug
+  const result = await checkInteractions(drugs);
   const drugDetails = await Promise.all(
     result.drugs.filter(d => d.rxcui).map(async (drug) => {
       const classes = await getDrugClasses(drug.rxcui);
@@ -491,16 +392,12 @@ async function getComprehensiveReport(drugs, allergies = []) {
         classes
       };
     })
-  );
-  
-  // Check for allergy cross-reactivity based on drug classes
+  );
   const allergyAlerts = [];
   
   for (const drug of drugDetails) {
     for (const allergy of allergies) {
-      const allergenNormalized = allergy.allergen?.toLowerCase() || '';
-      
-      // Check direct name match
+      const allergenNormalized = allergy.allergen?.toLowerCase() || '';
       if (drug.name.toLowerCase().includes(allergenNormalized) ||
           allergenNormalized.includes(drug.name.toLowerCase())) {
         allergyAlerts.push({
@@ -511,9 +408,7 @@ async function getComprehensiveReport(drugs, allergies = []) {
           reaction: allergy.reaction
         });
         continue;
-      }
-      
-      // Check class match
+      }
       for (const drugClass of drug.classes) {
         if (drugClass.className?.toLowerCase().includes(allergenNormalized)) {
           allergyAlerts.push({
@@ -537,9 +432,6 @@ async function getComprehensiveReport(drugs, allergies = []) {
   };
 }
 
-/**
- * Generate summary text
- */
 function generateSummary(interactions, allergyAlerts) {
   const parts = [];
   

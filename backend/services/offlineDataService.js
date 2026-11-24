@@ -1,11 +1,6 @@
-/**
- * Offline Data Service
- * Handles critical patient data for offline access
- */
 
-class OfflineDataService {
-  
-  // Get critical patient data package for offline use
+
+class OfflineDataService {
   async getOfflinePatientData(patientId) {
     const EMRPatient = require('../models/EMRPatient');
     const EMRVisit = require('../models/EMRVisit');
@@ -13,24 +8,18 @@ class OfflineDataService {
     
     try {
       const patient = await EMRPatient.findById(patientId).lean();
-      if (!patient) throw new Error('Patient not found');
-      
-      // Get recent visits (last 10)
+      if (!patient) throw new Error('Patient not found');
       const visits = await EMRVisit.find({ patientId })
         .sort({ visitDate: -1 })
         .limit(10)
-        .lean();
-      
-      // Get active prescriptions
+        .lean();
       const prescriptions = await Prescription.find({ 
         patientId, 
         status: 'active' 
-      }).lean();
-      
-      // Critical data package
+      }).lean();
       const offlinePackage = {
         syncedAt: new Date(),
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
         patient: {
           id: patient._id,
           name: patient.name,
@@ -61,31 +50,23 @@ class OfflineDataService {
       console.error('Offline data fetch error:', error);
       throw error;
     }
-  }
-  
-  // Generate critical alerts for offline display
+  }
   generatePatientAlerts(patient, visits, prescriptions) {
-    const alerts = [];
-    
-    // Allergy alerts
+    const alerts = [];
     if (patient.allergies?.length > 0) {
       alerts.push({
         type: 'allergy',
         severity: 'high',
         message: `Allergies: ${patient.allergies.join(', ')}`
       });
-    }
-    
-    // Chronic condition alerts
+    }
     if (patient.chronicConditions?.length > 0) {
       alerts.push({
         type: 'chronic',
         severity: 'medium',
         message: `Chronic: ${patient.chronicConditions.join(', ')}`
       });
-    }
-    
-    // High-risk medication alerts
+    }
     const highRiskMeds = ['warfarin', 'insulin', 'methotrexate', 'lithium'];
     prescriptions.forEach(p => {
       if (highRiskMeds.some(m => p.medicationName?.toLowerCase().includes(m))) {
@@ -98,9 +79,7 @@ class OfflineDataService {
     });
     
     return alerts;
-  }
-  
-  // Sync offline changes back to server
+  }
   async syncOfflineChanges(changes) {
     const results = { success: [], failed: [] };
     

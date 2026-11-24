@@ -1,7 +1,4 @@
-/**
- * UpcomingAppointments - Overhauled Premium Showcase Card
- * Implements a responsive 2-column layout, 16dp corners, and subtle shadows.
- */
+
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -17,8 +14,7 @@ import Avatar from '../../../components/common/Avatar';
 dayjs.extend(relativeTime);
 
 const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, maxDisplay = 3 }) => {
-  const { colors, isDarkMode } = useTheme();
-  // Obtain navigation reference directly via hook for reusability
+  const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation();
   const [countdown, setCountdown] = useState('');
   const displayAppointments = appointments.slice(0, maxDisplay);
@@ -81,7 +77,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
         </TouchableOpacity>
       </View>
 
-      {/* Overhauled Showcase Card */}
+      {}
       <View style={[
         styles.featuredCard,
         {
@@ -90,7 +86,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
           borderWidth: 1,
         }
       ]}>
-        {/* Countdown & Type badges row */}
+        {}
         <View style={styles.badgesRow}>
           <View style={[styles.countdownBadge, { backgroundColor: isDarkMode ? 'rgba(0, 212, 170, 0.12)' : 'rgba(0, 212, 170, 0.08)' }]}>
             <Text style={[styles.countdownText, { color: colors.primary }]}>{countdown}</Text>
@@ -105,9 +101,9 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
           </View>
         </View>
 
-        {/* 2-Column Responsive Layout */}
+        {}
         <View style={styles.twoColumnGrid}>
-          {/* Left Column: Date & Time prominent typography */}
+          {}
           <View style={[
             styles.dateTimeCol,
             { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 212, 170, 0.05)' }
@@ -124,7 +120,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
             </Text>
           </View>
 
-          {/* Right Column: Doctor Info + Actions */}
+          {}
           <View style={styles.doctorInfoCol}>
             <View style={styles.doctorHeaderRow}>
               <Avatar
@@ -142,7 +138,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
               </View>
             </View>
 
-            {/* Quick Actions Row */}
+            {}
             <View style={styles.actionButtonContainer}>
               <TouchableOpacity
                 style={[
@@ -185,7 +181,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
         </View>
       </View>
 
-      {/* Other appointments in queue */}
+      {}
       {displayAppointments.slice(1).map((apt, i) => (
         <TouchableOpacity key={apt.id || i}
           style={[
@@ -213,9 +209,7 @@ const styles = StyleSheet.create({
   container: { marginBottom: spacing.xxxl },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   sectionTitle: { ...typography.headlineSmall, fontWeight: '700' },
-  seeAll: { ...typography.labelMedium },
-
-  // Empty state
+  seeAll: { ...typography.labelMedium },
   compactEmptyCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -262,14 +256,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Inter-Bold',
     fontWeight: '700',
-  },
-
-  // Overhauled Card Layout
+  },
   featuredCard: {
-    borderRadius: 16, // Enforce uniform corner radius of 16dp
+    borderRadius: 16, 
     padding: spacing.md,
-    marginBottom: spacing.md,
-    // Subtle diffused elevation blur shadow
+    marginBottom: spacing.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.04,
@@ -293,9 +284,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: borderRadius.full,
   },
-  typeText: { ...typography.labelSmall, fontWeight: '700', fontSize: 10 },
-  
-  // 2-Column responsive grid
+  typeText: { ...typography.labelSmall, fontWeight: '700', fontSize: 10 },
   twoColumnGrid: {
     flexDirection: 'row',
     gap: spacing.md,
@@ -384,9 +373,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Inter-Bold',
     fontWeight: '700',
-  },
-
-  // List items
+  },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',

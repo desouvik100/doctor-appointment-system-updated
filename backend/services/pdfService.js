@@ -1,7 +1,4 @@
-// backend/services/pdfService.js
-// PDF generation service for prescriptions, invoices, and health reports
-
-// Generate prescription HTML for PDF
+
 function generatePrescriptionHTML(prescription, patient, doctor, clinic, appointment) {
   const date = new Date(prescription.createdAt).toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -203,9 +200,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
 </body>
 </html>
   `;
-}
-
-// Generate Invoice HTML
+}
 function generateInvoiceHTML(payment, appointment, patient, doctor, clinic) {
   const date = new Date(payment.createdAt || Date.now()).toLocaleDateString('en-IN', {
     day: '2-digit',

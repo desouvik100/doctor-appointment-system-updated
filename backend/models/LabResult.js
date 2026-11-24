@@ -1,7 +1,4 @@
-/**
- * Lab Result Model
- * Stores individual lab test results for trending
- */
+
 
 const mongoose = require('mongoose');
 
@@ -31,7 +28,7 @@ const labResultSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  valueString: String, // For non-numeric results
+  valueString: String, 
   unit: String,
   referenceRange: {
     low: Number,
@@ -64,9 +61,7 @@ const labResultSchema = new mongoose.Schema({
   metadata: mongoose.Schema.Types.Mixed
 }, {
   timestamps: true
-});
-
-// Compound index for efficient trending queries
+});
 labResultSchema.index({ patientId: 1, testName: 1, collectedAt: -1 });
 
 module.exports = mongoose.model('LabResult', labResultSchema);

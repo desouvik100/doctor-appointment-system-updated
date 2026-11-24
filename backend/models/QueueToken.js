@@ -1,7 +1,4 @@
-/**
- * Queue Token Model
- * Advanced patient queue management with multi-department support
- */
+
 
 const mongoose = require('mongoose');
 
@@ -11,28 +8,22 @@ const queueTokenSchema = new mongoose.Schema({
     ref: 'Clinic',
     required: true,
     index: true
-  },
-  
-  // Token details
+  },
   tokenNumber: {
     type: String,
-    required: false // Will be auto-generated in pre-save hook
+    required: false 
   },
   
   tokenType: {
     type: String,
     enum: ['regular', 'priority', 'emergency', 'vip', 'senior', 'follow_up'],
     default: 'regular'
-  },
-  
-  // Department/Queue type
+  },
   department: {
     type: String,
     enum: ['consultation', 'lab', 'pharmacy', 'billing', 'radiology', 'procedure', 'vaccination', 'other'],
     default: 'consultation'
-  },
-  
-  // Patient info
+  },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -40,39 +31,27 @@ const queueTokenSchema = new mongoose.Schema({
   patientName: { type: String, required: true },
   patientPhone: String,
   patientAge: Number,
-  patientGender: String,
-  
-  // Doctor assignment
+  patientGender: String,
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
   },
-  doctorName: String,
-  
-  // Queue position and timing
+  doctorName: String,
   queuePosition: { type: Number, default: 0 },
-  estimatedWaitTime: { type: Number, default: 0 }, // minutes
-  
-  // Timestamps
+  estimatedWaitTime: { type: Number, default: 0 }, 
   issuedAt: { type: Date, default: Date.now },
   checkedInAt: Date,
   calledAt: Date,
   startedAt: Date,
-  completedAt: Date,
-  
-  // Status tracking
+  completedAt: Date,
   status: {
     type: String,
     enum: ['waiting', 'checked_in', 'called', 'in_consultation', 'completed', 'no_show', 'cancelled', 'transferred', 'on_hold'],
     default: 'waiting',
     index: true
-  },
-
-  // Call tracking
+  },
   callCount: { type: Number, default: 0 },
-  lastCalledAt: Date,
-  
-  // Transfer history
+  lastCalledAt: Date,
   transfers: [{
     fromDoctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
     toDoctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
@@ -81,56 +60,38 @@ const queueTokenSchema = new mongoose.Schema({
     reason: String,
     transferredAt: { type: Date, default: Date.now },
     transferredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-  }],
-  
-  // Consultation details
-  consultationDuration: Number, // minutes
+  }],
+  consultationDuration: Number, 
   chiefComplaint: String,
-  notes: String,
-  
-  // Notifications sent
+  notes: String,
   notifications: [{
     type: { type: String, enum: ['sms', 'whatsapp', 'app', 'display'] },
     message: String,
     sentAt: { type: Date, default: Date.now },
     status: { type: String, enum: ['sent', 'delivered', 'failed'] }
-  }],
-  
-  // Feedback
+  }],
   feedback: {
     rating: { type: Number, min: 1, max: 5 },
     waitTimeRating: { type: Number, min: 1, max: 5 },
     comment: String,
     submittedAt: Date
-  },
-  
-  // Virtual queue (joined remotely)
+  },
   isVirtualQueue: { type: Boolean, default: false },
   virtualJoinedAt: Date,
-  expectedArrivalTime: Date,
-  
-  // Appointment reference
-  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
-  
-  // Audit
+  expectedArrivalTime: Date,
+  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   
-}, { timestamps: true });
-
-// Indexes
+}, { timestamps: true });
 queueTokenSchema.index({ clinicId: 1, status: 1, department: 1 });
 queueTokenSchema.index({ clinicId: 1, doctorId: 1, status: 1 });
 queueTokenSchema.index({ clinicId: 1, issuedAt: -1 });
-queueTokenSchema.index({ patientPhone: 1 });
-
-// Virtual for wait time
+queueTokenSchema.index({ patientPhone: 1 });
 queueTokenSchema.virtual('actualWaitTime').get(function() {
   if (!this.calledAt) return null;
   return Math.round((this.calledAt - this.issuedAt) / 60000);
-});
-
-// Pre-save: Generate token number
+});
 queueTokenSchema.pre('save', async function(next) {
   if (this.isNew && !this.tokenNumber) {
     const today = new Date();
@@ -152,9 +113,7 @@ queueTokenSchema.pre('save', async function(next) {
     this.tokenNumber = `${prefix}${deptPrefix}-${String(count + 1).padStart(3, '0')}`;
   }
   next();
-});
-
-// Static: Get current queue for department
+});
 queueTokenSchema.statics.getCurrentQueue = function(clinicId, department, doctorId = null) {
   const query = {
     clinicId,
@@ -168,9 +127,7 @@ queueTokenSchema.statics.getCurrentQueue = function(clinicId, department, doctor
     .populate('patientId', 'name phone')
     .populate('doctorId', 'name')
     .sort({ tokenType: 1, queuePosition: 1, issuedAt: 1 });
-};
-
-// Static: Get queue stats
+};
 queueTokenSchema.statics.getQueueStats = async function(clinicId, department = null) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -186,11 +143,9 @@ queueTokenSchema.statics.getQueueStats = async function(clinicId, department = n
       avgWaitTime: { $avg: { $cond: [{ $and: ['$calledAt', '$issuedAt'] }, { $divide: [{ $subtract: ['$calledAt', '$issuedAt'] }, 60000] }, null] } }
     }}
   ]);
-};
-
-// Static: Calculate estimated wait time
+};
 queueTokenSchema.statics.calculateEstimatedWait = async function(clinicId, department, doctorId) {
-  const avgConsultTime = 10; // Default 10 minutes per patient
+  const avgConsultTime = 10; 
   
   const waitingCount = await this.countDocuments({
     clinicId,

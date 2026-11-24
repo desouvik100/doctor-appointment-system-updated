@@ -1,35 +1,21 @@
-/**
- * Script to add random profile photos to doctors and clinics
- * Run with: node scripts/add-random-photos.js
- */
+
 
 require('dotenv').config();
 const mongoose = require('mongoose');
 const Doctor = require('../models/Doctor');
-const Clinic = require('../models/Clinic');
-
-// Random doctor photos (using UI Avatars and Pravatar for variety)
+const Clinic = require('../models/Clinic');
 const getDoctorPhoto = (name, gender = 'male') => {
-  const photos = [
-    // UI Avatars - generates based on name
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff&size=200`,
-    // Pravatar - random faces
-    `https://i.pravatar.cc/200?u=${encodeURIComponent(name)}`,
-    // DiceBear avatars
-    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
-    // Robohash (fun robot avatars)
+  const photos = [
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff&size=200`,
+    `https://i.pravatar.cc/200?u=${encodeURIComponent(name)}`,
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`,
     `https://robohash.org/${encodeURIComponent(name)}?set=set4&size=200x200`,
-  ];
-  
-  // Use consistent photo based on name hash
+  ];
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return photos[hash % photos.length];
-};
-
-// Random clinic photos (using placeholder services)
+};
 const getClinicPhoto = (name) => {
-  const photos = [
-    // Unsplash medical/clinic images
+  const photos = [
     'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400&h=300&fit=crop',
     'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=400&h=300&fit=crop',
@@ -45,15 +31,12 @@ const getClinicPhoto = (name) => {
 };
 
 async function addRandomPhotos() {
-  try {
-    // Connect to MongoDB
+  try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ Connected to MongoDB');
-
-    // Update all doctors with profile photos
+    console.log('✅ Connected to MongoDB');
     const doctors = await Doctor.find({});
     console.log(`\n📋 Found ${doctors.length} doctors`);
     
@@ -64,9 +47,7 @@ async function addRandomPhotos() {
       doctorUpdated++;
       console.log(`  ✓ Updated Dr. ${doctor.name}`);
     }
-    console.log(`✅ Updated ${doctorUpdated} doctors with profile photos`);
-
-    // Update all clinics with logo and images
+    console.log(`✅ Updated ${doctorUpdated} doctors with profile photos`);
     const clinics = await Clinic.find({});
     console.log(`\n📋 Found ${clinics.length} clinics`);
     

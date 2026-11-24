@@ -1,7 +1,4 @@
-/**
- * Pharmacy Inventory Model
- * Advanced medicine/drug inventory management for clinics
- */
+
 
 const mongoose = require('mongoose');
 
@@ -11,9 +8,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
     ref: 'Clinic',
     required: true,
     index: true
-  },
-  
-  // Medicine details
+  },
   medicineName: {
     type: String,
     required: true,
@@ -37,9 +32,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
   
   composition: String,
   
-  strength: String, // e.g., "500mg", "10ml"
-  
-  // Stock details
+  strength: String, 
   sku: {
     type: String,
     unique: true,
@@ -63,9 +56,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
   unitsPerPack: {
     type: Number,
     default: 1
-  },
-  
-  // Stock levels
+  },
   minStockLevel: {
     type: Number,
     default: 10
@@ -76,9 +67,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
   reorderLevel: {
     type: Number,
     default: 20
-  },
-  
-  // Pricing
+  },
   costPrice: {
     type: Number,
     required: true
@@ -89,40 +78,32 @@ const pharmacyInventorySchema = new mongoose.Schema({
     required: true
   },
   
-  mrp: Number, // Maximum Retail Price
+  mrp: Number, 
   
   gstRate: {
     type: Number,
-    default: 12 // GST percentage
-  },
-  
-  // Dates
+    default: 12 
+  },
   manufacturingDate: Date,
   
   expiryDate: {
     type: Date,
     index: true
-  },
-  
-  // Supplier info
+  },
   supplier: {
     name: String,
     contact: String,
     email: String,
     address: String,
     gstNumber: String
-  },
-  
-  // Storage
+  },
   storageConditions: {
     type: String,
     enum: ['room_temperature', 'refrigerated', 'frozen', 'cool_dry_place'],
     default: 'room_temperature'
   },
   
-  shelfLocation: String,
-  
-  // Regulatory
+  shelfLocation: String,
   scheduleType: {
     type: String,
     enum: ['OTC', 'H', 'H1', 'X', 'G', 'J', 'none'],
@@ -134,9 +115,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
     default: false
   },
   
-  drugCode: String, // NDC or similar
-  
-  // Status
+  drugCode: String, 
   isActive: {
     type: Boolean,
     default: true
@@ -145,9 +124,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
   isDiscontinued: {
     type: Boolean,
     default: false
-  },
-  
-  // Stock transactions
+  },
   transactions: [{
     type: {
       type: String,
@@ -163,7 +140,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
     batchNumber: String,
     unitPrice: Number,
     totalAmount: Number,
-    reference: String, // Invoice/PO number
+    reference: String, 
     reason: String,
     performedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -173,9 +150,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }],
-  
-  // Auto-reorder settings
+  }],
   autoReorder: {
     enabled: {
       type: Boolean,
@@ -183,12 +158,8 @@ const pharmacyInventorySchema = new mongoose.Schema({
     },
     preferredSupplier: String,
     reorderQuantity: Number
-  },
-  
-  // Notes
-  notes: String,
-  
-  // Audit
+  },
+  notes: String,
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -201,36 +172,26 @@ const pharmacyInventorySchema = new mongoose.Schema({
   
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 pharmacyInventorySchema.index({ clinicId: 1, medicineName: 1 });
 pharmacyInventorySchema.index({ clinicId: 1, currentStock: 1 });
 pharmacyInventorySchema.index({ clinicId: 1, expiryDate: 1 });
-pharmacyInventorySchema.index({ genericName: 'text', medicineName: 'text', brandName: 'text' });
-
-// Virtual for stock status
+pharmacyInventorySchema.index({ genericName: 'text', medicineName: 'text', brandName: 'text' });
 pharmacyInventorySchema.virtual('stockStatus').get(function() {
   if (this.currentStock <= 0) return 'out_of_stock';
   if (this.currentStock <= this.minStockLevel) return 'low_stock';
   if (this.currentStock <= this.reorderLevel) return 'reorder';
   return 'in_stock';
-});
-
-// Virtual for days until expiry
+});
 pharmacyInventorySchema.virtual('daysUntilExpiry').get(function() {
   if (!this.expiryDate) return null;
   const diff = this.expiryDate - new Date();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
-});
-
-// Virtual for profit margin
+});
 pharmacyInventorySchema.virtual('profitMargin').get(function() {
   if (!this.costPrice || !this.sellingPrice) return 0;
   return ((this.sellingPrice - this.costPrice) / this.costPrice * 100).toFixed(2);
-});
-
-// Method to add stock
+});
 pharmacyInventorySchema.methods.addStock = async function(quantity, details = {}) {
   const previousStock = this.currentStock;
   this.currentStock += quantity;
@@ -245,9 +206,7 @@ pharmacyInventorySchema.methods.addStock = async function(quantity, details = {}
   });
   
   return this.save();
-};
-
-// Method to reduce stock
+};
 pharmacyInventorySchema.methods.reduceStock = async function(quantity, details = {}) {
   if (this.currentStock < quantity) {
     throw new Error('Insufficient stock');
@@ -266,18 +225,14 @@ pharmacyInventorySchema.methods.reduceStock = async function(quantity, details =
   });
   
   return this.save();
-};
-
-// Static: Get low stock items
+};
 pharmacyInventorySchema.statics.getLowStock = function(clinicId) {
   return this.find({
     clinicId,
     isActive: true,
     $expr: { $lte: ['$currentStock', '$minStockLevel'] }
   }).sort({ currentStock: 1 });
-};
-
-// Static: Get expiring items
+};
 pharmacyInventorySchema.statics.getExpiring = function(clinicId, daysAhead = 30) {
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + daysAhead);
@@ -287,9 +242,7 @@ pharmacyInventorySchema.statics.getExpiring = function(clinicId, daysAhead = 30)
     isActive: true,
     expiryDate: { $lte: futureDate, $gt: new Date() }
   }).sort({ expiryDate: 1 });
-};
-
-// Static: Get expired items
+};
 pharmacyInventorySchema.statics.getExpired = function(clinicId) {
   return this.find({
     clinicId,

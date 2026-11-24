@@ -6,57 +6,9 @@ const aiSecurityService = require('../services/aiSecurityService');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const router = express.Router();
 
-/**
- * @swagger
- * /users/me:
- *   get:
- *     summary: Get current logged-in user
- *     description: Returns the profile of the currently authenticated user
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/User'
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: User not found
- */
-
-/**
- * @swagger
- * /users/search:
- *   get:
- *     summary: Search user by phone or email
- *     description: Search for a user by phone number or email (for walk-in patient lookup)
- *     tags: [Users]
- *     parameters:
- *       - in: query
- *         name: phone
- *         schema:
- *           type: string
- *       - in: query
- *         name: email
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: User found
- *       400:
- *         description: Phone or email required
- *       404:
- *         description: User not found
- */
-
-// Security helper - log account operations
 const logAccountOperation = async (req, action, targetUser, details = {}) => {
   try {
-    // Get admin info from request (if available)
+
     const adminId = req.body?.adminId || req.headers['x-admin-id'];
     
     await aiSecurityService.analyzeActivity({
@@ -80,7 +32,6 @@ const logAccountOperation = async (req, action, targetUser, details = {}) => {
   }
 };
 
-// Get current logged-in user info
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id || req.user.userId)
@@ -111,7 +62,6 @@ router.get('/me', verifyToken, async (req, res) => {
   }
 });
 
-// Search user by phone (for walk-in patient lookup)
 router.get('/search', verifyToken, async (req, res) => {
   try {
     const { phone, email } = req.query;
@@ -138,7 +88,6 @@ router.get('/search', verifyToken, async (req, res) => {
   }
 });
 
-// Get all users (Admin only) — with filtering, pagination, and search
 router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const {
@@ -154,19 +103,14 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
 
     const filter = {};
 
-    // Active/inactive filter
     if (includeInactive !== 'true') filter.isActive = true;
 
-    // Role filter
     if (role) filter.role = role;
 
-    // Approval status filter
     if (approvalStatus) filter.approvalStatus = approvalStatus;
 
-    // Clinic filter
     if (clinicId) filter.clinicId = clinicId;
 
-    // Text search
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -200,7 +144,6 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   }
 });
 
-// Get user by ID
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
@@ -217,23 +160,19 @@ router.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Create new user (Admin only)
 router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { name, email, password, phone, role, clinicId } = req.body;
 
-    // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
-    // Check if user with email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
-    // If role is receptionist, verify clinic exists
     if (role === 'receptionist' && clinicId) {
       const clinic = await Clinic.findById(clinicId);
       if (!clinic) {
@@ -241,10 +180,8 @@ router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
       }
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = new User({
       name,
       email,
@@ -252,13 +189,12 @@ router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
       phone: phone || '',
       role: role || 'patient',
       clinicId: (role === 'receptionist' && clinicId) ? clinicId : null,
-      // Admin-created receptionists are auto-approved
+
       approvalStatus: (role === 'receptionist') ? 'approved' : undefined
     });
 
     await user.save();
 
-    // Log account creation for security monitoring
     await logAccountOperation(req, 'create_user', user, { role: user.role });
 
     const populatedUser = await User.findById(user._id)
@@ -271,7 +207,6 @@ router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
   }
 });
 
-// Update current user's profile (self-update)
 router.put('/profile', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -305,7 +240,6 @@ router.put('/profile', verifyToken, async (req, res) => {
   }
 });
 
-// Change password
 router.put('/change-password', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -338,14 +272,12 @@ router.put('/change-password', verifyToken, async (req, res) => {
   }
 });
 
-// Update user — only the user themselves or an admin can update a user record
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const requestingUserId = req.user?.id?.toString() || req.user?.userId?.toString();
     const targetUserId = req.params.id;
     const isAdmin = req.user?.role === 'admin';
 
-    // Security: only allow self-update or admin update
     if (!isAdmin && requestingUserId !== targetUserId) {
       return res.status(403).json({
         success: false,
@@ -355,19 +287,16 @@ router.put('/:id', verifyToken, async (req, res) => {
 
     const { password, role, approvalStatus, isActive, ...updateData } = req.body;
 
-    // Non-admins cannot change role, approvalStatus, or isActive
     if (isAdmin) {
       if (role !== undefined) updateData.role = role;
       if (approvalStatus !== undefined) updateData.approvalStatus = approvalStatus;
       if (isActive !== undefined) updateData.isActive = isActive;
     }
 
-    // If password is provided, hash it
     if (password && password.trim() !== '') {
       updateData.password = await bcrypt.hash(password, 10);
     }
 
-    // If role is receptionist and clinicId is provided, verify clinic exists
     if (updateData.role === 'receptionist' && updateData.clinicId) {
       const clinic = await Clinic.findById(updateData.clinicId);
       if (!clinic) {
@@ -392,10 +321,9 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete user (soft delete)
 router.delete('/:id', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
-    // Get user before deletion for logging
+
     const userToDelete = await User.findById(req.params.id);
     
     const user = await User.findByIdAndUpdate(
@@ -408,7 +336,6 @@ router.delete('/:id', verifyTokenWithRole(['admin']), async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Log account deletion for security monitoring
     await logAccountOperation(req, 'delete_user', userToDelete, { action: 'deactivate' });
     res.json({ message: 'User deactivated successfully' });
   } catch (error) {
@@ -417,7 +344,6 @@ router.delete('/:id', verifyTokenWithRole(['admin']), async (req, res) => {
   }
 });
 
-// Register patient (staff registration endpoint)
 router.post('/register-patient', verifyToken, async (req, res) => {
   try {
     const { 
@@ -432,11 +358,10 @@ router.post('/register-patient', verifyToken, async (req, res) => {
       });
     }
 
-    // Check if user with phone already exists
     let user = await User.findOne({ phone });
     
     if (user) {
-      // Link existing user to clinic if not already linked
+
       if (clinicId && !user.clinicLinks?.some(link => link.clinicId?.toString() === clinicId)) {
         user.clinicLinks = user.clinicLinks || [];
         user.clinicLinks.push({ clinicId, linkedAt: new Date() });
@@ -450,7 +375,6 @@ router.post('/register-patient', verifyToken, async (req, res) => {
       });
     }
 
-    // Create new patient user
     user = new User({
       name,
       phone,

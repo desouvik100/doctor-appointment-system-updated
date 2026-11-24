@@ -1,9 +1,4 @@
-/**
- * RazorpayPaymentScreen
- * Opens the backend's /payments/mobile-checkout page in a WebView.
- * The backend page handles Razorpay checkout and redirects back via
- * healthsync:// deep link on success/failure.
- */
+
 
 import React, { useRef, useState, useEffect } from 'react';
 import {
@@ -14,9 +9,7 @@ import { WebView } from 'react-native-webview';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import apiClient from '../../services/api/apiClient';
-import { API_URL } from '../../config/env';
-
-// Base URL without /api suffix
+import { API_URL } from '../../config/env';
 const BASE_URL = API_URL.replace('/api', '');
 
 const RazorpayPaymentScreen = ({ navigation, route }) => {
@@ -29,16 +22,12 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
 
   const [verifying, setVerifying] = useState(false);
   const [authToken, setAuthToken] = useState(null);
-  const webViewRef = useRef(null);
-
-  // Load auth token so the WebView can pass it to the ownership-validated checkout endpoint
+  const webViewRef = useRef(null);
   useEffect(() => {
     import('../../services/api/apiClient').then(({ getAuthToken }) => {
       getAuthToken().then(token => setAuthToken(token)).catch(() => {});
     }).catch(() => {});
-  }, []);
-
-  // Build the checkout URL served by the backend
+  }, []);
   const checkoutUrl = `${BASE_URL}/api/payments/mobile-checkout/${orderId}?` +
     `appointmentId=${encodeURIComponent(appointmentId || '')}` +
     `&amount=${(amount || 0) * 100}` +
@@ -47,24 +36,18 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
     `&contact=${encodeURIComponent(user?.phone || '')}` +
     `&doctorName=${encodeURIComponent(doctor?.name || 'Doctor')}` +
     (method ? `&method=${encodeURIComponent(method)}` : '') +
-    (upiApp ? `&upiApp=${encodeURIComponent(upiApp)}` : '');
-
-  // Headers for the WebView — passes JWT so the backend can validate ownership
+    (upiApp ? `&upiApp=${encodeURIComponent(upiApp)}` : '');
   const webViewHeaders = authToken
     ? { Authorization: `Bearer ${authToken}` }
-    : {};
-
-  // Handle deep link callbacks from the payment page
+    : {};
   useEffect(() => {
     const handleDeepLink = async ({ url }) => {
-      if (!url?.startsWith('healthsync://')) return;  // ignore healthsyncpro:// and others
+      if (!url?.startsWith('healthsync://')) return;  
 
       if (url.includes('payment-success')) {
         setVerifying(true);
-        try {
-          // Payment was already verified server-side by the mobile-checkout page
-          if (appointmentId?.startsWith('lab_')) {
-            // Lab test payment — go to lab confirmation
+        try {
+          if (appointmentId?.startsWith('lab_')) {
             navigation.replace('LabTestConfirmation', {
               cart: route.params?.cart || [],
               total: amount,
@@ -102,9 +85,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
 
   const handleNavigationChange = (navState) => {
     const { url } = navState;
-    if (!url) return;
-
-    // Intercept deep link inside WebView — only handle healthsync:// (user app scheme)
+    if (!url) return;
     if (url.startsWith('healthsync://')) {
       if (url.includes('payment-success')) {
         setVerifying(true);
@@ -128,14 +109,14 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
         Alert.alert('Payment Failed', 'Your payment could not be processed. Please try again.');
         navigation.goBack();
       }
-      return false; // prevent WebView from navigating to deep link
+      return false; 
     }
     return true;
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
+      {}
       <View style={[styles.header, { borderBottomColor: colors.divider }]}>
         <TouchableOpacity
           style={[styles.closeBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}

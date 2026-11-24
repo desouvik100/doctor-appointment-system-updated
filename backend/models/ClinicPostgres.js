@@ -1,4 +1,4 @@
-// models/ClinicPostgres.js - PostgreSQL Clinic model with tenant support
+
 const { getPool } = require('../config/database');
 
 class Clinic {
@@ -12,14 +12,11 @@ class Clinic {
     this.parentClinicId = clinicData.parent_clinic_id;
     this.settings = clinicData.settings || {};
     this.timezone = clinicData.timezone || 'UTC';
-    this.isActive = clinicData.is_active !== false; // Default to true
+    this.isActive = clinicData.is_active !== false; 
     this.createdAt = clinicData.created_at;
     this.updatedAt = clinicData.updated_at;
   }
 
-  /**
-   * Create a new clinic
-   */
   static async create(clinicData, tenantId) {
     const pool = getPool();
     const { 
@@ -33,21 +30,16 @@ class Clinic {
       isActive = true
     } = clinicData;
 
-    try {
-      // Validate required fields
+    try {
       if (!name || name.trim().length === 0) {
         throw new Error('Clinic name is required');
-      }
-
-      // Validate parent clinic exists if provided
+      }
       if (parentClinicId) {
         const parentClinic = await this.findById(parentClinicId, tenantId);
         if (!parentClinic) {
           throw new Error('Parent clinic not found in this tenant');
         }
-      }
-
-      // Insert clinic
+      }
       const result = await pool.query(
         `INSERT INTO clinics (tenant_id, name, type, address, contact_info, parent_clinic_id, settings, timezone, is_active) 
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
@@ -75,9 +67,6 @@ class Clinic {
     }
   }
 
-  /**
-   * Find clinic by ID within tenant
-   */
   static async findById(clinicId, tenantId) {
     const pool = getPool();
 
@@ -95,30 +84,21 @@ class Clinic {
     }
   }
 
-  /**
-   * Find all clinics in tenant with optional filters
-   */
   static async findAll(tenantId, filters = {}) {
     const pool = getPool();
     let query = 'SELECT * FROM clinics WHERE tenant_id = $1';
     const params = [tenantId];
-    let paramCount = 1;
-
-    // Add type filter
+    let paramCount = 1;
     if (filters.type) {
       paramCount++;
       query += ` AND type = $${paramCount}`;
       params.push(filters.type);
-    }
-
-    // Add active filter
+    }
     if (filters.isActive !== undefined) {
       paramCount++;
       query += ` AND is_active = $${paramCount}`;
       params.push(filters.isActive);
-    }
-
-    // Add parent clinic filter
+    }
     if (filters.parentClinicId !== undefined) {
       paramCount++;
       if (filters.parentClinicId === null) {
@@ -127,26 +107,18 @@ class Clinic {
         query += ` AND parent_clinic_id = $${paramCount}`;
         params.push(filters.parentClinicId);
       }
-    }
-
-    // Add search filter
+    }
     if (filters.search) {
       paramCount++;
       query += ` AND (name ILIKE $${paramCount} OR address::text ILIKE $${paramCount})`;
       params.push(`%${filters.search}%`);
-    }
-
-    // Add city filter (from address JSON)
+    }
     if (filters.city) {
       paramCount++;
       query += ` AND address->>'city' ILIKE $${paramCount}`;
       params.push(`%${filters.city}%`);
-    }
-
-    // Add ordering
-    query += ' ORDER BY name ASC';
-
-    // Add pagination
+    }
+    query += ' ORDER BY name ASC';
     if (filters.limit) {
       paramCount++;
       query += ` LIMIT $${paramCount}`;
@@ -169,17 +141,12 @@ class Clinic {
     }
   }
 
-  /**
-   * Update clinic
-   */
   async update(updateData) {
     const pool = getPool();
     const allowedFields = ['name', 'type', 'address', 'contact_info', 'parent_clinic_id', 'settings', 'timezone', 'is_active'];
     const updates = [];
     const params = [this.id, this.tenantId];
-    let paramCount = 2;
-
-    // Build dynamic update query
+    let paramCount = 2;
     for (const [key, value] of Object.entries(updateData)) {
       if (allowedFields.includes(key) && value !== undefined) {
         paramCount++;
@@ -207,9 +174,7 @@ class Clinic {
 
       if (result.rows.length === 0) {
         throw new Error('Clinic not found or access denied');
-      }
-
-      // Update current instance
+      }
       Object.assign(this, new Clinic(result.rows[0]));
       console.log(`✅ Clinic updated: ${this.name}`);
       return this;
@@ -220,27 +185,18 @@ class Clinic {
     }
   }
 
-  /**
-   * Delete clinic (soft delete by setting isActive to false)
-   */
   async softDelete() {
     return await this.update({ is_active: false });
   }
 
-  /**
-   * Hard delete clinic (permanent deletion)
-   */
   async delete() {
     const pool = getPool();
 
-    try {
-      // Check if clinic has child clinics
+    try {
       const childClinics = await Clinic.findAll(this.tenantId, { parentClinicId: this.id });
       if (childClinics.length > 0) {
         throw new Error('Cannot delete clinic with child clinics. Delete or reassign child clinics first.');
-      }
-
-      // Check if clinic has associated users
+      }
       const userCheckResult = await pool.query(
         'SELECT COUNT(*) as count FROM users WHERE clinic_id = $1 AND tenant_id = $2',
         [this.id, this.tenantId]
@@ -248,9 +204,7 @@ class Clinic {
 
       if (parseInt(userCheckResult.rows[0].count) > 0) {
         throw new Error('Cannot delete clinic with associated users. Reassign users first.');
-      }
-
-      // Check if clinic has associated doctors
+      }
       const doctorCheckResult = await pool.query(
         'SELECT COUNT(*) as count FROM doctors WHERE clinic_id = $1 AND tenant_id = $2',
         [this.id, this.tenantId]
@@ -278,20 +232,14 @@ class Clinic {
     }
   }
 
-  /**
-   * Get clinic hierarchy (parent and children)
-   */
   async getHierarchy() {
     const pool = getPool();
 
-    try {
-      // Get parent clinic
+    try {
       let parent = null;
       if (this.parentClinicId) {
         parent = await Clinic.findById(this.parentClinicId, this.tenantId);
-      }
-
-      // Get child clinics
+      }
       const children = await Clinic.findAll(this.tenantId, { parentClinicId: this.id });
 
       return {
@@ -306,9 +254,6 @@ class Clinic {
     }
   }
 
-  /**
-   * Get clinic statistics for tenant
-   */
   static async getStats(tenantId) {
     const pool = getPool();
 
@@ -361,9 +306,6 @@ class Clinic {
     }
   }
 
-  /**
-   * Convert to JSON
-   */
   toJSON() {
     return {
       id: this.id,
@@ -381,9 +323,6 @@ class Clinic {
     };
   }
 
-  /**
-   * Convert to safe JSON for client (exclude internal IDs)
-   */
   toSafeJSON() {
     return {
       id: this.id,
@@ -399,9 +338,6 @@ class Clinic {
     };
   }
 
-  /**
-   * Convert to legacy format for backward compatibility
-   */
   toLegacyJSON() {
     return {
       _id: this.id,

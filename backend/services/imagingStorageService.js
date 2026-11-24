@@ -1,51 +1,33 @@
-/**
- * Imaging Storage Service
- * Handles DICOM file storage and retrieval with Cloudinary integration
- */
+
 
 const cloudinary = require('cloudinary').v2;
 const DicomStudy = require('../models/DicomStudy');
 const { parseDicomFile, parseMultipleDicomFiles, validateDicomFile, convertDicomToImage } = require('./dicomParserService');
 const { validatePatientById } = require('./patientValidationService');
-const { v4: uuidv4 } = require('uuid');
-
-// Configure Cloudinary from environment variables
+const { v4: uuidv4 } = require('uuid');
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-/**
- * Upload a single DICOM file
- * @param {Buffer} fileBuffer - The DICOM file buffer
- * @param {Object} options - Upload options
- * @returns {Promise<Object>} Upload result with URL and metadata
- */
 async function uploadDicomFile(fileBuffer, options = {}) {
-  const { patientId, clinicId, visitId, folder = 'dicom' } = options;
-  
-  // Validate DICOM file
+  const { patientId, clinicId, visitId, folder = 'dicom' } = options;
   const validation = validateDicomFile(fileBuffer);
   if (!validation.isValid) {
     throw new Error(`Invalid DICOM file: ${validation.error}`);
-  }
-  
-  // Parse metadata
+  }
   const parseResult = parseDicomFile(fileBuffer);
   if (!parseResult.success) {
     throw new Error(`Failed to parse DICOM file: ${parseResult.error}`);
   }
   
-  const { metadata } = parseResult;
-  
-  // Convert DICOM to viewable PNG
+  const { metadata } = parseResult;
   const imageConversion = convertDicomToImage(fileBuffer);
   let viewableImageUrl = null;
   
   if (imageConversion.success) {
-    try {
-      // Upload PNG version for viewing
+    try {
       const pngFilename = `${metadata.image.sopInstanceUID || uuidv4()}.png`;
       const pngPath = `${folder}_images/${clinicId}/${patientId}/${metadata.study.studyInstanceUID}/${pngFilename}`;
       
@@ -67,17 +49,13 @@ async function uploadDicomFile(fileBuffer, options = {}) {
       
       viewableImageUrl = pngUploadResult.secure_url;
     } catch (pngError) {
-      console.error('Failed to upload PNG version:', pngError.message);
-      // Continue without viewable image
+      console.error('Failed to upload PNG version:', pngError.message);
     }
-  }
-  
-  // Generate unique filename for raw DICOM
+  }
   const filename = `${metadata.image.sopInstanceUID || uuidv4()}.dcm`;
   const uploadPath = `${folder}/${clinicId}/${patientId}/${metadata.study.studyInstanceUID}/${filename}`;
   
-  try {
-    // Upload raw DICOM to Cloudinary as raw file
+  try {
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -102,8 +80,8 @@ async function uploadDicomFile(fileBuffer, options = {}) {
     
     return {
       success: true,
-      url: viewableImageUrl || uploadResult.secure_url, // Prefer viewable PNG
-      rawUrl: uploadResult.secure_url, // Keep raw DICOM URL
+      url: viewableImageUrl || uploadResult.secure_url, 
+      rawUrl: uploadResult.secure_url, 
       publicId: uploadResult.public_id,
       metadata: metadata,
       size: fileBuffer.length
@@ -113,28 +91,18 @@ async function uploadDicomFile(fileBuffer, options = {}) {
   }
 }
 
-/**
- * Upload multiple DICOM files as a study
- * @param {Array<Buffer>} fileBuffers - Array of DICOM file buffers
- * @param {Object} options - Upload options
- * @returns {Promise<Object>} Study creation result
- */
 async function uploadDicomStudy(fileBuffers, options = {}) {
   const { patientId, clinicId, visitId, validatePatient = true, acknowledgedMismatch = false } = options;
   
   if (!fileBuffers || fileBuffers.length === 0) {
     throw new Error('No DICOM files provided');
-  }
-  
-  // Parse all files to get study metadata
+  }
   const parseResult = parseMultipleDicomFiles(fileBuffers);
   if (!parseResult.success) {
     throw new Error(parseResult.error);
   }
   
-  const { study } = parseResult;
-  
-  // Validate patient if required
+  const { study } = parseResult;
   let patientValidation = null;
   if (validatePatient && patientId) {
     patientValidation = await validatePatientById(study.patient, patientId);
@@ -152,9 +120,7 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
         }
       };
     }
-  }
-  
-  // Upload all files
+  }
   const uploadResults = [];
   const errors = [];
   
@@ -174,17 +140,13 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
   
   if (uploadResults.length === 0) {
     throw new Error('Failed to upload any DICOM files');
-  }
-  
-  // Helper to sanitize numeric values (handle NaN)
+  }
   const sanitizeNumber = (value, defaultValue = null) => {
     if (value === undefined || value === null || Number.isNaN(value)) {
       return defaultValue;
     }
     return value;
-  };
-  
-  // Organize images by series
+  };
   const seriesMap = new Map();
   
   uploadResults.forEach(result => {
@@ -216,27 +178,21 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
       sliceLocation: sanitizeNumber(result.metadata.image.sliceLocation),
       sliceThickness: sanitizeNumber(result.metadata.image.sliceThickness)
     });
-  });
-  
-  // Sort images within each series by instance number
+  });
   seriesMap.forEach(series => {
     series.images.sort((a, b) => (a.instanceNumber || 0) - (b.instanceNumber || 0));
-  });
-  
-  // Create study record in database (or update if exists)
+  });
   let studyRecord;
   const existingStudy = await DicomStudy.findOne({ studyInstanceUID: study.studyInstanceUID });
   
-  if (existingStudy) {
-    // Update existing study with new images
+  if (existingStudy) {
     existingStudy.series = Array.from(seriesMap.values());
     existingStudy.totalImages = uploadResults.length;
     existingStudy.totalSeries = seriesMap.size;
     existingStudy.storageSize = uploadResults.reduce((sum, r) => sum + (r.size || 0), 0);
     await existingStudy.save();
     studyRecord = existingStudy;
-  } else {
-    // Create new study
+  } else {
     studyRecord = new DicomStudy({
       patientId: patientId,
       clinicId: clinicId,
@@ -283,12 +239,6 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
   };
 }
 
-
-/**
- * Get study by ID
- * @param {string} studyId - Study MongoDB ID
- * @returns {Promise<Object>} Study details
- */
 async function getStudyById(studyId) {
   const study = await DicomStudy.findById(studyId)
     .populate('patientId', 'name email phone')
@@ -302,11 +252,6 @@ async function getStudyById(studyId) {
   return study;
 }
 
-/**
- * Get study by Study Instance UID
- * @param {string} studyInstanceUID - DICOM Study Instance UID
- * @returns {Promise<Object>} Study details
- */
 async function getStudyByUID(studyInstanceUID) {
   const study = await DicomStudy.findOne({ studyInstanceUID })
     .populate('patientId', 'name email phone')
@@ -319,12 +264,6 @@ async function getStudyByUID(studyInstanceUID) {
   return study;
 }
 
-/**
- * Get patient's imaging history
- * @param {string} patientId - Patient MongoDB ID
- * @param {Object} options - Query options
- * @returns {Promise<Array>} List of studies
- */
 async function getPatientImagingHistory(patientId, options = {}) {
   const { limit = 50, modality, startDate, endDate, includeReports = false, includeSeries = true } = options;
   
@@ -357,13 +296,6 @@ async function getPatientImagingHistory(patientId, options = {}) {
   return studies;
 }
 
-/**
- * Get image data for viewing
- * @param {string} studyId - Study ID
- * @param {string} seriesUID - Series Instance UID (optional)
- * @param {number} imageIndex - Image index within series (optional)
- * @returns {Promise<Object>} Image data with URL
- */
 async function getImageData(studyId, seriesUID = null, imageIndex = 0) {
   const study = await DicomStudy.findById(studyId).lean();
   
@@ -404,25 +336,17 @@ async function getImageData(studyId, seriesUID = null, imageIndex = 0) {
   };
 }
 
-/**
- * Delete a study and its files
- * @param {string} studyId - Study ID
- * @returns {Promise<Object>} Deletion result
- */
 async function deleteStudy(studyId) {
   const study = await DicomStudy.findById(studyId);
   
   if (!study) {
     throw new Error('Study not found');
-  }
-  
-  // Delete files from Cloudinary
+  }
   const deletePromises = [];
   
   study.series.forEach(series => {
     series.images.forEach(image => {
-      if (image.imageUrl) {
-        // Extract public ID from URL and delete
+      if (image.imageUrl) {
         const publicId = extractPublicIdFromUrl(image.imageUrl);
         if (publicId) {
           deletePromises.push(
@@ -434,28 +358,21 @@ async function deleteStudy(studyId) {
     });
   });
   
-  await Promise.all(deletePromises);
-  
-  // Delete database record
+  await Promise.all(deletePromises);
   await DicomStudy.findByIdAndDelete(studyId);
   
   return { success: true, deletedImages: deletePromises.length };
 }
 
-/**
- * Extract Cloudinary public ID from URL
- */
 function extractPublicIdFromUrl(url) {
   if (!url) return null;
   
   try {
     const urlParts = url.split('/');
     const uploadIndex = urlParts.findIndex(p => p === 'upload');
-    if (uploadIndex === -1) return null;
-    
-    // Get everything after 'upload/v{version}/'
+    if (uploadIndex === -1) return null;
     const pathParts = urlParts.slice(uploadIndex + 2);
-    const publicId = pathParts.join('/').replace(/\.[^/.]+$/, ''); // Remove extension
+    const publicId = pathParts.join('/').replace(/\.[^/.]+$/, ''); 
     
     return publicId;
   } catch {
@@ -463,19 +380,8 @@ function extractPublicIdFromUrl(url) {
   }
 }
 
-/**
- * Generate thumbnail for a DICOM image
- * @param {string} studyId - Study ID
- * @param {string} seriesUID - Series UID
- * @param {number} imageIndex - Image index
- * @returns {Promise<string>} Thumbnail URL
- */
-async function generateThumbnail(studyId, seriesUID, imageIndex = 0) {
-  // For DICOM files, we'd need to render them server-side
-  // This is a placeholder - actual implementation would use a DICOM rendering library
-  const imageData = await getImageData(studyId, seriesUID, imageIndex);
-  
-  // Return the original URL for now - in production, you'd generate an actual thumbnail
+async function generateThumbnail(studyId, seriesUID, imageIndex = 0) {
+  const imageData = await getImageData(studyId, seriesUID, imageIndex);
   return imageData.imageUrl;
 }
 

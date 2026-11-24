@@ -1,11 +1,9 @@
-// Test script to send email directly to Gmail
+
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 
 async function testDirectEmail() {
-  console.log('📧 Testing direct email to Gmail...\n');
-  
-  // Send directly to Gmail, not through Cloudflare routing
+  console.log('📧 Testing direct email to Gmail...\n');
   const directEmail = 'desouvik0000@gmail.com';
   
   console.log('Configuration:');

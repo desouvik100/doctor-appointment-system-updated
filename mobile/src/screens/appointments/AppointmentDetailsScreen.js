@@ -1,7 +1,4 @@
-/**
- * AppointmentDetailsScreen - Full appointment details with actions - Dynamic Theme Edition
- * Connected to real API
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -43,8 +40,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       setLoading(false);
     } else if (appointmentId) {
       fetchAppointment();
-    } else {
-      // Neither appointment object nor appointmentId provided — bail out gracefully
+    } else {
       setLoading(false);
     }
   }, [appointment, appointmentId]);
@@ -126,7 +122,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
     try {
       await checkIn(appointmentData.id);
       Alert.alert('Check-in Successful', 'You have been checked in. Please wait for your turn.');
-      fetchAppointment(); // Refresh data
+      fetchAppointment(); 
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to check in');
     }
@@ -154,7 +150,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
@@ -164,7 +160,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Status Banner */}
+        {}
         <LinearGradient
           colors={appointmentData.status === 'confirmed' ? (colors.gradientPrimary || ['#00D4AA', '#00B894']) : (colors.gradientSecondary || ['#6C5CE7', '#5B4ED1'])}
           style={styles.statusBanner}
@@ -177,7 +173,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           </Text>
         </LinearGradient>
 
-        {/* Doctor Card */}
+        {}
         <Card variant="gradient" style={styles.doctorCard}>
           <View style={styles.doctorRow}>
             <Avatar name={appointmentData.doctor?.name || 'Doctor'} size="large" />
@@ -188,7 +184,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           </View>
         </Card>
 
-        {/* Appointment Details */}
+        {}
         <Card variant="default" style={styles.detailsCard}>
           <View style={styles.detailRow}>
             <View style={styles.detailItem}>
@@ -239,7 +235,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           </View>
         </Card>
 
-        {/* Queue Tracker (for clinic visits) */}
+        {}
         {appointmentData.type === 'clinic' && appointmentData.status === 'confirmed' && (
           <QueueTracker
             appointmentId={appointmentData.id}
@@ -250,7 +246,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           />
         )}
 
-        {/* QR Code Section */}
+        {}
         {appointmentData.type === 'clinic' && (
           <Card variant="default" style={styles.qrSection}>
             <TouchableOpacity style={styles.qrHeader} onPress={() => setShowQR(!showQR)}>
@@ -271,7 +267,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           </Card>
         )}
 
-        {/* Clinic Address (for clinic visits) */}
+        {}
         {appointmentData.type === 'clinic' && (
           <Card variant="default" style={styles.addressCard}>
             <View style={styles.addressHeader}>
@@ -285,7 +281,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           </Card>
         )}
 
-        {/* Payment Info */}
+        {}
         <Card variant="default" style={styles.paymentCard}>
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Consultation Fee</Text>
@@ -297,7 +293,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           </View>
         </Card>
 
-        {/* Action Buttons */}
+        {}
         <View style={styles.actionButtons}>
           {appointmentData.type === 'video' && appointmentData.status === 'confirmed' && (
             <Button title="Join Video Call" onPress={handleJoinCall} fullWidth size="large" />

@@ -1,8 +1,4 @@
-/**
- * Property-Based Tests for Measurement Service
- * Feature: advanced-imaging
- * Properties 5, 6, 7, 8, 10, 11, 12
- */
+
 
 const fc = require('fast-check');
 const {
@@ -15,9 +11,7 @@ const {
   applyWindowLevel
 } = require('../services/measurementService');
 
-describe('Measurement Service - Property Tests', () => {
-  
-  // Property 10: Distance Measurement Accuracy
+describe('Measurement Service - Property Tests', () => {
   describe('Property 10: Distance Measurement Accuracy', () => {
     test('distance calculation matches expected formula within 0.1mm precision', () => {
       fc.assert(
@@ -72,9 +66,7 @@ describe('Measurement Service - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-  });
-  
-  // Property 11: Angle Measurement Accuracy
+  });
   describe('Property 11: Angle Measurement Accuracy', () => {
     test('angle is between 0 and 180 degrees', () => {
       fc.assert(
@@ -92,8 +84,7 @@ describe('Measurement Service - Property Tests', () => {
       );
     });
     
-    test('right angle calculation is accurate within 0.1 degrees', () => {
-      // Test with known right angle
+    test('right angle calculation is accurate within 0.1 degrees', () => {
       const pointA = { x: 0, y: 10 };
       const pointB = { x: 0, y: 0 };
       const pointC = { x: 10, y: 0 };
@@ -110,9 +101,7 @@ describe('Measurement Service - Property Tests', () => {
       const angle = calculateAngle(pointA, pointB, pointC);
       expect(Math.abs(angle - 180)).toBeLessThan(0.1);
     });
-  });
-  
-  // Property 12: Area Measurement Accuracy
+  });
   describe('Property 12: Area Measurement Accuracy', () => {
     test('rectangle area calculation is accurate within 1mm²', () => {
       fc.assert(
@@ -162,9 +151,7 @@ describe('Measurement Service - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-  });
-  
-  // Property 6: Zoom Range Validation
+  });
   describe('Property 6: Zoom Range Validation', () => {
     test('zoom is clamped to valid range [0.25, 4.0]', () => {
       fc.assert(
@@ -192,9 +179,7 @@ describe('Measurement Service - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-  });
-  
-  // Property 8: Slice Navigation Bounds
+  });
   describe('Property 8: Slice Navigation Bounds', () => {
     test('slice index is clamped to valid range [0, N-1]', () => {
       fc.assert(
@@ -231,9 +216,7 @@ describe('Measurement Service - Property Tests', () => {
         { numRuns: 10 }
       );
     });
-  });
-  
-  // Property 7: Window/Level Application
+  });
   describe('Property 7: Window/Level Application', () => {
     test('output is always in range [0, 255]', () => {
       fc.assert(
@@ -280,9 +263,7 @@ describe('Measurement Service - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-  });
-  
-  // Edge cases
+  });
   describe('Edge Cases', () => {
     test('distance with zero pixel spacing throws error', () => {
       expect(() => calculateDistance(0, 0, 10, 10, 0)).toThrow();

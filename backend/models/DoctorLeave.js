@@ -6,8 +6,7 @@ const doctorLeaveSchema = new mongoose.Schema({
   endDate: { type: Date, required: true },
   reason: { type: String, enum: ['vacation', 'sick', 'personal', 'conference', 'emergency', 'other'], default: 'personal' },
   notes: String,
-  isFullDay: { type: Boolean, default: true },
-  // For partial day leaves
+  isFullDay: { type: Boolean, default: true },
   startTime: String,
   endTime: String,
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },

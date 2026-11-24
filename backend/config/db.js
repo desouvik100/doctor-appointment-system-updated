@@ -1,4 +1,4 @@
-// config/db.js — Enhanced MongoDB connection with production optimizations
+
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
@@ -12,29 +12,22 @@ const connectDB = async () => {
       throw new Error('MongoDB URI not found in environment variables (MONGODB_URI)');
     }
 
-    const options = {
-      // Production-grade connection pool
-      maxPoolSize: 500,        // Handle high concurrent load  
-      minPoolSize: 100,        // Always ready connections
+    const options = {
+      maxPoolSize: 500,        
+      minPoolSize: 100,        
       maxIdleTimeMS: 30000,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
       retryWrites: true,
-      w: 'majority',
-      
-      // Production performance optimizations
-      bufferMaxEntries: 0,     // Disable mongoose buffering
-      bufferCommands: false,   // Disable command buffering
+      w: 'majority',
+      bufferMaxEntries: 0,     
+      bufferCommands: false,   
       heartbeatFrequencyMS: 10000,
-      maxStalenessSeconds: 30,
-      
-      // Connection reliability
-      family: 4,               // Use IPv4
+      maxStalenessSeconds: 30,
+      family: 4,               
       keepAlive: true,
-      keepAliveInitialDelay: 300000,
-      
-      // Read preferences for scalability
-      readPreference: 'secondaryPreferred', // Use secondary for reads when possible
+      keepAliveInitialDelay: 300000,
+      readPreference: 'secondaryPreferred', 
     };
 
     await mongoose.connect(mongoUri, options);

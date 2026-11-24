@@ -1,13 +1,8 @@
-/**
- * NotificationService - Firebase Cloud Messaging setup and handlers
- * Supports both real FCM and fallback mock mode
- */
+
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import apiClient from '../api/apiClient';
-
-// Try to import Firebase messaging - will be null if not configured
+import apiClient from '../api/apiClient';
 let messaging = null;
 let PushNotification = null;
 
@@ -33,8 +28,7 @@ class NotificationService {
   async initialize() {
     if (this.initialized) return;
 
-    try {
-      // Configure local notifications channel (Android)
+    try {
       if (PushNotification) {
         PushNotification.createChannel(
           {
@@ -48,27 +42,21 @@ class NotificationService {
           },
           (created) => console.log(`Notification channel created: ${created}`)
         );
-      }
-
-      // Request permission
+      }
       const authStatus = await this.requestPermission();
-      if (authStatus) {
-        // Get FCM token
+      if (authStatus) {
         const token = await this.getToken();
         if (token) {
           this.fcmToken = token;
           await this.registerTokenWithBackend(token);
-        }
-
-        // Set up message handlers
+        }
         this.setupMessageHandlers();
       }
 
       this.initialized = true;
       console.log('NotificationService initialized', { useMockMode: this.useMockMode });
     } catch (error) {
-      console.error('Notification initialization error:', error);
-      // Still mark as initialized to prevent repeated attempts
+      console.error('Notification initialization error:', error);
       this.initialized = true;
     }
   }
@@ -82,8 +70,7 @@ class NotificationService {
           authStatus === messaging.AuthorizationStatus.PROVISIONAL;
         console.log('FCM permission status:', enabled ? 'granted' : 'denied');
         return enabled;
-      }
-      // Mock mode - assume permission granted
+      }
       return true;
     } catch (error) {
       console.error('Permission request error:', error);
@@ -97,8 +84,7 @@ class NotificationService {
         const token = await messaging().getToken();
         console.log('FCM token obtained:', token?.substring(0, 20) + '...');
         return token;
-      }
-      // Mock mode - generate a mock token
+      }
       const mockToken = `mock-fcm-${Platform.OS}-${Date.now()}`;
       console.log('Using mock FCM token:', mockToken);
       return mockToken;
@@ -109,11 +95,8 @@ class NotificationService {
   }
 
   async registerTokenWithBackend(token) {
-    try {
-      // Store token locally
-      await AsyncStorage.setItem('fcmToken', token);
-      
-      // Register with backend only if user is logged in
+    try {
+      await AsyncStorage.setItem('fcmToken', token);
       const userToken = await AsyncStorage.getItem('token');
       const userData = await AsyncStorage.getItem('user');
       
@@ -128,9 +111,7 @@ class NotificationService {
       if (!userId) {
         console.log('Device registration skipped: No user ID available');
         return;
-      }
-      
-      // Try to register with backend, but don't fail if it's not available
+      }
       try {
         await apiClient.post('/notifications/register-device', {
           fcmToken: token,
@@ -142,17 +123,13 @@ class NotificationService {
           }
         });
         console.log('FCM token registered for user:', userId);
-      } catch (apiError) {
-        // Silently fail - backend endpoint might not exist yet or network might be unavailable
+      } catch (apiError) {
         console.log('Device registration skipped (backend unavailable)');
       }
-    } catch (error) {
-      // Catch any other errors (AsyncStorage, JSON parsing, etc.)
+    } catch (error) {
       console.log('Token registration error (non-critical):', error.message);
     }
-  }
-
-  // Call this after successful login to register device
+  }
   async registerDeviceAfterLogin(userId) {
     try {
       const token = this.fcmToken || await AsyncStorage.getItem('fcmToken');
@@ -172,8 +149,7 @@ class NotificationService {
           }
         });
         console.log('Device registered after login for user:', userId);
-      } catch (apiError) {
-        // Silently fail - backend endpoint might not exist yet
+      } catch (apiError) {
         console.log('Device registration after login skipped (backend unavailable)');
       }
     } catch (error) {
@@ -185,35 +161,25 @@ class NotificationService {
     if (!messaging) {
       console.log('Skipping message handlers setup - mock mode');
       return;
-    }
-
-    // Handle foreground messages
+    }
     messaging().onMessage(async remoteMessage => {
       console.log('Foreground message received:', remoteMessage);
       this.handleForegroundMessage(remoteMessage);
-    });
-
-    // Handle background messages
+    });
     messaging().setBackgroundMessageHandler(async remoteMessage => {
       console.log('Background message received:', remoteMessage);
       this.handleBackgroundMessage(remoteMessage);
-    });
-
-    // Handle notification tap when app is in background/quit state
+    });
     messaging().onNotificationOpenedApp(remoteMessage => {
       console.log('Notification opened app:', remoteMessage);
       this.handleNotificationTap(remoteMessage);
-    });
-
-    // Check if app was opened from a notification
+    });
     messaging().getInitialNotification().then(remoteMessage => {
       if (remoteMessage) {
         console.log('App opened from notification:', remoteMessage);
         this.handleNotificationTap(remoteMessage);
       }
-    });
-
-    // Listen for token refresh
+    });
     messaging().onTokenRefresh(async token => {
       console.log('FCM token refreshed');
       this.fcmToken = token;
@@ -222,9 +188,7 @@ class NotificationService {
   }
 
   handleForegroundMessage(message) {
-    const { notification, data } = message;
-    
-    // Show local notification when app is in foreground
+    const { notification, data } = message;
     if (PushNotification && notification) {
       PushNotification.localNotification({
         channelId: 'healthsync-channel',
@@ -243,40 +207,31 @@ class NotificationService {
   }
 
   handleBackgroundMessage(message) {
-    console.log('Background message handled:', message);
-    // Process background message (e.g., update badge count, sync data)
+    console.log('Background message handled:', message);
     const { data } = message;
     
-    if (data?.type === 'appointment_update') {
-      // Could trigger a background sync here
+    if (data?.type === 'appointment_update') {
       console.log('Appointment update received in background');
     }
   }
 
   handleNotificationTap(message) {
-    const { data } = message;
-    
-    // Store navigation intent for when app is ready
+    const { data } = message;
     if (data) {
       AsyncStorage.setItem('pendingNotificationNavigation', JSON.stringify({
         type: data.type,
         id: data.id || data.appointmentId || data.prescriptionId,
         timestamp: Date.now()
       })).catch(console.error);
-    }
-    
-    // Navigation will be handled by the app when it's ready
+    }
     console.log('Notification tap stored for navigation:', data);
-  }
-
-  // Get pending navigation from notification tap
+  }
   async getPendingNavigation() {
     try {
       const pending = await AsyncStorage.getItem('pendingNotificationNavigation');
       if (pending) {
         await AsyncStorage.removeItem('pendingNotificationNavigation');
-        const data = JSON.parse(pending);
-        // Only use if less than 5 minutes old
+        const data = JSON.parse(pending);
         if (Date.now() - data.timestamp < 5 * 60 * 1000) {
           return data;
         }
@@ -311,9 +266,7 @@ class NotificationService {
 
   async updateNotificationSettings(settings) {
     try {
-      await AsyncStorage.setItem('notificationSettings', JSON.stringify(settings));
-      
-      // Sync with backend
+      await AsyncStorage.setItem('notificationSettings', JSON.stringify(settings));
       const userToken = await AsyncStorage.getItem('token');
       if (userToken) {
         await apiClient.put('/notifications/settings', settings).catch(err => {
@@ -323,9 +276,7 @@ class NotificationService {
     } catch (error) {
       console.error('Update settings error:', error);
     }
-  }
-
-  // Show immediate local notification (appears in notification tray)
+  }
   showLocalNotification(title, body, data = {}) {
     if (!PushNotification) {
       console.log('Local notification (mock):', { title, body, data });
@@ -385,15 +336,13 @@ class NotificationService {
     if (PushNotification) {
       PushNotification.cancelLocalNotification(id);
     }
-  }
-
-  // Schedule appointment reminder
+  }
   async scheduleAppointmentReminder(appointment) {
     const settings = await this.getNotificationSettings();
     if (!settings.appointments || !settings.reminders) return;
 
     const appointmentDate = new Date(appointment.date);
-    const reminderDate = new Date(appointmentDate.getTime() - 60 * 60 * 1000); // 1 hour before
+    const reminderDate = new Date(appointmentDate.getTime() - 60 * 60 * 1000); 
 
     if (reminderDate > new Date()) {
       await this.scheduleLocalNotification(
@@ -403,9 +352,7 @@ class NotificationService {
         { type: 'appointment_reminder', appointmentId: appointment._id }
       );
     }
-  }
-
-  // Get current FCM token
+  }
   getStoredToken() {
     return this.fcmToken;
   }

@@ -1,8 +1,4 @@
-/**
- * Creates a demo hospital, staff account, and active EMR subscription
- * Staff: desouvik0001@gmail.com / HealthSync@2026
- * Run: node backend/scripts/create-staff-with-emr.js
- */
+
 
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const mongoose = require('mongoose');
@@ -17,9 +13,7 @@ async function run() {
   const Clinic = require('../models/Clinic');
   const User = require('../models/User');
   const EMRSubscription = require('../models/EMRSubscription');
-  const ClinicStaff = require('../models/ClinicStaff');
-
-  // ─── 1. Create or find the demo hospital ───────────────────────────────────
+  const ClinicStaff = require('../models/ClinicStaff');
   let clinic = await Clinic.findOne({ name: 'Sunrise Multispeciality Hospital' });
   if (!clinic) {
     clinic = await Clinic.create({
@@ -51,9 +45,7 @@ async function run() {
     console.log('🏥 Hospital created:', clinic.name, '| ID:', clinic._id);
   } else {
     console.log('🏥 Hospital already exists:', clinic.name, '| ID:', clinic._id);
-  }
-
-  // ─── 2. Create or update the staff user ────────────────────────────────────
+  }
   const EMAIL = 'desouvik0001@gmail.com';
   const PASSWORD = 'HealthSync@2026';
   const hashedPassword = await bcrypt.hash(PASSWORD, 10);
@@ -75,8 +67,7 @@ async function run() {
       termsAcceptedAt: new Date(),
     });
     console.log('👤 Staff user created:', staffUser.email, '| ID:', staffUser._id);
-  } else {
-    // Update existing user to link to clinic and approve
+  } else {
     staffUser.clinicId = clinic._id;
     staffUser.clinicName = clinic.name;
     staffUser.role = 'receptionist';
@@ -85,14 +76,12 @@ async function run() {
     staffUser.password = hashedPassword;
     await staffUser.save();
     console.log('👤 Staff user updated:', staffUser.email, '| ID:', staffUser._id);
-  }
-
-  // ─── 3. Create active EMR subscription (advanced, 1 year) ──────────────────
+  }
   let emrSub = await EMRSubscription.findOne({ clinicId: clinic._id, status: 'active' });
   if (!emrSub) {
     const startDate = new Date();
     const expiryDate = new Date();
-    expiryDate.setFullYear(expiryDate.getFullYear() + 1); // 1 year from now
+    expiryDate.setFullYear(expiryDate.getFullYear() + 1); 
 
     emrSub = await EMRSubscription.create({
       clinicId: clinic._id,
@@ -115,9 +104,7 @@ async function run() {
     console.log('📋 EMR subscription created | Plan: advanced | Expires:', expiryDate.toDateString());
   } else {
     console.log('📋 EMR subscription already active | Plan:', emrSub.plan, '| Expires:', emrSub.expiryDate.toDateString());
-  }
-
-  // ─── 4. Create ClinicStaff record (links user to clinic for EMR access) ────
+  }
   let clinicStaff = await ClinicStaff.findOne({ clinicId: clinic._id, email: EMAIL });
   if (!clinicStaff) {
     clinicStaff = await ClinicStaff.create({
@@ -140,9 +127,7 @@ async function run() {
     clinicStaff.joinedAt = clinicStaff.joinedAt || new Date();
     await clinicStaff.save();
     console.log('🔗 ClinicStaff record updated');
-  }
-
-  // ─── Summary ───────────────────────────────────────────────────────────────
+  }
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('✅ SETUP COMPLETE');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

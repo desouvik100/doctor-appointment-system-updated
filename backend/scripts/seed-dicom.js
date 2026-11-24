@@ -1,7 +1,4 @@
-/**
- * Seeds a DICOM imaging study for the staff user desouvik0001@gmail.com
- * Uses the sample DICOM file already in backend/data/
- */
+
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
@@ -11,9 +8,7 @@ async function main() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB');
 
-  const db = mongoose.connection.db;
-
-  // Find the staff user
+  const db = mongoose.connection.db;
   const staff = await db.collection('clinicstaffs').findOne({ email: 'desouvik0001@gmail.com' });
   const doctor = await db.collection('doctors').findOne({});
   const clinic = await db.collection('clinics').findOne({});
@@ -22,9 +17,7 @@ async function main() {
   const patientName = staff?.name || 'Souvik De';
   const clinicId = clinic?._id || null;
 
-  console.log('Using patientId:', patientId, 'name:', patientName);
-
-  // Copy sample DICOM to uploads dir
+  console.log('Using patientId:', patientId, 'name:', patientName);
   const sampleDicom = path.join(__dirname, '../data/CT-MONO2-16-brain.dcm');
   const uploadDir = path.join(__dirname, '../uploads/imaging', patientId.toString());
   fs.mkdirSync(uploadDir, { recursive: true });
@@ -50,7 +43,7 @@ async function main() {
     findings: 'CT Brain without contrast. No acute intracranial hemorrhage. Ventricles and sulci are normal in size and configuration. No midline shift. Basal cisterns are patent.',
     impression: 'Normal CT Brain study. No acute intracranial pathology identified.',
     status: 'completed',
-    procedureDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+    procedureDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 
     reportDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
     images: [
       {
@@ -64,9 +57,7 @@ async function main() {
     updatedAt: new Date(),
   };
 
-  if (clinicId) report.clinicId = clinicId;
-
-  // Remove existing test entry for this patient
+  if (clinicId) report.clinicId = clinicId;
   await db.collection('imagingreports').deleteMany({ patientId, reportNumber: { $regex: /^DCM/ } });
 
   const result = await db.collection('imagingreports').insertOne(report);

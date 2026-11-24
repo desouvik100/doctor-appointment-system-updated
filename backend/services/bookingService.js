@@ -1,7 +1,4 @@
-/**
- * Booking Service - Atomic Booking with Transactions
- * Handles slot locking, booking creation, and payment in a single transaction
- */
+
 
 const mongoose = require('mongoose');
 const Appointment = require('../models/Appointment');
@@ -11,10 +8,7 @@ const FinancialLedger = require('../models/FinancialLedger');
 const { ConflictError, NotFoundError, ValidationError } = require('../middleware/errorHandler');
 
 class BookingService {
-  /**
-   * Create booking with atomic transaction
-   * Prevents double booking by locking slot first
-   */
+  
   static async createBooking(bookingData, userId) {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -23,15 +17,13 @@ class BookingService {
       const {
         doctorId,
         slotId,
-        slotType, // 'online' or 'clinic'
+        slotType, 
         date,
         consultationType,
         reason,
         symptoms,
         patientDetails
-      } = bookingData;
-
-      // 1. Lock and verify slot availability
+      } = bookingData;
       const SlotModel = slotType === 'online' ? OnlineSlot : ClinicSlot;
       
       const slot = await SlotModel.findOneAndUpdate(
@@ -56,18 +48,14 @@ class BookingService {
 
       if (!slot) {
         throw new ConflictError('Slot is no longer available. Please select another slot.');
-      }
-
-      // 2. Generate queue number for the day
+      }
       const existingAppointments = await Appointment.countDocuments({
         doctor: doctorId,
         date: date,
         status: { $nin: ['cancelled'] }
       }).session(session);
 
-      const queueNumber = existingAppointments + 1;
-
-      // 3. Create appointment
+      const queueNumber = existingAppointments + 1;
       const appointment = new Appointment({
         patient: userId,
         doctor: doctorId,
@@ -80,14 +68,12 @@ class BookingService {
         queueNumber: queueNumber,
         slotId: slotId,
         slotType: slotType,
-        status: 'pending', // Will be 'confirmed' after payment
+        status: 'pending', 
         patientDetails: patientDetails,
         createdAt: new Date()
       });
 
-      await appointment.save({ session });
-
-      // 4. Update slot with appointment reference
+      await appointment.save({ session });
       await SlotModel.findByIdAndUpdate(
         slotId,
         { appointmentId: appointment._id },
@@ -112,15 +98,11 @@ class BookingService {
     }
   }
 
-  /**
-   * Confirm booking after successful payment
-   */
   static async confirmBooking(appointmentId, paymentDetails, userId) {
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    try {
-      // 1. Find and update appointment
+    try {
       const appointment = await Appointment.findOneAndUpdate(
         {
           _id: appointmentId,
@@ -141,30 +123,22 @@ class BookingService {
 
       if (!appointment) {
         throw new NotFoundError('Appointment not found or already processed');
-      }
-
-      // 2. Create financial ledger entry (immutable record)
+      }
       const ledgerEntry = new FinancialLedger({
         appointmentId: appointment._id,
         doctorId: appointment.doctor._id,
         patientId: userId,
         transactionType: 'booking_payment',
-        consultationType: appointment.consultationType,
-        
-        // Amounts (stored, not calculated)
+        consultationType: appointment.consultationType,
         consultationFee: paymentDetails.consultationFee,
         platformFee: paymentDetails.platformFee || 0,
         convenienceFee: paymentDetails.convenienceFee || 0,
         gstAmount: paymentDetails.gstAmount || 0,
-        totalAmount: paymentDetails.totalAmount,
-        
-        // Commission breakdown
+        totalAmount: paymentDetails.totalAmount,
         commissionAmount: paymentDetails.commissionAmount || 0,
         commissionType: paymentDetails.commissionType || 'percentage',
         doctorEarnings: paymentDetails.doctorEarnings,
-        platformEarnings: paymentDetails.platformEarnings || 0,
-        
-        // Payment details
+        platformEarnings: paymentDetails.platformEarnings || 0,
         paymentId: paymentDetails.paymentId,
         paymentMethod: paymentDetails.method || 'razorpay',
         paymentGatewayFee: paymentDetails.gatewayFee || 0,
@@ -192,15 +166,11 @@ class BookingService {
     }
   }
 
-  /**
-   * Cancel booking with refund handling
-   */
   static async cancelBooking(appointmentId, userId, reason, isDoctor = false) {
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    try {
-      // 1. Find appointment
+    try {
       const query = { _id: appointmentId };
       if (!isDoctor) {
         query.patient = userId;
@@ -218,16 +188,12 @@ class BookingService {
 
       if (appointment.status === 'completed') {
         throw new ConflictError('Cannot cancel a completed appointment');
-      }
-
-      // 2. Update appointment status
+      }
       appointment.status = 'cancelled';
       appointment.cancelledAt = new Date();
       appointment.cancelledBy = isDoctor ? 'doctor' : 'patient';
       appointment.cancellationReason = reason || 'Cancelled by user';
-      await appointment.save({ session });
-
-      // 3. Release the slot
+      await appointment.save({ session });
       const SlotModel = appointment.slotType === 'online' ? OnlineSlot : ClinicSlot;
       await SlotModel.findByIdAndUpdate(
         appointment.slotId,
@@ -240,9 +206,7 @@ class BookingService {
           }
         },
         { session }
-      );
-
-      // 4. Create refund ledger entry if payment was made
+      );
       if (appointment.paymentStatus === 'paid') {
         const refundEntry = new FinancialLedger({
           appointmentId: appointment._id,
@@ -250,7 +214,7 @@ class BookingService {
           patientId: appointment.patient,
           transactionType: 'refund',
           consultationType: appointment.consultationType,
-          totalAmount: -appointment.totalPaid, // Negative for refund
+          totalAmount: -appointment.totalPaid, 
           status: 'pending_refund',
           refundReason: reason,
           createdAt: new Date()
@@ -275,9 +239,6 @@ class BookingService {
     }
   }
 
-  /**
-   * Get available slots for a doctor on a date
-   */
   static async getAvailableSlots(doctorId, date, slotType = 'both') {
     const query = {
       doctor: doctorId,
@@ -305,9 +266,6 @@ class BookingService {
     return slots.sort((a, b) => a.startTime.localeCompare(b.startTime));
   }
 
-  /**
-   * Check slot availability (for real-time updates)
-   */
   static async checkSlotAvailability(slotId, slotType) {
     const SlotModel = slotType === 'online' ? OnlineSlot : ClinicSlot;
     const slot = await SlotModel.findById(slotId).lean();

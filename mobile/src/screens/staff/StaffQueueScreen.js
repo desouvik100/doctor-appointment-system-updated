@@ -1,8 +1,4 @@
-/**
- * Staff Queue Screen - Patient Queue Management
- * 100% Parity with Web Staff Dashboard
- * Queue is per-doctor, not per-clinic
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -29,9 +25,7 @@ const StaffQueueScreen = ({ navigation }) => {
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [currentPatient, setCurrentPatient] = useState(null);
-
-  // Fetch clinic doctors first
+  const [currentPatient, setCurrentPatient] = useState(null);
   const fetchDoctors = useCallback(async () => {
     if (!user?.clinicId) return;
     try {
@@ -44,9 +38,7 @@ const StaffQueueScreen = ({ navigation }) => {
     } catch (error) {
       console.log('Error fetching doctors:', error.message);
     }
-  }, [user?.clinicId, selectedDoctor]);
-
-  // Fetch queue for selected doctor
+  }, [user?.clinicId, selectedDoctor]);
   const fetchQueue = useCallback(async () => {
     if (!selectedDoctor?._id) {
       setLoading(false);
@@ -55,9 +47,7 @@ const StaffQueueScreen = ({ navigation }) => {
     try {
       const queueData = await staffApi.getDoctorQueue(selectedDoctor._id);
       const queueList = queueData?.queue || [];
-      setQueue(Array.isArray(queueList) ? queueList : []);
-      
-      // Find current patient (in-consultation)
+      setQueue(Array.isArray(queueList) ? queueList : []);
       const current = queueList.find(p => p.status === 'in-consultation');
       setCurrentPatient(current);
     } catch (error) {
@@ -111,7 +101,7 @@ const StaffQueueScreen = ({ navigation }) => {
         <View style={styles.headerRight} />
       </View>
 
-      {/* Doctor Selector */}
+      {}
       {doctors.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.doctorSelector}>
           {doctors.map(doc => (
@@ -138,7 +128,7 @@ const StaffQueueScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B6B" />}
       >
-        {/* Stats */}
+        {}
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: '#F59E0B20' }]}>
             <Text style={[styles.statValue, { color: '#F59E0B' }]}>{waitingPatients.length}</Text>
@@ -154,7 +144,7 @@ const StaffQueueScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Current Patient */}
+        {}
         {currentPatient && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Now Seeing</Text>
@@ -172,14 +162,14 @@ const StaffQueueScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Call Next Button */}
+        {}
         {waitingPatients.length > 0 && (
           <TouchableOpacity style={styles.callNextBtn} onPress={handleCallNext}>
             <Text style={styles.callNextBtnText}>📢 Call Next Patient</Text>
           </TouchableOpacity>
         )}
 
-        {/* Waiting Queue */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
             Waiting ({waitingPatients.length})
@@ -207,7 +197,7 @@ const StaffQueueScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* No Doctor Selected */}
+        {}
         {doctors.length === 0 && (
           <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.emptyIcon}>👨‍⚕️</Text>

@@ -1,57 +1,38 @@
-/**
- * Immutable Audit Log Model
- * =========================
- * Tamper-proof audit logging with:
- * - Hash chain for integrity verification
- * - No update/delete operations allowed
- * - Cryptographic signatures
- * - Compliance-ready (HIPAA, GDPR)
- */
+
 
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 
-const immutableAuditLogSchema = new mongoose.Schema({
-  // Sequence number for ordering
+const immutableAuditLogSchema = new mongoose.Schema({
   sequenceNumber: {
     type: Number,
     required: true,
     unique: true,
     index: true
-  },
-
-  // Hash of previous log entry (blockchain-style chain)
+  },
   previousHash: {
     type: String,
     required: true,
     index: true
-  },
-
-  // Hash of this entry (for verification)
+  },
   entryHash: {
     type: String,
     required: true,
     unique: true
-  },
-
-  // Timestamp (immutable)
+  },
   timestamp: {
     type: Date,
     required: true,
     default: Date.now,
     immutable: true
-  },
-
-  // Who performed the action
+  },
   actor: {
     userId: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true },
     userType: { type: String, enum: ['patient', 'doctor', 'receptionist', 'admin', 'system'], required: true, immutable: true },
     userName: { type: String, required: true, immutable: true },
     userEmail: { type: String, immutable: true },
     userRole: { type: String, immutable: true }
-  },
-
-  // What was affected
+  },
   target: {
     entityType: { 
       type: String, 
@@ -61,9 +42,7 @@ const immutableAuditLogSchema = new mongoose.Schema({
     },
     entityId: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true },
     entityName: { type: String, immutable: true }
-  },
-
-  // Action performed
+  },
   action: {
     type: String,
     enum: [
@@ -81,39 +60,29 @@ const immutableAuditLogSchema = new mongoose.Schema({
     ],
     required: true,
     immutable: true
-  },
-
-  // Detailed description
+  },
   description: {
     type: String,
     required: true,
     immutable: true
-  },
-
-  // Severity level
+  },
   severity: {
     type: String,
     enum: ['info', 'low', 'medium', 'high', 'critical'],
     default: 'info',
     immutable: true
-  },
-
-  // Data changes (before/after)
+  },
   changes: {
     before: { type: mongoose.Schema.Types.Mixed, immutable: true },
     after: { type: mongoose.Schema.Types.Mixed, immutable: true },
     fields: [{ type: String, immutable: true }]
-  },
-
-  // Context
+  },
   context: {
     clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', immutable: true },
     branchId: { type: mongoose.Schema.Types.ObjectId, ref: 'HospitalBranch', immutable: true },
     sessionId: { type: String, immutable: true },
     requestId: { type: String, immutable: true }
-  },
-
-  // Request metadata
+  },
   metadata: {
     ipAddress: { type: String, immutable: true },
     userAgent: { type: String, immutable: true },
@@ -126,37 +95,29 @@ const immutableAuditLogSchema = new mongoose.Schema({
       }
     },
     source: { type: String, enum: ['web', 'mobile', 'api', 'system', 'cron'], default: 'web', immutable: true }
-  },
-
-  // Compliance flags
+  },
   compliance: {
     hipaaRelevant: { type: Boolean, default: false, immutable: true },
     gdprRelevant: { type: Boolean, default: false, immutable: true },
     piiAccessed: { type: Boolean, default: false, immutable: true },
     phiAccessed: { type: Boolean, default: false, immutable: true }
-  },
-
-  // Digital signature (optional, for critical actions)
+  },
   signature: {
     algorithm: { type: String, immutable: true },
     value: { type: String, immutable: true },
     signedAt: { type: Date, immutable: true }
   }
 }, {
-  timestamps: false, // We use our own timestamp
+  timestamps: false, 
   collection: 'immutable_audit_logs'
-});
-
-// Indexes for efficient querying
+});
 immutableAuditLogSchema.index({ timestamp: -1 });
 immutableAuditLogSchema.index({ 'actor.userId': 1, timestamp: -1 });
 immutableAuditLogSchema.index({ 'target.entityType': 1, 'target.entityId': 1 });
 immutableAuditLogSchema.index({ action: 1, timestamp: -1 });
 immutableAuditLogSchema.index({ 'context.clinicId': 1, timestamp: -1 });
 immutableAuditLogSchema.index({ severity: 1, timestamp: -1 });
-immutableAuditLogSchema.index({ 'compliance.hipaaRelevant': 1 });
-
-// CRITICAL: Disable all update and delete operations
+immutableAuditLogSchema.index({ 'compliance.hipaaRelevant': 1 });
 immutableAuditLogSchema.pre('updateOne', function() {
   throw new Error('Audit logs are immutable and cannot be updated');
 });
@@ -179,14 +140,9 @@ immutableAuditLogSchema.pre('deleteOne', function() {
 
 immutableAuditLogSchema.pre('deleteMany', function() {
   throw new Error('Audit logs are immutable and cannot be deleted');
-});
-
-// Counter for sequence numbers
+});
 let sequenceCounter = null;
 
-/**
- * Generate hash for an entry
- */
 function generateEntryHash(data) {
   const hashData = JSON.stringify({
     seq: data.sequenceNumber,
@@ -201,31 +157,18 @@ function generateEntryHash(data) {
   return crypto.createHash('sha256').update(hashData).digest('hex');
 }
 
-/**
- * Get the last log entry for chain verification
- */
 async function getLastEntry() {
   const ImmutableAuditLog = mongoose.model('ImmutableAuditLog');
   return await ImmutableAuditLog.findOne().sort({ sequenceNumber: -1 }).lean();
 }
 
-/**
- * Static method to create a new immutable log entry
- */
 immutableAuditLogSchema.statics.log = async function(data) {
-  try {
-    // Get last entry for hash chain
-    const lastEntry = await getLastEntry();
-    
-    // Calculate sequence number
-    const sequenceNumber = lastEntry ? lastEntry.sequenceNumber + 1 : 1;
-    
-    // Get previous hash (genesis block uses special hash)
+  try {
+    const lastEntry = await getLastEntry();
+    const sequenceNumber = lastEntry ? lastEntry.sequenceNumber + 1 : 1;
     const previousHash = lastEntry 
       ? lastEntry.entryHash 
-      : crypto.createHash('sha256').update('GENESIS_BLOCK_HEALTHSYNC').digest('hex');
-
-    // Prepare entry data
+      : crypto.createHash('sha256').update('GENESIS_BLOCK_HEALTHSYNC').digest('hex');
     const entryData = {
       sequenceNumber,
       previousHash,
@@ -264,26 +207,18 @@ immutableAuditLogSchema.statics.log = async function(data) {
         piiAccessed: this.isPiiAccessed(data),
         phiAccessed: this.isPhiAccessed(data)
       }
-    };
-
-    // Generate entry hash
-    entryData.entryHash = generateEntryHash(entryData);
-
-    // Create and save
+    };
+    entryData.entryHash = generateEntryHash(entryData);
     const log = new this(entryData);
     await log.save();
 
     return log;
   } catch (error) {
-    console.error('Immutable audit log error:', error);
-    // Don't throw - audit logging should not break main functionality
+    console.error('Immutable audit log error:', error);
     return null;
   }
 };
 
-/**
- * Check if action is HIPAA relevant
- */
 immutableAuditLogSchema.statics.isHipaaRelevant = function(data) {
   const hipaaActions = ['read', 'export', 'print', 'download', 'prescribe', 'access_granted'];
   const hipaaEntities = ['patient', 'prescription', 'lab_report', 'emr'];
@@ -291,25 +226,16 @@ immutableAuditLogSchema.statics.isHipaaRelevant = function(data) {
   return hipaaActions.includes(data.action) && hipaaEntities.includes(data.entityType || data.target?.entityType);
 };
 
-/**
- * Check if action is GDPR relevant
- */
 immutableAuditLogSchema.statics.isGdprRelevant = function(data) {
   const gdprActions = ['export', 'delete', 'read'];
   return gdprActions.includes(data.action);
 };
 
-/**
- * Check if PII was accessed
- */
 immutableAuditLogSchema.statics.isPiiAccessed = function(data) {
   const piiEntities = ['patient', 'user', 'doctor'];
   return piiEntities.includes(data.entityType || data.target?.entityType);
 };
 
-/**
- * Check if PHI was accessed
- */
 immutableAuditLogSchema.statics.isPhiAccessed = function(data) {
   const phiEntities = ['prescription', 'lab_report', 'emr', 'patient'];
   const phiActions = ['read', 'export', 'print', 'prescribe'];
@@ -318,9 +244,6 @@ immutableAuditLogSchema.statics.isPhiAccessed = function(data) {
          phiActions.includes(data.action);
 };
 
-/**
- * Verify chain integrity
- */
 immutableAuditLogSchema.statics.verifyChainIntegrity = async function(startSeq = 1, endSeq = null) {
   const query = { sequenceNumber: { $gte: startSeq } };
   if (endSeq) query.sequenceNumber.$lte = endSeq;
@@ -336,18 +259,14 @@ immutableAuditLogSchema.statics.verifyChainIntegrity = async function(startSeq =
   let previousHash = logs[0]?.previousHash;
 
   for (let i = 0; i < logs.length; i++) {
-    const log = logs[i];
-    
-    // Verify hash chain
+    const log = logs[i];
     if (i > 0 && log.previousHash !== logs[i - 1].entryHash) {
       results.verified = false;
       results.errors.push({
         sequenceNumber: log.sequenceNumber,
         error: 'Hash chain broken - previousHash mismatch'
       });
-    }
-
-    // Verify entry hash
+    }
     const calculatedHash = generateEntryHash(log);
     if (log.entryHash !== calculatedHash) {
       results.verified = false;
@@ -361,9 +280,6 @@ immutableAuditLogSchema.statics.verifyChainIntegrity = async function(startSeq =
   return results;
 };
 
-/**
- * Get audit trail for an entity
- */
 immutableAuditLogSchema.statics.getEntityAuditTrail = async function(entityType, entityId, options = {}) {
   const { limit = 100, startDate, endDate } = options;
   
@@ -384,9 +300,6 @@ immutableAuditLogSchema.statics.getEntityAuditTrail = async function(entityType,
     .lean();
 };
 
-/**
- * Get user activity log
- */
 immutableAuditLogSchema.statics.getUserActivityLog = async function(userId, options = {}) {
   const { limit = 100, days = 30 } = options;
   
@@ -402,9 +315,6 @@ immutableAuditLogSchema.statics.getUserActivityLog = async function(userId, opti
     .lean();
 };
 
-/**
- * Generate compliance report
- */
 immutableAuditLogSchema.statics.generateComplianceReport = async function(clinicId, startDate, endDate) {
   const query = {
     'context.clinicId': clinicId,

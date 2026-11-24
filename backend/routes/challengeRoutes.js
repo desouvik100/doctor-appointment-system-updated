@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const HealthChallenge = require('../models/HealthChallenge');
-const LoyaltyPoints = require('../models/LoyaltyPoints');
-
-// Get all active challenges
+const LoyaltyPoints = require('../models/LoyaltyPoints');
 router.get('/', async (req, res) => {
   try {
     const challenges = await HealthChallenge.find({ 
@@ -14,9 +12,7 @@ router.get('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get user's challenges
+});
 router.get('/user/:userId', async (req, res) => {
   try {
     const challenges = await HealthChallenge.find({
@@ -27,9 +23,7 @@ router.get('/user/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Join a challenge
+});
 router.post('/:challengeId/join', async (req, res) => {
   try {
     const { userId } = req.body;
@@ -51,9 +45,7 @@ router.post('/:challengeId/join', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Update progress
+});
 router.post('/:challengeId/progress', async (req, res) => {
   try {
     const { userId, value } = req.body;
@@ -65,14 +57,10 @@ router.post('/:challengeId/progress', async (req, res) => {
     }
     
     participant.progress += value;
-    participant.dailyLogs.push({ date: new Date(), value });
-    
-    // Check if completed
+    participant.dailyLogs.push({ date: new Date(), value });
     if (participant.progress >= challenge.target && !participant.completed) {
       participant.completed = true;
-      participant.completedAt = new Date();
-      
-      // Award points
+      participant.completedAt = new Date();
       let loyalty = await LoyaltyPoints.findOne({ userId });
       if (!loyalty) {
         loyalty = await LoyaltyPoints.create({ userId });
@@ -85,9 +73,7 @@ router.post('/:challengeId/progress', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Create challenge (admin)
+});
 router.post('/', async (req, res) => {
   try {
     const challenge = new HealthChallenge(req.body);
@@ -96,9 +82,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-});
-
-// Get leaderboard for a challenge
+});
 router.get('/:challengeId/leaderboard', async (req, res) => {
   try {
     const challenge = await HealthChallenge.findById(req.params.challengeId)

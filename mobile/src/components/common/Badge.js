@@ -1,7 +1,4 @@
-/**
- * Enterprise Badge Component
- * Status indicators, labels, and counts - Dynamic Theme Edition
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
@@ -10,8 +7,8 @@ import { useTheme } from '../../context/ThemeContext';
 
 const Badge = ({
   children,
-  variant = 'primary', // primary, secondary, success, warning, error, info, neutral
-  size = 'medium', // small, medium, large
+  variant = 'primary', 
+  size = 'medium', 
   dot = false,
   style,
   textStyle,
@@ -93,9 +90,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'flex-start',
-  },
-
-  // Sizes
+  },
   small: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
@@ -110,18 +105,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     minHeight: 32,
-  },
-
-  // Dot variant
+  },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     padding: 0,
     minHeight: 0,
-  },
-
-  // Text styles
+  },
   text: {
     ...typography.labelSmall,
     fontWeight: '600',

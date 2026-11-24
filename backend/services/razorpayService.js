@@ -1,4 +1,4 @@
-// Razorpay Payment Service
+
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Appointment = require('../models/Appointment');
@@ -9,9 +9,7 @@ const {
   RAZORPAY_MODE,
   IS_LIVE_MODE,
   FRONTEND_URL
-} = require('../config/paymentConfig');
-
-// Initialize Razorpay instance
+} = require('../config/paymentConfig');
 let razorpay = null;
 const isRazorpayEnabled = USE_RAZORPAY_PAYMENTS && RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET;
 
@@ -19,9 +17,7 @@ if (isRazorpayEnabled) {
   razorpay = new Razorpay({
     key_id: RAZORPAY_KEY_ID,
     key_secret: RAZORPAY_KEY_SECRET
-  });
-  
-  // Clear logging for live vs test mode
+  });
   if (IS_LIVE_MODE) {
     console.log('💳 Razorpay LIVE payments ENABLED');
     console.log(`   Key: ${RAZORPAY_KEY_ID.substring(0, 15)}...`);
@@ -38,12 +34,10 @@ if (isRazorpayEnabled) {
 class RazorpayService {
   constructor() {
     this.currency = 'INR';
-    this.platformFeePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 5; // Default 5%
-    this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 0; // Default 0%
+    this.platformFeePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 5; 
+    this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 0; 
     this.useRazorpay = isRazorpayEnabled;
-  }
-
-  // Calculate payment breakdown
+  }
   calculatePaymentBreakdown(consultationFee) {
     const baseAmount = parseFloat(consultationFee);
     const gstAmount = Math.round((baseAmount * this.gstPercentage) / 100);
@@ -55,12 +49,10 @@ class RazorpayService {
       gst: gstAmount,
       platformFee: platformFeeAmount,
       total: totalAmount,
-      totalInPaise: totalAmount * 100, // Razorpay uses paise
+      totalInPaise: totalAmount * 100, 
       currency: this.currency
     };
-  }
-
-  // Create Razorpay Order
+  }
   async createOrder(appointmentId, userId, couponCode = null) {
     if (!this.useRazorpay) {
       return {
@@ -90,17 +82,13 @@ class RazorpayService {
 
       if (appointment.userId._id.toString() !== userId) {
         throw new Error('Unauthorized access to appointment');
-      }
-
-      // Ensure consultation fee is valid (minimum ₹1)
+      }
       const consultationFee = appointment.doctorId?.consultationFee || 500;
       if (consultationFee < 1) {
         throw new Error('Invalid consultation fee');
       }
 
-      const paymentBreakdown = this.calculatePaymentBreakdown(consultationFee);
-      
-      // Apply coupon discount if provided
+      const paymentBreakdown = this.calculatePaymentBreakdown(consultationFee);
       let couponDiscount = 0;
       let appliedCoupon = null;
       
@@ -124,18 +112,13 @@ class RazorpayService {
             }
           }
         } catch (couponError) {
-          console.error('Error applying coupon:', couponError.message);
-          // Continue without coupon if there's an error
+          console.error('Error applying coupon:', couponError.message);
         }
-      }
-      
-      // Calculate final amount after coupon discount
-      const finalAmount = Math.max(1, paymentBreakdown.total - couponDiscount); // Minimum ₹1
-      const finalAmountInPaise = finalAmount * 100;
-      
-      // Create Razorpay order with discounted amount
+      }
+      const finalAmount = Math.max(1, paymentBreakdown.total - couponDiscount); 
+      const finalAmountInPaise = finalAmount * 100;
       const orderOptions = {
-        amount: finalAmountInPaise, // Amount in paise (after discount)
+        amount: finalAmountInPaise, 
         currency: this.currency,
         receipt: `apt_${appointmentId.slice(-10)}`,
         notes: {
@@ -157,9 +140,7 @@ class RazorpayService {
       console.log('   Order notes:', JSON.stringify(orderOptions.notes, null, 2));
       
       const order = await razorpay.orders.create(orderOptions);
-      console.log('✅ Razorpay order created successfully:', order.id);
-
-      // Update appointment with order ID and coupon details
+      console.log('✅ Razorpay order created successfully:', order.id);
       appointment.razorpayOrderId = order.id;
       appointment.paymentStatus = 'pending';
       if (appliedCoupon) {
@@ -206,9 +187,7 @@ class RazorpayService {
       });
       throw error;
     }
-  }
-
-  // Verify Razorpay Payment Signature
+  }
   verifyPaymentSignature(orderId, paymentId, signature) {
     const body = orderId + '|' + paymentId;
     const expectedSignature = crypto
@@ -217,9 +196,7 @@ class RazorpayService {
       .digest('hex');
     
     return expectedSignature === signature;
-  }
-
-  // Verify and Complete Payment
+  }
   async verifyPayment(paymentData) {
     if (!this.useRazorpay) {
       return {
@@ -230,9 +207,7 @@ class RazorpayService {
     }
 
     try {
-      const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = paymentData;
-
-      // Verify signature
+      const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = paymentData;
       const isValidSignature = this.verifyPaymentSignature(
         razorpay_order_id,
         razorpay_payment_id,
@@ -244,15 +219,11 @@ class RazorpayService {
         throw new Error('Payment verification failed - Invalid signature');
       }
 
-      console.log('✅ Razorpay signature verified');
-
-      // Find appointment
+      console.log('✅ Razorpay signature verified');
       const appointment = await Appointment.findById(appointmentId);
       if (!appointment) {
         throw new Error('Appointment not found');
-      }
-
-      // Check if already completed
+      }
       if (appointment.paymentStatus === 'completed') {
         console.log(`ℹ️ Payment already verified and completed for appointment: ${appointmentId}`);
         return {
@@ -267,14 +238,10 @@ class RazorpayService {
             method: appointment.paymentDetails?.method || 'Razorpay'
           }
         };
-      }
-
-      // Fetch payment details from Razorpay
+      }
       const payment = await razorpay.payments.fetch(razorpay_payment_id);
 
-      console.log('📦 Payment details:', payment);
-
-      // Update appointment with payment details
+      console.log('📦 Payment details:', payment);
       appointment.paymentStatus = 'completed';
       appointment.status = 'confirmed';
       appointment.razorpayPaymentId = razorpay_payment_id;
@@ -282,7 +249,7 @@ class RazorpayService {
       appointment.paymentDetails = {
         razorpayOrderId: razorpay_order_id,
         razorpayPaymentId: razorpay_payment_id,
-        amount: payment.amount / 100, // Convert from paise to rupees
+        amount: payment.amount / 100, 
         currency: payment.currency,
         method: payment.method,
         bank: payment.bank,
@@ -295,9 +262,7 @@ class RazorpayService {
       };
       await appointment.save();
 
-      console.log(`✅ Payment completed for appointment ${appointmentId}`);
-
-      // Award loyalty points on verified payment completion
+      console.log(`✅ Payment completed for appointment ${appointmentId}`);
       try {
         const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
         const populatedApt = await Appointment.findById(appointmentId).populate('doctorId');
@@ -328,9 +293,7 @@ class RazorpayService {
       console.error('❌ Error verifying Razorpay payment:', error);
       throw error;
     }
-  }
-
-  // Process Refund
+  }
   async processRefund(appointmentId, reason = 'Appointment cancelled') {
     if (!this.useRazorpay) {
       const appointment = await Appointment.findById(appointmentId);
@@ -355,18 +318,14 @@ class RazorpayService {
 
       if (appointment.paymentStatus !== 'completed') {
         throw new Error('Cannot refund incomplete payment');
-      }
-
-      // Create refund
+      }
       const refund = await razorpay.payments.refund(appointment.razorpayPaymentId, {
-        amount: appointment.paymentDetails.amount * 100, // Convert to paise
+        amount: appointment.paymentDetails.amount * 100, 
         notes: {
           reason: reason,
           appointmentId: appointmentId
         }
-      });
-
-      // Update appointment
+      });
       appointment.paymentStatus = 'refunded';
       appointment.status = 'cancelled';
       appointment.refundDetails = {
@@ -391,9 +350,7 @@ class RazorpayService {
       console.error('❌ Error processing refund:', error);
       throw error;
     }
-  }
-
-  // Get payment history
+  }
   async getPaymentHistory(userId) {
     try {
       const appointments = await Appointment.find({ 
@@ -423,9 +380,7 @@ class RazorpayService {
       console.error('Error fetching payment history:', error);
       throw error;
     }
-  }
-
-  // Get config for frontend
+  }
   getConfig() {
     return {
       paymentsEnabled: Boolean(this.useRazorpay),

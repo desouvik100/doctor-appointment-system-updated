@@ -1,13 +1,9 @@
-/**
- * Compliance & Accreditation Routes
- */
+
 
 const express = require('express');
 const router = express.Router();
 const ComplianceChecklist = require('../models/ComplianceChecklist');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// Create checklist
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 router.post('/checklists', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const checklist = new ComplianceChecklist({ ...req.body, preparedBy: req.user?.userId });
@@ -16,9 +12,7 @@ router.post('/checklists', verifyTokenWithRole(['admin', 'clinic', 'receptionist
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all checklists for clinic
+});
 router.get('/checklists/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { checklistType, status } = req.query;
@@ -34,9 +28,7 @@ router.get('/checklists/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get checklist by ID
+});
 router.get('/checklists/:id', verifyToken, async (req, res) => {
   try {
     const checklist = await ComplianceChecklist.findById(req.params.id)
@@ -48,9 +40,7 @@ router.get('/checklists/:id', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update checklist item
+});
 router.put('/checklists/:id/item', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { categoryIndex, itemIndex, updates } = req.body;
@@ -70,9 +60,7 @@ router.put('/checklists/:id/item', verifyTokenWithRole(['admin', 'clinic', 'rece
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Submit for review
+});
 router.post('/checklists/:id/submit', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const checklist = await ComplianceChecklist.findByIdAndUpdate(
@@ -87,9 +75,7 @@ router.post('/checklists/:id/submit', verifyTokenWithRole(['admin', 'clinic', 'r
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Approve checklist
+});
 router.post('/checklists/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const checklist = await ComplianceChecklist.findByIdAndUpdate(
@@ -106,9 +92,7 @@ router.post('/checklists/:id/approve', verifyTokenWithRole(['admin']), async (re
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get compliance summary
+});
 router.get('/summary/:clinicId', verifyToken, async (req, res) => {
   try {
     const checklists = await ComplianceChecklist.find({ 
@@ -150,9 +134,7 @@ router.get('/summary/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get NABH template
+});
 router.get('/templates/nabh', verifyToken, async (req, res) => {
   try {
     const template = {
@@ -215,9 +197,7 @@ router.get('/templates/nabh', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get template by type (generic route)
+});
 router.get('/templates/:type', verifyToken, async (req, res) => {
   try {
     const { type } = req.params;

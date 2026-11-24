@@ -1,54 +1,15 @@
-/**
- * API Client - Centralized Axios instance with interceptors
- * 
- * This module provides a standardized API client for the HealthSync mobile app.
- * It ensures consistent behavior with the web application by using identical
- * API contracts and error handling.
- * 
- * Features:
- * - Automatic Authorization header attachment (Requirement 1.2)
- * - Standardized error transformation (Requirement 1.4)
- * - Token refresh on 401 responses (Requirement 1.6)
- * - Prevents red screen crashes with proper error handling
- * - Consistent with web app API layer
- * 
- * @module apiClient
- * @see {@link https://doctor-appointment-system-updated.onrender.com/api/docs} API Documentation
- */
+
 
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
 import { API_URL, API_TIMEOUT } from '../../config/env';
-import { devLog, devError } from '../../utils/errorHandler';
-
-// API Version for future compatibility
-export const API_VERSION = '1.0.0';
-
-// Token storage keys
+import { devLog, devError } from '../../utils/errorHandler';
+export const API_VERSION = '1.0.0';
 const TOKEN_KEY = 'authToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
-/**
- * Standardized API Error structure
- * @typedef {Object} StandardizedError
- * @property {boolean} success - Always false for errors
- * @property {string} message - Human-readable error message
- * @property {number} statusCode - HTTP status code (0 for network errors, -1 for unknown)
- * @property {string} [code] - Optional error code from backend
- * @property {Array<{field: string, message: string}>} [errors] - Field-specific validation errors
- * @property {Error} originalError - The original error object
- */
-
-/**
- * Transform any error into a standardized error format
- * Ensures consistent error structure across all API calls
- * 
- * @param {Error} error - The original error from axios or other source
- * @returns {StandardizedError} Standardized error object
- */
-const transformError = (error) => {
-  // Server responded with an error status
+const transformError = (error) => {
   if (error.response) {
     const { status, data } = error.response;
     return {
@@ -59,9 +20,7 @@ const transformError = (error) => {
       errors: data?.errors || [],
       originalError: error,
     };
-  }
-
-  // Request was made but no response received (network error)
+  }
   if (error.request) {
     return {
       success: false,
@@ -71,9 +30,7 @@ const transformError = (error) => {
       errors: [],
       originalError: error,
     };
-  }
-
-  // Something else happened during request setup
+  }
   return {
     success: false,
     message: error.message || 'An unexpected error occurred.',
@@ -84,12 +41,6 @@ const transformError = (error) => {
   };
 };
 
-/**
- * Get default error message based on HTTP status code
- * 
- * @param {number} status - HTTP status code
- * @returns {string} Default error message
- */
 const getDefaultErrorMessage = (status) => {
   const messages = {
     400: 'Invalid request. Please check your input.',
@@ -105,9 +56,7 @@ const getDefaultErrorMessage = (status) => {
     504: 'Gateway timeout. Please try again.',
   };
   return messages[status] || 'Something went wrong.';
-};
-
-// Create axios instance with centralized configuration
+};
 const apiClient = axios.create({
   baseURL: API_URL,
   timeout: API_TIMEOUT,
@@ -116,15 +65,8 @@ const apiClient = axios.create({
   },
 });
 
-/**
- * Get auth token from secure storage
- * Attempts Keychain first, falls back to AsyncStorage
- * 
- * @returns {Promise<string|null>} The auth token or null if not found
- */
 export const getAuthToken = async () => {
-  try {
-    // Try Keychain first
+  try {
     const credentials = await Keychain.getGenericPassword({ service: TOKEN_KEY });
     if (credentials && credentials.password) {
       console.log('🔑 [AUTH] Token found in Keychain');
@@ -132,16 +74,13 @@ export const getAuthToken = async () => {
     }
   } catch (error) {
     console.log('⚠️ [AUTH] Keychain read failed:', error.message);
-  }
-  
-  // Fallback to AsyncStorage
+  }
   try {
     const token = await AsyncStorage.getItem(TOKEN_KEY);
     if (token) {
       console.log('🔑 [AUTH] Token found in AsyncStorage');
       return token;
-    }
-    // Also try 'token' key (used by UserContext)
+    }
     const altToken = await AsyncStorage.getItem('token');
     if (altToken) {
       console.log('🔑 [AUTH] Token found in AsyncStorage (alt key)');
@@ -155,12 +94,6 @@ export const getAuthToken = async () => {
   return null;
 };
 
-/**
- * Save auth token to secure storage
- * 
- * @param {string} token - The JWT token to save
- * @returns {Promise<void>}
- */
 export const saveAuthToken = async (token) => {
   console.log('💾 [AUTH] Saving token...');
   try {
@@ -179,9 +112,7 @@ export const saveAuthToken = async (token) => {
     await AsyncStorage.setItem('token', token);
   } catch (error) {
     console.log('⚠️ [AUTH] AsyncStorage alt key save failed:', error.message);
-  }
-  
-  // Dynamic import to prevent circular dependency
+  }
   try {
     const socketManager = require('./socketManager').default;
     if (socketManager) {
@@ -192,12 +123,6 @@ export const saveAuthToken = async (token) => {
   }
 };
 
-/**
- * Save refresh token to secure storage
- * 
- * @param {string} token - The refresh token to save
- * @returns {Promise<void>}
- */
 export const saveRefreshToken = async (token) => {
   console.log('💾 [AUTH] Saving refresh token...');
   try {
@@ -214,11 +139,6 @@ export const saveRefreshToken = async (token) => {
   }
 };
 
-/**
- * Get refresh token from secure storage
- * 
- * @returns {Promise<string|null>} The refresh token or null if not found
- */
 export const getRefreshToken = async () => {
   try {
     const credentials = await Keychain.getGenericPassword({ service: REFRESH_TOKEN_KEY });
@@ -242,12 +162,6 @@ export const getRefreshToken = async () => {
   return null;
 };
 
-/**
- * Clear all auth tokens from storage
- * Used during logout or when token refresh fails
- * 
- * @returns {Promise<void>}
- */
 export const clearAuthTokens = async () => {
   try {
     await Keychain.resetGenericPassword({ service: TOKEN_KEY });
@@ -268,55 +182,26 @@ export const clearAuthTokens = async () => {
 
 let authFailureCallback = null;
 
-/**
- * Register a callback for application-wide authentication failures
- * @param {Function} callback - Callback function receiving error message
- */
 export const setAuthFailureCallback = (callback) => {
   authFailureCallback = callback;
-};
-
-// Flag to prevent multiple simultaneous refresh attempts
-let isRefreshing = false;
-// Queue of requests waiting for token refresh
+};
+let isRefreshing = false;
 let refreshSubscribers = [];
 
-/**
- * Subscribe to token refresh completion
- * 
- * @param {Function} callback - Callback to execute when refresh completes
- */
 const subscribeTokenRefresh = (callback) => {
   refreshSubscribers.push(callback);
 };
 
-/**
- * Notify all subscribers that token refresh is complete
- * 
- * @param {string} token - The new auth token
- */
 const onTokenRefreshed = (token) => {
   refreshSubscribers.forEach((callback) => callback(token));
   refreshSubscribers = [];
 };
 
-/**
- * Notify all subscribers that token refresh failed
- * 
- * @param {Error} error - The refresh error
- */
 const onTokenRefreshFailed = (error) => {
   refreshSubscribers.forEach((callback) => callback(null, error));
   refreshSubscribers = [];
 };
 
-/**
- * Refresh the auth token using the refresh token
- * Handles concurrent refresh requests by queuing them
- * 
- * @returns {Promise<string>} The new auth token
- * @throws {Error} If refresh fails or no refresh token available
- */
 const refreshAuthToken = async () => {
   const refreshToken = await getRefreshToken();
   if (!refreshToken) {
@@ -336,13 +221,6 @@ const refreshAuthToken = async () => {
   return token;
 };
 
-/**
- * Wraps refreshAuthToken with a hard deadline to prevent the isRefreshing
- * flag from permanently deadlocking the request queue on network freeze.
- *
- * @param {number} [timeoutMs=10000] - Deadline in milliseconds
- * @returns {Promise<string>} The new access token
- */
 const refreshAuthTokenWithTimeout = (timeoutMs = 10000) =>
   new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -360,26 +238,17 @@ const refreshAuthTokenWithTimeout = (timeoutMs = 10000) =>
       });
   });
 
-/**
- * Request Interceptor
- * Automatically attaches Authorization header with JWT token (Requirement 1.2)
- */
 apiClient.interceptors.request.use(
   async (config) => {
     try {
-      const token = await getAuthToken();
-      
-      // DEBUG: Always log request details
+      const token = await getAuthToken();
       console.log(`🌐 [API REQUEST] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
       console.log(`🌐 [API REQUEST] Has Token: ${!!token}`);
-      if (config.data) {
-        // Don't log password
+      if (config.data) {
         const safeData = { ...config.data };
         if (safeData.password) safeData.password = '***';
         console.log(`🌐 [API REQUEST] Body:`, JSON.stringify(safeData));
-      }
-      
-      // Automatically attach Authorization header if token exists
+      }
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -394,12 +263,6 @@ apiClient.interceptors.request.use(
   }
 );
 
-/**
- * Response Interceptor
- * - Handles successful responses
- * - Transforms errors into standardized format (Requirement 1.4)
- * - Implements token refresh on 401 responses (Requirement 1.6)
- */
 apiClient.interceptors.response.use(
   (response) => {
     if (__DEV__) {
@@ -408,9 +271,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
-
-    // Log error in dev mode only — use warn for network errors to avoid LogBox red overlay
+    const originalRequest = error.config;
     if (__DEV__) {
       const isNetworkErr = !error.response && error.request;
       if (isNetworkErr) {
@@ -423,23 +284,16 @@ apiClient.interceptors.response.use(
           error.response?.data?.message || error.message
         );
       }
-    }
-
-    // Handle 401 - Token refresh (Requirement 1.6)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      // Skip refresh for auth endpoints to prevent infinite loops
+    }
+    if (error.response?.status === 401 && !originalRequest._retry) {
       if (originalRequest.url?.includes('/auth/login') || 
           originalRequest.url?.includes('/auth/register') ||
           originalRequest.url?.includes('/auth/refresh')) {
         return Promise.reject(transformError(error));
       }
 
-      originalRequest._retry = true;
-
-      // If already refreshing, queue this request
-      if (isRefreshing) {
-        // Guard: do not re-queue a request that has already been through one
-        // full subscriber cycle to prevent runaway retry storms.
+      originalRequest._retry = true;
+      if (isRefreshing) {
         if (originalRequest._retryCount && originalRequest._retryCount >= 1) {
           return Promise.reject(transformError(error));
         }
@@ -462,9 +316,7 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        devLog('🔄 [API] Attempting token refresh (10s deadline)...');
-        // Use the timeout-guarded variant to prevent the isRefreshing flag
-        // from permanently deadlocking the request queue on network freeze.
+        devLog('🔄 [API] Attempting token refresh (10s deadline)...');
         const newToken = await refreshAuthTokenWithTimeout(10000);
         devLog('✅ [API] Token refreshed successfully');
         
@@ -479,30 +331,18 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
         onTokenRefreshFailed(refreshError);
         
-        await clearAuthTokens();
-
-        // Trigger automatic logout escape route
+        await clearAuthTokens();
         if (authFailureCallback) {
           authFailureCallback(refreshError.message || 'Session expired');
         }
 
         return Promise.reject(transformError(refreshError));
       }
-    }
-
-    // Return standardized error (Requirement 1.4)
+    }
     return Promise.reject(transformError(error));
   }
 );
 
-/**
- * Safe API call wrapper - prevents crashes and returns standardized response
- * 
- * @template T
- * @param {Function} apiCall - The API call function to execute
- * @param {T} [fallback=null] - Fallback value if call fails
- * @returns {Promise<T|null>} The response data or fallback value
- */
 export const safeApiCall = async (apiCall, fallback = null) => {
   try {
     const response = await apiCall();
@@ -513,12 +353,6 @@ export const safeApiCall = async (apiCall, fallback = null) => {
   }
 };
 
-/**
- * Check if an error is a standardized API error
- * 
- * @param {any} error - The error to check
- * @returns {boolean} True if error is a standardized API error
- */
 export const isApiError = (error) => {
   return (
     error &&
@@ -529,12 +363,6 @@ export const isApiError = (error) => {
   );
 };
 
-/**
- * Extract user-friendly message from any error
- * 
- * @param {any} error - The error to extract message from
- * @returns {string} User-friendly error message
- */
 export const getErrorMessage = (error) => {
   if (isApiError(error)) {
     return error.message;
@@ -548,12 +376,6 @@ export const getErrorMessage = (error) => {
   return 'An unexpected error occurred.';
 };
 
-/**
- * Get field-specific errors from a validation error
- * 
- * @param {any} error - The error to extract field errors from
- * @returns {Array<{field: string, message: string}>} Array of field errors
- */
 export const getFieldErrors = (error) => {
   if (isApiError(error) && Array.isArray(error.errors)) {
     return error.errors;
@@ -564,32 +386,14 @@ export const getFieldErrors = (error) => {
   return [];
 };
 
-/**
- * Check if error is a network error
- * 
- * @param {any} error - The error to check
- * @returns {boolean} True if error is a network error
- */
 export const isNetworkError = (error) => {
   return isApiError(error) && error.statusCode === 0;
 };
 
-/**
- * Check if error is an authentication error
- * 
- * @param {any} error - The error to check
- * @returns {boolean} True if error is an auth error (401)
- */
 export const isAuthError = (error) => {
   return isApiError(error) && error.statusCode === 401;
 };
 
-/**
- * Check if error is a validation error
- * 
- * @param {any} error - The error to check
- * @returns {boolean} True if error is a validation error (400 or 422)
- */
 export const isValidationError = (error) => {
   return isApiError(error) && (error.statusCode === 400 || error.statusCode === 422);
 };

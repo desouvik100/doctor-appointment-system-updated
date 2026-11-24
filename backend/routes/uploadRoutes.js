@@ -1,7 +1,4 @@
-/**
- * Upload Routes - Comprehensive file upload handling
- * Handles: Profile photos, documents, prescriptions, chat attachments, etc.
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -12,9 +9,7 @@ const cloudinaryService = require('../services/cloudinaryService');
 const { verifyToken } = require('../middleware/auth');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
-const Clinic = require('../models/Clinic');
-
-// Multer configuration
+const Clinic = require('../models/Clinic');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '../uploads/temp');
@@ -48,25 +43,15 @@ const documentFilter = (req, file, cb) => {
 };
 
 const uploadImage = multer({ storage, fileFilter: imageFilter, limits: { fileSize: 5 * 1024 * 1024 } });
-const uploadDocument = multer({ storage, fileFilter: documentFilter, limits: { fileSize: 10 * 1024 * 1024 } });
-
-// Helper to clean up temp file
+const uploadDocument = multer({ storage, fileFilter: documentFilter, limits: { fileSize: 10 * 1024 * 1024 } });
 const cleanupTempFile = (filePath) => {
   if (filePath) {
     fs.unlink(filePath, (err) => {
       if (err) console.error('Error deleting temp file:', err);
     });
   }
-};
+};
 
-// ============================================
-// PROFILE PHOTO UPLOAD
-// ============================================
-
-/**
- * POST /api/upload/profile-photo
- * Upload user profile photo
- */
 router.post('/profile-photo', verifyToken, uploadImage.single('photo'), async (req, res) => {
   try {
     if (!cloudinaryService.isConfigured()) {
@@ -83,15 +68,11 @@ router.post('/profile-photo', verifyToken, uploadImage.single('photo'), async (r
 
     if (!result.success) {
       return res.status(500).json({ success: false, message: 'Upload failed' });
-    }
-
-    // Update user's profile photo in database
+    }
     await User.findByIdAndUpdate(req.userId, {
       profilePhoto: result.secureUrl,
       profilePhotoPublicId: result.publicId
-    });
-
-    // If doctor, also update Doctor model
+    });
     if (userType === 'doctor') {
       await Doctor.findOneAndUpdate(
         { userId: req.userId },
@@ -115,10 +96,6 @@ router.post('/profile-photo', verifyToken, uploadImage.single('photo'), async (r
   }
 });
 
-/**
- * DELETE /api/upload/profile-photo
- * Remove profile photo
- */
 router.delete('/profile-photo', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId);
@@ -135,16 +112,8 @@ router.delete('/profile-photo', verifyToken, async (req, res) => {
     console.error('Delete profile photo error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// DOCTOR VERIFICATION DOCUMENTS
-// ============================================
-
-/**
- * POST /api/upload/verification-doc
- * Upload doctor verification document
- */
 router.post('/verification-doc', verifyToken, uploadDocument.single('document'), async (req, res) => {
   try {
     if (!cloudinaryService.isConfigured()) {
@@ -155,16 +124,14 @@ router.post('/verification-doc', verifyToken, uploadDocument.single('document'),
       return res.status(400).json({ success: false, message: 'No document uploaded' });
     }
 
-    const { docType } = req.body; // 'license', 'degree', 'id_proof'
+    const { docType } = req.body; 
     if (!docType) {
       cleanupTempFile(req.file.path);
       return res.status(400).json({ success: false, message: 'Document type required' });
     }
 
     const result = await cloudinaryService.uploadVerificationDoc(req.file.path, req.userId, docType);
-    cleanupTempFile(req.file.path);
-
-    // Update doctor's verification documents
+    cleanupTempFile(req.file.path);
     const updateField = `verificationDocs.${docType}`;
     await Doctor.findOneAndUpdate(
       { userId: req.userId },
@@ -193,16 +160,8 @@ router.post('/verification-doc', verifyToken, uploadDocument.single('document'),
     console.error('Verification doc upload error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// PRESCRIPTION UPLOAD
-// ============================================
-
-/**
- * POST /api/upload/prescription
- * Upload prescription image
- */
 router.post('/prescription', verifyToken, uploadDocument.single('prescription'), async (req, res) => {
   try {
     if (!cloudinaryService.isConfigured()) {
@@ -240,10 +199,6 @@ router.post('/prescription', verifyToken, uploadDocument.single('prescription'),
   }
 });
 
-/**
- * POST /api/upload/prescription/extract-text
- * Extract text from prescription using OCR
- */
 router.post('/prescription/extract-text', verifyToken, async (req, res) => {
   try {
     const { publicId } = req.body;
@@ -258,16 +213,8 @@ router.post('/prescription/extract-text', verifyToken, async (req, res) => {
     console.error('OCR extraction error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// CHAT ATTACHMENT
-// ============================================
-
-/**
- * POST /api/upload/chat-attachment
- * Upload chat attachment
- */
 router.post('/chat-attachment', verifyToken, uploadDocument.single('attachment'), async (req, res) => {
   try {
     if (!cloudinaryService.isConfigured()) {
@@ -309,16 +256,8 @@ router.post('/chat-attachment', verifyToken, uploadDocument.single('attachment')
     console.error('Chat attachment upload error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// CLINIC UPLOADS
-// ============================================
-
-/**
- * POST /api/upload/clinic-logo
- * Upload clinic logo
- */
 router.post('/clinic-logo', verifyToken, uploadImage.single('logo'), async (req, res) => {
   try {
     if (!cloudinaryService.isConfigured()) {
@@ -336,9 +275,7 @@ router.post('/clinic-logo', verifyToken, uploadImage.single('logo'), async (req,
     }
 
     const result = await cloudinaryService.uploadClinicLogo(req.file.path, clinicId);
-    cleanupTempFile(req.file.path);
-
-    // Update clinic logo
+    cleanupTempFile(req.file.path);
     await Clinic.findByIdAndUpdate(clinicId, {
       logo: result.secureUrl,
       logoPublicId: result.publicId
@@ -357,10 +294,6 @@ router.post('/clinic-logo', verifyToken, uploadImage.single('logo'), async (req,
   }
 });
 
-/**
- * POST /api/upload/clinic-photo
- * Upload clinic gallery photo
- */
 router.post('/clinic-photo', verifyToken, uploadImage.single('photo'), async (req, res) => {
   try {
     if (!cloudinaryService.isConfigured()) {
@@ -375,16 +308,12 @@ router.post('/clinic-photo', verifyToken, uploadImage.single('photo'), async (re
     if (!clinicId) {
       cleanupTempFile(req.file.path);
       return res.status(400).json({ success: false, message: 'Clinic ID required' });
-    }
-
-    // Get current photo count
+    }
     const clinic = await Clinic.findById(clinicId);
     const photoIndex = (clinic?.galleryPhotos?.length || 0) + 1;
 
     const result = await cloudinaryService.uploadClinicPhoto(req.file.path, clinicId, photoIndex);
-    cleanupTempFile(req.file.path);
-
-    // Add to clinic gallery
+    cleanupTempFile(req.file.path);
     await Clinic.findByIdAndUpdate(clinicId, {
       $push: {
         galleryPhotos: {
@@ -409,16 +338,8 @@ router.post('/clinic-photo', verifyToken, uploadImage.single('photo'), async (re
     console.error('Clinic photo upload error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// ARTICLE IMAGE
-// ============================================
-
-/**
- * POST /api/upload/article-image
- * Upload article featured image
- */
 router.post('/article-image', verifyToken, uploadImage.single('image'), async (req, res) => {
   try {
     if (!cloudinaryService.isConfigured()) {
@@ -451,16 +372,8 @@ router.post('/article-image', verifyToken, uploadImage.single('image'), async (r
     console.error('Article image upload error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// UTILITY ENDPOINTS
-// ============================================
-
-/**
- * GET /api/upload/config
- * Get upload configuration
- */
 router.get('/config', (req, res) => {
   res.json({
     configured: cloudinaryService.isConfigured(),
@@ -474,10 +387,6 @@ router.get('/config', (req, res) => {
   });
 });
 
-/**
- * DELETE /api/upload/file/:publicId
- * Delete a file by public ID
- */
 router.delete('/file/:publicId', verifyToken, async (req, res) => {
   try {
     const { publicId } = req.params;

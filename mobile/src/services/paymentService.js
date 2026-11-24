@@ -1,7 +1,4 @@
-/**
- * Payment Service
- * Handles Razorpay payment integration for mobile app
- */
+
 
 import { Linking, Platform } from 'react-native';
 import apiClient from './api/apiClient';
@@ -9,9 +6,6 @@ import apiClient from './api/apiClient';
 import { API_URL } from '../config/env';
 const BACKEND_URL = API_URL.replace('/api', '');
 
-/**
- * Get payment configuration
- */
 export const getPaymentConfig = async () => {
   try {
     const response = await apiClient.get('/payments/config');
@@ -29,9 +23,6 @@ export const getPaymentConfig = async () => {
   }
 };
 
-/**
- * Calculate payment breakdown
- */
 export const calculatePayment = async (appointmentId) => {
   try {
     const response = await apiClient.get(`/payments/calculate/${appointmentId}`);
@@ -45,9 +36,6 @@ export const calculatePayment = async (appointmentId) => {
   }
 };
 
-/**
- * Create Razorpay order
- */
 export const createOrder = async (appointmentId, userId, couponCode = null) => {
   try {
     const response = await apiClient.post('/payments/create-order', {
@@ -65,9 +53,7 @@ export const createOrder = async (appointmentId, userId, couponCode = null) => {
         message: 'Payment completed in test mode',
         appointmentId,
       };
-    }
-    
-    // Validate required fields
+    }
     if (!data.orderId || !data.keyId) {
       throw new Error('Invalid order response from server');
     }
@@ -89,18 +75,12 @@ export const createOrder = async (appointmentId, userId, couponCode = null) => {
   }
 };
 
-/**
- * Open Razorpay payment page in browser
- * This is the recommended approach for React Native without native SDK
- */
 export const openPaymentPage = async (orderData, appointmentId) => {
   try {
-    const { orderId, amount, keyId, prefill } = orderData;
-    
-    // Build mobile checkout URL
+    const { orderId, amount, keyId, prefill } = orderData;
     const params = new URLSearchParams({
       appointmentId,
-      amount: amount * 100, // Convert to paise
+      amount: amount * 100, 
       name: encodeURIComponent(prefill?.name || ''),
       email: encodeURIComponent(prefill?.email || ''),
       contact: encodeURIComponent(prefill?.contact || ''),
@@ -124,9 +104,6 @@ export const openPaymentPage = async (orderData, appointmentId) => {
   }
 };
 
-/**
- * Verify payment after completion
- */
 export const verifyPayment = async (paymentData) => {
   try {
     const response = await apiClient.post('/payments/verify', paymentData);
@@ -144,9 +121,6 @@ export const verifyPayment = async (paymentData) => {
   }
 };
 
-/**
- * Get payment status for an appointment
- */
 export const getPaymentStatus = async (appointmentId) => {
   try {
     const response = await apiClient.get(`/payments/status/${appointmentId}`);
@@ -164,9 +138,6 @@ export const getPaymentStatus = async (appointmentId) => {
   }
 };
 
-/**
- * Get payment history for user
- */
 export const getPaymentHistory = async (userId) => {
   try {
     const response = await apiClient.get(`/payments/history/${userId}`);
@@ -182,9 +153,6 @@ export const getPaymentHistory = async (userId) => {
   }
 };
 
-/**
- * Request refund
- */
 export const requestRefund = async (appointmentId, reason) => {
   try {
     const response = await apiClient.post('/payments/refund', {
@@ -204,9 +172,6 @@ export const requestRefund = async (appointmentId, reason) => {
   }
 };
 
-/**
- * Validate coupon code
- */
 export const validateCoupon = async (code, amount) => {
   try {
     const response = await apiClient.post('/coupons/validate', {

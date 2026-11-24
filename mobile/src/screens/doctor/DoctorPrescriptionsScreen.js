@@ -1,7 +1,4 @@
-/**
- * Doctor Prescriptions Screen - Prescription Management
- * 100% Parity with Web Doctor Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {

@@ -1,23 +1,16 @@
-/**
- * Multi-Branch Management Routes
- * With Real-Time Data Aggregation from All Branches
- */
+
 
 const express = require('express');
 const router = express.Router();
 const HospitalBranch = require('../models/HospitalBranch');
 const BranchStaff = require('../models/BranchStaff');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-const mongoose = require('mongoose');
-
-// Try to load models for aggregation (may not exist in all setups)
+const mongoose = require('mongoose');
 let Appointment, Billing, Patient, IPDAdmission;
 try { Appointment = require('../models/Appointment'); } catch(e) {}
 try { Billing = require('../models/Billing'); } catch(e) {}
 try { Patient = require('../models/Patient'); } catch(e) {}
-try { IPDAdmission = require('../models/IPDAdmission'); } catch(e) {}
-
-// Create branch
+try { IPDAdmission = require('../models/IPDAdmission'); } catch(e) {}
 router.post('/branches', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const branch = new HospitalBranch({ ...req.body, createdBy: req.user?.userId });
@@ -26,9 +19,7 @@ router.post('/branches', verifyTokenWithRole(['admin', 'clinic', 'receptionist']
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all branches for organization
+});
 router.get('/branches/organization/:orgId', verifyToken, async (req, res) => {
   try {
     const { status } = req.query;
@@ -46,9 +37,7 @@ router.get('/branches/organization/:orgId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get branch by ID
+});
 router.get('/branches/:id', verifyToken, async (req, res) => {
   try {
     const branch = await HospitalBranch.findById(req.params.id)
@@ -59,9 +48,7 @@ router.get('/branches/:id', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update branch
+});
 router.put('/branches/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const branch = await HospitalBranch.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -69,18 +56,14 @@ router.put('/branches/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionis
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get branch performance comparison
+});
 router.get('/analytics/comparison/:orgId', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId) 
       ? new mongoose.Types.ObjectId(req.params.orgId) 
       : req.params.orgId;
-    const branches = await HospitalBranch.find({ organizationId: orgId, isActive: true });
-
-    // In production, aggregate data from appointments, billing, etc.
+    const branches = await HospitalBranch.find({ organizationId: orgId, isActive: true });
     const comparison = branches.map(branch => ({
       branchId: branch._id,
       branchName: branch.branchName,
@@ -100,9 +83,7 @@ router.get('/analytics/comparison/:orgId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get centralized dashboard
+});
 router.get('/dashboard/:orgId', verifyToken, async (req, res) => {
   try {
     const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId) 
@@ -130,14 +111,10 @@ router.get('/dashboard/:orgId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Transfer patient between branches
+});
 router.post('/transfer-patient', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const { patientId, fromBranchId, toBranchId, reason, transferDate } = req.body;
-    
-    // In production, update patient records, create transfer record, notify both branches
+    const { patientId, fromBranchId, toBranchId, reason, transferDate } = req.body;
     const transfer = {
       patientId,
       fromBranchId,
@@ -152,11 +129,7 @@ router.post('/transfer-patient', verifyTokenWithRole(['admin', 'clinic', 'recept
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== REAL-TIME AGGREGATION APIs =====
-
-// Get aggregated data from all branches for main dashboard
+});
 router.get('/aggregated/:orgId', verifyToken, async (req, res) => {
   try {
     const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId) 
@@ -164,15 +137,11 @@ router.get('/aggregated/:orgId', verifyToken, async (req, res) => {
       : req.params.orgId;
     
     const branches = await HospitalBranch.find({ organizationId: orgId, isActive: true });
-    const branchIds = branches.map(b => b._id);
-
-    // Get staff counts per branch
+    const branchIds = branches.map(b => b._id);
     const staffByBranch = await BranchStaff.aggregate([
       { $match: { organizationId: orgId, isActive: true } },
       { $group: { _id: '$branchId', count: { $sum: 1 } } }
-    ]);
-
-    // Build aggregated data
+    ]);
     const aggregatedData = {
       organization: {
         totalBranches: branches.length,
@@ -199,9 +168,7 @@ router.get('/aggregated/:orgId', verifyToken, async (req, res) => {
         staffCount: staffByBranch.find(s => s._id?.toString() === branch._id.toString())?.count || 0,
         phone: branch.phone
       }))
-    };
-
-    // Try to get appointment data if model exists
+    };
     if (Appointment) {
       try {
         const today = new Date();
@@ -241,9 +208,7 @@ router.get('/aggregated/:orgId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get real-time branch activity feed
+});
 router.get('/activity/:orgId', verifyToken, async (req, res) => {
   try {
     const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId) 
@@ -251,12 +216,8 @@ router.get('/activity/:orgId', verifyToken, async (req, res) => {
       : req.params.orgId;
     const { limit = 20 } = req.query;
 
-    const branches = await HospitalBranch.find({ organizationId: orgId, isActive: true });
-    
-    // Generate activity feed (in production, this would come from actual data)
-    const activities = [];
-    
-    // Get recent staff additions
+    const branches = await HospitalBranch.find({ organizationId: orgId, isActive: true });
+    const activities = [];
     const recentStaff = await BranchStaff.find({ organizationId: orgId })
       .sort({ createdAt: -1 })
       .limit(5)
@@ -270,18 +231,14 @@ router.get('/activity/:orgId', verifyToken, async (req, res) => {
         branchName: staff.branchId?.branchName,
         timestamp: staff.createdAt
       });
-    });
-
-    // Sort by timestamp
+    });
     activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     res.json({ success: true, activities: activities.slice(0, parseInt(limit)) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get branch-specific data (for when staff logs in to their branch)
+});
 router.get('/branch-data/:branchId', verifyToken, async (req, res) => {
   try {
     const branchId = mongoose.Types.ObjectId.isValid(req.params.branchId) 
@@ -294,13 +251,9 @@ router.get('/branch-data/:branchId', verifyToken, async (req, res) => {
 
     if (!branch) {
       return res.status(404).json({ success: false, message: 'Branch not found' });
-    }
-
-    // Get branch staff
+    }
     const staff = await BranchStaff.find({ branchId, isActive: true })
-      .populate('userId', 'name email phone profilePhoto');
-
-    // Build branch data
+      .populate('userId', 'name email phone profilePhoto');
     const branchData = {
       branch,
       staff: {
@@ -318,25 +271,15 @@ router.get('/branch-data/:branchId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Sync data from branch to main (webhook-style endpoint)
+});
 router.post('/sync/:branchId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { dataType, data } = req.body;
-    const branchId = req.params.branchId;
-
-    // Validate branch
+    const branchId = req.params.branchId;
     const branch = await HospitalBranch.findById(branchId);
     if (!branch) {
       return res.status(404).json({ success: false, message: 'Branch not found' });
-    }
-
-    // In production, this would handle different data types:
-    // - appointments: sync to main appointment collection with branchId
-    // - billing: sync to main billing with branchId
-    // - patients: sync to main patient records
-    // - inventory: sync inventory changes
+    }
 
     res.json({ 
       success: true, 

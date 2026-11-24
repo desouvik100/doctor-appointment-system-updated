@@ -1,7 +1,4 @@
-/**
- * Login Screen — Premium patient-first design
- * Dynamic light/dark theme · icon inputs · focus states · trust badges · proper error handling
- */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -18,9 +15,7 @@ import biometricService from '../../services/biometricService';
 import socialAuthService from '../../services/socialAuthService';
 import NotificationService from '../../services/notifications/NotificationService';
 import { useTheme } from '../../context/ThemeContext';
-import Svg, { Path } from 'react-native-svg';
-
-// ─── Branded SVG Logos ───────────────────────────────────────────────────────
+import Svg, { Path } from 'react-native-svg';
 const GoogleIcon = () => (
   <Svg width="18" height="18" viewBox="0 0 24 24">
     <Path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -42,9 +37,7 @@ const AppleIcon = ({ color }) => (
   </Svg>
 );
 
-const { height } = Dimensions.get('window');
-
-// ─── Inline Input with icon + focus glow ────────────────────────────────────
+const { height } = Dimensions.get('window');
 const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, keyboardType, autoCapitalize, rightElement, colors }) => {
   const [focused, setFocused] = useState(false);
   const glowAnim = useRef(new Animated.Value(0)).current;
@@ -82,9 +75,7 @@ const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, k
       {rightElement ? rightElement : null}
     </Animated.View>
   );
-};
-
-// ─── Error toast ─────────────────────────────────────────────────────────────
+};
 const ErrorToast = ({ message }) => {
   const slideAnim = useRef(new Animated.Value(-60)).current;
   useEffect(() => {
@@ -97,9 +88,7 @@ const ErrorToast = ({ message }) => {
       <Text style={styles.errorToastText}>{message}</Text>
     </Animated.View>
   );
-};
-
-// ─── Main Screen ─────────────────────────────────────────────────────────────
+};
 const LoginScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
   const [email, setEmail]       = useState('');
@@ -210,7 +199,7 @@ const LoginScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
 
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
@@ -233,15 +222,15 @@ const LoginScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Back */}
+          {}
           <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]} onPress={() => navigation.goBack()}>
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
           </TouchableOpacity>
 
-          {/* Error toast */}
+          {}
           <ErrorToast message={errorMsg} />
 
-          {/* Header */}
+          {}
           <View style={styles.header}>
             <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.logoGradient}>
               <Text style={styles.logoPlus}>+</Text>
@@ -250,7 +239,7 @@ const LoginScreen = ({ navigation }) => {
             <Text style={[styles.welcomeSub, { color: colors.textSecondary }]}>Sign in to your HealthSync account</Text>
           </View>
 
-          {/* Form */}
+          {}
           <View style={styles.form}>
             <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Email address</Text>
             <FancyInput
@@ -281,7 +270,7 @@ const LoginScreen = ({ navigation }) => {
               <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
             </TouchableOpacity>
 
-            {/* Sign In button */}
+            {}
             <TouchableOpacity
               style={[styles.signInBtn, loading && styles.signInBtnDisabled]}
               onPress={handleLogin}
@@ -296,7 +285,7 @@ const LoginScreen = ({ navigation }) => {
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Biometric */}
+            {}
             {biometricAvailable && hasStoredCredentials ? (
               <TouchableOpacity style={[styles.biometricBtn, { borderColor: colors.primaryLight, backgroundColor: colors.surface }]} onPress={handleBiometricLogin}>
                 <Text style={styles.biometricIcon}>{biometricType === 'Face ID' ? '👤' : '👆'}</Text>
@@ -304,14 +293,14 @@ const LoginScreen = ({ navigation }) => {
               </TouchableOpacity>
             ) : null}
 
-            {/* Divider */}
+            {}
             <View style={styles.divider}>
               <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
               <Text style={[styles.dividerText, { color: colors.textMuted }]}>or continue with</Text>
               <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
             </View>
 
-            {/* Social buttons */}
+            {}
             <View style={styles.socialStack}>
               {[
                 { id: 'google',   label: 'Continue with Google',   icon: <GoogleIcon />,       color: colors.textPrimary, bg: colors.surface },
@@ -345,14 +334,14 @@ const LoginScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Premium Trust Statement */}
+          {}
           <View style={[styles.trustCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}>
             <Text style={[styles.trustText, { color: colors.textSecondary }]}>
               🔐 Your health records and personal data are fully protected under HIPAA compliance standards and 256-bit bank-grade encryption.
             </Text>
           </View>
 
-          {/* Sign up link */}
+          {}
           <View style={styles.signUpRow}>
             <Text style={[styles.signUpText, { color: colors.textSecondary }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>

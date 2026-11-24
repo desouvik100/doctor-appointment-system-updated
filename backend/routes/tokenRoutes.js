@@ -2,16 +2,9 @@ const express = require('express');
 const router = express.Router();
 const TokenService = require('../services/tokenService');
 const Appointment = require('../models/Appointment');
-const { verifyToken } = require('../middleware/auth');
-
-// Roles that can manage clinic queue operations
-// 'clinic_staff' kept for legacy tokens; 'receptionist' is the active role name used in auth
+const { verifyToken } = require('../middleware/auth');
 const CLINIC_ROLES = ['admin', 'clinic_staff', 'receptionist', 'doctor'];
 
-/**
- * POST /api/token/verify
- * Verify appointment token (Clinic/Admin side)
- */
 router.post('/verify', async (req, res) => {
   try {
     const { token } = req.body;
@@ -32,10 +25,6 @@ router.post('/verify', async (req, res) => {
   }
 });
 
-/**
- * POST /api/token/add-to-queue
- * Add verified appointment to queue
- */
 router.post('/add-to-queue', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.body;
@@ -56,10 +45,6 @@ router.post('/add-to-queue', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/token/patient/:userId
- * Get patient's current appointment token
- */
 router.get('/patient/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -80,10 +65,6 @@ router.get('/patient/:userId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/token/queue/:doctorId
- * Get queue list for a doctor (Clinic/Admin side)
- */
 router.get('/queue/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -109,10 +90,6 @@ router.get('/queue/:doctorId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/token/mark-completed
- * Mark appointment as completed (Clinic/Admin side)
- */
 router.post('/mark-completed', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.body;
@@ -137,10 +114,6 @@ router.post('/mark-completed', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/token/mark-no-show
- * Mark appointment as no-show (Clinic/Admin side)
- */
 router.post('/mark-no-show', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.body;
@@ -165,10 +138,6 @@ router.post('/mark-no-show', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/token/expire-old
- * Expire old tokens (Cron job or manual trigger)
- */
 router.post('/expire-old', verifyToken, async (req, res) => {
   try {
     if (req.user.role !== 'admin') {

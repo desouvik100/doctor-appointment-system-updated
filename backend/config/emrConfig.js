@@ -1,18 +1,10 @@
-/**
- * EMR Configuration
- * Defines screens, plans, pricing, and access control
- */
 
-// Plan hierarchy for access control
 const PLAN_HIERARCHY = {
   basic: 1,
   standard: 2,
   advanced: 3
-};
-
-// EMR Screens with plan requirements and role access
-const EMR_SCREENS = {
-  // ===== BASIC PLAN SCREENS =====
+};
+const EMR_SCREENS = {
   PATIENT_REGISTRATION: {
     id: 'patient_registration',
     name: 'Patient Registration',
@@ -57,9 +49,7 @@ const EMR_SCREENS = {
     roles: ['admin', 'staff', 'doctor'],
     icon: 'fa-file-medical',
     route: '/emr/reports'
-  },
-  
-  // ===== STANDARD PLAN SCREENS =====
+  },
   DOCTOR_NOTES: {
     id: 'doctor_notes',
     name: 'Clinical Notes',
@@ -95,9 +85,7 @@ const EMR_SCREENS = {
     roles: ['admin', 'doctor'],
     icon: 'fa-stream',
     route: '/emr/timeline'
-  },
-  
-  // ===== ADVANCED PLAN SCREENS =====
+  },
   EMR_DASHBOARD: {
     id: 'emr_dashboard',
     name: 'EMR Dashboard',
@@ -143,9 +131,7 @@ const EMR_SCREENS = {
     icon: 'fa-file-export',
     route: '/emr/export'
   }
-};
-
-// Subscription Plans with pricing
+};
 const SUBSCRIPTION_PLANS = {
   basic: {
     id: 'basic',
@@ -213,16 +199,14 @@ const SUBSCRIPTION_PLANS = {
       '1_year': { amount: 35999, currency: 'INR', perMonth: 3000, savings: 3999 }
     },
     limits: {
-      maxDoctors: -1, // unlimited
-      maxStaff: -1,   // unlimited
-      maxPatientsPerMonth: -1 // unlimited
+      maxDoctors: -1, 
+      maxStaff: -1,   
+      maxPatientsPerMonth: -1 
     },
     color: '#8b5cf6',
     recommended: false
   }
-};
-
-// Role definitions
+};
 const EMR_ROLES = {
   admin: {
     id: 'admin',
@@ -248,9 +232,7 @@ const EMR_ROLES = {
     canManageSubscription: false,
     canViewBilling: false
   }
-};
-
-// Helper functions
+};
 const getScreensForPlan = (plan) => {
   const planLevel = PLAN_HIERARCHY[plan] || 0;
   return Object.values(EMR_SCREENS).filter(

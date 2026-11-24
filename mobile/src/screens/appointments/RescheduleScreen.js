@@ -1,6 +1,4 @@
-/**
- * RescheduleScreen - Reschedule an existing appointment
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -24,9 +22,7 @@ const RescheduleScreen = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { appointment } = route.params || {};
   const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-
-  // Generate next 14 days
+  const [selectedTime, setSelectedTime] = useState(null);
   const dates = Array.from({ length: 14 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() + i);
@@ -83,7 +79,7 @@ const RescheduleScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Current Appointment Info */}
+        {}
         <Card variant="gradient" style={styles.currentCard}>
           <Text style={styles.currentLabel}>Current Appointment</Text>
           <View style={styles.currentRow}>
@@ -97,7 +93,7 @@ const RescheduleScreen = ({ navigation, route }) => {
           </View>
         </Card>
 
-        {/* Date Selection */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select New Date</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesContainer}>
@@ -125,7 +121,7 @@ const RescheduleScreen = ({ navigation, route }) => {
           </ScrollView>
         </View>
 
-        {/* Time Selection */}
+        {}
         {selectedDate && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Select New Time</Text>

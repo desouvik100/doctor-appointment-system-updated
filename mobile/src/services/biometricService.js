@@ -1,6 +1,4 @@
-/**
- * Biometric Service - Fingerprint/Face Authentication
- */
+
 
 import ReactNativeBiometrics from 'react-native-biometrics';
 import * as Keychain from 'react-native-keychain';
@@ -12,9 +10,6 @@ class BiometricService {
     this.rnBiometrics = new ReactNativeBiometrics();
   }
 
-  /**
-   * Check if biometric authentication is available
-   */
   async isBiometricAvailable() {
     try {
       const { available, biometryType } = await this.rnBiometrics.isSensorAvailable();
@@ -43,9 +38,6 @@ class BiometricService {
     }
   }
 
-  /**
-   * Check if user has stored credentials for biometric login
-   */
   async hasStoredCredentials() {
     try {
       const credentials = await Keychain.getGenericPassword({
@@ -57,12 +49,8 @@ class BiometricService {
     }
   }
 
-  /**
-   * Enable biometric login by storing credentials
-   */
   async enableBiometricLogin(email, password) {
-    try {
-      // First verify biometric
+    try {
       const { success } = await this.rnBiometrics.simplePrompt({
         promptMessage: 'Confirm your identity',
         cancelButtonText: 'Cancel',
@@ -70,9 +58,7 @@ class BiometricService {
 
       if (!success) {
         throw new Error('Biometric authentication failed');
-      }
-
-      // Store credentials securely
+      }
       await Keychain.setGenericPassword(
         email,
         password,
@@ -90,9 +76,6 @@ class BiometricService {
     }
   }
 
-  /**
-   * Disable biometric login
-   */
   async disableBiometricLogin() {
     try {
       await Keychain.resetGenericPassword({
@@ -105,12 +88,8 @@ class BiometricService {
     }
   }
 
-  /**
-   * Authenticate with biometrics and get stored credentials
-   */
   async biometricLogin() {
-    try {
-      // Prompt for biometric
+    try {
       const { success } = await this.rnBiometrics.simplePrompt({
         promptMessage: 'Sign in with biometrics',
         cancelButtonText: 'Cancel',
@@ -118,9 +97,7 @@ class BiometricService {
 
       if (!success) {
         throw new Error('Biometric authentication failed');
-      }
-
-      // Get stored credentials
+      }
       const credentials = await Keychain.getGenericPassword({
         service: BIOMETRIC_CREDENTIALS_KEY,
       });
@@ -139,9 +116,6 @@ class BiometricService {
     }
   }
 
-  /**
-   * Simple biometric prompt for verification
-   */
   async authenticate(promptMessage = 'Verify your identity') {
     try {
       const { success } = await this.rnBiometrics.simplePrompt({

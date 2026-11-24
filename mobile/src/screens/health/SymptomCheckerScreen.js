@@ -1,6 +1,4 @@
-/**
- * Symptom Checker Screen - AI-powered symptom analysis
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -104,8 +102,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
       });
       setStep(4);
     } catch (error) {
-      console.error('Symptom analysis error:', error);
-      // Provide offline fallback
+      console.error('Symptom analysis error:', error);
       setResult({
         analysis: getOfflineAnalysis(selectedSymptoms, severity),
         symptoms: selectedSymptoms.map(id => COMMON_SYMPTOMS.find(s => s.id === id)?.label).join(', '),
@@ -282,7 +279,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
         <View style={styles.placeholder} />
       </View>
 
-      {/* Progress */}
+      {}
       {step < 4 && (
         <View style={styles.progressContainer}>
           {[1, 2, 3].map(s => (
@@ -305,7 +302,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
         )}
       </ScrollView>
 
-      {/* Navigation Buttons */}
+      {}
       {step < 4 && !loading && (
         <View style={styles.navButtons}>
           {step > 1 && (
@@ -327,7 +324,6 @@ const SymptomCheckerScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },

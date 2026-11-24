@@ -1,6 +1,4 @@
-/**
- * Doctors Screen - Find & Book Doctors (Connected to Production API)
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -24,7 +22,6 @@ import DoctorCard from '../../components/cards/DoctorCard';
 import Avatar from '../../components/common/Avatar';
 import doctorService from '../../services/api/doctorService';
 import { useTheme } from '../../context/ThemeContext';
-
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -76,8 +73,7 @@ const DoctorsScreen = ({ navigation }) => {
 
       const response = await doctorService.searchDoctors(params);
       setDoctors(response.doctors || response.data || response || []);
-    } catch (err) {
-      // Use warn instead of error for network failures — avoids LogBox red overlay in dev mode
+    } catch (err) {
       const isNetworkErr = err?.statusCode === 0 || err?.code === 'NETWORK_ERROR' || err?.message?.includes('Network');
       if (isNetworkErr) {
         console.warn('[DoctorsScreen] Network unavailable — showing offline state');
@@ -116,12 +112,11 @@ const DoctorsScreen = ({ navigation }) => {
     />
   ), [navigation, colors, isDarkMode]);
 
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -141,7 +136,7 @@ const DoctorsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Header */}
+      {}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Find Doctors</Text>
         <TouchableOpacity style={[styles.filterBtn, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)', borderColor: colors.surfaceBorder }]}>
@@ -149,7 +144,7 @@ const DoctorsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar (Glassmorphic) */}
+      {}
       <View style={styles.searchContainer}>
         <View style={[
           styles.searchBar, 
@@ -177,7 +172,7 @@ const DoctorsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Specialties */}
+      {}
       <View style={styles.specialtiesSection}>
         <ScrollView
           horizontal
@@ -224,7 +219,7 @@ const DoctorsScreen = ({ navigation }) => {
         </ScrollView>
       </View>
 
-      {/* Results Count */}
+      {}
       <View style={styles.resultsHeader}>
         <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
           {loading ? 'Loading...' : `${doctors.length} doctors found`}
@@ -235,7 +230,7 @@ const DoctorsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Doctors List */}
+      {}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />

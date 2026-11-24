@@ -1,11 +1,8 @@
-// utils/tenantManager.js - Tenant management utilities
+
 const { getPool } = require('../config/database');
 
 class TenantManager {
-  
-  /**
-   * Create a new tenant
-   */
+
   static async createTenant(tenantData) {
     const pool = getPool();
     const { name, subdomain, settings = {}, subscriptionInfo = {} } = tenantData;
@@ -22,16 +19,13 @@ class TenantManager {
       return result.rows[0];
       
     } catch (error) {
-      if (error.code === '23505') { // Unique violation
+      if (error.code === '23505') { 
         throw new Error(`Tenant with subdomain '${subdomain}' already exists`);
       }
       throw error;
     }
   }
-  
-  /**
-   * Get tenant by subdomain
-   */
+
   static async getTenantBySubdomain(subdomain) {
     const pool = getPool();
     
@@ -48,10 +42,7 @@ class TenantManager {
       throw error;
     }
   }
-  
-  /**
-   * Get tenant by ID
-   */
+
   static async getTenantById(tenantId) {
     const pool = getPool();
     
@@ -68,10 +59,7 @@ class TenantManager {
       throw error;
     }
   }
-  
-  /**
-   * Update tenant settings
-   */
+
   static async updateTenantSettings(tenantId, settings) {
     const pool = getPool();
     
@@ -91,10 +79,7 @@ class TenantManager {
       throw error;
     }
   }
-  
-  /**
-   * Get all tenants (admin function)
-   */
+
   static async getAllTenants() {
     const pool = getPool();
     
@@ -110,10 +95,7 @@ class TenantManager {
       throw error;
     }
   }
-  
-  /**
-   * Delete tenant (careful - cascades to all related data)
-   */
+
   static async deleteTenant(tenantId) {
     const pool = getPool();
     
@@ -135,25 +117,17 @@ class TenantManager {
       throw error;
     }
   }
-  
-  /**
-   * Get default tenant (for backward compatibility)
-   */
+
   static async getDefaultTenant() {
     return await this.getTenantBySubdomain('default');
   }
-  
-  /**
-   * Provision a new tenant with default data
-   */
+
   static async provisionTenant(tenantData) {
     const pool = getPool();
     const client = await pool.connect();
     
     try {
-      await client.query('BEGIN');
-      
-      // Create tenant
+      await client.query('BEGIN');
       const tenantResult = await client.query(
         `INSERT INTO tenants (name, subdomain, settings, subscription_info) 
          VALUES ($1, $2, $3, $4) 
@@ -166,9 +140,7 @@ class TenantManager {
         ]
       );
       
-      const tenant = tenantResult.rows[0];
-      
-      // Create default clinic for the tenant
+      const tenant = tenantResult.rows[0];
       if (tenantData.defaultClinic) {
         await client.query(
           `INSERT INTO clinics (tenant_id, name, address, contact_info) 

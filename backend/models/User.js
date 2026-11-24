@@ -30,27 +30,27 @@ const userSchema = new mongoose.Schema(
     },
     profilePhoto: {
       type: String,
-      default: null // URL for profile picture (Cloudinary)
+      default: null 
     },
     profilePhotoPublicId: {
       type: String,
-      default: null // Cloudinary public ID for deletion
+      default: null 
     },
     googleId: {
       type: String,
-      default: null // Google OAuth ID for social login
+      default: null 
     },
     facebookId: {
       type: String,
-      default: null // Facebook OAuth ID for social login
+      default: null 
     },
     appleId: {
       type: String,
-      default: null // Apple Sign-In ID for social login
+      default: null 
     },
     role: {
       type: String,
-      // 'clinic' and 'staff_registered' kept for backward compatibility
+
       enum: ["patient", "admin", "receptionist", "clinic", "staff"],
       default: "patient",
     },
@@ -59,19 +59,19 @@ const userSchema = new mongoose.Schema(
       ref: "Clinic",
       default: null,
     },
-    // Branch assignment for multi-branch staff
+
     branchId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "HospitalBranch",
       default: null,
     },
-    // For staff: assigned doctor (department-level isolation)
+
     assignedDoctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",
       default: null,
     },
-    // Department name for staff (e.g., "Gynecology OPD", "Eye OPD")
+
     department: {
       type: String,
       trim: true,
@@ -140,15 +140,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
-    // Favorite Doctors
+
     favoriteDoctors: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Doctor'
     }],
-    // Family Members
+
     familyMembers: [{
       name: { type: String, required: true },
-      relationship: { type: String, required: true }, // spouse, child, parent, sibling, other
+      relationship: { type: String, required: true }, 
       age: { type: Number },
       gender: { type: String, enum: ['male', 'female', 'other'] },
       phone: { type: String },
@@ -157,7 +157,7 @@ const userSchema = new mongoose.Schema(
       chronicConditions: [{ type: String }],
       createdAt: { type: Date, default: Date.now }
     }],
-    // Medical History
+
     medicalHistory: {
       bloodGroup: { type: String },
       allergies: [{ type: String }],
@@ -174,29 +174,29 @@ const userSchema = new mongoose.Schema(
         relationship: String
       }
     },
-    // Health Reports
+
     healthReports: [{
       name: { type: String, required: true },
-      type: { type: String }, // lab_report, xray, mri, prescription, other
+      type: { type: String }, 
       fileUrl: { type: String },
       uploadedAt: { type: Date, default: Date.now },
       notes: { type: String }
     }],
-    // Notification Preferences
+
     notificationPreferences: {
       emailReminders: { type: Boolean, default: true },
       smsReminders: { type: Boolean, default: true },
       pushNotifications: { type: Boolean, default: true },
       reminderHoursBefore: { type: Number, default: 24 }
     },
-    // Mobile Device Tokens (FCM)
+
     devices: [{
       fcmToken: { type: String, required: true },
       platform: { type: String, enum: ['android', 'ios', 'web'] },
       deviceId: { type: String },
       registeredAt: { type: Date, default: Date.now }
     }],
-    // Terms and Conditions Acceptance (for staff/receptionist)
+
     termsAccepted: {
       type: Boolean,
       default: false
@@ -213,13 +213,13 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
-    // EMR Plan for clinic staff (basic, advanced, enterprise)
+
     emrPlan: {
       type: String,
       enum: ['basic', 'advanced', 'enterprise'],
       default: 'basic'
     },
-    // Last login tracking
+
     lastLogin: {
       type: Date,
       default: null
@@ -228,20 +228,20 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null
     },
-    // Walk-in Patient Fields (EMR)
+
     registrationType: {
       type: String,
-      // 'staff_registered' is used when clinic staff registers a patient on their behalf
+
       enum: ['online', 'walk_in', 'staff_registered'],
       default: 'online'
     },
-    // Clinics where this patient is registered
+
     registeredClinics: [{
       clinicId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Clinic'
       },
-      clinicPatientId: String, // Clinic's internal patient ID
+      clinicPatientId: String, 
       registeredAt: {
         type: Date,
         default: Date.now
@@ -252,7 +252,7 @@ const userSchema = new mongoose.Schema(
       },
       lastVisit: Date
     }],
-    // Patient demographics for EMR
+
     age: Number,
     gender: {
       type: String,
@@ -277,8 +277,7 @@ const userSchema = new mongoose.Schema(
     },
     allergies: [String],
     chronicConditions: [String],
-    
-    // Wallet for refunds and credits
+
     walletBalance: {
       type: Number,
       default: 0,
@@ -309,8 +308,7 @@ const userSchema = new mongoose.Schema(
         default: Date.now
       }
     }],
-    
-    // Insurance Policies
+
     insurancePolicies: [{
       provider: { type: String, required: true },
       policyNumber: { type: String, required: true },
@@ -331,8 +329,7 @@ const userSchema = new mongoose.Schema(
       isActive: { type: Boolean, default: true },
       createdAt: { type: Date, default: Date.now }
     }],
-    
-    // Vitals History
+
     vitalsHistory: [{
       type: { 
         type: String, 
@@ -341,21 +338,20 @@ const userSchema = new mongoose.Schema(
       },
       value: { type: String, required: true },
       unit: { type: String },
-      systolic: { type: Number }, // For BP
-      diastolic: { type: Number }, // For BP
-      numericValue: { type: Number }, // For other vitals
+      systolic: { type: Number }, 
+      diastolic: { type: Number }, 
+      numericValue: { type: Number }, 
       status: { 
         type: String, 
         enum: ['normal', 'high', 'low', 'critical'],
         default: 'normal'
       },
       notes: { type: String },
-      recordedBy: { type: String, default: 'self' }, // 'self', 'doctor', 'clinic'
+      recordedBy: { type: String, default: 'self' }, 
       recordedAt: { type: Date, default: Date.now },
-      source: { type: String, default: 'manual' } // 'manual', 'device', 'clinic'
+      source: { type: String, default: 'manual' } 
     }],
-    
-    // Medical Timeline Events
+
     medicalTimeline: [{
       type: { 
         type: String, 
@@ -375,8 +371,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ===== PERFORMANCE INDEXES =====
-userSchema.index({ email: 1 }); // Already unique, but explicit
+userSchema.index({ email: 1 }); 
 userSchema.index({ phone: 1 }, { sparse: true });
 userSchema.index({ role: 1, isActive: 1 });
 userSchema.index({ clinicId: 1, role: 1 });
@@ -387,7 +382,7 @@ userSchema.index({ createdAt: -1 });
 userSchema.index({ 'loginLocation.city': 1 }, { sparse: true });
 userSchema.index({ 'registeredClinics.clinicId': 1 });
 userSchema.index({ 'devices.fcmToken': 1 }, { sparse: true });
-// Text search index for admin user search
+
 userSchema.index({ name: 'text', email: 'text', phone: 'text' });
 
 module.exports = mongoose.model('User', userSchema);

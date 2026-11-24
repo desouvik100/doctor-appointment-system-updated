@@ -1,24 +1,14 @@
-/**
- * Database Backup Service
- * =======================
- * Automated daily backups with:
- * - MongoDB dump to local/cloud storage
- * - Retention policy (keep last N backups)
- * - Compression
- * - Notification on success/failure
- */
+
 
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const cron = require('node-cron');
-
-// Configuration
+const cron = require('node-cron');
 const CONFIG = {
   BACKUP_DIR: process.env.BACKUP_DIR || path.join(__dirname, '../backups'),
   RETENTION_DAYS: parseInt(process.env.BACKUP_RETENTION_DAYS) || 7,
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/healthsync',
-  BACKUP_TIME: process.env.BACKUP_CRON || '0 2 * * *', // 2 AM daily
+  BACKUP_TIME: process.env.BACKUP_CRON || '0 2 * * *', 
   COMPRESS: true,
   NOTIFY_EMAIL: process.env.ADMIN_EMAIL
 };
@@ -29,9 +19,6 @@ class BackupService {
     this.ensureBackupDir();
   }
 
-  /**
-   * Ensure backup directory exists
-   */
   ensureBackupDir() {
     if (!fs.existsSync(this.backupDir)) {
       fs.mkdirSync(this.backupDir, { recursive: true });
@@ -39,18 +26,12 @@ class BackupService {
     }
   }
 
-  /**
-   * Generate backup filename with timestamp
-   */
   generateBackupName() {
     const now = new Date();
     const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
     return `healthsync_backup_${timestamp}`;
   }
 
-  /**
-   * Parse MongoDB URI to get database name
-   */
   getDatabaseName() {
     try {
       const uri = CONFIG.MONGODB_URI;
@@ -61,11 +42,7 @@ class BackupService {
     }
   }
 
-  /**
-   * Run MongoDB backup using mongodump, with mongoose fallback
-   */
-  async createBackup() {
-    // Try mongoose-based backup first (no mongodump binary needed)
+  async createBackup() {
     try {
       return await this.createBackupWithMongoose();
     } catch (mongooseError) {
@@ -110,9 +87,6 @@ class BackupService {
     });
   }
 
-  /**
-   * Create backup using mongoose (alternative method)
-   */
   async createBackupWithMongoose() {
     const mongoose = require('mongoose');
     const backupName = this.generateBackupName();
@@ -125,8 +99,7 @@ class BackupService {
       const backup = {};
 
       for (const collection of collections) {
-        const collectionName = collection.name;
-        // Skip system collections
+        const collectionName = collection.name;
         if (collectionName.startsWith('system.')) continue;
 
         const data = await mongoose.connection.db
@@ -136,12 +109,8 @@ class BackupService {
         
         backup[collectionName] = data;
         console.log(`  📦 Backed up ${collectionName}: ${data.length} documents`);
-      }
-
-      // Write to file
-      fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2));
-
-      // Compress if enabled
+      }
+      fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2));
       if (CONFIG.COMPRESS) {
         const zlib = require('zlib');
         const gzip = zlib.createGzip();
@@ -152,9 +121,7 @@ class BackupService {
           input.pipe(gzip).pipe(output)
             .on('finish', resolve)
             .on('error', reject);
-        });
-
-        // Remove uncompressed file
+        });
         fs.unlinkSync(backupPath);
       }
 
@@ -178,9 +145,6 @@ class BackupService {
     }
   }
 
-  /**
-   * Clean old backups based on retention policy
-   */
   async cleanOldBackups() {
     const retentionMs = CONFIG.RETENTION_DAYS * 24 * 60 * 60 * 1000;
     const cutoffDate = Date.now() - retentionMs;
@@ -212,9 +176,6 @@ class BackupService {
     }
   }
 
-  /**
-   * List available backups
-   */
   listBackups() {
     try {
       const files = fs.readdirSync(this.backupDir);
@@ -240,9 +201,6 @@ class BackupService {
     }
   }
 
-  /**
-   * Restore from backup
-   */
   async restoreBackup(backupPath) {
     console.log(`🔄 Starting restore from: ${backupPath}`);
 
@@ -268,9 +226,6 @@ class BackupService {
     });
   }
 
-  /**
-   * Send notification about backup status
-   */
   async notifyBackupStatus(success, error = null, details = null) {
     if (!CONFIG.NOTIFY_EMAIL) return;
 
@@ -323,9 +278,6 @@ class BackupService {
     }
   }
 
-  /**
-   * Start scheduled backup cron job
-   */
   startScheduledBackups() {
     console.log(`⏰ Scheduling daily backups at: ${CONFIG.BACKUP_TIME}`);
 
@@ -344,9 +296,6 @@ class BackupService {
     console.log('✅ Backup scheduler started');
   }
 
-  /**
-   * Get backup statistics
-   */
   getBackupStats() {
     const backups = this.listBackups();
     
@@ -372,7 +321,5 @@ class BackupService {
       retentionDays: CONFIG.RETENTION_DAYS
     };
   }
-}
-
-// Export singleton
+}
 module.exports = new BackupService();

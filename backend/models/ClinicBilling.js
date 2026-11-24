@@ -1,7 +1,4 @@
-/**
- * Clinic Billing Model
- * Comprehensive billing and revenue management for clinics
- */
+
 
 const mongoose = require('mongoose');
 
@@ -11,22 +8,18 @@ const clinicBillingSchema = new mongoose.Schema({
     ref: 'Clinic',
     required: true,
     index: true
-  },
-  
-  // Bill details
+  },
   billNumber: {
     type: String,
     unique: true,
-    sparse: true  // Allow null/undefined for auto-generation
+    sparse: true  
   },
   
   billDate: {
     type: Date,
     default: Date.now,
     index: true
-  },
-  
-  // Patient info
+  },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -35,9 +28,7 @@ const clinicBillingSchema = new mongoose.Schema({
   
   patientName: String,
   patientPhone: String,
-  patientAddress: String,
-  
-  // Visit/Appointment reference
+  patientAddress: String,
   visitId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'EMRVisit'
@@ -51,28 +42,24 @@ const clinicBillingSchema = new mongoose.Schema({
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
-  },
-  
-  // Bill type
+  },
   billType: {
     type: String,
     enum: ['consultation', 'procedure', 'pharmacy', 'lab', 'imaging', 'package', 'other'],
     default: 'consultation'
-  },
-  
-  // Line items
+  },
   items: [{
     itemType: {
       type: String,
       enum: ['consultation', 'procedure', 'medicine', 'lab_test', 'imaging', 'consumable', 'other'],
       required: true
     },
-    itemId: mongoose.Schema.Types.ObjectId, // Reference to medicine/test/procedure
+    itemId: mongoose.Schema.Types.ObjectId, 
     description: {
       type: String,
       required: true
     },
-    hsnCode: String, // HSN/SAC code for GST
+    hsnCode: String, 
     quantity: {
       type: Number,
       default: 1
@@ -102,9 +89,7 @@ const clinicBillingSchema = new mongoose.Schema({
       type: Number,
       required: true
     }
-  }],
-  
-  // Totals
+  }],
   subtotal: {
     type: Number,
     default: 0
@@ -113,9 +98,7 @@ const clinicBillingSchema = new mongoose.Schema({
   totalDiscount: {
     type: Number,
     default: 0
-  },
-  
-  // Tax breakdown
+  },
   taxBreakdown: {
     cgst: { type: Number, default: 0 },
     sgst: { type: Number, default: 0 },
@@ -136,9 +119,7 @@ const clinicBillingSchema = new mongoose.Schema({
   grandTotal: {
     type: Number,
     default: 0
-  },
-  
-  // Payment details
+  },
   paidAmount: {
     type: Number,
     default: 0
@@ -156,9 +137,7 @@ const clinicBillingSchema = new mongoose.Schema({
     index: true
   },
   
-  dueDate: Date,
-  
-  // Payment transactions
+  dueDate: Date,
   payments: [{
     amount: {
       type: Number,
@@ -180,9 +159,7 @@ const clinicBillingSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }],
-  
-  // Insurance claim
+  }],
   insuranceClaim: {
     isInsured: {
       type: Boolean,
@@ -206,9 +183,7 @@ const clinicBillingSchema = new mongoose.Schema({
       url: String,
       uploadedAt: Date
     }]
-  },
-  
-  // Refund details
+  },
   refund: {
     isRefunded: {
       type: Boolean,
@@ -222,20 +197,14 @@ const clinicBillingSchema = new mongoose.Schema({
       ref: 'User'
     },
     transactionId: String
-  },
-  
-  // Notes
+  },
   notes: String,
-  internalNotes: String,
-  
-  // Status
+  internalNotes: String,
   status: {
     type: String,
     enum: ['draft', 'finalized', 'cancelled'],
     default: 'draft'
-  },
-  
-  // Audit
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -256,17 +225,12 @@ const clinicBillingSchema = new mongoose.Schema({
   
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 clinicBillingSchema.index({ clinicId: 1, billDate: -1 });
 clinicBillingSchema.index({ clinicId: 1, paymentStatus: 1 });
 clinicBillingSchema.index({ patientId: 1, billDate: -1 });
-clinicBillingSchema.index({ billNumber: 1 });
-
-// Pre-save: Generate bill number and calculate totals
-clinicBillingSchema.pre('save', async function(next) {
-  // Generate bill number if new
+clinicBillingSchema.index({ billNumber: 1 });
+clinicBillingSchema.pre('save', async function(next) {
   if (this.isNew && !this.billNumber) {
     const date = new Date();
     const prefix = `BILL-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
@@ -275,9 +239,7 @@ clinicBillingSchema.pre('save', async function(next) {
       billNumber: new RegExp(`^${prefix}`)
     });
     this.billNumber = `${prefix}-${String(count + 1).padStart(5, '0')}`;
-  }
-  
-  // Calculate totals
+  }
   this.subtotal = this.items.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
   this.totalDiscount = this.items.reduce((sum, item) => {
     if (item.discountType === 'percentage') {
@@ -287,9 +249,7 @@ clinicBillingSchema.pre('save', async function(next) {
   }, 0);
   this.totalTax = this.items.reduce((sum, item) => sum + item.taxAmount, 0);
   this.grandTotal = this.subtotal - this.totalDiscount + this.totalTax + this.roundOff;
-  this.dueAmount = this.grandTotal - this.paidAmount;
-  
-  // Update payment status
+  this.dueAmount = this.grandTotal - this.paidAmount;
   if (this.paidAmount >= this.grandTotal) {
     this.paymentStatus = 'paid';
   } else if (this.paidAmount > 0) {
@@ -299,16 +259,12 @@ clinicBillingSchema.pre('save', async function(next) {
   }
   
   next();
-});
-
-// Method to add payment
+});
 clinicBillingSchema.methods.addPayment = async function(paymentDetails) {
   this.payments.push(paymentDetails);
   this.paidAmount += paymentDetails.amount;
   return this.save();
-};
-
-// Static: Get revenue summary
+};
 clinicBillingSchema.statics.getRevenueSummary = async function(clinicId, startDate, endDate) {
   return this.aggregate([
     {
@@ -330,9 +286,7 @@ clinicBillingSchema.statics.getRevenueSummary = async function(clinicId, startDa
       }
     }
   ]);
-};
-
-// Static: Get daily revenue
+};
 clinicBillingSchema.statics.getDailyRevenue = async function(clinicId, days = 30) {
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);

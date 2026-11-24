@@ -1,7 +1,5 @@
-// config/database.js - PostgreSQL connection configuration
-const { Pool } = require('pg');
 
-// Database connection pool
+const { Pool } = require('pg');
 let pool = null;
 
 const createPool = () => {
@@ -12,12 +10,10 @@ const createPool = () => {
       database: process.env.DB_NAME || 'doctor_appointment_system',
       password: process.env.DB_PASSWORD || 'password',
       port: process.env.DB_PORT || 5432,
-      max: 20, // Maximum number of clients in the pool
-      idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-      connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
-    });
-
-    // Handle pool errors
+      max: 20, 
+      idleTimeoutMillis: 30000, 
+      connectionTimeoutMillis: 2000, 
+    });
     pool.on('error', (err) => {
       console.error('❌ Unexpected error on idle client', err);
     });
@@ -29,13 +25,9 @@ const createPool = () => {
 
 const connectDB = async () => {
   try {
-    const dbPool = createPool();
-    
-    // Test the connection
+    const dbPool = createPool();
     const client = await dbPool.connect();
-    console.log('✅ PostgreSQL connected successfully');
-    
-    // Test query
+    console.log('✅ PostgreSQL connected successfully');
     const result = await client.query('SELECT NOW()');
     console.log('✅ Database test query successful:', result.rows[0].now);
     
@@ -43,9 +35,7 @@ const connectDB = async () => {
     return dbPool;
   } catch (err) {
     console.error('❌ PostgreSQL connection error:', err.message);
-    console.error('Make sure PostgreSQL is running and credentials are correct');
-    // Don't exit process in development
-    // process.exit(1);
+    console.error('Make sure PostgreSQL is running and credentials are correct');
   }
 };
 

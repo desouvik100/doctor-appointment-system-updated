@@ -1,6 +1,4 @@
-/**
- * AvailableNow - Flagship Doctor Discovery Section with animated trust signals
- */
+
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
@@ -55,7 +53,6 @@ const FALLBACK_AVAILABLE = [
   },
 ];
 
-// Pulsing indicator for active online status
 const OnlineIndicator = () => {
   const { colors } = useTheme();
   const scale = useSharedValue(1);
@@ -114,8 +111,7 @@ const AvailableDoctorCard = ({ doc, index }) => {
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={() => {
-          // Guard: do not navigate to profile for fallback placeholder doctors
-          // (IDs like 'avail_1' are not real MongoDB ObjectIds)
+
           const id = doc._id || doc.id || '';
           const isFakePlaceholder = !id || id.startsWith('avail_') || id.length < 20;
           if (isFakePlaceholder) {
@@ -133,7 +129,7 @@ const AvailableDoctorCard = ({ doc, index }) => {
           },
         ]}
       >
-        {/* Upper metadata: Image, online badge and experience */}
+        {}
         <View style={styles.topInfoRow}>
           <View style={styles.avatarWrapper}>
             <Avatar name={doc.name} size="large" imageUrl={doc.photo || doc.profilePhoto} />
@@ -147,7 +143,7 @@ const AvailableDoctorCard = ({ doc, index }) => {
           </View>
         </View>
 
-        {/* Doctor Details */}
+        {}
         <View style={styles.doctorDetails}>
           <Text style={[styles.docName, { color: colors.textPrimary }]} numberOfLines={1}>
             {doc.name}
@@ -157,7 +153,7 @@ const AvailableDoctorCard = ({ doc, index }) => {
           </Text>
         </View>
 
-        {/* Location & Rating */}
+        {}
         <View style={styles.distanceRatingRow}>
           <Text style={[styles.locationText, { color: colors.textMuted }]}>🕒 {doc.nextSlot || 'Available Today'}</Text>
           <View style={styles.ratingContainer}>
@@ -166,7 +162,7 @@ const AvailableDoctorCard = ({ doc, index }) => {
           </View>
         </View>
 
-        {/* Footer: Price tag & slot selection CTA */}
+        {}
         <View style={styles.footer}>
           <Text style={[styles.feeVal, { color: colors.primary }]}>
             ₹{doc.fee || doc.consultationFee || 500} <Text style={[styles.feeSub, { color: colors.textMuted }]}>/ consult</Text>

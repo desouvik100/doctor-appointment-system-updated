@@ -1,8 +1,4 @@
-/**
- * Lab Test Payment Screen
- * Handles payment for home collection lab tests.
- * Uses the same Razorpay mobile-checkout flow as appointment payments.
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -40,14 +36,11 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
 
   const handlePay = async () => {
     setLoading(true);
-    try {
-      // --- Cash on Delivery ---
+    try {
       if (selectedMethod === 'cod') {
         goToConfirmation('cod');
         return;
-      }
-
-      // --- Wallet ---
+      }
       if (selectedMethod === 'wallet') {
         const res = await apiClient.post('/wallet/pay', {
           amount: total,
@@ -60,9 +53,7 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
           Alert.alert('Wallet Error', res.data?.message || 'Insufficient wallet balance');
         }
         return;
-      }
-
-      // --- Razorpay ---
+      }
       const orderRes = await apiClient.post('/payments/create-lab-order', {
         amount: total,
         description: `Lab Test Home Collection (${cart.length} tests)`,
@@ -80,22 +71,18 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
           ]
         );
         return;
-      }
-
-      // Navigate to RazorpayPaymentScreen — on success it deep-links back
-      // We intercept the deep link in LabTestPaymentScreen via navigation listener
+      }
       navigation.navigate('RazorpayPayment', {
         orderId,
         amount: total,
-        appointmentId: `lab_${Date.now()}`, // placeholder — not used for lab tests
+        appointmentId: `lab_${Date.now()}`, 
         user: { name: user?.name, email: user?.email, phone: user?.phone },
         doctor: { name: 'Lab Test Home Collection' },
         date: new Date().toISOString(),
         time: '',
         queueNumber: null,
         consultationType: 'lab',
-        patient: { name: user?.name },
-        // Override success handler — navigate to LabTestConfirmation instead
+        patient: { name: user?.name },
         onPaymentSuccess: (paymentId) => {
           goToConfirmation('razorpay', paymentId);
         },
@@ -123,7 +110,7 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {/* Order Summary */}
+        {}
         <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>Order Summary</Text>
           {cart.map((item, i) => (
@@ -147,7 +134,7 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Payment Methods */}
+        {}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Choose Payment Method</Text>
         {paymentMethods.map((method) => (
           <TouchableOpacity
@@ -176,7 +163,7 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
         ))}
       </ScrollView>
 
-      {/* Pay Button */}
+      {}
       <View style={[styles.footer, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder }]}>
         <TouchableOpacity style={styles.payBtn} onPress={handlePay} disabled={loading} activeOpacity={0.85}>
           <LinearGradient colors={colors.gradientPrimary} style={styles.payBtnGradient}>

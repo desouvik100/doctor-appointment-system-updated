@@ -1,7 +1,4 @@
-/**
- * Doctor Create Prescription Screen - Write New Prescription
- * 100% Parity with Web Doctor Dashboard
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -99,7 +96,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Patient Info */}
+        {}
         {patient && (
           <View style={[styles.patientCard, { backgroundColor: colors.surface }]}>
             <View style={styles.patientAvatar}>
@@ -112,7 +109,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Diagnosis */}
+        {}
         <View style={styles.inputGroup}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Diagnosis *</Text>
           <TextInput
@@ -126,7 +123,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
           />
         </View>
 
-        {/* Medicines */}
+        {}
         <View style={styles.medicinesSection}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Medicines</Text>
@@ -191,7 +188,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
           ))}
         </View>
 
-        {/* Notes */}
+        {}
         <View style={styles.inputGroup}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Additional Notes</Text>
           <TextInput
@@ -205,7 +202,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
           />
         </View>
 
-        {/* Follow-up */}
+        {}
         <View style={styles.inputGroup}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Follow-up Date (Optional)</Text>
           <TextInput

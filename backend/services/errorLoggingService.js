@@ -1,28 +1,15 @@
-/**
- * Centralized Error Logging Service
- * ==================================
- * Comprehensive error tracking with:
- * - Structured error logging
- * - Error categorization and severity
- * - Stack trace capture
- * - Request context preservation
- * - Aggregation and alerting
- */
+
 
 const fs = require('fs');
-const path = require('path');
-
-// Configuration
+const path = require('path');
 const CONFIG = {
   LOG_DIR: process.env.LOG_DIR || path.join(__dirname, '../logs'),
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
-  MAX_LOG_SIZE: 10 * 1024 * 1024, // 10MB
+  MAX_LOG_SIZE: 10 * 1024 * 1024, 
   MAX_LOG_FILES: 5,
-  ALERT_THRESHOLD: 10, // Errors per minute to trigger alert
+  ALERT_THRESHOLD: 10, 
   ALERT_EMAIL: process.env.ADMIN_EMAIL
-};
-
-// Log levels
+};
 const LOG_LEVELS = {
   error: 0,
   warn: 1,
@@ -39,26 +26,17 @@ class ErrorLoggingService {
     this.startErrorRateMonitor();
   }
 
-  /**
-   * Ensure log directory exists
-   */
   ensureLogDir() {
     if (!fs.existsSync(this.logDir)) {
       fs.mkdirSync(this.logDir, { recursive: true });
     }
   }
 
-  /**
-   * Get current log file path
-   */
   getLogFilePath(type = 'app') {
     const date = new Date().toISOString().split('T')[0];
     return path.join(this.logDir, `${type}-${date}.log`);
   }
 
-  /**
-   * Format log entry
-   */
   formatLogEntry(level, message, meta = {}) {
     return JSON.stringify({
       timestamp: new Date().toISOString(),
@@ -68,14 +46,10 @@ class ErrorLoggingService {
     }) + '\n';
   }
 
-  /**
-   * Write to log file
-   */
   writeToFile(type, entry) {
     const filePath = this.getLogFilePath(type);
     
-    try {
-      // Check file size and rotate if needed
+    try {
       if (fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath);
         if (stats.size > CONFIG.MAX_LOG_SIZE) {
@@ -89,14 +63,9 @@ class ErrorLoggingService {
     }
   }
 
-  /**
-   * Rotate log file
-   */
   rotateLogFile(filePath) {
     const dir = path.dirname(filePath);
-    const basename = path.basename(filePath, '.log');
-    
-    // Shift existing rotated files
+    const basename = path.basename(filePath, '.log');
     for (let i = CONFIG.MAX_LOG_FILES - 1; i >= 1; i--) {
       const oldPath = path.join(dir, `${basename}.${i}.log`);
       const newPath = path.join(dir, `${basename}.${i + 1}.log`);
@@ -108,15 +77,10 @@ class ErrorLoggingService {
           fs.renameSync(oldPath, newPath);
         }
       }
-    }
-
-    // Rotate current file
+    }
     fs.renameSync(filePath, path.join(dir, `${basename}.1.log`));
   }
 
-  /**
-   * Log an error with full context
-   */
   logError(error, context = {}) {
     const errorData = {
       name: error.name || 'Error',
@@ -135,16 +99,10 @@ class ErrorLoggingService {
         userId: context.req.user?.id,
         userRole: context.req.user?.role
       } : undefined
-    };
-
-    // Track error for rate monitoring
-    this.trackError(errorData);
-
-    // Write to error log
+    };
+    this.trackError(errorData);
     const entry = this.formatLogEntry('error', error.message, errorData);
-    this.writeToFile('error', entry);
-
-    // Console output in development
+    this.writeToFile('error', entry);
     if (process.env.NODE_ENV !== 'production') {
       console.error('🔴 ERROR:', error.message);
       if (error.stack) console.error(error.stack);
@@ -153,9 +111,6 @@ class ErrorLoggingService {
     return errorData;
   }
 
-  /**
-   * Log a warning
-   */
   logWarning(message, meta = {}) {
     if (LOG_LEVELS[CONFIG.LOG_LEVEL] < LOG_LEVELS.warn) return;
 
@@ -167,9 +122,6 @@ class ErrorLoggingService {
     }
   }
 
-  /**
-   * Log info
-   */
   logInfo(message, meta = {}) {
     if (LOG_LEVELS[CONFIG.LOG_LEVEL] < LOG_LEVELS.info) return;
 
@@ -181,9 +133,6 @@ class ErrorLoggingService {
     }
   }
 
-  /**
-   * Log debug
-   */
   logDebug(message, meta = {}) {
     if (LOG_LEVELS[CONFIG.LOG_LEVEL] < LOG_LEVELS.debug) return;
 
@@ -191,9 +140,6 @@ class ErrorLoggingService {
     this.writeToFile('app', entry);
   }
 
-  /**
-   * Log security event
-   */
   logSecurity(event, meta = {}) {
     const entry = this.formatLogEntry('security', event, {
       ...meta,
@@ -204,9 +150,6 @@ class ErrorLoggingService {
     console.log('🔒 SECURITY:', event);
   }
 
-  /**
-   * Log API request
-   */
   logRequest(req, res, duration) {
     const entry = this.formatLogEntry('info', 'API Request', {
       method: req.method,
@@ -220,25 +163,14 @@ class ErrorLoggingService {
     this.writeToFile('access', entry);
   }
 
-  /**
-   * Track error for rate monitoring
-   */
   trackError(errorData) {
     const now = Date.now();
-    const key = `${errorData.name}:${errorData.message?.substring(0, 50)}`;
-
-    // Add to recent errors
-    this.recentErrors.push({ timestamp: now, error: errorData });
-
-    // Keep only last 5 minutes
+    const key = `${errorData.name}:${errorData.message?.substring(0, 50)}`;
+    this.recentErrors.push({ timestamp: now, error: errorData });
     const cutoff = now - 5 * 60 * 1000;
-    this.recentErrors = this.recentErrors.filter(e => e.timestamp > cutoff);
-
-    // Update error counts
+    this.recentErrors = this.recentErrors.filter(e => e.timestamp > cutoff);
     const count = (this.errorCounts.get(key) || 0) + 1;
-    this.errorCounts.set(key, count);
-
-    // Reset counts every minute
+    this.errorCounts.set(key, count);
     setTimeout(() => {
       const current = this.errorCounts.get(key) || 0;
       if (current > 0) {
@@ -247,9 +179,6 @@ class ErrorLoggingService {
     }, 60000);
   }
 
-  /**
-   * Start error rate monitoring
-   */
   startErrorRateMonitor() {
     setInterval(() => {
       const errorsLastMinute = this.recentErrors.filter(
@@ -262,9 +191,6 @@ class ErrorLoggingService {
     }, 60000);
   }
 
-  /**
-   * Send error rate alert
-   */
   async sendErrorAlert(errorCount) {
     if (!CONFIG.ALERT_EMAIL) return;
 
@@ -277,9 +203,7 @@ class ErrorLoggingService {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASS
         }
-      });
-
-      // Get recent error summary
+      });
       const errorSummary = {};
       this.recentErrors.slice(-20).forEach(e => {
         const key = e.error.name || 'Unknown';
@@ -312,9 +236,6 @@ class ErrorLoggingService {
     }
   }
 
-  /**
-   * Get error statistics
-   */
   getErrorStats(minutes = 60) {
     const cutoff = Date.now() - minutes * 60 * 1000;
     const recentErrors = this.recentErrors.filter(e => e.timestamp > cutoff);
@@ -339,40 +260,26 @@ class ErrorLoggingService {
     };
   }
 
-  /**
-   * Express error handling middleware
-   * Returns standardized error responses with field-specific validation errors
-   */
   errorMiddleware() {
-    return (err, req, res, next) => {
-      // Log the error
-      this.logError(err, { req });
-
-      // Determine status code
-      const statusCode = err.statusCode || err.status || 500;
-
-      // Build standardized error response
+    return (err, req, res, next) => {
+      this.logError(err, { req });
+      const statusCode = err.statusCode || err.status || 500;
       const errorResponse = {
         success: false,
         message: process.env.NODE_ENV === 'production' && statusCode === 500
           ? 'An error occurred' 
           : err.message,
         code: err.code || this.getErrorCode(statusCode),
-      };
-
-      // Add field-specific validation errors if present
+      };
       if (err.errors && Array.isArray(err.errors)) {
         errorResponse.errors = err.errors;
-      } else if (err.name === 'ValidationError' && err.errors) {
-        // Handle Mongoose validation errors
+      } else if (err.name === 'ValidationError' && err.errors) {
         errorResponse.errors = Object.keys(err.errors).map(field => ({
           field,
           message: err.errors[field].message
         }));
         errorResponse.code = 'VALIDATION_ERROR';
-      }
-
-      // Add stack trace in development
+      }
       if (process.env.NODE_ENV !== 'production') {
         errorResponse.stack = err.stack;
       }
@@ -381,9 +288,6 @@ class ErrorLoggingService {
     };
   }
 
-  /**
-   * Get error code based on status code
-   */
   getErrorCode(statusCode) {
     const codes = {
       400: 'BAD_REQUEST',
@@ -398,9 +302,6 @@ class ErrorLoggingService {
     return codes[statusCode] || 'UNKNOWN_ERROR';
   }
 
-  /**
-   * Request logging middleware
-   */
   requestLoggerMiddleware() {
     return (req, res, next) => {
       const start = Date.now();
@@ -414,9 +315,6 @@ class ErrorLoggingService {
     };
   }
 
-  /**
-   * Read recent logs
-   */
   readLogs(type = 'error', lines = 100) {
     const filePath = this.getLogFilePath(type);
     
@@ -442,19 +340,13 @@ class ErrorLoggingService {
     }
   }
 
-  /**
-   * Search logs
-   */
   searchLogs(type, query, options = {}) {
     const { startDate, endDate, limit = 100 } = options;
     const logs = this.readLogs(type, 1000);
 
-    return logs.filter(log => {
-      // Date filter
+    return logs.filter(log => {
       if (startDate && new Date(log.timestamp) < new Date(startDate)) return false;
-      if (endDate && new Date(log.timestamp) > new Date(endDate)) return false;
-
-      // Query filter
+      if (endDate && new Date(log.timestamp) > new Date(endDate)) return false;
       if (query) {
         const logStr = JSON.stringify(log).toLowerCase();
         if (!logStr.includes(query.toLowerCase())) return false;
@@ -463,9 +355,7 @@ class ErrorLoggingService {
       return true;
     }).slice(0, limit);
   }
-}
-
-// Export singleton
+}
 const errorLoggingService = new ErrorLoggingService();
 
 module.exports = {

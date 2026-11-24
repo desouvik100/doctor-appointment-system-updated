@@ -1,13 +1,4 @@
-/**
- * Security Admin Routes
- * =====================
- * Admin endpoints for security management:
- * - Audit log viewing and export
- * - User session management
- * - IP blocking/unblocking
- * - Security alerts management
- * - Backup management
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -17,20 +8,10 @@ const ImmutableAuditLog = require('../models/ImmutableAuditLog');
 const aiSecurityService = require('../services/aiSecurityService');
 const jwtTokenService = require('../services/jwtTokenService');
 const backupService = require('../services/backupService');
-const { errorLoggingService } = require('../services/errorLoggingService');
-
-// All routes require admin authentication
+const { errorLoggingService } = require('../services/errorLoggingService');
 router.use(verifyAccessToken);
-router.use(verifyTokenWithRole(['admin', 'superadmin', 'clinic_admin']));
+router.use(verifyTokenWithRole(['admin', 'superadmin', 'clinic_admin']));
 
-// ============================================
-// AUDIT LOG ENDPOINTS
-// ============================================
-
-/**
- * GET /api/security-admin/audit-logs
- * Get audit logs with filtering
- */
 router.get('/audit-logs', requirePermission('audit:view'), async (req, res) => {
   try {
     const {
@@ -86,10 +67,6 @@ router.get('/audit-logs', requirePermission('audit:view'), async (req, res) => {
   }
 });
 
-/**
- * GET /api/security-admin/audit-logs/entity/:entityType/:entityId
- * Get audit trail for specific entity
- */
 router.get('/audit-logs/entity/:entityType/:entityId', requirePermission('audit:view'), async (req, res) => {
   try {
     const { entityType, entityId } = req.params;
@@ -109,10 +86,6 @@ router.get('/audit-logs/entity/:entityType/:entityId', requirePermission('audit:
   }
 });
 
-/**
- * GET /api/security-admin/audit-logs/user/:userId
- * Get user activity log
- */
 router.get('/audit-logs/user/:userId', requirePermission('audit:view'), async (req, res) => {
   try {
     const { userId } = req.params;
@@ -134,10 +107,6 @@ router.get('/audit-logs/user/:userId', requirePermission('audit:view'), async (r
   }
 });
 
-/**
- * GET /api/security-admin/audit-logs/verify-integrity
- * Verify audit log chain integrity
- */
 router.get('/audit-logs/verify-integrity', requirePermission('audit:view'), async (req, res) => {
   try {
     const { startSeq, endSeq } = req.query;
@@ -157,10 +126,6 @@ router.get('/audit-logs/verify-integrity', requirePermission('audit:view'), asyn
   }
 });
 
-/**
- * GET /api/security-admin/audit-logs/compliance-report
- * Generate compliance report
- */
 router.get('/audit-logs/compliance-report', requirePermission('audit:export'), async (req, res) => {
   try {
     const { clinicId, startDate, endDate } = req.query;
@@ -184,10 +149,6 @@ router.get('/audit-logs/compliance-report', requirePermission('audit:export'), a
   }
 });
 
-/**
- * POST /api/security-admin/audit-logs/export
- * Export audit logs
- */
 router.post('/audit-logs/export', requirePermission('audit:export'), async (req, res) => {
   try {
     const { format = 'json', filters = {} } = req.body;
@@ -203,9 +164,7 @@ router.post('/audit-logs/export', requirePermission('audit:export'), async (req,
     const logs = await ImmutableAuditLog.find(query)
       .sort({ timestamp: -1 })
       .limit(10000)
-      .lean();
-
-    // Log the export action
+      .lean();
     await ImmutableAuditLog.log({
       userId: req.user.id,
       userType: req.user.role,
@@ -220,8 +179,7 @@ router.post('/audit-logs/export', requirePermission('audit:export'), async (req,
       userAgent: req.headers['user-agent']
     });
 
-    if (format === 'csv') {
-      // Convert to CSV
+    if (format === 'csv') {
       const csv = convertToCSV(logs);
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename=audit-logs.csv');
@@ -237,16 +195,8 @@ router.post('/audit-logs/export', requirePermission('audit:export'), async (req,
     console.error('Export audit logs error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// SECURITY ALERTS ENDPOINTS
-// ============================================
-
-/**
- * GET /api/security-admin/alerts
- * Get security alerts
- */
 router.get('/alerts', requirePermission('security:view_alerts'), async (req, res) => {
   try {
     const { status, severity, activityType, limit = 100 } = req.query;
@@ -268,10 +218,6 @@ router.get('/alerts', requirePermission('security:view_alerts'), async (req, res
   }
 });
 
-/**
- * GET /api/security-admin/alerts/stats
- * Get security alert statistics
- */
 router.get('/alerts/stats', requirePermission('security:view_alerts'), async (req, res) => {
   try {
     const stats = await aiSecurityService.getStats();
@@ -286,10 +232,6 @@ router.get('/alerts/stats', requirePermission('security:view_alerts'), async (re
   }
 });
 
-/**
- * PUT /api/security-admin/alerts/:alertId/status
- * Update alert status
- */
 router.put('/alerts/:alertId/status', requirePermission('security:manage'), async (req, res) => {
   try {
     const { alertId } = req.params;
@@ -307,10 +249,6 @@ router.put('/alerts/:alertId/status', requirePermission('security:manage'), asyn
   }
 });
 
-/**
- * GET /api/security-admin/alerts/analytics
- * Get security analytics
- */
 router.get('/alerts/analytics', requirePermission('security:view_alerts'), async (req, res) => {
   try {
     const { days = 30 } = req.query;
@@ -324,16 +262,8 @@ router.get('/alerts/analytics', requirePermission('security:view_alerts'), async
     console.error('Get security analytics error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// IP MANAGEMENT ENDPOINTS
-// ============================================
-
-/**
- * GET /api/security-admin/blocked-ips
- * Get list of blocked IPs
- */
 router.get('/blocked-ips', requirePermission('security:manage'), async (req, res) => {
   try {
     const blockedIPs = aiSecurityService.getBlockedIPs();
@@ -348,10 +278,6 @@ router.get('/blocked-ips', requirePermission('security:manage'), async (req, res
   }
 });
 
-/**
- * POST /api/security-admin/block-ip
- * Block an IP address
- */
 router.post('/block-ip', requirePermission('security:manage'), async (req, res) => {
   try {
     const { ipAddress, reason, duration } = req.body;
@@ -363,9 +289,7 @@ router.post('/block-ip', requirePermission('security:manage'), async (req, res) 
       });
     }
 
-    aiSecurityService.blockIP(ipAddress, reason, duration);
-
-    // Log action
+    aiSecurityService.blockIP(ipAddress, reason, duration);
     await ImmutableAuditLog.log({
       userId: req.user.id,
       userType: req.user.role,
@@ -388,10 +312,6 @@ router.post('/block-ip', requirePermission('security:manage'), async (req, res) 
   }
 });
 
-/**
- * DELETE /api/security-admin/unblock-ip/:ipAddress
- * Unblock an IP address
- */
 router.delete('/unblock-ip/:ipAddress', requirePermission('security:manage'), async (req, res) => {
   try {
     const { ipAddress } = req.params;
@@ -418,16 +338,8 @@ router.delete('/unblock-ip/:ipAddress', requirePermission('security:manage'), as
     console.error('Unblock IP error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// SESSION MANAGEMENT ENDPOINTS
-// ============================================
-
-/**
- * POST /api/security-admin/force-logout/:userId
- * Force logout a user
- */
 router.post('/force-logout/:userId', requirePermission('security:manage'), async (req, res) => {
   try {
     const { userId } = req.params;
@@ -458,19 +370,13 @@ router.post('/force-logout/:userId', requirePermission('security:manage'), async
   }
 });
 
-/**
- * POST /api/security-admin/suspend-user/:userId
- * Suspend a user account
- */
 router.post('/suspend-user/:userId', requirePermission('security:manage'), async (req, res) => {
   try {
     const { userId } = req.params;
     const { reason, duration } = req.body;
 
     const User = require('../models/User');
-    const Doctor = require('../models/Doctor');
-
-    // Update user status
+    const Doctor = require('../models/Doctor');
     await User.findByIdAndUpdate(userId, {
       isActive: false,
       suspendedAt: new Date(),
@@ -481,9 +387,7 @@ router.post('/suspend-user/:userId', requirePermission('security:manage'), async
       isActive: false,
       suspendedAt: new Date(),
       suspendReason: reason
-    });
-
-    // Force logout
+    });
     await aiSecurityService.forceLogout(userId, reason);
     jwtTokenService.revokeAllUserTokens(userId);
 
@@ -509,10 +413,6 @@ router.post('/suspend-user/:userId', requirePermission('security:manage'), async
   }
 });
 
-/**
- * POST /api/security-admin/unsuspend-user/:userId
- * Unsuspend a user account
- */
 router.post('/unsuspend-user/:userId', requirePermission('security:manage'), async (req, res) => {
   try {
     const { userId } = req.params;
@@ -539,16 +439,8 @@ router.post('/unsuspend-user/:userId', requirePermission('security:manage'), asy
     console.error('Unsuspend user error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// BACKUP MANAGEMENT ENDPOINTS
-// ============================================
-
-/**
- * GET /api/security-admin/backups
- * List available backups
- */
 router.get('/backups', requirePermission('audit:export'), async (req, res) => {
   try {
     const backups = backupService.listBackups();
@@ -565,10 +457,6 @@ router.get('/backups', requirePermission('audit:export'), async (req, res) => {
   }
 });
 
-/**
- * POST /api/security-admin/backups/create
- * Create a manual backup
- */
 router.post('/backups/create', requirePermission('audit:export'), async (req, res) => {
   try {
     const result = await backupService.createBackup();
@@ -593,16 +481,8 @@ router.post('/backups/create', requirePermission('audit:export'), async (req, re
     console.error('Create backup error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 
-// ============================================
-// ERROR LOGS ENDPOINTS
-// ============================================
-
-/**
- * GET /api/security-admin/error-logs
- * Get recent error logs
- */
 router.get('/error-logs', requirePermission('audit:view'), async (req, res) => {
   try {
     const { type = 'error', lines = 100 } = req.query;
@@ -618,10 +498,6 @@ router.get('/error-logs', requirePermission('audit:view'), async (req, res) => {
   }
 });
 
-/**
- * GET /api/security-admin/error-logs/stats
- * Get error statistics
- */
 router.get('/error-logs/stats', requirePermission('audit:view'), async (req, res) => {
   try {
     const { minutes = 60 } = req.query;
@@ -635,11 +511,7 @@ router.get('/error-logs/stats', requirePermission('audit:view'), async (req, res
     console.error('Get error stats error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
+});
 
 function convertToCSV(logs) {
   if (logs.length === 0) return '';

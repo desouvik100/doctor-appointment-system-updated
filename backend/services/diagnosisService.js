@@ -1,27 +1,11 @@
-/**
- * Diagnosis Service
- * Manages diagnosis codes and descriptions for EMR visits
- * Supports primary, secondary, and differential diagnosis classification
- */
+
 
 const EMRVisit = require('../models/EMRVisit');
 const EMRAuditLog = require('../models/EMRAuditLog');
 const { searchICD10, getICD10Code } = require('./icd10Service');
 
-/**
- * Add diagnosis to a visit
- * @param {string} visitId - The visit ID
- * @param {Object} diagnosisData - Diagnosis data
- * @param {string} diagnosisData.code - ICD-10 code
- * @param {string} diagnosisData.description - Human-readable description
- * @param {string} diagnosisData.type - 'primary', 'secondary', or 'differential'
- * @param {string} diagnosisData.notes - Optional notes
- * @param {string} addedBy - User ID who added the diagnosis
- * @returns {Promise<Object>} Updated visit with diagnoses
- */
 async function addDiagnosis(visitId, diagnosisData, addedBy) {
-  try {
-    // Input validation
+  try {
     if (!visitId) {
       throw new Error('Visit ID is required');
     }
@@ -42,26 +26,18 @@ async function addDiagnosis(visitId, diagnosisData, addedBy) {
     
     if (!addedBy) {
       throw new Error('User ID (addedBy) is required');
-    }
-    
-    // Find the visit
+    }
     const visit = await EMRVisit.findById(visitId);
     if (!visit) {
       throw new Error('Visit not found');
-    }
-    
-    // Validate ICD-10 code format (basic validation)
+    }
     const codePattern = /^[A-Z]\d{2}(\.\d{1,2})?$/;
     if (!codePattern.test(code.toUpperCase())) {
       console.warn(`Invalid ICD-10 code format: ${code}`);
-    }
-    
-    // Initialize diagnosis array if it doesn't exist
+    }
     if (!visit.diagnosis) {
       visit.diagnosis = [];
-    }
-    
-    // Check if diagnosis already exists
+    }
     const existingIndex = visit.diagnosis.findIndex(d => 
       d.code.toUpperCase() === code.toUpperCase()
     );
@@ -75,31 +51,23 @@ async function addDiagnosis(visitId, diagnosisData, addedBy) {
       addedAt: new Date()
     };
     
-    if (existingIndex >= 0) {
-      // Update existing diagnosis
+    if (existingIndex >= 0) {
       visit.diagnosis[existingIndex] = {
         ...visit.diagnosis[existingIndex],
         ...diagnosisEntry,
         updatedAt: new Date()
       };
-    } else {
-      // Add new diagnosis
+    } else {
       visit.diagnosis.push(diagnosisEntry);
-    }
-    
-    // Ensure only one primary diagnosis
+    }
     if (type === 'primary') {
       visit.diagnosis.forEach((d, index) => {
         if (d.type === 'primary' && d.code !== code.toUpperCase()) {
           visit.diagnosis[index].type = 'secondary';
         }
       });
-    }
-    
-    // Save the visit
-    await visit.save();
-    
-    // Log the action
+    }
+    await visit.save();
     try {
       await EMRAuditLog.logAction({
         userId: addedBy,
@@ -124,11 +92,6 @@ async function addDiagnosis(visitId, diagnosisData, addedBy) {
   }
 }
 
-/**
- * Get all diagnoses for a visit
- * @param {string} visitId - The visit ID
- * @returns {Promise<Array>} Array of diagnoses
- */
 async function getDiagnoses(visitId) {
   try {
     if (!visitId) {
@@ -152,14 +115,6 @@ async function getDiagnoses(visitId) {
   }
 }
 
-/**
- * Update diagnosis in a visit
- * @param {string} visitId - The visit ID
- * @param {string} diagnosisCode - The ICD-10 code to update
- * @param {Object} updateData - Data to update
- * @param {string} updatedBy - User ID who updated the diagnosis
- * @returns {Promise<Object>} Updated visit
- */
 async function updateDiagnosis(visitId, diagnosisCode, updateData, updatedBy) {
   try {
     if (!visitId || !diagnosisCode) {
@@ -189,18 +144,14 @@ async function updateDiagnosis(visitId, diagnosisCode, updateData, updatedBy) {
     
     if (diagnosisIndex === -1) {
       throw new Error('Diagnosis not found');
-    }
-    
-    // Update the diagnosis
+    }
     const originalDiagnosis = { ...visit.diagnosis[diagnosisIndex] };
     visit.diagnosis[diagnosisIndex] = {
       ...visit.diagnosis[diagnosisIndex],
       ...updateData,
       updatedBy,
       updatedAt: new Date()
-    };
-    
-    // Ensure only one primary diagnosis
+    };
     if (updateData.type === 'primary') {
       visit.diagnosis.forEach((d, index) => {
         if (index !== diagnosisIndex && d.type === 'primary') {
@@ -209,9 +160,7 @@ async function updateDiagnosis(visitId, diagnosisCode, updateData, updatedBy) {
       });
     }
     
-    await visit.save();
-    
-    // Log the action
+    await visit.save();
     try {
       await EMRAuditLog.logAction({
         userId: updatedBy,
@@ -237,13 +186,6 @@ async function updateDiagnosis(visitId, diagnosisCode, updateData, updatedBy) {
   }
 }
 
-/**
- * Remove diagnosis from a visit
- * @param {string} visitId - The visit ID
- * @param {string} diagnosisCode - The ICD-10 code to remove
- * @param {string} removedBy - User ID who removed the diagnosis
- * @returns {Promise<Object>} Updated visit
- */
 async function removeDiagnosis(visitId, diagnosisCode, removedBy) {
   try {
     if (!visitId || !diagnosisCode) {
@@ -274,9 +216,7 @@ async function removeDiagnosis(visitId, diagnosisCode, removedBy) {
     const removedDiagnosis = visit.diagnosis[diagnosisIndex];
     visit.diagnosis.splice(diagnosisIndex, 1);
     
-    await visit.save();
-    
-    // Log the action
+    await visit.save();
     try {
       await EMRAuditLog.logAction({
         userId: removedBy,
@@ -301,13 +241,6 @@ async function removeDiagnosis(visitId, diagnosisCode, removedBy) {
   }
 }
 
-/**
- * Get patient's diagnosis history across all visits
- * @param {string} patientId - The patient ID
- * @param {string} clinicId - The clinic ID (optional)
- * @param {Object} options - Query options
- * @returns {Promise<Array>} Array of diagnoses with visit information
- */
 async function getPatientDiagnosisHistory(patientId, clinicId = null, options = {}) {
   try {
     if (!patientId) {
@@ -370,12 +303,6 @@ async function getPatientDiagnosisHistory(patientId, clinicId = null, options = 
   }
 }
 
-/**
- * Get diagnosis statistics for a clinic
- * @param {string} clinicId - The clinic ID
- * @param {Object} options - Query options
- * @returns {Promise<Object>} Diagnosis statistics
- */
 async function getDiagnosisStats(clinicId, options = {}) {
   try {
     if (!clinicId) {
@@ -436,11 +363,6 @@ async function getDiagnosisStats(clinicId, options = {}) {
   }
 }
 
-/**
- * Validate diagnosis data
- * @param {Object} diagnosisData - Diagnosis data to validate
- * @returns {Object} Validation result
- */
 function validateDiagnosisData(diagnosisData) {
   const errors = [];
   
@@ -451,8 +373,7 @@ function validateDiagnosisData(diagnosisData) {
   
   if (!diagnosisData.code) {
     errors.push('ICD-10 code is required');
-  } else {
-    // Basic ICD-10 format validation
+  } else {
     const codePattern = /^[A-Z]\d{2}(\.\d{1,2})?$/;
     if (!codePattern.test(diagnosisData.code.toUpperCase())) {
       errors.push('Invalid ICD-10 code format');

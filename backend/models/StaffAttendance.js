@@ -1,79 +1,52 @@
-/**
- * Staff Attendance Model
- * Attendance Tracking & Leave Management
- */
+
 
 const mongoose = require('mongoose');
 
 const staffAttendanceSchema = new mongoose.Schema({
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
   branchId: { type: mongoose.Schema.Types.ObjectId, ref: 'HospitalBranch' },
-  staffId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  
-  // Date
-  date: { type: Date, required: true },
-  
-  // Shift
+  staffId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  date: { type: Date, required: true },
   shiftId: { type: mongoose.Schema.Types.ObjectId, ref: 'StaffSchedule' },
   shiftType: { type: String, enum: ['morning', 'afternoon', 'evening', 'night', 'general', 'split'], default: 'general' },
   scheduledStart: { type: String },
-  scheduledEnd: { type: String },
-  
-  // Check In/Out
+  scheduledEnd: { type: String },
   checkInTime: { type: Date },
   checkOutTime: { type: Date },
   checkInMethod: { type: String, enum: ['biometric', 'manual', 'app', 'qr_code', 'face_recognition', 'gps'], default: 'manual' },
   checkOutMethod: { type: String, enum: ['biometric', 'manual', 'app', 'qr_code', 'face_recognition', 'gps'] },
   checkInLocation: { lat: Number, lng: Number, address: String },
-  checkOutLocation: { lat: Number, lng: Number, address: String },
-  
-  // Breaks
+  checkOutLocation: { lat: Number, lng: Number, address: String },
   breaks: [{
     startTime: Date,
     endTime: Date,
-    duration: Number, // minutes
+    duration: Number, 
     type: { type: String, enum: ['lunch', 'tea', 'personal', 'other'] }
   }],
-  totalBreakTime: { type: Number, default: 0 }, // minutes
-  
-  // Working Hours
+  totalBreakTime: { type: Number, default: 0 }, 
   scheduledHours: { type: Number, default: 8 },
   workedHours: { type: Number, default: 0 },
-  overtimeHours: { type: Number, default: 0 },
-  
-  // Status
+  overtimeHours: { type: Number, default: 0 },
   status: { 
     type: String, 
     enum: ['present', 'absent', 'half_day', 'late', 'early_leave', 'on_leave', 'holiday', 'week_off', 'work_from_home'],
     default: 'present'
-  },
-  
-  // Late/Early
+  },
   lateMinutes: { type: Number, default: 0 },
-  earlyLeaveMinutes: { type: Number, default: 0 },
-  
-  // Leave Reference
+  earlyLeaveMinutes: { type: Number, default: 0 },
   leaveId: { type: mongoose.Schema.Types.ObjectId, ref: 'LeaveRequest' },
-  leaveType: { type: String },
-  
-  // Regularization
+  leaveType: { type: String },
   isRegularized: { type: Boolean, default: false },
   regularizationReason: { type: String },
   regularizedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  regularizedAt: { type: Date },
-  
-  // Notes
-  remarks: { type: String },
-  
-  // Audit
+  regularizedAt: { type: Date },
+  remarks: { type: String },
   markedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   
-}, { timestamps: true });
-
-// Calculate worked hours before save
+}, { timestamps: true });
 staffAttendanceSchema.pre('save', function(next) {
   if (this.checkInTime && this.checkOutTime) {
-    const worked = (this.checkOutTime - this.checkInTime) / (1000 * 60 * 60); // hours
+    const worked = (this.checkOutTime - this.checkInTime) / (1000 * 60 * 60); 
     this.workedHours = Math.round((worked - (this.totalBreakTime / 60)) * 100) / 100;
     
     if (this.workedHours > this.scheduledHours) {
@@ -81,9 +54,7 @@ staffAttendanceSchema.pre('save', function(next) {
     }
   }
   next();
-});
-
-// Indexes
+});
 staffAttendanceSchema.index({ clinicId: 1, staffId: 1, date: 1 }, { unique: true });
 staffAttendanceSchema.index({ staffId: 1, date: -1 });
 staffAttendanceSchema.index({ clinicId: 1, date: 1, status: 1 });

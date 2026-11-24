@@ -1,8 +1,5 @@
-const aiSecurityService = require('../services/aiSecurityService');
-
-// Extract user info from request
-const extractUserInfo = (req) => {
-  // Try to get user from various auth sources
+const aiSecurityService = require('../services/aiSecurityService');
+const extractUserInfo = (req) => {
   const user = req.user || req.admin || req.doctor || req.receptionist;
   
   if (!user) return null;
@@ -16,9 +13,7 @@ const extractUserInfo = (req) => {
     userEmail: user.email,
     userRole: user.role
   };
-};
-
-// Determine action type from request
+};
 const getActionType = (req) => {
   const method = req.method;
   const path = req.path.toLowerCase();
@@ -32,9 +27,7 @@ const getActionType = (req) => {
   if (method === 'GET' && req.query.limit > 50) return 'bulk_access';
   
   return 'data_access';
-};
-
-// Check if IP is blocked middleware
+};
 const checkBlockedIP = async (req, res, next) => {
   const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress;
   
@@ -49,9 +42,7 @@ const checkBlockedIP = async (req, res, next) => {
   }
   
   next();
-};
-
-// Check if user is suspended middleware
+};
 const checkSuspendedUser = async (req, res, next) => {
   const user = req.user || req.admin || req.doctor || req.receptionist;
   
@@ -68,17 +59,12 @@ const checkSuspendedUser = async (req, res, next) => {
   }
   
   next();
-};
-
-// Main security monitoring middleware
-const securityMonitor = async (req, res, next) => {
-  // Skip monitoring for certain paths
+};
+const securityMonitor = async (req, res, next) => {
   const skipPaths = ['/api/security', '/health', '/api/otp'];
   if (skipPaths.some(p => req.path.startsWith(p))) {
     return next();
-  }
-
-  // Check if IP is blocked
+  }
   const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress;
   const block = aiSecurityService.isIPBlocked(ipAddress);
   if (block) {
@@ -89,27 +75,17 @@ const securityMonitor = async (req, res, next) => {
     });
   }
 
-  const startTime = Date.now();
-  
-  // Store original end function
-  const originalEnd = res.end;
-  
-  // Override end to capture response
+  const startTime = Date.now();
+  const originalEnd = res.end;
   res.end = async function(chunk, encoding) {
     res.end = originalEnd;
-    res.end(chunk, encoding);
-    
-    // Don't block response, analyze asynchronously
+    res.end(chunk, encoding);
     setImmediate(async () => {
       try {
-        const userInfo = extractUserInfo(req);
-        
-        // Only monitor authenticated requests
+        const userInfo = extractUserInfo(req);
         if (!userInfo) return;
         
-        const action = getActionType(req);
-        
-        // Analyze the activity
+        const action = getActionType(req);
         await aiSecurityService.analyzeActivity({
           ...userInfo,
           action,
@@ -131,9 +107,7 @@ const securityMonitor = async (req, res, next) => {
   };
   
   next();
-};
-
-// Sanitize request body to remove sensitive data
+};
 const sanitizeBody = (body) => {
   if (!body) return undefined;
   
@@ -147,14 +121,11 @@ const sanitizeBody = (body) => {
   });
   
   return sanitized;
-};
-
-// Track failed login attempts
+};
 const trackFailedLogin = async (req, res, next) => {
   const originalJson = res.json;
   
-  res.json = async function(data) {
-    // Check if this is a failed login
+  res.json = async function(data) {
     if (req.path.includes('login') && (res.statusCode === 401 || data?.success === false)) {
       const email = req.body?.email;
       const ipAddress = req.ip || req.headers['x-forwarded-for'];
@@ -169,20 +140,15 @@ const trackFailedLogin = async (req, res, next) => {
   };
   
   next();
-};
-
-// Monitor sensitive operations
+};
 const monitorSensitiveOps = (operationType) => {
-  return async (req, res, next) => {
-    // Store operation context for later analysis
+  return async (req, res, next) => {
     res.locals.operationType = operationType;
     res.locals.operationStart = Date.now();
     
     next();
   };
-};
-
-// Rate limiting with security alerts
+};
 const securityRateLimit = (maxRequests = 100, windowMs = 60000) => {
   const requests = new Map();
   
@@ -201,8 +167,7 @@ const securityRateLimit = (maxRequests = 100, windowMs = 60000) => {
     userRequests.push(now);
     requests.set(key, userRequests);
     
-    if (userRequests.length > maxRequests) {
-      // Log security alert for rate limit violation
+    if (userRequests.length > maxRequests) {
       await aiSecurityService.createAlert({
         ...userInfo,
         activityType: 'api_abuse',

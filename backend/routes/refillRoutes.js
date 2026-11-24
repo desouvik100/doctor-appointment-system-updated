@@ -2,15 +2,11 @@ const express = require('express');
 const router = express.Router();
 const RefillRequest = require('../models/RefillRequest');
 const Prescription = require('../models/Prescription');
-const { sendEmail } = require('../services/emailService');
-
-// Create refill request (patient)
+const { sendEmail } = require('../services/emailService');
 router.post('/', async (req, res) => {
   try {
     const refill = new RefillRequest(req.body);
-    await refill.save();
-    
-    // Notify doctor
+    await refill.save();
     const prescription = await Prescription.findById(req.body.originalPrescriptionId).populate('doctorId');
     if (prescription?.doctorId?.email) {
       await sendEmail({
@@ -33,9 +29,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get refill requests for doctor
+});
 router.get('/doctor/:doctorId', async (req, res) => {
   try {
     const refills = await RefillRequest.find({ doctorId: req.params.doctorId })
@@ -46,9 +40,7 @@ router.get('/doctor/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get refill requests for patient
+});
 router.get('/patient/:patientId', async (req, res) => {
   try {
     const refills = await RefillRequest.find({ patientId: req.params.patientId })
@@ -58,9 +50,7 @@ router.get('/patient/:patientId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Process refill request (doctor)
+});
 router.put('/:id/process', async (req, res) => {
   try {
     const { status, medicines, doctorNotes } = req.body;
@@ -74,9 +64,7 @@ router.put('/:id/process', async (req, res) => {
       refill.medicines = medicines;
     }
     
-    await refill.save();
-    
-    // Notify patient
+    await refill.save();
     if (refill.patientId?.email) {
       const statusText = status === 'approved' ? 'approved ✅' : status === 'partially_approved' ? 'partially approved' : 'needs review';
       await sendEmail({

@@ -4,9 +4,7 @@ const SupportTicket = require('../models/SupportTicket');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-const { sendEmail } = require('../services/emailService');
-
-// Create support ticket (doctors only)
+const { sendEmail } = require('../services/emailService');
 router.post('/ticket', verifyToken, async (req, res) => {
   try {
     const { subject, message, category, priority } = req.body;
@@ -17,9 +15,7 @@ router.post('/ticket', verifyToken, async (req, res) => {
         success: false, 
         message: 'Subject and message are required' 
       });
-    }
-
-    // Check if user is a doctor
+    }
     const doctor = await Doctor.findOne({ userId: userId });
     if (!doctor && req.user.role !== 'doctor') {
       return res.status(403).json({ 
@@ -43,9 +39,7 @@ router.post('/ticket', verifyToken, async (req, res) => {
       }]
     });
 
-    await ticket.save();
-
-    // Send email notification to admin
+    await ticket.save();
     try {
       const adminEmail = process.env.ADMIN_EMAIL || 'desouvik0000@gmail.com';
       const user = await User.findById(userId);
@@ -94,9 +88,7 @@ router.post('/ticket', verifyToken, async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Get doctor's tickets
+});
 router.get('/my-tickets', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -116,9 +108,7 @@ router.get('/my-tickets', verifyToken, async (req, res) => {
       message: 'Failed to fetch tickets' 
     });
   }
-});
-
-// Get single ticket with messages
+});
 router.get('/ticket/:ticketId', verifyToken, async (req, res) => {
   try {
     const { ticketId } = req.params;
@@ -134,17 +124,13 @@ router.get('/ticket/:ticketId', verifyToken, async (req, res) => {
         success: false, 
         message: 'Ticket not found' 
       });
-    }
-
-    // Check access - only ticket owner or admin can view
+    }
     if (ticket.submittedBy._id.toString() !== userId && req.user.role !== 'admin') {
       return res.status(403).json({ 
         success: false, 
         message: 'Access denied' 
       });
-    }
-
-    // Mark messages as read for the viewer
+    }
     const viewerRole = req.user.role === 'admin' ? 'doctor' : 'admin';
     ticket.messages.forEach(msg => {
       if (msg.sender === viewerRole) {
@@ -164,9 +150,7 @@ router.get('/ticket/:ticketId', verifyToken, async (req, res) => {
       message: 'Failed to fetch ticket' 
     });
   }
-});
-
-// Add message to ticket (doctor reply)
+});
 router.post('/ticket/:ticketId/reply', verifyToken, async (req, res) => {
   try {
     const { ticketId } = req.params;
@@ -187,31 +171,23 @@ router.post('/ticket/:ticketId/reply', verifyToken, async (req, res) => {
         success: false, 
         message: 'Ticket not found' 
       });
-    }
-
-    // Check if user owns this ticket
+    }
     if (ticket.submittedBy.toString() !== userId) {
       return res.status(403).json({ 
         success: false, 
         message: 'Access denied' 
       });
-    }
-
-    // Add message
+    }
     ticket.messages.push({
       sender: 'doctor',
       senderId: userId,
       message
-    });
-
-    // Reopen if closed
+    });
     if (ticket.status === 'closed' || ticket.status === 'resolved') {
       ticket.status = 'open';
     }
 
-    await ticket.save();
-
-    // Notify admin
+    await ticket.save();
     try {
       const adminEmail = process.env.ADMIN_EMAIL || 'desouvik0000@gmail.com';
       await sendEmail({
@@ -243,11 +219,7 @@ router.post('/ticket/:ticketId/reply', verifyToken, async (req, res) => {
       message: 'Failed to send reply' 
     });
   }
-});
-
-// ============ ADMIN ENDPOINTS ============
-
-// Get all tickets (admin only)
+});
 router.get('/admin/tickets', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { status, priority, page = 1, limit = 20 } = req.query;
@@ -282,9 +254,7 @@ router.get('/admin/tickets', verifyTokenWithRole(['admin']), async (req, res) =>
       message: 'Failed to fetch tickets' 
     });
   }
-});
-
-// Admin reply to ticket
+});
 router.post('/admin/ticket/:ticketId/reply', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { ticketId } = req.params;
@@ -306,16 +276,12 @@ router.post('/admin/ticket/:ticketId/reply', verifyTokenWithRole(['admin']), asy
         success: false, 
         message: 'Ticket not found' 
       });
-    }
-
-    // Add admin message
+    }
     ticket.messages.push({
       sender: 'admin',
       senderId: adminId,
       message
-    });
-
-    // Update status if provided
+    });
     if (status) {
       ticket.status = status;
       if (status === 'resolved') ticket.resolvedAt = new Date();
@@ -328,9 +294,7 @@ router.post('/admin/ticket/:ticketId/reply', verifyTokenWithRole(['admin']), asy
     ticket.respondedAt = new Date();
     ticket.adminResponse = message;
 
-    await ticket.save();
-
-    // Notify doctor via email
+    await ticket.save();
     if (ticket.submittedBy?.email) {
       try {
         await sendEmail({
@@ -369,9 +333,7 @@ router.post('/admin/ticket/:ticketId/reply', verifyTokenWithRole(['admin']), asy
       message: 'Failed to send reply' 
     });
   }
-});
-
-// Update ticket status (admin only)
+});
 router.patch('/admin/ticket/:ticketId/status', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { ticketId } = req.params;
@@ -413,9 +375,7 @@ router.patch('/admin/ticket/:ticketId/status', verifyTokenWithRole(['admin']), a
       message: 'Failed to update status' 
     });
   }
-});
-
-// Get ticket stats (admin only)
+});
 router.get('/admin/stats', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const stats = await SupportTicket.aggregate([

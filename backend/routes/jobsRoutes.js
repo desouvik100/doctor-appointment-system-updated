@@ -1,8 +1,4 @@
-/**
- * Jobs Routes - Admin API for Job Management
- * ===========================================
- * Allows admins to manually trigger and monitor automation jobs
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -16,11 +12,6 @@ const {
   runAllJobsManually
 } = require('../jobs');
 
-/**
- * @route   GET /api/jobs/status
- * @desc    Get status of all automation jobs
- * @access  Admin only
- */
 router.get('/status', protect, authorize('admin'), async (req, res) => {
   try {
     const status = getJobsStatus();
@@ -40,11 +31,6 @@ router.get('/status', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-/**
- * @route   POST /api/jobs/run-all
- * @desc    Manually run all jobs (for testing or immediate execution)
- * @access  Admin only
- */
 router.post('/run-all', protect, authorize('admin'), async (req, res) => {
   try {
     console.log('🔧 Admin triggered manual execution of all jobs');
@@ -67,11 +53,6 @@ router.post('/run-all', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-/**
- * @route   POST /api/jobs/cleanup
- * @desc    Manually run cleanup jobs
- * @access  Admin only
- */
 router.post('/cleanup', protect, authorize('admin'), async (req, res) => {
   try {
     console.log('🧹 Admin triggered cleanup jobs');
@@ -94,11 +75,6 @@ router.post('/cleanup', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-/**
- * @route   POST /api/jobs/reminders
- * @desc    Manually run reminder jobs
- * @access  Admin only
- */
 router.post('/reminders', protect, authorize('admin'), async (req, res) => {
   try {
     console.log('📧 Admin triggered reminder jobs');
@@ -124,11 +100,6 @@ router.post('/reminders', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-/**
- * @route   POST /api/jobs/appointments
- * @desc    Manually run appointment jobs
- * @access  Admin only
- */
 router.post('/appointments', protect, authorize('admin'), async (req, res) => {
   try {
     console.log('📅 Admin triggered appointment jobs');
@@ -151,11 +122,6 @@ router.post('/appointments', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-/**
- * @route   POST /api/jobs/analytics
- * @desc    Manually run analytics jobs
- * @access  Admin only
- */
 router.post('/analytics', protect, authorize('admin'), async (req, res) => {
   try {
     console.log('📊 Admin triggered analytics jobs');
@@ -178,11 +144,6 @@ router.post('/analytics', protect, authorize('admin'), async (req, res) => {
   }
 });
 
-/**
- * @route   POST /api/jobs/cleanup/old-appointments
- * @desc    Manually cleanup old completed appointments
- * @access  Admin only
- */
 router.post('/cleanup/old-appointments', protect, authorize('admin'), async (req, res) => {
   try {
     const result = await cleanupJobs.cleanupOldAppointments();
@@ -203,11 +164,6 @@ router.post('/cleanup/old-appointments', protect, authorize('admin'), async (req
   }
 });
 
-/**
- * @route   POST /api/jobs/cleanup/old-notifications
- * @desc    Manually cleanup old notifications
- * @access  Admin only
- */
 router.post('/cleanup/old-notifications', protect, authorize('admin'), async (req, res) => {
   try {
     const result = await cleanupJobs.cleanupOldNotifications();
@@ -228,15 +184,8 @@ router.post('/cleanup/old-notifications', protect, authorize('admin'), async (re
   }
 });
 
-/**
- * @route   GET /api/jobs/health
- * @desc    Get health status of automation jobs
- * @access  Admin only
- */
 router.get('/health', protect, authorize('admin'), async (req, res) => {
-  try {
-    // Check if jobs are running by checking last execution times
-    // This is a simple health check - can be enhanced with more metrics
+  try {
     
     const health = {
       status: 'healthy',

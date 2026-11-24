@@ -1,7 +1,4 @@
-/**
- * Common Components - Central export file
- * Import all components from one place: import { Button, Card, Toast } from '../components/common';
- */
+
 
 export { default as Avatar } from './Avatar';
 export { default as Badge } from './Badge';

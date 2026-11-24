@@ -1,15 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const AuditLog = require('../models/AuditLog');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// Middleware to log actions
-const logAction = async (req, res, next) => {
-  // Store original json method
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
+const logAction = async (req, res, next) => {
   const originalJson = res.json.bind(res);
   
-  res.json = function(data) {
-    // Log successful actions
+  res.json = function(data) {
     if (res.statusCode >= 200 && res.statusCode < 300 && req.auditData) {
       AuditLog.log({
         ...req.auditData,
@@ -26,9 +22,7 @@ const logAction = async (req, res, next) => {
   };
   
   next();
-};
-
-// Get audit logs (general endpoint - uses clinicId from token if available)
+};
 router.get('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { 
@@ -41,9 +35,7 @@ router.get('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async 
       endDate,
       severity,
       clinicId: queryClinicId
-    } = req.query;
-
-    // Use clinicId from query or from user's token
+    } = req.query;
     const clinicId = queryClinicId || req.user?.clinicId;
     
     const query = {};
@@ -81,9 +73,7 @@ router.get('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async 
     console.error('Error fetching audit logs:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get audit logs for clinic (Admin only)
+});
 router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -133,9 +123,7 @@ router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'recepti
     console.error('Error fetching audit logs:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get audit history for specific entity
+});
 router.get('/entity/:entityType/:entityId', verifyToken, async (req, res) => {
   try {
     const { entityType, entityId } = req.params;
@@ -148,9 +136,7 @@ router.get('/entity/:entityType/:entityId', verifyToken, async (req, res) => {
     console.error('Error fetching entity history:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get user activity log
+});
 router.get('/user/:userId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { userId } = req.params;
@@ -163,9 +149,7 @@ router.get('/user/:userId', verifyTokenWithRole(['admin', 'clinic', 'receptionis
     console.error('Error fetching user activity:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get audit summary/stats (general - uses clinicId from token)
+});
 router.get('/stats', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const clinicId = req.query.clinicId || req.user?.clinicId;
@@ -195,9 +179,7 @@ router.get('/stats', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), a
     console.error('Error fetching audit stats:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get audit summary/stats for specific clinic
+});
 router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -234,9 +216,7 @@ router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptio
           totalActions: { $sum: '$count' }
         }
       }
-    ]);
-
-    // Get critical actions
+    ]);
     const criticalActions = await AuditLog.find({
       clinicId,
       severity: { $in: ['high', 'critical'] },
@@ -244,9 +224,7 @@ router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptio
     })
       .sort({ timestamp: -1 })
       .limit(20)
-      .populate('userId', 'name');
-
-    // Get most active users
+      .populate('userId', 'name');
     const activeUsers = await AuditLog.aggregate([
       { 
         $match: { 
@@ -279,9 +257,7 @@ router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptio
     console.error('Error fetching audit stats:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Export audit logs (for compliance)
+});
 router.get('/export/:clinicId', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -299,8 +275,7 @@ router.get('/export/:clinicId', verifyTokenWithRole(['admin']), async (req, res)
       .populate('userId', 'name email role')
       .lean();
 
-    if (format === 'csv') {
-      // Generate CSV
+    if (format === 'csv') {
       const fields = ['timestamp', 'userName', 'userRole', 'action', 'entityType', 'entityName', 'description', 'ipAddress'];
       const csv = [
         fields.join(','),

@@ -1,7 +1,4 @@
-/**
- * HeartbeatLoader - Premium Medical Loading Animation
- * ECG/BP style heartbeat animation for HealthSync
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Easing, Vibration, Platform } from 'react-native';
@@ -11,10 +8,10 @@ import LinearGradient from 'react-native-linear-gradient';
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 const HeartbeatLoader = ({
-  size = 'medium', // small, medium, large, fullscreen
+  size = 'medium', 
   message = '',
   showText = true,
-  variant = 'ecg', // ecg, heart, circular
+  variant = 'ecg', 
   color = '#4F46E5',
   glowColor = '#818CF8',
 }) => {
@@ -24,15 +21,12 @@ const HeartbeatLoader = ({
   const heartScale = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0.3)).current;
 
-  useEffect(() => {
-    // Fade in
+  useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 300,
       useNativeDriver: true,
-    }).start();
-
-    // ECG line animation
+    }).start();
     Animated.loop(
       Animated.timing(ecgAnim, {
         toValue: 1,
@@ -40,9 +34,7 @@ const HeartbeatLoader = ({
         easing: Easing.linear,
         useNativeDriver: true,
       })
-    ).start();
-
-    // Heartbeat pulse
+    ).start();
     Animated.loop(
       Animated.sequence([
         Animated.timing(heartScale, { toValue: 1.15, duration: 150, useNativeDriver: true }),
@@ -51,18 +43,13 @@ const HeartbeatLoader = ({
         Animated.timing(heartScale, { toValue: 1, duration: 100, useNativeDriver: true }),
         Animated.delay(600),
       ])
-    ).start();
-
-
-    // Glow animation
+    ).start();
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, { toValue: 0.8, duration: 800, useNativeDriver: true }),
         Animated.timing(glowAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
       ])
-    ).start();
-
-    // Subtle haptic on heartbeat (only on real device)
+    ).start();
     if (Platform.OS !== 'web') {
       const hapticInterval = setInterval(() => {
         Vibration.vibrate(10);
@@ -80,9 +67,7 @@ const HeartbeatLoader = ({
     }
   };
 
-  const dimensions = getSize();
-
-  // ECG Path - realistic heartbeat waveform
+  const dimensions = getSize();
   const ecgPath = `M 0 25 L 20 25 L 25 25 L 30 10 L 35 40 L 40 5 L 45 35 L 50 25 L 55 25 L 60 25 L 80 25 L 85 20 L 90 30 L 95 25 L 120 25`;
 
   const renderECGLoader = () => (
@@ -106,7 +91,7 @@ const HeartbeatLoader = ({
           />
         </Svg>
       </Animated.View>
-      {/* Animated scan line */}
+      {}
       <Animated.View
         style={[
           styles.scanLine,
@@ -130,7 +115,6 @@ const HeartbeatLoader = ({
       </Animated.View>
     </View>
   );
-
 
   const renderHeartLoader = () => (
     <Animated.View style={[styles.heartContainer, { transform: [{ scale: heartScale }] }]}>
@@ -163,7 +147,7 @@ const HeartbeatLoader = ({
       <Animated.View style={[styles.fullscreenContainer, { opacity: fadeAnim }]}>
         <LinearGradient colors={['#0F172A', '#1E293B']} style={styles.fullscreenGradient}>
           <View style={styles.fullscreenContent}>
-            {/* Logo */}
+            {}
             <View style={styles.logoContainer}>
               <LinearGradient colors={['#4F46E5', '#6366F1']} style={styles.logoBg}>
                 <Text style={styles.logoText}>HS</Text>
@@ -171,19 +155,19 @@ const HeartbeatLoader = ({
               <Text style={styles.brandName}>HealthSync</Text>
             </View>
             
-            {/* ECG Animation */}
+            {}
             <View style={styles.ecgFullscreen}>
               {renderECGLoader()}
             </View>
             
-            {/* Loading text */}
+            {}
             {showText && (
               <Animated.Text style={[styles.loadingText, { opacity: glowAnim }]}>
                 {message || 'Loading...'}
               </Animated.Text>
             )}
             
-            {/* Heartbeat indicator */}
+            {}
             <View style={styles.bpmContainer}>
               <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                 <Text style={styles.bpmHeart}>❤️</Text>
@@ -204,7 +188,6 @@ const HeartbeatLoader = ({
   );
 };
 
-
 const styles = StyleSheet.create({
   container: { alignItems: 'center', justifyContent: 'center', padding: 16 },
   container_small: { padding: 8 },
@@ -221,8 +204,7 @@ const styles = StyleSheet.create({
   circularInner: { width: 60, height: 60, borderRadius: 30, borderWidth: 2, position: 'absolute', top: 10, left: 10 },
   circularHeart: { alignItems: 'center', justifyContent: 'center' },
   circularHeartIcon: { fontSize: 28 },
-  message: { marginTop: 12, fontSize: 14, fontWeight: '500' },
-  // Fullscreen styles
+  message: { marginTop: 12, fontSize: 14, fontWeight: '500' },
   fullscreenContainer: { ...StyleSheet.absoluteFillObject, zIndex: 9999 },
   fullscreenGradient: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   fullscreenContent: { alignItems: 'center' },

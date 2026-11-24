@@ -1,7 +1,4 @@
-/**
- * Utility script to check user existence and reset password
- * Usage: node scripts/reset-user-password.js <email> <new-password>
- */
+
 
 require('dotenv').config();
 const mongoose = require('mongoose');
@@ -59,14 +56,12 @@ async function main() {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       await User.findByIdAndUpdate(user._id, { 
         password: hashedPassword,
-        isActive: true  // Also reactivate the account
+        isActive: true  
       });
       console.log(`\n✅ Password reset successfully for ${normalizedEmail}`);
       console.log('✅ Account reactivated');
       console.log('   You can now login with the new password.');
-    }
-
-    // Option to just reactivate without changing password
+    }
     if (!newPassword && !user.isActive) {
       const readline = require('readline');
       const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -81,7 +76,7 @@ async function main() {
         console.log('\n🔌 Disconnected from MongoDB');
         process.exit(0);
       });
-      return; // Don't disconnect yet, wait for user input
+      return; 
     }
 
   } catch (error) {

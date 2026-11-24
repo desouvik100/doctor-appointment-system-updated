@@ -1,7 +1,4 @@
-/**
- * Admin Users Screen - Patient/User Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -26,7 +23,7 @@ const AdminUsersScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('all'); // all, active, suspended
+  const [filter, setFilter] = useState('all'); 
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -56,7 +53,6 @@ const AdminUsersScreen = ({ navigation }) => {
     if (filter === 'suspended') return matchesSearch && user.isActive === false;
     return matchesSearch;
   });
-
 
   const handleSuspend = async (userId) => {
     Alert.alert('Suspend User', 'Are you sure you want to suspend this user?', [

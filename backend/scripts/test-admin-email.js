@@ -1,4 +1,4 @@
-// Test script to send email to admin@healthsyncpro.in
+
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 

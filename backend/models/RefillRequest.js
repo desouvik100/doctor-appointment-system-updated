@@ -13,7 +13,7 @@ const refillRequestSchema = new mongoose.Schema({
   patientNotes: String,
   doctorNotes: String,
   status: { type: String, enum: ['pending', 'approved', 'partially_approved', 'rejected', 'completed'], default: 'pending' },
-  refillFee: { type: Number, default: 100 }, // Lower fee for refills
+  refillFee: { type: Number, default: 100 }, 
   newPrescriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' },
   processedAt: Date,
   createdAt: { type: Date, default: Date.now }

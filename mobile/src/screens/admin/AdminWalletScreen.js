@@ -1,7 +1,4 @@
-/**
- * Admin Wallet Screen - Wallet & Payments Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -53,7 +50,6 @@ const AdminWalletScreen = ({ navigation }) => {
     await fetchData();
     setRefreshing(false);
   }, [fetchData]);
-
 
   const handleProcessWithdrawal = async (walletId, requestId, action) => {
     Alert.alert(
@@ -137,7 +133,7 @@ const AdminWalletScreen = ({ navigation }) => {
         <View style={styles.headerRight} />
       </View>
 
-      {/* Stats Overview */}
+      {}
       <View style={styles.statsContainer}>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Text style={styles.statIcon}>💰</Text>
@@ -151,7 +147,7 @@ const AdminWalletScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Tabs */}
+      {}
       <View style={styles.tabContainer}>
         <TabButton label="Overview" value="overview" />
         <TabButton label={`Withdrawals (${withdrawals.length})`} value="withdrawals" />

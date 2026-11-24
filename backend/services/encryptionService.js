@@ -1,13 +1,6 @@
-/**
- * Encryption Service - Field-Level Encryption for Sensitive Data
- * ==============================================================
- * Encrypts sensitive fields like phone numbers, diagnosis, etc.
- * Uses AES-256-GCM for authenticated encryption.
- */
 
-const crypto = require('crypto');
 
-// Configuration
+const crypto = require('crypto');
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
@@ -18,21 +11,12 @@ class EncryptionService {
     this.masterKey = this.deriveMasterKey();
   }
 
-  /**
-   * Derive master key from environment secret
-   */
   deriveMasterKey() {
     const secret = process.env.ENCRYPTION_KEY || process.env.JWT_SECRET || 'default-encryption-key';
-    const salt = process.env.ENCRYPTION_SALT || 'healthsync-salt-2024';
-    
-    // Use PBKDF2 to derive a 256-bit key
+    const salt = process.env.ENCRYPTION_SALT || 'healthsync-salt-2024';
     return crypto.pbkdf2Sync(secret, salt, 100000, 32, 'sha256');
   }
 
-  /**
-   * Encrypt a string value
-   * Returns: iv:authTag:encryptedData (base64 encoded)
-   */
   encrypt(plaintext) {
     if (!plaintext || typeof plaintext !== 'string') {
       return plaintext;
@@ -45,9 +29,7 @@ class EncryptionService {
       let encrypted = cipher.update(plaintext, 'utf8', 'base64');
       encrypted += cipher.final('base64');
       
-      const authTag = cipher.getAuthTag();
-      
-      // Format: iv:authTag:encryptedData
+      const authTag = cipher.getAuthTag();
       return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted}`;
     } catch (error) {
       console.error('Encryption error:', error);
@@ -55,23 +37,18 @@ class EncryptionService {
     }
   }
 
-  /**
-   * Decrypt an encrypted string
-   */
   decrypt(encryptedData) {
     if (!encryptedData || typeof encryptedData !== 'string') {
       return encryptedData;
-    }
-
-    // Check if data is encrypted (has our format)
+    }
     if (!encryptedData.includes(':')) {
-      return encryptedData; // Return as-is if not encrypted
+      return encryptedData; 
     }
 
     try {
       const parts = encryptedData.split(':');
       if (parts.length !== 3) {
-        return encryptedData; // Not our encrypted format
+        return encryptedData; 
       }
 
       const [ivBase64, authTagBase64, encrypted] = parts;
@@ -87,24 +64,17 @@ class EncryptionService {
       
       return decrypted;
     } catch (error) {
-      console.error('Decryption error:', error);
-      // Return original if decryption fails (might not be encrypted)
+      console.error('Decryption error:', error);
       return encryptedData;
     }
   }
 
-  /**
-   * Check if a value is encrypted
-   */
   isEncrypted(value) {
     if (!value || typeof value !== 'string') return false;
     const parts = value.split(':');
-    return parts.length === 3 && parts[0].length === 24; // Base64 IV length
+    return parts.length === 3 && parts[0].length === 24; 
   }
 
-  /**
-   * Encrypt specific fields in an object
-   */
   encryptFields(obj, fields) {
     if (!obj || typeof obj !== 'object') return obj;
     
@@ -119,9 +89,6 @@ class EncryptionService {
     return encrypted;
   }
 
-  /**
-   * Decrypt specific fields in an object
-   */
   decryptFields(obj, fields) {
     if (!obj || typeof obj !== 'object') return obj;
     
@@ -136,10 +103,6 @@ class EncryptionService {
     return decrypted;
   }
 
-  /**
-   * Hash a value (one-way, for searching)
-   * Use this for fields that need to be searchable but encrypted
-   */
   hash(value) {
     if (!value) return value;
     return crypto
@@ -148,20 +111,12 @@ class EncryptionService {
       .digest('hex');
   }
 
-  /**
-   * Generate a secure random token
-   */
   generateSecureToken(length = 32) {
     return crypto.randomBytes(length).toString('hex');
   }
 
-  /**
-   * Mask sensitive data for display (e.g., phone: ****1234)
-   */
   mask(value, visibleChars = 4, maskChar = '*') {
-    if (!value || typeof value !== 'string') return value;
-    
-    // Decrypt if encrypted
+    if (!value || typeof value !== 'string') return value;
     const decrypted = this.isEncrypted(value) ? this.decrypt(value) : value;
     
     if (decrypted.length <= visibleChars) {
@@ -172,9 +127,6 @@ class EncryptionService {
     return masked + decrypted.slice(-visibleChars);
   }
 
-  /**
-   * Mask email (e.g., j***@example.com)
-   */
   maskEmail(email) {
     if (!email || typeof email !== 'string') return email;
     
@@ -186,16 +138,12 @@ class EncryptionService {
     const maskedLocal = local.charAt(0) + '*'.repeat(Math.max(local.length - 1, 3));
     return `${maskedLocal}@${domain}`;
   }
-}
-
-// Sensitive fields configuration
+}
 const SENSITIVE_FIELDS = {
   patient: ['phone', 'aadhaar', 'pan', 'emergencyContact.phone'],
   clinical: ['diagnosis', 'allergies', 'chronicConditions', 'medications'],
   financial: ['bankAccount', 'upi', 'cardNumber']
-};
-
-// Export singleton and config
+};
 const encryptionService = new EncryptionService();
 
 module.exports = {

@@ -1,7 +1,4 @@
-/**
- * Enterprise Search Bar
- * Smart search with suggestions and filters
- */
+
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -89,7 +86,6 @@ const SearchBar = ({
         </TouchableOpacity>
       )}
 
-      
       {showFilter && (
         <TouchableOpacity onPress={onFilterPress} style={[styles.filterButton, { backgroundColor: colors.primaryLight }]}>
           <Text style={[styles.filterIcon, { color: colors.primary }]}>⚙️</Text>

@@ -95,7 +95,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Notification Types */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notification Types</Text>
           <Card variant="default" style={styles.settingsCard}>
@@ -108,7 +108,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
           </Card>
         </View>
 
-        {/* Sound & Vibration */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Sound & Vibration</Text>
           <Card variant="default" style={styles.settingsCard}>
@@ -121,7 +121,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
           </Card>
         </View>
 
-        {/* Test Notification */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Test Notifications</Text>
           <TouchableOpacity 
@@ -139,7 +139,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Info */}
+        {}
         <View style={styles.infoBox}>
           <Text style={styles.infoIcon}>ℹ️</Text>
           <Text style={styles.infoText}>

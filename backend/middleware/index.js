@@ -1,9 +1,4 @@
-/**
- * Middleware Index
- * Central export for all middleware
- */
 
-// Role-based access control
 const {
   authenticate,
   checkRole,
@@ -12,9 +7,7 @@ const {
   checkOwnership,
   requireAuth,
   ROLE_HIERARCHY
-} = require('./roleMiddleware');
-
-// Error handling
+} = require('./roleMiddleware');
 const {
   AppError,
   ValidationError,
@@ -26,9 +19,7 @@ const {
   errorHandler,
   asyncHandler,
   notFoundHandler
-} = require('./errorHandler');
-
-// Input validation
+} = require('./errorHandler');
 const {
   validate,
   validateBody,
@@ -37,9 +28,7 @@ const {
   schemas,
   rules,
   sanitize
-} = require('./validation');
-
-// Rate limiting
+} = require('./validation');
 const {
   createRateLimiter,
   loginLimiter,
@@ -52,17 +41,14 @@ const {
   slotCheckLimiter
 } = require('./rateLimiter');
 
-module.exports = {
-  // Auth & Roles
+module.exports = {
   authenticate,
   checkRole,
   checkMinRole,
   checkClinicAccess,
   checkOwnership,
   requireAuth,
-  ROLE_HIERARCHY,
-
-  // Errors
+  ROLE_HIERARCHY,
   AppError,
   ValidationError,
   AuthenticationError,
@@ -72,18 +58,14 @@ module.exports = {
   RateLimitError,
   errorHandler,
   asyncHandler,
-  notFoundHandler,
-
-  // Validation
+  notFoundHandler,
   validate,
   validateBody,
   validateQuery,
   validateParams,
   schemas,
   rules,
-  sanitize,
-
-  // Rate Limiting
+  sanitize,
   createRateLimiter,
   loginLimiter,
   otpLimiter,

@@ -1,7 +1,4 @@
-/**
- * Admin Coupons Screen - Coupon Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -73,7 +70,6 @@ const AdminCouponsScreen = ({ navigation }) => {
       }},
     ]);
   };
-
 
   const renderCoupon = ({ item }) => (
     <View style={[styles.couponCard, { backgroundColor: colors.surface }]}>
@@ -147,7 +143,7 @@ const AdminCouponsScreen = ({ navigation }) => {
         }
       />
 
-      {/* Create Coupon Modal */}
+      {}
       <Modal visible={showModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>

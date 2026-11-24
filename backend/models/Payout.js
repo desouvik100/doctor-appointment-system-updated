@@ -1,19 +1,16 @@
 const mongoose = require('mongoose');
 
-const payoutSchema = new mongoose.Schema({
-  // Doctor receiving payout
+const payoutSchema = new mongoose.Schema({
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true
-  },
-  // Payout cycle info
+  },
   payoutCycle: {
     type: String,
     enum: ['weekly', 'biweekly', 'monthly'],
     required: true
-  },
-  // Period covered
+  },
   periodStart: {
     type: Date,
     required: true
@@ -21,8 +18,7 @@ const payoutSchema = new mongoose.Schema({
   periodEnd: {
     type: Date,
     required: true
-  },
-  // Financial summary
+  },
   summary: {
     totalAppointments: {
       type: Number,
@@ -52,19 +48,16 @@ const payoutSchema = new mongoose.Schema({
       type: Number,
       required: true
     }
-  },
-  // Linked ledger entries
+  },
   ledgerEntries: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'FinancialLedger'
-  }],
-  // Payout status
+  }],
   status: {
     type: String,
     enum: ['pending', 'approved', 'processing', 'completed', 'failed', 'cancelled'],
     default: 'pending'
-  },
-  // Payment details
+  },
   paymentMethod: {
     type: String,
     enum: ['bank_transfer', 'upi', 'cheque', 'cash'],
@@ -76,15 +69,13 @@ const payoutSchema = new mongoose.Schema({
     ifscCode: String,
     bankName: String,
     upiId: String
-  },
-  // Transaction reference
+  },
   transactionReference: {
     type: String
   },
   transactionDate: {
     type: Date
-  },
-  // Processing info
+  },
   processedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -98,16 +89,14 @@ const payoutSchema = new mongoose.Schema({
   },
   approvedAt: {
     type: Date
-  },
-  // Failure tracking
+  },
   failureReason: {
     type: String
   },
   retryCount: {
     type: Number,
     default: 0
-  },
-  // Invoice
+  },
   invoiceNumber: {
     type: String,
     unique: true,
@@ -115,20 +104,15 @@ const payoutSchema = new mongoose.Schema({
   },
   invoiceGeneratedAt: {
     type: Date
-  },
-  // Notes
+  },
   notes: {
     type: String
   }
-}, { timestamps: true });
-
-// Indexes
+}, { timestamps: true });
 payoutSchema.index({ doctorId: 1, status: 1 });
 payoutSchema.index({ status: 1, createdAt: -1 });
 payoutSchema.index({ periodStart: 1, periodEnd: 1 });
-payoutSchema.index({ invoiceNumber: 1 });
-
-// Generate invoice number
+payoutSchema.index({ invoiceNumber: 1 });
 payoutSchema.methods.generateInvoiceNumber = function() {
   const date = new Date();
   const year = date.getFullYear();
@@ -137,9 +121,7 @@ payoutSchema.methods.generateInvoiceNumber = function() {
   this.invoiceNumber = `HS-PAY-${year}${month}-${random}`;
   this.invoiceGeneratedAt = date;
   return this.invoiceNumber;
-};
-
-// Approve payout
+};
 payoutSchema.methods.approve = function(userId) {
   if (this.status !== 'pending') {
     throw new Error('Only pending payouts can be approved');
@@ -148,9 +130,7 @@ payoutSchema.methods.approve = function(userId) {
   this.approvedBy = userId;
   this.approvedAt = new Date();
   return this.save();
-};
-
-// Mark as processing
+};
 payoutSchema.methods.startProcessing = function(userId) {
   if (this.status !== 'approved') {
     throw new Error('Only approved payouts can be processed');
@@ -158,9 +138,7 @@ payoutSchema.methods.startProcessing = function(userId) {
   this.status = 'processing';
   this.processedBy = userId;
   return this.save();
-};
-
-// Complete payout
+};
 payoutSchema.methods.complete = function(transactionRef) {
   if (this.status !== 'processing') {
     throw new Error('Only processing payouts can be completed');
@@ -170,9 +148,7 @@ payoutSchema.methods.complete = function(transactionRef) {
   this.transactionDate = new Date();
   this.processedAt = new Date();
   return this.save();
-};
-
-// Mark as failed
+};
 payoutSchema.methods.markFailed = function(reason) {
   this.status = 'failed';
   this.failureReason = reason;

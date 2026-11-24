@@ -1,9 +1,5 @@
 import apiClient from './apiClient';
 
-/**
- * Review Service - Handle Patient Reviews, Replies, and Votes
- */
-
 export const createReview = async (reviewData) => {
   const response = await apiClient.post('/reviews', reviewData);
   return response.data;

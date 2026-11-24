@@ -1,6 +1,4 @@
-/**
- * Reset Password Screen - Set new password after OTP verification
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -85,7 +83,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>

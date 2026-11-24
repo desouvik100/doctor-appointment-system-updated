@@ -1,6 +1,4 @@
-/**
- * Home Screen Components Index
- */
+
 
 export { default as UpcomingAppointments } from './UpcomingAppointments';
 export { default as WalletSummary } from './WalletSummary';

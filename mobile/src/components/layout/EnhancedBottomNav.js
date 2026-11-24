@@ -1,7 +1,4 @@
-/**
- * Enterprise Bottom Navigation
- * Smooth animations, haptic feedback, and accessibility
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import {
@@ -97,7 +94,6 @@ const EnhancedBottomNav = ({ state, descriptors, navigation }) => {
             }
           };
 
-          // Icon mapping
           const iconMap = {
             Home: '🏠',
             Doctors: '👨‍⚕️',

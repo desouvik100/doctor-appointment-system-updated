@@ -1,4 +1,4 @@
-// scripts/seedTenants.js - Seed database with sample tenant data
+
 require('dotenv').config();
 const { connectDB, closePool } = require('../config/database');
 const TenantManager = require('../utils/tenantManager');
@@ -116,24 +116,16 @@ const sampleTenants = [
 
 const seedTenants = async () => {
   try {
-    console.log('🌱 Starting tenant seeding...');
-    
-    // Connect to database
-    await connectDB();
-    
-    // Check if tenants already exist
+    console.log('🌱 Starting tenant seeding...');
+    await connectDB();
     const existingTenants = await TenantManager.getAllTenants();
     
     if (existingTenants.length > 0) {
-      console.log(`ℹ️  Found ${existingTenants.length} existing tenants`);
-      
-      // Ask if user wants to continue
+      console.log(`ℹ️  Found ${existingTenants.length} existing tenants`);
       const shouldContinue = process.argv.includes('--force');
       if (!shouldContinue) {
         console.log('Use --force flag to seed anyway');
         return;
       }
-    }
-    
-    // Seed each tenant
-    for (const tenantData of sampleTenants) {\n      try {\n        // Check if tenant already exists\n        const existing = await TenantManager.getTenantBySubdomain(tenantData.subdomain);\n        \n        if (existing) {\n          console.log(`⏭️  Tenant '${tenantData.subdomain}' already exists, skipping...`);\n          continue;\n        }\n        \n        // Provision new tenant\n        const tenant = await TenantManager.provisionTenant(tenantData);\n        console.log(`✅ Seeded tenant: ${tenant.name} (${tenant.subdomain})`);\n        \n      } catch (error) {\n        console.error(`❌ Failed to seed tenant '${tenantData.subdomain}':`, error.message);\n      }\n    }\n    \n    console.log('🎉 Tenant seeding completed!');\n    \n    // Display summary\n    const allTenants = await TenantManager.getAllTenants();\n    console.log('\\n📊 Tenant Summary:');\n    allTenants.forEach(tenant => {\n      console.log(`  - ${tenant.name} (${tenant.subdomain})`);\n    });\n    \n  } catch (error) {\n    console.error('❌ Seeding failed:', error.message);\n    process.exit(1);\n  } finally {\n    await closePool();\n    process.exit(0);\n  }\n};\n\n// Run seeding if this file is executed directly\nif (require.main === module) {\n  seedTenants();\n}\n\nmodule.exports = { seedTenants, sampleTenants };
+    }
+    for (const tenantData of sampleTenants) {\n      try {\n        

@@ -1,7 +1,4 @@
-/**
- * Clinical Protocols / Care Pathways Service
- * Evidence-based clinical decision support
- */
+
 
 class ClinicalProtocolService {
   
@@ -304,9 +301,7 @@ class ClinicalProtocolService {
         references: ['GINA Guidelines 2023']
       }
     };
-  }
-  
-  // Get all protocols
+  }
   getAllProtocols() {
     return Object.entries(this.protocols).map(([id, protocol]) => ({
       id,
@@ -314,23 +309,17 @@ class ClinicalProtocolService {
       category: protocol.category,
       triggers: protocol.triggers
     }));
-  }
-  
-  // Get protocol by ID
+  }
   getProtocol(protocolId) {
     const protocol = this.protocols[protocolId];
     if (!protocol) return null;
     return { id: protocolId, ...protocol };
-  }
-  
-  // Get protocols by category
+  }
   getProtocolsByCategory(category) {
     return Object.entries(this.protocols)
       .filter(([_, p]) => p.category === category)
       .map(([id, protocol]) => ({ id, ...protocol }));
-  }
-  
-  // Check if any protocol should be triggered based on patient data
+  }
   checkTriggers(patientData) {
     const triggered = [];
     const symptoms = (patientData.symptoms || []).map(s => s.toLowerCase());
@@ -349,9 +338,7 @@ class ClinicalProtocolService {
           priority: this.getPriority(protocol.category)
         });
       }
-    });
-    
-    // Sort by priority
+    });
     return triggered.sort((a, b) => a.priority - b.priority);
   }
   
@@ -364,9 +351,7 @@ class ClinicalProtocolService {
       'Endocrinology': 3
     };
     return priorities[category] || 5;
-  }
-  
-  // Get categories
+  }
   getCategories() {
     const categories = new Set();
     Object.values(this.protocols).forEach(p => categories.add(p.category));

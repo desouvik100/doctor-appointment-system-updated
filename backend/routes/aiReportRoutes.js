@@ -1,5 +1,4 @@
-// backend/routes/aiReportRoutes.js
-// API routes for AI-powered medical report analysis
+
 
 const express = require('express');
 const router = express.Router();
@@ -13,13 +12,11 @@ const {
   analyzeDiabetesReport,
   getSupportedTests,
   getTestsByCategory
-} = require('../services/aiReportAnalyzer');
-
-// Configure multer for image uploads
+} = require('../services/aiReportAnalyzer');
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf'];
     if (allowedTypes.includes(file.mimetype)) {
@@ -30,10 +27,6 @@ const upload = multer({
   }
 });
 
-/**
- * POST /api/ai-report/analyze-image
- * Analyze uploaded medical report image
- */
 router.post('/analyze-image', upload.single('report'), async (req, res) => {
   try {
     if (!req.file) {
@@ -61,11 +54,6 @@ router.post('/analyze-image', upload.single('report'), async (req, res) => {
   }
 });
 
-
-/**
- * POST /api/ai-report/analyze-manual
- * Analyze manually entered test values
- */
 router.post('/analyze-manual', async (req, res) => {
   try {
     const { values, patientInfo } = req.body;
@@ -92,10 +80,6 @@ router.post('/analyze-manual', async (req, res) => {
   }
 });
 
-/**
- * POST /api/ai-report/analyze-diabetes
- * Specialized diabetes report analysis
- */
 router.post('/analyze-diabetes', async (req, res) => {
   try {
     const { values } = req.body;
@@ -123,10 +107,6 @@ router.post('/analyze-diabetes', async (req, res) => {
   }
 });
 
-/**
- * GET /api/ai-report/supported-tests
- * Get list of all supported medical tests
- */
 router.get('/supported-tests', (req, res) => {
   try {
     const tests = getSupportedTests();
@@ -143,10 +123,6 @@ router.get('/supported-tests', (req, res) => {
   }
 });
 
-/**
- * GET /api/ai-report/tests-by-category/:category
- * Get tests filtered by category
- */
 router.get('/tests-by-category/:category', (req, res) => {
   try {
     const { category } = req.params;
@@ -174,10 +150,6 @@ router.get('/tests-by-category/:category', (req, res) => {
   }
 });
 
-/**
- * GET /api/ai-report/categories
- * Get all test categories
- */
 router.get('/categories', (req, res) => {
   res.json({
     success: true,

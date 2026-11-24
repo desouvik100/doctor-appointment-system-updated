@@ -1,11 +1,6 @@
-/**
- * Role-Based Access Control Middleware
- * Centralized middleware for role checking and clinic isolation
- */
 
-const jwt = require('jsonwebtoken');
 
-// Role hierarchy for permission checking
+const jwt = require('jsonwebtoken');
 const ROLE_HIERARCHY = {
   superadmin: 100,
   admin: 80,
@@ -15,9 +10,6 @@ const ROLE_HIERARCHY = {
   patient: 10
 };
 
-/**
- * Verify JWT and attach user to request
- */
 const authenticate = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '') ||
@@ -55,10 +47,6 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-/**
- * Check if user has required role(s)
- * @param {string|string[]} allowedRoles - Single role or array of allowed roles
- */
 const checkRole = (allowedRoles) => {
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   
@@ -83,10 +71,6 @@ const checkRole = (allowedRoles) => {
   };
 };
 
-/**
- * Check minimum role level (hierarchy-based)
- * @param {string} minRole - Minimum required role
- */
 const checkMinRole = (minRole) => {
   return (req, res, next) => {
     if (!req.user || !req.userRole) {
@@ -112,28 +96,17 @@ const checkMinRole = (minRole) => {
   };
 };
 
-/**
- * Clinic Isolation Middleware
- * Ensures users can only access data from their own clinic
- */
 const checkClinicAccess = (clinicIdField = 'clinicId') => {
-  return (req, res, next) => {
-    // Superadmin and admin can access all clinics
+  return (req, res, next) => {
     if (['superadmin', 'admin'].includes(req.userRole)) {
       return next();
-    }
-
-    // Get clinic ID from request (params, body, or query)
+    }
     const requestedClinicId = req.params[clinicIdField] || 
                               req.body[clinicIdField] || 
-                              req.query[clinicIdField];
-
-    // If no clinic ID in request, allow (will be filtered by user's clinic)
+                              req.query[clinicIdField];
     if (!requestedClinicId) {
       return next();
-    }
-
-    // Check if user belongs to the requested clinic
+    }
     if (req.clinicId && req.clinicId.toString() !== requestedClinicId.toString()) {
       return res.status(403).json({
         success: false,
@@ -146,13 +119,8 @@ const checkClinicAccess = (clinicIdField = 'clinicId') => {
   };
 };
 
-/**
- * Resource ownership check
- * Ensures users can only modify their own resources
- */
 const checkOwnership = (ownerField = 'userId') => {
-  return (req, res, next) => {
-    // Admin roles can modify any resource
+  return (req, res, next) => {
     if (['superadmin', 'admin'].includes(req.userRole)) {
       return next();
     }
@@ -171,9 +139,6 @@ const checkOwnership = (ownerField = 'userId') => {
   };
 };
 
-/**
- * Combined middleware: authenticate + role check
- */
 const requireAuth = (...roles) => {
   if (roles.length === 0) {
     return [authenticate];

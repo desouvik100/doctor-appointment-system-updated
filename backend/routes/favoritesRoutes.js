@@ -2,9 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
-const { verifyToken } = require('../middleware/auth');
-
-// GET /api/favorites — get current user's favorites (authenticated)
+const { verifyToken } = require('../middleware/auth');
 router.get('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -23,9 +21,7 @@ router.get('/', verifyToken, async (req, res) => {
     console.error('Error fetching favorites:', error);
     res.status(500).json({ message: 'Error fetching favorites', error: error.message });
   }
-});
-
-// POST /api/favorites — add to favorites (authenticated)
+});
 router.post('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -50,9 +46,7 @@ router.post('/', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error adding favorite', error: error.message });
   }
-});
-
-// DELETE /api/favorites/:doctorId — remove from favorites (authenticated)
+});
 router.delete('/:doctorId', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -66,9 +60,7 @@ router.delete('/:doctorId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error removing favorite', error: error.message });
   }
-});
-
-// Get user's favorite doctors (legacy endpoint)
+});
 router.get('/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId)
@@ -86,9 +78,7 @@ router.get('/:userId', async (req, res) => {
     console.error('Error fetching favorites:', error);
     res.status(500).json({ message: 'Error fetching favorites', error: error.message });
   }
-});
-
-// Add doctor to favorites (POST /:userId with body)
+});
 router.post('/:userId', async (req, res) => {
   try {
     const { doctorId } = req.body;
@@ -97,9 +87,7 @@ router.post('/:userId', async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Check if already in favorites
+    }
     if (user.favoriteDoctors?.includes(doctorId)) {
       return res.status(400).json({ message: 'Doctor already in favorites' });
     }
@@ -113,9 +101,7 @@ router.post('/:userId', async (req, res) => {
     console.error('Error adding favorite:', error);
     res.status(500).json({ message: 'Error adding favorite', error: error.message });
   }
-});
-
-// Remove doctor from favorites (DELETE /:userId/:doctorId)
+});
 router.delete('/:userId/:doctorId', async (req, res) => {
   try {
     const { userId, doctorId } = req.params;
@@ -135,9 +121,7 @@ router.delete('/:userId/:doctorId', async (req, res) => {
     console.error('Error removing favorite:', error);
     res.status(500).json({ message: 'Error removing favorite', error: error.message });
   }
-});
-
-// Add doctor to favorites
+});
 router.post('/:userId/add', async (req, res) => {
   try {
     const { doctorId } = req.body;
@@ -146,9 +130,7 @@ router.post('/:userId/add', async (req, res) => {
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Check if already in favorites
+    }
     if (user.favoriteDoctors?.includes(doctorId)) {
       return res.status(400).json({ message: 'Doctor already in favorites' });
     }
@@ -162,9 +144,7 @@ router.post('/:userId/add', async (req, res) => {
     console.error('Error adding favorite:', error);
     res.status(500).json({ message: 'Error adding favorite', error: error.message });
   }
-});
-
-// Remove doctor from favorites
+});
 router.post('/:userId/remove', async (req, res) => {
   try {
     const { doctorId } = req.body;
@@ -185,9 +165,7 @@ router.post('/:userId/remove', async (req, res) => {
     console.error('Error removing favorite:', error);
     res.status(500).json({ message: 'Error removing favorite', error: error.message });
   }
-});
-
-// Check if doctor is favorite
+});
 router.get('/:userId/check/:doctorId', async (req, res) => {
   try {
     const { userId, doctorId } = req.params;
@@ -202,9 +180,7 @@ router.get('/:userId/check/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error checking favorite', error: error.message });
   }
-});
-
-// Toggle favorite
+});
 router.post('/:userId/toggle', async (req, res) => {
   try {
     const { doctorId } = req.body;

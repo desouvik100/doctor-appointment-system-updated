@@ -1,35 +1,24 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-require('dotenv').config();
-
-// Import models
+require('dotenv').config();
 const User = require('./models/User');
 const Clinic = require('./models/Clinic');
 
 async function createSampleReceptionists() {
-  try {
-    // Connect to MongoDB
+  try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment');
-    console.log('✅ Connected to MongoDB');
-
-    // Get existing clinics
+    console.log('✅ Connected to MongoDB');
     const clinics = await Clinic.find();
     console.log(`Found ${clinics.length} clinics`);
 
     if (clinics.length === 0) {
       console.log('⚠️ No clinics found. Please run populate-db.js first');
       return;
-    }
-
-    // Clear existing receptionists
+    }
     await User.deleteMany({ role: 'receptionist' });
-    console.log('🗑️ Cleared existing receptionists');
-
-    // Hash password
+    console.log('🗑️ Cleared existing receptionists');
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('reception123', salt);
-
-    // Create sample receptionists
+    const hashedPassword = await bcrypt.hash('reception123', salt);
     const receptionists = await User.create([
       {
         name: 'Alice Johnson',

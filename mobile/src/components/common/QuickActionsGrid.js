@@ -1,7 +1,4 @@
-/**
- * QuickActionsGrid - Premium Reusable Service Grid Component
- * Inspired by Apple Health, Stripe, and Google Health designs.
- */
+
 
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
@@ -21,29 +18,21 @@ import { useTheme } from '../../context/ThemeContext';
 import Skeleton from './Skeleton';
 
 const { width } = Dimensions.get('window');
-const RECENT_ACTION_KEY = 'healthsync_recent_quick_action';
-
-// Helper to check if a string is a standard vector icon name
-const isVectorIcon = (icon) => typeof icon === 'string' && /^[a-z0-9-]+$/i.test(icon);
-
-// Helper to get soft background transparency for icons
+const RECENT_ACTION_KEY = 'healthsync_recent_quick_action';
+const isVectorIcon = (icon) => typeof icon === 'string' && /^[a-z0-9-]+$/i.test(icon);
 const getSoftBgColor = (colorHex) => {
   if (colorHex && colorHex.startsWith('#')) {
-    if (colorHex.length === 7) return `${colorHex}15`; // ~8% opacity
+    if (colorHex.length === 7) return `${colorHex}15`; 
     return colorHex;
   }
   return 'rgba(0, 212, 170, 0.1)';
-};
-
-// Individual Action Card Component
+};
 const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => {
   const { colors, isDarkMode } = useTheme();
   const scale = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
-
-  // 8pt Spacing / Gaps
-  const GAP = spacing.md; // 12pt gap
-  const horizontalPadding = spacing.xl * 2; // margins on left & right
+  const opacity = useRef(new Animated.Value(1)).current;
+  const GAP = spacing.md; 
+  const horizontalPadding = spacing.xl * 2; 
   const cardWidth = (width - horizontalPadding - GAP * (cols - 1)) / cols;
 
   const handlePressIn = useCallback(() => {
@@ -69,8 +58,7 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
   const softBg = getSoftBgColor(action.color || colors.primary);
   const iconColor = action.color || colors.primary;
 
-  if (variant === 'hub') {
-    // Premium 2-column rectangular design with subtitle description
+  if (variant === 'hub') {
     return (
       <Animated.View style={[
         styles.cardWrapper,
@@ -90,7 +78,7 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
           onPressOut={handlePressOut}
           android_ripple={{ color: colors.ripple }}
         >
-          {/* Action Badge */}
+          {}
           {action.badge && (
             <View style={[styles.badgeContainer, { backgroundColor: action.id === 'emergency' ? 'rgba(239, 68, 68, 0.15)' : `${colors.primary}18` }]}>
               <Text style={[styles.badgeText, { color: action.id === 'emergency' ? '#EF4444' : colors.primary }]}>
@@ -99,7 +87,7 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
             </View>
           )}
 
-          {/* Recently Used Indicator */}
+          {}
           {isRecent && !action.badge && (
             <View style={styles.recentContainer}>
               <Icon name="time-outline" size={10} color={colors.textMuted} />
@@ -133,9 +121,7 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
         </Pressable>
       </Animated.View>
     );
-  }
-
-  // Classic redesigned grid tile (square style, e.g. 3 or 4 columns)
+  }
   return (
     <Animated.View style={[
       styles.cardWrapper,
@@ -156,7 +142,7 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
         onPressOut={handlePressOut}
         android_ripple={{ color: colors.ripple }}
       >
-        {/* Floating Badge on Grid Card */}
+        {}
         {action.badge && (
           <View style={[styles.badgeContainer, { backgroundColor: action.id === 'emergency' ? 'rgba(239, 68, 68, 0.15)' : `${colors.primary}18` }]}>
             <Text style={[styles.badgeText, { color: action.id === 'emergency' ? '#EF4444' : colors.primary }]}>
@@ -165,7 +151,7 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
           </View>
         )}
 
-        {/* Recently Used Dot */}
+        {}
         {isRecent && !action.badge && (
           <View style={[styles.recentDot, { backgroundColor: colors.primary }]} />
         )}
@@ -202,9 +188,7 @@ const QuickActionsGrid = ({
 }) => {
   const navigation = useNavigation();
   const { colors } = useTheme();
-  const [recentId, setRecentId] = useState(null);
-
-  // Load recently used action ID from AsyncStorage
+  const [recentId, setRecentId] = useState(null);
   useEffect(() => {
     const loadRecentAction = async () => {
       try {
@@ -221,8 +205,7 @@ const QuickActionsGrid = ({
   }, []);
 
   const handleActionPress = useCallback(async (action) => {
-    try {
-      // Save ID to state and AsyncStorage for persistent recently used UX
+    try {
       setRecentId(action.id);
       await AsyncStorage.setItem(RECENT_ACTION_KEY, action.id);
     } catch (error) {
@@ -234,9 +217,7 @@ const QuickActionsGrid = ({
     } else if (action.screen) {
       navigation.navigate(action.screen);
     }
-  }, [onActionPress, navigation]);
-
-  // Loading skeleton state
+  }, [onActionPress, navigation]);
   if (loading) {
     const listCount = actions.length || (variant === 'hub' ? 8 : 6);
     const GAP = spacing.md;
@@ -346,8 +327,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     overflow: 'hidden',
-    borderRadius: borderRadius.xl,
-    // Soft subtle shadow for modern depth
+    borderRadius: borderRadius.xl,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,

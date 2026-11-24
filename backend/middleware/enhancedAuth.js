@@ -1,21 +1,9 @@
-/**
- * Enhanced Authentication Middleware
- * ==================================
- * Uses the new JWT Token Service with:
- * - Access + Refresh token validation
- * - Token blacklist checking
- * - Force logout support
- * - Session validation
- */
+
 
 const jwtTokenService = require('../services/jwtTokenService');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 
-/**
- * Verify access token middleware
- * Checks token validity, blacklist, and user status
- */
 const verifyAccessToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -28,13 +16,10 @@ const verifyAccessToken = async (req, res, next) => {
       });
     }
 
-    const token = authHeader.split(' ')[1];
-
-    // Verify token using JWT service
+    const token = authHeader.split(' ')[1];
     const verification = jwtTokenService.verifyAccessToken(token);
 
-    if (!verification.valid) {
-      // Check if token expired (client should refresh)
+    if (!verification.valid) {
       if (verification.expired) {
         return res.status(401).json({
           success: false,
@@ -51,9 +36,7 @@ const verifyAccessToken = async (req, res, next) => {
       });
     }
 
-    const decoded = verification.decoded;
-
-    // Check if user was force logged out
+    const decoded = verification.decoded;
     const forceLogoutCheck = await checkForceLogout(decoded);
     if (forceLogoutCheck.forceLogout) {
       return res.status(401).json({
@@ -62,9 +45,7 @@ const verifyAccessToken = async (req, res, next) => {
         message: 'Your session has been terminated. Please login again.',
         reason: forceLogoutCheck.reason
       });
-    }
-
-    // Check if user is suspended
+    }
     const suspensionCheck = await checkUserSuspension(decoded);
     if (suspensionCheck.suspended) {
       return res.status(403).json({
@@ -73,9 +54,7 @@ const verifyAccessToken = async (req, res, next) => {
         message: 'Your account has been suspended',
         reason: suspensionCheck.reason
       });
-    }
-
-    // Attach user info to request
+    }
     req.user = {
       id: decoded.userId || decoded.doctorId,
       userId: decoded.userId,
@@ -98,12 +77,9 @@ const verifyAccessToken = async (req, res, next) => {
   }
 };
 
-/**
- * Check if user was force logged out
- */
 async function checkForceLogout(decoded) {
   try {
-    const tokenIssuedAt = decoded.iat * 1000; // Convert to milliseconds
+    const tokenIssuedAt = decoded.iat * 1000; 
     let forceLogoutAt = null;
 
     if (decoded.doctorId) {
@@ -125,9 +101,6 @@ async function checkForceLogout(decoded) {
   }
 }
 
-/**
- * Check if user is suspended
- */
 async function checkUserSuspension(decoded) {
   try {
     let userRecord = null;
@@ -156,14 +129,9 @@ async function checkUserSuspension(decoded) {
   }
 }
 
-/**
- * Verify token with role check
- */
 const verifyTokenWithRole = (allowedRoles = []) => {
-  return async (req, res, next) => {
-    // First verify the token
-    await verifyAccessToken(req, res, async () => {
-      // Then check role
+  return async (req, res, next) => {
+    await verifyAccessToken(req, res, async () => {
       if (allowedRoles.length > 0 && !allowedRoles.includes(req.user.role)) {
         return res.status(403).json({
           success: false,
@@ -178,9 +146,6 @@ const verifyTokenWithRole = (allowedRoles = []) => {
   };
 };
 
-/**
- * Optional authentication - doesn't fail if no token
- */
 const optionalAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -209,9 +174,6 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-/**
- * Refresh token endpoint handler
- */
 const handleTokenRefresh = async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -250,9 +212,6 @@ const handleTokenRefresh = async (req, res) => {
   }
 };
 
-/**
- * Logout handler
- */
 const handleLogout = async (req, res) => {
   try {
     const accessToken = req.token || req.headers.authorization?.split(' ')[1];
@@ -273,9 +232,6 @@ const handleLogout = async (req, res) => {
   }
 };
 
-/**
- * Logout from all devices handler
- */
 const handleLogoutAll = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -296,9 +252,6 @@ const handleLogoutAll = async (req, res) => {
   }
 };
 
-/**
- * Get active sessions handler
- */
 const handleGetSessions = async (req, res) => {
   try {
     const userId = req.user.id;

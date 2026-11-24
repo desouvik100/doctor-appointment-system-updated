@@ -1,7 +1,4 @@
-/**
- * Admin Appointments Screen - All Appointments Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -54,7 +51,6 @@ const AdminAppointmentsScreen = ({ navigation }) => {
     if (filter === 'all') return matchesSearch;
     return matchesSearch && apt.status === filter;
   });
-
 
   const getStatusColor = (status) => {
     switch (status) {

@@ -33,9 +33,7 @@ const surveySchema = new mongoose.Schema({
     passives: { type: Number, default: 0 },
     detractors: { type: Number, default: 0 }
   }
-}, { timestamps: true });
-
-// Calculate NPS
+}, { timestamps: true });
 surveySchema.methods.calculateNPS = function() {
   const responses = this.responses.filter(r => r.npsScore !== undefined);
   if (responses.length === 0) return 0;

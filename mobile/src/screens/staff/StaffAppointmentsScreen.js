@@ -1,7 +1,4 @@
-/**
- * Staff Appointments Screen - Clinic Appointment Management
- * 100% Parity with Web Staff Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {

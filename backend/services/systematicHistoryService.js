@@ -1,26 +1,17 @@
-/**
- * Systematic History Service
- * Handles CRUD operations and business logic for systematic history
- */
+
 
 const SystematicHistory = require('../models/SystematicHistory');
 const { BODY_SYSTEMS } = require('../config/systematicHistoryConfig');
 
 class SystematicHistoryService {
-  
-  /**
-   * Create a new systematic history record
-   */
+
   async create(userId, data) {
-    try {
-      // Initialize body systems with default structure if not provided
+    try {
       const systemKeys = Object.keys(BODY_SYSTEMS);
       const historyData = {
         userId,
         ...data
-      };
-      
-      // Ensure each body system has proper structure
+      };
       systemKeys.forEach(system => {
         if (!historyData[system]) {
           historyData[system] = {
@@ -41,10 +32,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Get systematic history by appointment ID
-   */
+
   async getByAppointment(appointmentId) {
     try {
       const history = await SystematicHistory.findOne({ appointmentId })
@@ -56,10 +44,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Get the latest systematic history for a user
-   */
+
   async getLatestByUser(userId) {
     try {
       const history = await SystematicHistory.findOne({ userId })
@@ -71,10 +56,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Get all history versions for a user
-   */
+
   async getUserHistoryVersions(userId, limit = 10) {
     try {
       const histories = await SystematicHistory.find({ userId })
@@ -88,10 +70,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Get history by ID
-   */
+
   async getById(historyId) {
     try {
       const history = await SystematicHistory.findById(historyId)
@@ -105,9 +84,6 @@ class SystematicHistoryService {
     }
   }
 
-  /**
-   * Update systematic history (creates new version, preserves original)
-   */
   async update(historyId, updates, createNewVersion = false) {
     try {
       const existing = await SystematicHistory.findById(historyId);
@@ -115,8 +91,7 @@ class SystematicHistoryService {
         throw new Error('Systematic history not found');
       }
       
-      if (createNewVersion) {
-        // Create a new version while preserving the original
+      if (createNewVersion) {
         const newHistoryData = {
           ...existing.toObject(),
           _id: undefined,
@@ -131,8 +106,7 @@ class SystematicHistoryService {
         
         console.log(`✅ New version ${newHistory.version} created for history`);
         return newHistory;
-      } else {
-        // Update in place
+      } else {
         Object.assign(existing, updates);
         await existing.save();
         
@@ -144,10 +118,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Mark history as completed
-   */
+
   async markCompleted(historyId) {
     try {
       const history = await SystematicHistory.findByIdAndUpdate(
@@ -164,10 +135,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Mark history as reviewed by doctor
-   */
+
   async markReviewed(historyId, doctorId) {
     try {
       const history = await SystematicHistory.findByIdAndUpdate(
@@ -185,10 +153,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Link history to an appointment
-   */
+
   async linkToAppointment(historyId, appointmentId) {
     try {
       const history = await SystematicHistory.findByIdAndUpdate(
@@ -202,10 +167,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Save AI recommendations to history
-   */
+
   async saveRecommendations(historyId, recommendations) {
     try {
       const history = await SystematicHistory.findByIdAndUpdate(
@@ -219,10 +181,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Add attachment to history
-   */
+
   async addAttachment(historyId, attachment) {
     try {
       const history = await SystematicHistory.findByIdAndUpdate(
@@ -236,10 +195,7 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Delete history (soft delete by marking status)
-   */
+
   async delete(historyId) {
     try {
       await SystematicHistory.findByIdAndDelete(historyId);
@@ -250,17 +206,12 @@ class SystematicHistoryService {
       throw error;
     }
   }
-  
-  /**
-   * Get histories for clinic queue (with completion status)
-   */
+
   async getForClinicQueue(appointmentIds) {
     try {
       const histories = await SystematicHistory.find({
         appointmentId: { $in: appointmentIds }
-      }).select('appointmentId status completedAt chiefComplaint');
-      
-      // Create a map for quick lookup
+      }).select('appointmentId status completedAt chiefComplaint');
       const historyMap = {};
       histories.forEach(h => {
         historyMap[h.appointmentId.toString()] = {

@@ -1,14 +1,10 @@
-/**
- * Patient Feedback & Satisfaction Routes
- */
+
 
 const express = require('express');
 const router = express.Router();
 const PatientFeedback = require('../models/PatientFeedback');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-const mongoose = require('mongoose');
-
-// Submit feedback
+const mongoose = require('mongoose');
 router.post('/submit', verifyToken, async (req, res) => {
   try {
     const feedback = new PatientFeedback(req.body);
@@ -17,9 +13,7 @@ router.post('/submit', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all feedback for clinic
+});
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { feedbackType, isComplaint, npsCategory, doctorId, page = 1, limit = 20 } = req.query;
@@ -41,9 +35,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get feedback analytics
+});
 router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -54,14 +46,11 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
       if (endDate) match.createdAt.$lte = new Date(endDate);
     }
 
-    const [npsStats, ratingStats, complaintStats, trendData] = await Promise.all([
-      // NPS Distribution
+    const [npsStats, ratingStats, complaintStats, trendData] = await Promise.all([
       PatientFeedback.aggregate([
         { $match: { ...match, npsScore: { $exists: true } } },
         { $group: { _id: '$npsCategory', count: { $sum: 1 } } }
-      ]),
-      
-      // Average Ratings
+      ]),
       PatientFeedback.aggregate([
         { $match: match },
         { $group: {
@@ -74,15 +63,11 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
           avgFacilities: { $avg: '$ratings.facilities' },
           totalFeedback: { $sum: 1 }
         }}
-      ]),
-      
-      // Complaint Stats
+      ]),
       PatientFeedback.aggregate([
         { $match: { ...match, isComplaint: true } },
         { $group: { _id: '$complaintStatus', count: { $sum: 1 } } }
-      ]),
-      
-      // Monthly Trend
+      ]),
       PatientFeedback.aggregate([
         { $match: match },
         { $group: {
@@ -94,9 +79,7 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
         { $sort: { _id: 1 } },
         { $limit: 12 }
       ])
-    ]);
-
-    // Calculate NPS Score
+    ]);
     const promoters = npsStats.find(n => n._id === 'promoter')?.count || 0;
     const detractors = npsStats.find(n => n._id === 'detractor')?.count || 0;
     const totalNps = npsStats.reduce((sum, n) => sum + n.count, 0);
@@ -114,9 +97,7 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get doctor-wise feedback
+});
 router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
@@ -145,9 +126,7 @@ router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Respond to feedback
+});
 router.post('/:id/respond', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { responseText } = req.body;
@@ -166,9 +145,7 @@ router.post('/:id/respond', verifyTokenWithRole(['admin', 'clinic', 'receptionis
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Resolve complaint
+});
 router.post('/:id/resolve', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { resolution } = req.body;
@@ -187,17 +164,11 @@ router.post('/:id/resolve', verifyTokenWithRole(['admin', 'clinic', 'receptionis
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Send feedback request (post-visit)
+});
 router.post('/send-request', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const { patientId, patientPhone, patientEmail, appointmentId, doctorId, clinicId } = req.body;
-    
-    // In production, send SMS/Email with feedback link
-    const feedbackLink = `https://healthsyncpro.in/feedback?apt=${appointmentId}`;
-    
-    // Mock sending
+    const { patientId, patientPhone, patientEmail, appointmentId, doctorId, clinicId } = req.body;
+    const feedbackLink = `https://healthsyncpro.in/feedback?apt=${appointmentId}`;
     const sent = {
       sms: patientPhone ? true : false,
       email: patientEmail ? true : false,

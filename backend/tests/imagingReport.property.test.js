@@ -1,28 +1,16 @@
-/**
- * Property-Based Tests for Imaging Reports
- * Feature: advanced-imaging
- * Properties 27, 28, 29
- */
 
-const fc = require('fast-check');
 
-// Report status constants
+const fc = require('fast-check');
 const REPORT_STATUS = {
   DRAFT: 'draft',
   PRELIMINARY: 'preliminary',
   FINAL: 'final',
   AMENDED: 'amended'
-};
-
-// Required sections
+};
 const REQUIRED_SECTIONS = ['clinicalHistory', 'technique', 'findings', 'impression'];
 const OPTIONAL_SECTIONS = ['comparison', 'recommendations'];
-const ALL_SECTIONS = [...REQUIRED_SECTIONS, ...OPTIONAL_SECTIONS];
-
-// Counter for unique IDs
-let reportIdCounter = 0;
-
-// Mock report service
+const ALL_SECTIONS = [...REQUIRED_SECTIONS, ...OPTIONAL_SECTIONS];
+let reportIdCounter = 0;
 class ReportService {
   constructor() {
     this.reports = new Map();
@@ -71,9 +59,7 @@ class ReportService {
 
   updateStatus(reportId, newStatus) {
     const report = this.reports.get(reportId);
-    if (!report) throw new Error('Report not found');
-    
-    // Validate before finalizing
+    if (!report) throw new Error('Report not found');
     if (newStatus === REPORT_STATUS.FINAL || newStatus === REPORT_STATUS.PRELIMINARY) {
       const validation = this.validateReport(report);
       if (!validation.isValid) {
@@ -124,9 +110,7 @@ class ReportService {
 
   exportToPDF(reportId) {
     const report = this.reports.get(reportId);
-    if (!report) throw new Error('Report not found');
-    
-    // Simulate PDF generation
+    if (!report) throw new Error('Report not found');
     return {
       reportId,
       pdfUrl: `https://storage.example.com/reports/${reportId}.pdf`,
@@ -137,9 +121,7 @@ class ReportService {
   }
 }
 
-describe('Imaging Reports - Property Tests', () => {
-
-  // Property 27: Report Structure Completeness
+describe('Imaging Reports - Property Tests', () => {
   describe('Property 27: Report Structure Completeness', () => {
     
     test('report has all required sections', () => {
@@ -217,8 +199,8 @@ describe('Imaging Reports - Property Tests', () => {
           technique: 'Technique text',
           findings: 'Findings text',
           impression: 'Impression text',
-          comparison: '', // Optional - empty
-          recommendations: '' // Optional - empty
+          comparison: '', 
+          recommendations: '' 
         }
       });
       
@@ -236,7 +218,7 @@ describe('Imaging Reports - Property Tests', () => {
         sections: {
           clinicalHistory: 'History',
           technique: 'Technique',
-          findings: '', // Missing
+          findings: '', 
           impression: 'Impression'
         }
       });
@@ -244,9 +226,7 @@ describe('Imaging Reports - Property Tests', () => {
       expect(() => service.updateStatus(report.reportId, REPORT_STATUS.FINAL))
         .toThrow('Cannot finalize');
     });
-  });
-
-  // Property 28: Report-Study Association
+  });
   describe('Property 28: Report-Study Association', () => {
     
     test('report is linked to study on creation', () => {
@@ -270,14 +250,10 @@ describe('Imaging Reports - Property Tests', () => {
 
     test('report can be retrieved by study ID', () => {
       const service = new ReportService();
-      const studyId = 'study_test_123';
-      
-      // Create 3 reports for the study
+      const studyId = 'study_test_123';
       service.createReport({ studyId, patientId: 'patient_1' });
       service.createReport({ studyId, patientId: 'patient_2' });
-      service.createReport({ studyId, patientId: 'patient_3' });
-      
-      // Create report for different study
+      service.createReport({ studyId, patientId: 'patient_3' });
       service.createReport({ studyId: 'other_study', patientId: 'patient_x' });
       
       const reports = service.getReportsForStudy(studyId);
@@ -298,9 +274,7 @@ describe('Imaging Reports - Property Tests', () => {
           findings: 'Findings',
           impression: 'Impression'
         }
-      });
-      
-      // Update status
+      });
       service.updateStatus(report.reportId, REPORT_STATUS.PRELIMINARY);
       
       const retrieved = service.getReport(report.reportId);
@@ -320,9 +294,7 @@ describe('Imaging Reports - Property Tests', () => {
       const retrieved = service.getReport(report.reportId);
       expect(retrieved.studyId).toBe('study_2');
     });
-  });
-
-  // Property 29: PDF Export with Key Images
+  });
   describe('Property 29: PDF Export with Key Images', () => {
     
     test('PDF export includes key image count', () => {
@@ -401,9 +373,7 @@ describe('Imaging Reports - Property Tests', () => {
       expect(new Date(keyImage.addedAt) >= before).toBe(true);
       expect(new Date(keyImage.addedAt) <= after).toBe(true);
     });
-  });
-
-  // Report status transitions
+  });
   describe('Report Status Transitions', () => {
     
     test('new reports start as draft', () => {

@@ -1,6 +1,4 @@
-/**
- * Edit Profile Screen - Full profile editing with photo upload, verification validation and crop preview
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -43,20 +41,16 @@ const EditProfileScreen = ({ navigation }) => {
   const [photoUri, setPhotoUri] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  // Focus tracking state
   const [focusedField, setFocusedField] = useState(null);
 
-  // Errors state
   const [errors, setErrors] = useState({});
 
-  // Image Cropping/Adjustment Modal States
   const [isCropModalVisible, setIsCropModalVisible] = useState(false);
   const [selectedPhotoAsset, setSelectedPhotoAsset] = useState(null);
   const [zoomScale, setZoomScale] = useState(1.0);
   const [offsetX, setOffsetX] = useState(0);
   const [offsetY, setOffsetY] = useState(0);
 
-  // Saved Crop Configs
   const [appliedCrop, setAppliedCrop] = useState({ scale: 1.0, x: 0, y: 0 });
 
   const styles = makeStyles(colors, isDarkMode);
@@ -79,11 +73,10 @@ const EditProfileScreen = ({ navigation }) => {
     }
   }, [user]);
 
-  // Validation functions
   const validateField = (field, val) => {
     let err = '';
     const phoneRegex = /^\+?[0-9]{10,14}$/;
-    // DD/MM/YYYY format check
+
     const dobRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20)\d\d$/;
 
     if (field === 'name') {
@@ -184,12 +177,11 @@ const EditProfileScreen = ({ navigation }) => {
       const response = await updateProfilePhoto(user.id || user._id, base64Image);
       
       if (response.success && response.user) {
-        // Save crop config locally and inside user object
+
         const cropConfig = { scale: zoomScale, x: offsetX, y: offsetY };
         setAppliedCrop(cropConfig);
         setPhotoUri(response.user.profilePhoto);
-        
-        // Update user context with new photo & cropConfig
+
         await updateUser({ 
           profilePhoto: response.user.profilePhoto,
           cropConfig: cropConfig
@@ -229,13 +221,13 @@ const EditProfileScreen = ({ navigation }) => {
         address: address.trim(),
         emergencyContact: emergencyContact.trim(),
         allergies: allergies.trim(),
-        cropConfig: appliedCrop, // Persist alignment
+        cropConfig: appliedCrop, 
       };
 
       const response = await updateProfile(user.id || user._id, profileData);
       
       if (response.success && response.user) {
-        // Update user context with all new data
+
         await updateUser(response.user);
         
         Alert.alert('Success', 'Profile updated successfully', [
@@ -286,7 +278,7 @@ const EditProfileScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
@@ -302,7 +294,7 @@ const EditProfileScreen = ({ navigation }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {/* Avatar Section with Applied Crop positioning */}
+        {}
         <View style={styles.avatarSection}>
           <View style={[styles.avatarContainer, { borderColor: colors.primary }]}>
             {photoUri ? (
@@ -341,10 +333,10 @@ const EditProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Inputs Form */}
+        {}
         <Card variant="default" style={[styles.formCard, { backgroundColor: colors.surface }]}>
           
-          {/* Full Name */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Full Name *</Text>
             <TextInput
@@ -370,7 +362,7 @@ const EditProfileScreen = ({ navigation }) => {
             {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
           </View>
 
-          {/* Email (Disabled) */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Email Address</Text>
             <TextInput
@@ -383,7 +375,7 @@ const EditProfileScreen = ({ navigation }) => {
             <Text style={[styles.hint, { color: colors.textMuted }]}>Registered medical identification email</Text>
           </View>
 
-          {/* Phone Number */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Phone Number</Text>
             <TextInput
@@ -413,7 +405,7 @@ const EditProfileScreen = ({ navigation }) => {
           {renderPicker('Blood Group', bloodType, bloodTypes, setBloodType)}
           {renderPicker('Gender Identity', gender, genders, setGender)}
 
-          {/* Date of Birth */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Date of Birth</Text>
             <TextInput
@@ -443,7 +435,7 @@ const EditProfileScreen = ({ navigation }) => {
             )}
           </View>
 
-          {/* Address */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Residential Address</Text>
             <TextInput
@@ -468,7 +460,7 @@ const EditProfileScreen = ({ navigation }) => {
             />
           </View>
 
-          {/* Emergency Contact */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Emergency Contact Number</Text>
             <TextInput
@@ -495,7 +487,7 @@ const EditProfileScreen = ({ navigation }) => {
             {errors.emergencyContact ? <Text style={styles.errorText}>{errors.emergencyContact}</Text> : null}
           </View>
 
-          {/* Known Allergies */}
+          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Chronic / Medical Allergies</Text>
             <TextInput
@@ -522,7 +514,7 @@ const EditProfileScreen = ({ navigation }) => {
         </Card>
       </ScrollView>
 
-      {/* Modern Circle Cropping / Adjustment Modal */}
+      {}
       <Modal
         visible={isCropModalVisible}
         transparent={true}
@@ -539,7 +531,7 @@ const EditProfileScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Simulated Crop Preview Frame */}
+            {}
             <View style={styles.cropWindowArea}>
               <View style={[styles.cropWindowCircle, { borderColor: colors.primary }]}>
                 {selectedPhotoAsset && (
@@ -558,7 +550,7 @@ const EditProfileScreen = ({ navigation }) => {
                   />
                 )}
               </View>
-              {/* Outer grid boundary line indicator */}
+              {}
               <View style={styles.cropOverlayGrid} pointerEvents="none" />
             </View>
 
@@ -566,10 +558,10 @@ const EditProfileScreen = ({ navigation }) => {
               Position the photo in the frame. Scale and align before saving.
             </Text>
 
-            {/* Adjuster Controls */}
+            {}
             <View style={styles.controlsContainer}>
               
-              {/* Scale/Zoom Control */}
+              {}
               <View style={styles.controlRow}>
                 <Icon name="image-outline" size={18} color={colors.textMuted} />
                 <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Zoom Scale: {zoomScale.toFixed(1)}x</Text>
@@ -589,7 +581,7 @@ const EditProfileScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Horizontal Positioning */}
+              {}
               <View style={styles.controlRow}>
                 <Icon name="swap-horizontal-outline" size={18} color={colors.textMuted} />
                 <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Horizontal Align</Text>
@@ -609,7 +601,7 @@ const EditProfileScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Vertical Positioning */}
+              {}
               <View style={styles.controlRow}>
                 <Icon name="swap-vertical-outline" size={18} color={colors.textMuted} />
                 <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Vertical Align</Text>
@@ -631,7 +623,7 @@ const EditProfileScreen = ({ navigation }) => {
 
             </View>
 
-            {/* Bottom Actions */}
+            {}
             <View style={styles.cropActionsRow}>
               <TouchableOpacity 
                 style={[styles.cropCancelBtn, { borderColor: colors.surfaceBorder }]} 
@@ -681,8 +673,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   },
   saveBtn: { ...typography.buttonSmall, fontWeight: '700' },
   content: { paddingHorizontal: spacing.xl, paddingBottom: 120 },
-  
-  // Avatar section styling
+
   avatarSection: { alignItems: 'center', marginBottom: spacing.xxl, marginTop: spacing.md },
   avatarContainer: { 
     position: 'relative',
@@ -727,8 +718,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     ...shadows.md,
   },
   changePhotoText: { ...typography.labelMedium, color: '#fff', fontWeight: '750' },
-  
-  // Form Card styling
+
   formCard: { padding: spacing.xl, borderRadius: borderRadius.xxl, ...shadows.sm, borderWidth: 1, borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' },
   inputGroup: { marginBottom: spacing.lg },
   label: { ...typography.labelMedium, fontWeight: '700', marginBottom: spacing.sm },
@@ -755,7 +745,6 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   },
   pickerText: { ...typography.labelMedium },
 
-  // Crop Modal Styling
   cropModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',

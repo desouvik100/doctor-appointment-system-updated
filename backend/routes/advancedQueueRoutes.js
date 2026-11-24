@@ -1,28 +1,19 @@
-/**
- * Advanced Queue Management Routes
- * Comprehensive queue system with multi-department support
- */
+
 
 const express = require('express');
 const router = express.Router();
 const QueueToken = require('../models/QueueToken');
-const { verifyToken } = require('../middleware/auth');
-
-// Issue new token
+const { verifyToken } = require('../middleware/auth');
 router.post('/token/issue', verifyToken, async (req, res) => {
   try {
     const { clinicId, patientId, patientName, patientPhone, patientAge, patientGender,
-            doctorId, doctorName, department, tokenType, chiefComplaint, appointmentId, isVirtualQueue } = req.body;
-    
-    // Calculate queue position
+            doctorId, doctorName, department, tokenType, chiefComplaint, appointmentId, isVirtualQueue } = req.body;
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const queuePosition = await QueueToken.countDocuments({
       clinicId, department, doctorId,
       status: { $in: ['waiting', 'checked_in', 'called'] },
       issuedAt: { $gte: today }
-    }) + 1;
-    
-    // Calculate estimated wait time
+    }) + 1;
     const estimatedWaitTime = await QueueToken.calculateEstimatedWait(clinicId, department, doctorId);
     
     const token = new QueueToken({
@@ -38,9 +29,7 @@ router.post('/token/issue', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get current queue for department/doctor
+});
 router.get('/clinic/:clinicId/queue', verifyToken, async (req, res) => {
   try {
     const { department, doctorId, status } = req.query;
@@ -61,9 +50,7 @@ router.get('/clinic/:clinicId/queue', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get queue stats/dashboard
+});
 router.get('/clinic/:clinicId/stats', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -109,9 +96,7 @@ router.get('/clinic/:clinicId/stats', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Call next patient
+});
 router.post('/token/:tokenId/call', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findById(req.params.tokenId);
@@ -121,9 +106,7 @@ router.post('/token/:tokenId/call', verifyToken, async (req, res) => {
     token.calledAt = new Date();
     token.lastCalledAt = new Date();
     token.callCount += 1;
-    token.updatedBy = req.user?.id;
-    
-    // Add notification record
+    token.updatedBy = req.user?.id;
     token.notifications.push({
       type: 'display',
       message: `Token ${token.tokenNumber} - Please proceed to consultation`,
@@ -135,9 +118,7 @@ router.post('/token/:tokenId/call', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Start consultation
+});
 router.post('/token/:tokenId/start', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findById(req.params.tokenId);
@@ -152,9 +133,7 @@ router.post('/token/:tokenId/start', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Complete consultation
+});
 router.post('/token/:tokenId/complete', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findById(req.params.tokenId);
@@ -173,9 +152,7 @@ router.post('/token/:tokenId/complete', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Mark no-show
+});
 router.post('/token/:tokenId/no-show', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findByIdAndUpdate(
@@ -188,9 +165,7 @@ router.post('/token/:tokenId/no-show', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Recall patient
+});
 router.post('/token/:tokenId/recall', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findById(req.params.tokenId);
@@ -207,9 +182,7 @@ router.post('/token/:tokenId/recall', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Transfer token to another doctor/department
+});
 router.post('/token/:tokenId/transfer', verifyToken, async (req, res) => {
   try {
     const { toDoctorId, toDepartment, reason } = req.body;
@@ -235,9 +208,7 @@ router.post('/token/:tokenId/transfer', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Put on hold
+});
 router.post('/token/:tokenId/hold', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findByIdAndUpdate(
@@ -250,9 +221,7 @@ router.post('/token/:tokenId/hold', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Resume from hold
+});
 router.post('/token/:tokenId/resume', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findByIdAndUpdate(
@@ -265,9 +234,7 @@ router.post('/token/:tokenId/resume', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get patient's queue status (for mobile app)
+});
 router.get('/patient/:phone/status', async (req, res) => {
   try {
     const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -281,9 +248,7 @@ router.get('/patient/:phone/status', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get display board data (for TV display)
+});
 router.get('/clinic/:clinicId/display', async (req, res) => {
   try {
     const { department } = req.query;
@@ -312,9 +277,7 @@ router.get('/clinic/:clinicId/display', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Submit feedback
+});
 router.post('/token/:tokenId/feedback', async (req, res) => {
   try {
     const { rating, waitTimeRating, comment } = req.body;
@@ -328,9 +291,7 @@ router.post('/token/:tokenId/feedback', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get analytics
+});
 router.get('/clinic/:clinicId/analytics', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -362,9 +323,7 @@ router.get('/clinic/:clinicId/analytics', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Check-in (self-service kiosk)
+});
 router.post('/token/:tokenId/checkin', async (req, res) => {
   try {
     const token = await QueueToken.findByIdAndUpdate(
@@ -377,9 +336,7 @@ router.post('/token/:tokenId/checkin', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Virtual queue join
+});
 router.post('/virtual-join', async (req, res) => {
   try {
     const { clinicId, patientName, patientPhone, doctorId, department, expectedArrivalTime } = req.body;

@@ -1,7 +1,4 @@
-/**
- * Admin Appointment Detail Screen - View & Manage Appointment
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {

@@ -1,22 +1,18 @@
-/**
- * SkeletonLoader - Shimmer skeleton for inline loading
- * Medical-themed with subtle heartbeat pulse
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
 const SkeletonLoader = ({ 
-  variant = 'card', // card, list, profile, text
+  variant = 'card', 
   count = 1,
   style,
 }) => {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
 
-  useEffect(() => {
-    // Shimmer animation
+  useEffect(() => {
     Animated.loop(
       Animated.timing(shimmerAnim, {
         toValue: 1,
@@ -24,9 +20,7 @@ const SkeletonLoader = ({
         easing: Easing.linear,
         useNativeDriver: true,
       })
-    ).start();
-
-    // Pulse animation (heartbeat-like)
+    ).start();
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, { toValue: 0.7, duration: 500, useNativeDriver: true }),
@@ -121,11 +115,9 @@ const SkeletonLoader = ({
   );
 };
 
-
 const styles = StyleSheet.create({
   shimmerOverlay: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
-  shimmerGradient: { width: 100, height: '100%' },
-  // Card skeleton
+  shimmerGradient: { width: 100, height: '100%' },
   card: { backgroundColor: '#fff', borderRadius: 20, padding: 16, marginBottom: 16, overflow: 'hidden' },
   cardRow: { flexDirection: 'row' },
   avatar: { width: 80, height: 80, borderRadius: 20, backgroundColor: '#E2E8F0' },
@@ -135,21 +127,18 @@ const styles = StyleSheet.create({
   metaLine: { height: 12, backgroundColor: '#E2E8F0', borderRadius: 6, width: '80%' },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#F1F5F9' },
   priceLine: { height: 24, backgroundColor: '#E2E8F0', borderRadius: 12, width: 80 },
-  buttonLine: { height: 40, backgroundColor: '#E2E8F0', borderRadius: 14, width: 100 },
-  // List skeleton
+  buttonLine: { height: 40, backgroundColor: '#E2E8F0', borderRadius: 14, width: 100 },
   listItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 16, padding: 12, marginBottom: 12, overflow: 'hidden' },
   listAvatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#E2E8F0' },
   listContent: { flex: 1, marginLeft: 12 },
   listTitle: { height: 16, backgroundColor: '#E2E8F0', borderRadius: 8, width: '60%', marginBottom: 8 },
-  listSubtitle: { height: 12, backgroundColor: '#E2E8F0', borderRadius: 6, width: '40%' },
-  // Profile skeleton
+  listSubtitle: { height: 12, backgroundColor: '#E2E8F0', borderRadius: 6, width: '40%' },
   profile: { alignItems: 'center', backgroundColor: '#fff', borderRadius: 20, padding: 24, overflow: 'hidden' },
   profileAvatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#E2E8F0', marginBottom: 16 },
   profileName: { height: 24, backgroundColor: '#E2E8F0', borderRadius: 12, width: 150, marginBottom: 8 },
   profileBio: { height: 14, backgroundColor: '#E2E8F0', borderRadius: 7, width: 200, marginBottom: 20 },
   profileStats: { flexDirection: 'row', gap: 16 },
-  statBox: { width: 80, height: 60, backgroundColor: '#E2E8F0', borderRadius: 12 },
-  // Text skeleton
+  statBox: { width: 80, height: 60, backgroundColor: '#E2E8F0', borderRadius: 12 },
   textBlock: { backgroundColor: '#fff', borderRadius: 16, padding: 16, overflow: 'hidden' },
   textLine: { height: 14, backgroundColor: '#E2E8F0', borderRadius: 7, width: '100%', marginBottom: 10 },
 });

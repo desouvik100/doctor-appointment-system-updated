@@ -4,20 +4,15 @@ const mongoose = require('mongoose');
 const aiSecurityService = require('../services/aiSecurityService');
 const SuspiciousActivity = require('../models/SuspiciousActivity');
 const User = require('../models/User');
-const Doctor = require('../models/Doctor');
-
-// Helper function to find user by ID or email
+const Doctor = require('../models/Doctor');
 async function findUserByIdOrEmail(identifier) {
   let user = null;
   let userType = 'patient';
   
   if (!identifier) return { user: null, userType: 'patient' };
   
-  const searchEmail = identifier.toLowerCase().trim();
-  
-  // Check if it's an email (contains @)
-  if (identifier.includes('@')) {
-    // Search by email only
+  const searchEmail = identifier.toLowerCase().trim();
+  if (identifier.includes('@')) {
     console.log(`🔍 Searching for user by email: ${searchEmail}`);
     user = await User.findOne({ email: searchEmail });
     if (user) {
@@ -30,8 +25,7 @@ async function findUserByIdOrEmail(identifier) {
         console.log(`✅ Found doctor: ${user.name} (${user.email})`);
       }
     }
-  } else if (mongoose.Types.ObjectId.isValid(identifier)) {
-    // Valid ObjectId format - search by ID
+  } else if (mongoose.Types.ObjectId.isValid(identifier)) {
     console.log(`🔍 Searching for user by ID: ${identifier}`);
     user = await User.findById(identifier);
     if (user) {
@@ -52,9 +46,7 @@ async function findUserByIdOrEmail(identifier) {
   }
   
   return { user, userType };
-}
-
-// Get all security alerts (admin only)
+}
 router.get('/alerts', async (req, res) => {
   try {
     const { status, severity, activityType, userType, startDate, endDate, limit } = req.query;
@@ -69,9 +61,7 @@ router.get('/alerts', async (req, res) => {
     console.error('Error fetching alerts:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch alerts' });
   }
-});
-
-// Get security dashboard stats
+});
 router.get('/stats', async (req, res) => {
   try {
     const stats = await aiSecurityService.getStats();
@@ -80,9 +70,7 @@ router.get('/stats', async (req, res) => {
     console.error('Error fetching stats:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch stats' });
   }
-});
-
-// Get single alert details
+});
 router.get('/alerts/:id', async (req, res) => {
   try {
     const alert = await SuspiciousActivity.findById(req.params.id)
@@ -98,9 +86,7 @@ router.get('/alerts/:id', async (req, res) => {
     console.error('Error fetching alert:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch alert' });
   }
-});
-
-// Update alert status
+});
 router.put('/alerts/:id/status', async (req, res) => {
   try {
     const { status, adminId, notes } = req.body;
@@ -115,9 +101,7 @@ router.put('/alerts/:id/status', async (req, res) => {
     console.error('Error updating alert:', error);
     res.status(500).json({ success: false, message: error.message || 'Failed to update alert' });
   }
-});
-
-// Add action to alert
+});
 router.post('/alerts/:id/action', async (req, res) => {
   try {
     const { action, adminId, notes } = req.body;
@@ -139,9 +123,7 @@ router.post('/alerts/:id/action', async (req, res) => {
     console.error('Error adding action:', error);
     res.status(500).json({ success: false, message: 'Failed to add action' });
   }
-});
-
-// Get alerts for specific user
+});
 router.get('/user/:userId', async (req, res) => {
   try {
     const alerts = await SuspiciousActivity.find({ userId: req.params.userId })
@@ -153,9 +135,7 @@ router.get('/user/:userId', async (req, res) => {
     console.error('Error fetching user alerts:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch alerts' });
   }
-});
-
-// Manually log suspicious activity (for testing or manual reporting)
+});
 router.post('/report', async (req, res) => {
   try {
     const alert = await aiSecurityService.createAlert(req.body);
@@ -164,9 +144,7 @@ router.post('/report', async (req, res) => {
     console.error('Error reporting activity:', error);
     res.status(500).json({ success: false, message: 'Failed to report activity' });
   }
-});
-
-// Get recent critical alerts (for dashboard widget)
+});
 router.get('/critical', async (req, res) => {
   try {
     const alerts = await SuspiciousActivity.find({
@@ -181,9 +159,7 @@ router.get('/critical', async (req, res) => {
     console.error('Error fetching critical alerts:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch alerts' });
   }
-});
-
-// Bulk update alerts
+});
 router.put('/alerts/bulk-update', async (req, res) => {
   try {
     const { alertIds, status, adminId } = req.body;
@@ -201,9 +177,7 @@ router.put('/alerts/bulk-update', async (req, res) => {
     console.error('Error bulk updating:', error);
     res.status(500).json({ success: false, message: 'Failed to update alerts' });
   }
-});
-
-// Simulate test alerts (for testing the security system)
+});
 router.post('/test-alerts', async (req, res) => {
   try {
     const testAlerts = [
@@ -274,9 +248,7 @@ router.post('/test-alerts', async (req, res) => {
     console.error('Error creating test alerts:', error);
     res.status(500).json({ success: false, message: 'Failed to create test alerts' });
   }
-});
-
-// Clear all test alerts (cleanup)
+});
 router.delete('/test-alerts', async (req, res) => {
   try {
     const result = await SuspiciousActivity.deleteMany({
@@ -291,11 +263,7 @@ router.delete('/test-alerts', async (req, res) => {
     console.error('Error deleting test alerts:', error);
     res.status(500).json({ success: false, message: 'Failed to delete test alerts' });
   }
-});
-
-// ============ ENHANCED SECURITY ENDPOINTS ============
-
-// Get security analytics
+});
 router.get('/analytics', async (req, res) => {
   try {
     const { days } = req.query;
@@ -305,9 +273,7 @@ router.get('/analytics', async (req, res) => {
     console.error('Error fetching analytics:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch analytics' });
   }
-});
-
-// Generate security report
+});
 router.get('/report', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -320,9 +286,7 @@ router.get('/report', async (req, res) => {
     console.error('Error generating report:', error);
     res.status(500).json({ success: false, message: 'Failed to generate report' });
   }
-});
-
-// Get blocked IPs
+});
 router.get('/blocked-ips', async (req, res) => {
   try {
     const blockedIPs = aiSecurityService.getBlockedIPs();
@@ -331,9 +295,7 @@ router.get('/blocked-ips', async (req, res) => {
     console.error('Error fetching blocked IPs:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch blocked IPs' });
   }
-});
-
-// Block an IP manually
+});
 router.post('/block-ip', async (req, res) => {
   try {
     const { ipAddress, reason, duration } = req.body;
@@ -341,17 +303,13 @@ router.post('/block-ip', async (req, res) => {
     
     if (!ipAddress) {
       return res.status(400).json({ success: false, message: 'IP address required' });
-    }
-    
-    // Validate IP format (basic validation)
+    }
     const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$|^([a-fA-F0-9:]+)$/;
     if (!ipRegex.test(ipAddress.trim())) {
       return res.status(400).json({ success: false, message: 'Invalid IP address format' });
     }
     
-    aiSecurityService.blockIP(ipAddress.trim(), reason || 'Manually blocked by admin', duration);
-    
-    // Log the action
+    aiSecurityService.blockIP(ipAddress.trim(), reason || 'Manually blocked by admin', duration);
     await aiSecurityService.createAlert({
       userType: 'Admin',
       activityType: 'account_manipulation',
@@ -367,9 +325,7 @@ router.post('/block-ip', async (req, res) => {
     console.error('Error blocking IP:', error);
     res.status(500).json({ success: false, message: 'Failed to block IP: ' + error.message });
   }
-});
-
-// Unblock an IP
+});
 router.delete('/block-ip/:ip', async (req, res) => {
   try {
     aiSecurityService.unblockIP(req.params.ip);
@@ -378,9 +334,7 @@ router.delete('/block-ip/:ip', async (req, res) => {
     console.error('Error unblocking IP:', error);
     res.status(500).json({ success: false, message: 'Failed to unblock IP' });
   }
-});
-
-// Suspend user
+});
 router.post('/suspend-user', async (req, res) => {
   try {
     const { userId, reason, adminId } = req.body;
@@ -388,16 +342,12 @@ router.post('/suspend-user', async (req, res) => {
       return res.status(400).json({ success: false, message: 'User ID or Email required' });
     }
     
-    const { sendEmail } = require('../services/emailService');
-    
-    // Find user by ID or email
+    const { sendEmail } = require('../services/emailService');
     const { user, userType } = await findUserByIdOrEmail(userId);
     
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
-    }
-    
-    // Suspend the user
+    }
     console.log(`🔒 Suspending ${userType}: ${user.email} (ID: ${user._id})`);
     
     let updateResult;
@@ -430,9 +380,7 @@ router.post('/suspend-user', async (req, res) => {
     } catch (updateError) {
       console.error('❌ Database update failed:', updateError);
       throw updateError;
-    }
-
-    // Send email notification to user
+    }
     if (user.email) {
       try {
         await sendEmail({
@@ -465,9 +413,7 @@ router.post('/suspend-user', async (req, res) => {
       } catch (emailError) {
         console.error('Error sending suspension email:', emailError);
       }
-    }
-
-    // Create alert
+    }
     await aiSecurityService.createAlert({
       userId: user._id,
       userType: userType === 'doctor' ? 'Doctor' : 'User',
@@ -478,9 +424,7 @@ router.post('/suspend-user', async (req, res) => {
       confidenceScore: 100,
       description: `Account manually suspended by admin: ${reason || 'No reason provided'}`,
       details: { action: 'manual_suspend', adminId }
-    });
-
-    // Audit log
+    });
     try {
       const auditService = require('../services/auditService');
       const admin = adminId ? await User.findById(adminId).select('name email role') : { name: 'System', role: 'admin' };
@@ -492,9 +436,7 @@ router.post('/suspend-user', async (req, res) => {
     console.error('Error suspending user:', error);
     res.status(500).json({ success: false, message: 'Failed to suspend user: ' + error.message });
   }
-});
-
-// Unsuspend user
+});
 router.post('/unsuspend-user', async (req, res) => {
   try {
     const { userId, adminId } = req.body;
@@ -504,41 +446,31 @@ router.post('/unsuspend-user', async (req, res) => {
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
-    const { sendEmail } = require('../services/emailService');
-    
-    // Find user by ID or email using helper
+    const { sendEmail } = require('../services/emailService');
     const { user, userType } = await findUserByIdOrEmail(userId);
     
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
-    }
-    
-    // Unsuspend the user - check BOTH collections if email is provided
-    // Some users may exist in both User and Doctor collections
+    }
     const updateData = {
       $set: { isActive: true },
       $unset: { suspendedAt: 1, suspendReason: 1 }
     };
     
     let updatedUser = null;
-    let updatedDoctor = null;
-    
-    // Always try to update in User collection if email matches
+    let updatedDoctor = null;
     if (user.email) {
       const userInUserCollection = await User.findOne({ email: user.email.toLowerCase() });
       if (userInUserCollection) {
         updatedUser = await User.findByIdAndUpdate(userInUserCollection._id, updateData, { new: true });
         console.log(`✅ Updated in User collection: ${user.email} - isActive: ${updatedUser?.isActive}`);
-      }
-      
-      // Also try Doctor collection
+      }
       const userInDoctorCollection = await Doctor.findOne({ email: user.email.toLowerCase() });
       if (userInDoctorCollection) {
         updatedDoctor = await Doctor.findByIdAndUpdate(userInDoctorCollection._id, updateData, { new: true });
         console.log(`✅ Updated in Doctor collection: ${user.email} - isActive: ${updatedDoctor?.isActive}`);
       }
-    } else {
-      // Update by ID in the found collection
+    } else {
       if (userType === 'doctor') {
         updatedDoctor = await Doctor.findByIdAndUpdate(user._id, updateData, { new: true });
       } else {
@@ -551,9 +483,7 @@ router.post('/unsuspend-user', async (req, res) => {
       return res.status(500).json({ success: false, message: 'Database update failed' });
     }
     
-    console.log(`✅ User unsuspended: ${user.email} (${userType})`)
-
-    // Send email notification to user
+    console.log(`✅ User unsuspended: ${user.email} (${userType})`)
     if (user.email) {
       try {
         await sendEmail({
@@ -592,9 +522,7 @@ router.post('/unsuspend-user', async (req, res) => {
       } catch (emailError) {
         console.error('Error sending unsuspend email:', emailError);
       }
-    }
-
-    // Log the action
+    }
     await aiSecurityService.createAlert({
       userId: user._id,
       userType: userType === 'doctor' ? 'Doctor' : 'User',
@@ -605,9 +533,7 @@ router.post('/unsuspend-user', async (req, res) => {
       confidenceScore: 100,
       description: `Account restored by admin`,
       details: { action: 'manual_unsuspend', adminId }
-    });
-
-    // Audit log
+    });
     try {
       const auditService = require('../services/auditService');
       const admin = adminId ? await User.findById(adminId).select('name email role') : { name: 'System', role: 'admin' };
@@ -619,9 +545,7 @@ router.post('/unsuspend-user', async (req, res) => {
     console.error('Error unsuspending user:', error);
     res.status(500).json({ success: false, message: 'Failed to unsuspend user' });
   }
-});
-
-// Force logout user
+});
 router.post('/force-logout', async (req, res) => {
   try {
     const { userId, reason } = req.body;
@@ -629,19 +553,13 @@ router.post('/force-logout', async (req, res) => {
       return res.status(400).json({ success: false, message: 'User ID or Email required' });
     }
     
-    const { sendEmail } = require('../services/emailService');
-    
-    // Find user by ID or email using helper
+    const { sendEmail } = require('../services/emailService');
     const { user } = await findUserByIdOrEmail(userId);
     
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
-    }
-    
-    // Force logout via the service
-    await aiSecurityService.forceLogout(user._id, reason || 'Forced logout by admin');
-
-    // Send email notification to user
+    }
+    await aiSecurityService.forceLogout(user._id, reason || 'Forced logout by admin');
     if (user.email) {
       try {
         await sendEmail({
@@ -692,9 +610,7 @@ router.post('/force-logout', async (req, res) => {
     console.error('Error forcing logout:', error);
     res.status(500).json({ success: false, message: 'Failed to force logout' });
   }
-});
-
-// Check if IP is blocked (for middleware use)
+});
 router.get('/check-ip/:ip', async (req, res) => {
   try {
     const block = aiSecurityService.isIPBlocked(req.params.ip);
@@ -702,9 +618,7 @@ router.get('/check-ip/:ip', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to check IP' });
   }
-});
-
-// Require password reset for user
+});
 router.post('/require-password-reset', async (req, res) => {
   try {
     const { userId, reason, adminId } = req.body;
@@ -714,16 +628,12 @@ router.post('/require-password-reset', async (req, res) => {
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
-    const { sendEmail } = require('../services/emailService');
-    
-    // Find user by ID or email using helper
+    const { sendEmail } = require('../services/emailService');
     const { user, userType } = await findUserByIdOrEmail(userId);
     
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
-    }
-    
-    // Mark user as requiring password reset
+    }
     if (userType === 'doctor') {
       await Doctor.findByIdAndUpdate(user._id, {
         requirePasswordReset: true,
@@ -736,9 +646,7 @@ router.post('/require-password-reset', async (req, res) => {
         passwordResetRequiredAt: new Date(),
         passwordResetReason: reason || 'Required by admin'
       });
-    }
-
-    // Send email notification to user
+    }
     if (user.email) {
       try {
         await sendEmail({
@@ -777,9 +685,7 @@ router.post('/require-password-reset', async (req, res) => {
       } catch (emailError) {
         console.error('Error sending password reset email:', emailError);
       }
-    }
-
-    // Log the action
+    }
     await aiSecurityService.createAlert({
       userId: user._id,
       userType: userType === 'doctor' ? 'Doctor' : 'User',
@@ -797,9 +703,7 @@ router.post('/require-password-reset', async (req, res) => {
     console.error('Error requiring password reset:', error);
     res.status(500).json({ success: false, message: 'Failed to require password reset' });
   }
-});
-
-// Send test admin email notification
+});
 router.post('/test-email', async (req, res) => {
   try {
     const testAlert = {
@@ -821,9 +725,7 @@ router.post('/test-email', async (req, res) => {
     console.error('Error sending test email:', error);
     res.status(500).json({ success: false, message: 'Failed to send test email' });
   }
-});
-
-// Debug endpoint to check user suspension status
+});
 router.get('/check-user-status/:identifier', async (req, res) => {
   try {
     const { identifier } = req.params;
@@ -849,24 +751,17 @@ router.get('/check-user-status/:identifier', async (req, res) => {
     console.error('Error checking user status:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all suspended users
+});
 router.get('/suspended-users', async (req, res) => {
-  try {
-    // Get suspended users from User collection
+  try {
     const suspendedUsers = await User.find({ isActive: false })
       .select('_id name email role suspendedAt suspendReason createdAt')
       .sort({ suspendedAt: -1 })
-      .lean();
-    
-    // Get suspended doctors from Doctor collection
+      .lean();
     const suspendedDoctors = await Doctor.find({ isActive: false })
       .select('_id name email specialization suspendedAt suspendReason createdAt')
       .sort({ suspendedAt: -1 })
-      .lean();
-    
-    // Combine and format
+      .lean();
     const allSuspended = [
       ...suspendedUsers.map(u => ({ ...u, userType: u.role || 'patient' })),
       ...suspendedDoctors.map(d => ({ ...d, userType: 'doctor' }))
@@ -881,9 +776,7 @@ router.get('/suspended-users', async (req, res) => {
     console.error('Error fetching suspended users:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch suspended users' });
   }
-});
-
-// Delete all security alerts
+});
 router.delete('/alerts/all', async (req, res) => {
   try {
     const result = await SuspiciousActivity.deleteMany({});

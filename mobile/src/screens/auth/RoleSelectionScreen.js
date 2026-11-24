@@ -1,7 +1,4 @@
-/**
- * Welcome Screen — Patient-first landing page
- * Replaces the old multi-role selection screen with modern 2026 branding.
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import {
@@ -42,7 +39,7 @@ const WelcomeScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
 
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
@@ -55,7 +52,7 @@ const WelcomeScreen = ({ navigation }) => {
 
       <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
 
-        {/* Logo */}
+        {}
         <Animated.View style={[styles.logoWrap, { transform: [{ scale: logoScale }] }]}>
           <LinearGradient colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']} style={styles.logoGradient}>
             <Text style={styles.logoPlus}>+</Text>
@@ -66,7 +63,7 @@ const WelcomeScreen = ({ navigation }) => {
         <Text style={[styles.appName, { color: colors.textPrimary }]}>HealthSync</Text>
         <Text style={[styles.tagline, { color: colors.primary }]}>Your health, simplified 💚</Text>
 
-        {/* Illustration placeholder — friendly healthcare card */}
+        {}
         <View style={[
           styles.illustrationCard,
           {
@@ -82,7 +79,7 @@ const WelcomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Trust badges */}
+        {}
         <View style={styles.trustRow}>
           {[
             { icon: '🔒', label: 'Secure data' },
@@ -106,7 +103,7 @@ const WelcomeScreen = ({ navigation }) => {
           ))}
         </View>
 
-        {/* CTA buttons */}
+        {}
         <TouchableOpacity
           style={styles.primaryBtn}
           onPress={() => navigation.navigate('Login')}
@@ -125,7 +122,7 @@ const WelcomeScreen = ({ navigation }) => {
           <Text style={[styles.secondaryBtnText, { color: colors.primary }]}>Create a free account</Text>
         </TouchableOpacity>
 
-        {/* Pro app link */}
+        {}
         <TouchableOpacity style={styles.proLink} activeOpacity={0.7} onPress={() => navigation.navigate('DoctorLogin')}>
           <Text style={styles.proLinkText}>
             Are you a doctor or staff?{' '}

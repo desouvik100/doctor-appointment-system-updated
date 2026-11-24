@@ -1,6 +1,4 @@
-/**
- * AI Health Chatbot Screen
- */
+
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -140,7 +138,7 @@ const AIChatbotScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       
-      {/* Header */}
+      {}
       <LinearGradient
         colors={[colors.background, colors.backgroundCard]}
         style={styles.header}
@@ -163,7 +161,7 @@ const AIChatbotScreen = ({ navigation }) => {
         <View style={styles.onlineIndicator} />
       </LinearGradient>
 
-      {/* Messages */}
+      {}
       <ScrollView
         ref={scrollViewRef}
         style={styles.messagesContainer}
@@ -185,7 +183,7 @@ const AIChatbotScreen = ({ navigation }) => {
         )}
       </ScrollView>
 
-      {/* Quick Actions */}
+      {}
       {messages.length <= 2 && (
         <ScrollView
           horizontal
@@ -206,7 +204,7 @@ const AIChatbotScreen = ({ navigation }) => {
         </ScrollView>
       )}
 
-      {/* Input */}
+      {}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
@@ -239,7 +237,6 @@ const AIChatbotScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {

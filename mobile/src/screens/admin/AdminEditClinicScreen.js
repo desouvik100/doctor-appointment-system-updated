@@ -1,7 +1,4 @@
-/**
- * Admin Edit Clinic Screen - Update Clinic Details
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {

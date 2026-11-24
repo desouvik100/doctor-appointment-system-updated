@@ -1,79 +1,37 @@
-/**
- * Refund Policy Service
- * Handles refund calculations based on cancellation timing
- * 
- * REFUND POLICY (India-friendly):
- * ================================
- * 
- * PATIENT CANCELLATION:
- * - > 6 hours before appointment: 100% refund (minus payment gateway fee if any)
- * - < 6 hours before appointment: 50% refund (platform keeps rest - slot was blocked)
- * 
- * DOCTOR CANCELLATION:
- * - 100% refund always
- * - Optional ₹50 credit to user wallet as compensation
- * 
- * NO-SHOW:
- * - No refund (patient didn't show up)
- */
+
 
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
-const razorpayService = require('./razorpayService');
-
-// Refund policy configuration
-const REFUND_POLICY = {
-  // Hours before appointment for full refund eligibility
-  fullRefundHours: 6,
-  
-  // Refund percentages
+const razorpayService = require('./razorpayService');
+const REFUND_POLICY = {
+  fullRefundHours: 6,
   fullRefundPercentage: 100,
   partialRefundPercentage: 50,
   noShowRefundPercentage: 0,
-  doctorCancelRefundPercentage: 100,
-  
-  // Payment gateway fee percentage (deducted from refunds)
-  paymentGatewayFeePercentage: 2.5, // Razorpay charges ~2%
-  
-  // Compensation credit for doctor cancellation
-  doctorCancelCompensationCredit: 50, // ₹50 wallet credit
-  
-  // Minimum refund amount (below this, no refund processed)
+  doctorCancelRefundPercentage: 100,
+  paymentGatewayFeePercentage: 2.5, 
+  doctorCancelCompensationCredit: 50, 
   minimumRefundAmount: 1
 };
 
 class RefundPolicyService {
-  
-  /**
-   * Calculate hours until appointment
-   */
+
   calculateHoursUntilAppointment(appointmentDate, appointmentTime) {
-    const now = new Date();
-    
-    // Parse appointment date and time
+    const now = new Date();
     const [hours, minutes] = appointmentTime.split(':').map(Number);
     const appointmentDateTime = new Date(appointmentDate);
-    appointmentDateTime.setHours(hours, minutes, 0, 0);
-    
-    // Calculate difference in hours
+    appointmentDateTime.setHours(hours, minutes, 0, 0);
     const diffMs = appointmentDateTime - now;
     const diffHours = diffMs / (1000 * 60 * 60);
     
     return diffHours;
   }
-  
-  /**
-   * Determine refund eligibility and amount
-   */
+
   calculateRefund(appointment, cancelledBy = 'patient') {
     const paidAmount = appointment.paymentDetails?.amount || 
-                       appointment.payment?.totalAmount || 0;
-    
-    // Check both root level and nested payment status
+                       appointment.payment?.totalAmount || 0;
     const paymentCompleted = appointment.paymentStatus === 'completed' || 
-                             appointment.payment?.paymentStatus === 'completed';
-    
-    // No payment made - no refund needed
+                             appointment.payment?.paymentStatus === 'completed';
     if (paidAmount <= 0 || !paymentCompleted) {
       return {
         eligible: false,
@@ -88,9 +46,7 @@ class RefundPolicyService {
     const hoursUntil = this.calculateHoursUntilAppointment(
       appointment.date, 
       appointment.time
-    );
-    
-    // Doctor cancelled - full refund + compensation
+    );
     if (cancelledBy === 'doctor' || cancelledBy === 'clinic' || cancelledBy === 'system') {
       const refundAmount = paidAmount;
       return {
@@ -103,9 +59,7 @@ class RefundPolicyService {
         hoursUntilAppointment: hoursUntil,
         gatewayFeeDeducted: 0
       };
-    }
-    
-    // Appointment already passed - no refund (no-show)
+    }
     if (hoursUntil < 0) {
       return {
         eligible: false,
@@ -116,9 +70,7 @@ class RefundPolicyService {
         policyApplied: 'no_show',
         hoursUntilAppointment: hoursUntil
       };
-    }
-    
-    // Patient cancellation > 6 hours before - full refund (minus gateway fee)
+    }
     if (hoursUntil >= REFUND_POLICY.fullRefundHours) {
       const gatewayFee = Math.round(paidAmount * REFUND_POLICY.paymentGatewayFeePercentage / 100);
       const refundAmount = Math.max(0, paidAmount - gatewayFee);
@@ -134,9 +86,7 @@ class RefundPolicyService {
         gatewayFeeDeducted: gatewayFee,
         originalAmount: paidAmount
       };
-    }
-    
-    // Patient cancellation < 6 hours before - 50% refund
+    }
     const refundAmount = Math.round(paidAmount * REFUND_POLICY.partialRefundPercentage / 100);
     const platformRetained = paidAmount - refundAmount;
     
@@ -152,10 +102,7 @@ class RefundPolicyService {
       originalAmount: paidAmount
     };
   }
-  
-  /**
-   * Process refund based on policy
-   */
+
   async processRefund(appointmentId, cancelledBy = 'patient', reason = '') {
     try {
       const appointment = await Appointment.findById(appointmentId)
@@ -164,17 +111,13 @@ class RefundPolicyService {
       
       if (!appointment) {
         throw new Error('Appointment not found');
-      }
-      
-      // Calculate refund based on policy
+      }
       const refundCalc = this.calculateRefund(appointment, cancelledBy);
       
       console.log(`💰 Refund calculation for appointment ${appointmentId}:`);
       console.log(`   Policy: ${refundCalc.policyApplied}`);
       console.log(`   Refund amount: ₹${refundCalc.refundAmount}`);
-      console.log(`   Wallet credit: ₹${refundCalc.walletCredit}`);
-      
-      // Store refund details in appointment
+      console.log(`   Wallet credit: ₹${refundCalc.walletCredit}`);
       appointment.refundPolicy = {
         policyApplied: refundCalc.policyApplied,
         calculatedAt: new Date(),
@@ -189,28 +132,22 @@ class RefundPolicyService {
       };
       
       let refundResult = { success: false };
-      let walletCreditResult = { success: false };
-      
-      // Process actual refund if eligible and amount > minimum
+      let walletCreditResult = { success: false };
       if (refundCalc.eligible && refundCalc.refundAmount >= REFUND_POLICY.minimumRefundAmount) {
-        try {
-          // Check which payment gateway was used
-          if (appointment.razorpayPaymentId) {
-            // Razorpay refund
+        try {
+          if (appointment.razorpayPaymentId) {
             refundResult = await this.processRazorpayRefund(
               appointment, 
               refundCalc.refundAmount,
               reason || refundCalc.reason
             );
-          } else if (appointment.payuPaymentId || appointment.paymentDetails?.payuPaymentId) {
-            // PayU refund
+          } else if (appointment.payuPaymentId || appointment.paymentDetails?.payuPaymentId) {
             refundResult = await this.processPayURefund(
               appointment,
               refundCalc.refundAmount,
               reason || refundCalc.reason
             );
-          } else {
-            // No payment gateway transaction - mark as refunded (test mode or free appointment)
+          } else {
             refundResult = {
               success: true,
               testMode: true,
@@ -237,9 +174,7 @@ class RefundPolicyService {
             attemptedAt: new Date()
           };
         }
-      }
-      
-      // Add wallet credit if applicable (doctor cancellation compensation)
+      }
       if (refundCalc.walletCredit > 0 && appointment.userId) {
         try {
           walletCreditResult = await this.addWalletCredit(
@@ -274,10 +209,7 @@ class RefundPolicyService {
       throw error;
     }
   }
-  
-  /**
-   * Process Razorpay partial/full refund
-   */
+
   async processRazorpayRefund(appointment, refundAmount, reason) {
     const Razorpay = require('razorpay');
     const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, USE_RAZORPAY_PAYMENTS } = require('../config/paymentConfig');
@@ -297,7 +229,7 @@ class RefundPolicyService {
     
     try {
       const refund = await razorpay.payments.refund(appointment.razorpayPaymentId, {
-        amount: refundAmount * 100, // Convert to paise
+        amount: refundAmount * 100, 
         notes: {
           reason: reason,
           appointmentId: appointment._id.toString(),
@@ -318,12 +250,7 @@ class RefundPolicyService {
       throw error;
     }
   }
-  
-  /**
-   * Process PayU refund
-   * Note: PayU refunds require API integration or manual processing via merchant dashboard
-   * This method initiates the refund request via PayU's refund API
-   */
+
   async processPayURefund(appointment, refundAmount, reason) {
     const axios = require('axios');
     const crypto = require('crypto');
@@ -333,9 +260,7 @@ class RefundPolicyService {
       PAYU_MERCHANT_SALT,
       PAYU_AUTH_HEADER,
       PAYU_MODE 
-    } = require('../config/paymentConfig');
-    
-    // If PayU is disabled or not configured, simulate refund
+    } = require('../config/paymentConfig');
     if (!USE_PAYU_PAYMENTS || !PAYU_MERCHANT_KEY || !PAYU_MERCHANT_SALT) {
       console.log('⚠️ PayU not configured - marking refund as pending for manual processing');
       return {
@@ -358,14 +283,10 @@ class RefundPolicyService {
       };
     }
     
-    try {
-      // PayU Refund API endpoint
+    try {
       const refundUrl = PAYU_MODE === 'live' 
         ? 'https://info.payu.in/merchant/postservice.php?form=2'
-        : 'https://test.payu.in/merchant/postservice.php?form=2';
-      
-      // Generate hash for refund request
-      // Hash formula: key|command|var1|salt
+        : 'https://test.payu.in/merchant/postservice.php?form=2';
       const command = 'cancel_refund_transaction';
       const var1 = payuPaymentId || payuTxnId;
       const hashString = `${PAYU_MERCHANT_KEY}|${command}|${var1}|${PAYU_MERCHANT_SALT}`;
@@ -374,10 +295,10 @@ class RefundPolicyService {
       const refundData = {
         key: PAYU_MERCHANT_KEY,
         command: command,
-        var1: var1, // PayU Payment ID or Transaction ID
-        var2: payuTxnId, // Original Transaction ID
-        var3: refundAmount.toString(), // Refund amount
-        var4: reason, // Refund reason
+        var1: var1, 
+        var2: payuTxnId, 
+        var3: refundAmount.toString(), 
+        var4: reason, 
         hash: hash
       };
       
@@ -390,21 +311,18 @@ class RefundPolicyService {
         }
       });
       
-      console.log('📥 PayU refund response:', response.data);
-      
-      // PayU returns status in response
+      console.log('📥 PayU refund response:', response.data);
       if (response.data && (response.data.status === 1 || response.data.status === 'success')) {
         console.log(`✅ PayU refund initiated successfully for ₹${refundAmount}`);
         return {
           success: true,
-          pending: true, // PayU refunds take 5-7 days
+          pending: true, 
           refundId: response.data.request_id || response.data.mihpayid,
           amount: refundAmount,
           message: 'Refund initiated. Amount will be credited within 5-7 business days.',
           payuResponse: response.data
         };
-      } else {
-        // Refund API call failed, mark for manual processing
+      } else {
         console.log('⚠️ PayU refund API returned error, marking for manual processing');
         return {
           success: true,
@@ -415,8 +333,7 @@ class RefundPolicyService {
       }
       
     } catch (error) {
-      console.error('❌ PayU refund API error:', error.message);
-      // Even if API fails, mark as pending for manual processing
+      console.error('❌ PayU refund API error:', error.message);
       return {
         success: true,
         pending: true,
@@ -425,28 +342,19 @@ class RefundPolicyService {
       };
     }
   }
-  
-  /**
-   * Add credit to user wallet
-   */
+
   async addWalletCredit(userId, amount, description, referenceId) {
     try {
       const user = await User.findById(userId);
       if (!user) {
         throw new Error('User not found');
-      }
-      
-      // Initialize wallet if not exists
+      }
       if (typeof user.walletBalance !== 'number') {
         user.walletBalance = 0;
-      }
-      
-      // Initialize wallet history if not exists
+      }
       if (!Array.isArray(user.walletHistory)) {
         user.walletHistory = [];
-      }
-      
-      // Add credit
+      }
       user.walletBalance += amount;
       user.walletHistory.push({
         type: 'credit',
@@ -470,10 +378,7 @@ class RefundPolicyService {
       throw error;
     }
   }
-  
-  /**
-   * Get refund policy details (for display to users)
-   */
+
   getRefundPolicyDetails() {
     return {
       patientCancellation: {
@@ -498,10 +403,7 @@ class RefundPolicyService {
       fullRefundWindowHours: REFUND_POLICY.fullRefundHours
     };
   }
-  
-  /**
-   * Preview refund (without processing)
-   */
+
   async previewRefund(appointmentId, cancelledBy = 'patient') {
     const appointment = await Appointment.findById(appointmentId)
       .populate('userId', 'name email')

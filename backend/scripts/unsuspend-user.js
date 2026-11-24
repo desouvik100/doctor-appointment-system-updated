@@ -1,5 +1,4 @@
-// Script to unsuspend a user
-// Run with: node backend/scripts/unsuspend-user.js
+
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
@@ -19,14 +18,11 @@ async function unsuspendUser(email) {
     console.log('Connected to MongoDB');
 
     const User = require('../models/User');
-    const Doctor = require('../models/Doctor');
-
-    // Try to find in Users collection
+    const Doctor = require('../models/Doctor');
     let user = await User.findOne({ email: email.toLowerCase().trim() });
     let collection = 'User';
 
-    if (!user) {
-      // Try Doctors collection
+    if (!user) {
       user = await Doctor.findOne({ email: email.toLowerCase().trim() });
       collection = 'Doctor';
     }
@@ -47,9 +43,7 @@ async function unsuspendUser(email) {
     if (user.isActive === true) {
       console.log(`\n✅ User is already active, no action needed.`);
       process.exit(0);
-    }
-
-    // Unsuspend the user
+    }
     const updateResult = await (collection === 'Doctor' ? Doctor : User).findByIdAndUpdate(
       user._id,
       {
@@ -67,9 +61,7 @@ async function unsuspendUser(email) {
     console.error('❌ Error:', error.message);
     process.exit(1);
   }
-}
-
-// Get email from command line or use default
+}
 const email = process.argv[2] || 'desouvik2018@gmail.com';
 console.log(`\n🔓 Unsuspending user: ${email}\n`);
 unsuspendUser(email);

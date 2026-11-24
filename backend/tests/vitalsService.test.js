@@ -1,9 +1,4 @@
-/**
- * Property-Based Tests for Vitals Service
- * Feature: emr-clinical-features
- * 
- * Tests vitals validation, range checking, and abnormal flagging
- */
+
 
 const fc = require('fast-check');
 const {
@@ -15,15 +10,7 @@ const {
 } = require('../services/vitalsService');
 
 describe('Vitals Service', () => {
-  
-  /**
-   * Property 1: Vitals Range Validation and Abnormal Flagging
-   * For any vital sign value and type, if the value is within the valid input range,
-   * the system SHALL accept it; if the value is outside the normal clinical range,
-   * the system SHALL flag it as abnormal.
-   * 
-   * Validates: Requirements 1.2, 1.3, 1.6, 1.7
-   */
+
   describe('Property 1: Vitals Range Validation and Abnormal Flagging', () => {
     
     test('valid BP systolic values are accepted, abnormal values are flagged', () => {
@@ -31,12 +18,8 @@ describe('Vitals Service', () => {
         fc.property(
           fc.integer({ min: 60, max: 250 }),
           (systolic) => {
-            const result = validateVitalValue('systolic', systolic);
-            
-            // Should be valid within range
-            expect(result.isValid).toBe(true);
-            
-            // Check abnormal flagging
+            const result = validateVitalValue('systolic', systolic);
+            expect(result.isValid).toBe(true);
             const range = VITAL_RANGES.bloodPressure.systolic;
             const shouldBeAbnormal = systolic < range.normalMin || systolic > range.normalMax;
             expect(result.isAbnormal).toBe(shouldBeAbnormal);
@@ -119,32 +102,18 @@ describe('Vitals Service', () => {
       );
     });
     
-    test('invalid values outside valid range are rejected', () => {
-      // Test systolic below valid range
+    test('invalid values outside valid range are rejected', () => {
       const lowSystolic = validateVitalValue('systolic', 50);
-      expect(lowSystolic.isValid).toBe(false);
-      
-      // Test systolic above valid range
+      expect(lowSystolic.isValid).toBe(false);
       const highSystolic = validateVitalValue('systolic', 260);
-      expect(highSystolic.isValid).toBe(false);
-      
-      // Test pulse below valid range
+      expect(highSystolic.isValid).toBe(false);
       const lowPulse = validateVitalValue('pulse', 20);
-      expect(lowPulse.isValid).toBe(false);
-      
-      // Test SpO2 below valid range
+      expect(lowPulse.isValid).toBe(false);
       const lowSpo2 = validateVitalValue('spo2', 60);
       expect(lowSpo2.isValid).toBe(false);
     });
   });
-  
-  /**
-   * Property 2: Temperature Unit Conversion Round-Trip
-   * For any valid temperature value in Fahrenheit, converting to Celsius and back
-   * to Fahrenheit SHALL produce a value within 0.1°F of the original.
-   * 
-   * Validates: Requirements 1.4
-   */
+
   describe('Property 2: Temperature Unit Conversion Round-Trip', () => {
     
     test('F to C to F round-trip preserves value within precision', () => {
@@ -153,9 +122,7 @@ describe('Vitals Service', () => {
           fc.float({ min: 95, max: 108, noNaN: true }),
           (tempF) => {
             const tempC = convertTemperature(tempF, 'F', 'C');
-            const tempFBack = convertTemperature(tempC, 'C', 'F');
-            
-            // Should be within 0.1°F due to rounding
+            const tempFBack = convertTemperature(tempC, 'C', 'F');
             expect(Math.abs(tempFBack - tempF)).toBeLessThanOrEqual(0.2);
           }
         ),
@@ -169,9 +136,7 @@ describe('Vitals Service', () => {
           fc.float({ min: 35, max: 42, noNaN: true }),
           (tempC) => {
             const tempF = convertTemperature(tempC, 'C', 'F');
-            const tempCBack = convertTemperature(tempF, 'F', 'C');
-            
-            // Should be within 0.1°C due to rounding
+            const tempCBack = convertTemperature(tempF, 'F', 'C');
             expect(Math.abs(tempCBack - tempC)).toBeLessThanOrEqual(0.2);
           }
         ),
@@ -192,25 +157,16 @@ describe('Vitals Service', () => {
       );
     });
   });
-  
-  /**
-   * Property 3: BMI Calculation Correctness
-   * For any valid weight and height, the calculated BMI SHALL equal
-   * weight(kg) / height(m)² within acceptable precision.
-   * 
-   * Validates: Requirements 1.5
-   */
+
   describe('Property 3: BMI Calculation Correctness', () => {
     
     test('BMI calculation is correct for kg/cm inputs', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 30, max: 200, noNaN: true }),  // weight in kg
-          fc.float({ min: 100, max: 220, noNaN: true }), // height in cm
+          fc.float({ min: 30, max: 200, noNaN: true }),  
+          fc.float({ min: 100, max: 220, noNaN: true }), 
           (weightKg, heightCm) => {
-            const calculatedBMI = calculateBMI(weightKg, 'kg', heightCm, 'cm');
-            
-            // Manual calculation
+            const calculatedBMI = calculateBMI(weightKg, 'kg', heightCm, 'cm');
             const heightM = heightCm / 100;
             const expectedBMI = Math.round((weightKg / (heightM * heightM)) * 10) / 10;
             
@@ -224,12 +180,10 @@ describe('Vitals Service', () => {
     test('BMI calculation handles lbs to kg conversion', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 66, max: 440, noNaN: true }),  // weight in lbs
-          fc.float({ min: 100, max: 220, noNaN: true }), // height in cm
+          fc.float({ min: 66, max: 440, noNaN: true }),  
+          fc.float({ min: 100, max: 220, noNaN: true }), 
           (weightLbs, heightCm) => {
-            const calculatedBMI = calculateBMI(weightLbs, 'lbs', heightCm, 'cm');
-            
-            // Manual calculation with conversion
+            const calculatedBMI = calculateBMI(weightLbs, 'lbs', heightCm, 'cm');
             const weightKg = Math.round(weightLbs / 2.20462 * 10) / 10;
             const heightM = heightCm / 100;
             const expectedBMI = Math.round((weightKg / (heightM * heightM)) * 10) / 10;
@@ -247,10 +201,7 @@ describe('Vitals Service', () => {
       expect(calculateBMI(70, 'kg', 0, 'cm')).toBeNull();
     });
   });
-  
-  /**
-   * Integration test: validateVitals function
-   */
+
   describe('validateVitals Integration', () => {
     
     test('validates complete vitals object correctly', () => {
@@ -274,9 +225,9 @@ describe('Vitals Service', () => {
     
     test('flags abnormal values correctly', () => {
       const vitals = {
-        bloodPressure: { systolic: 160, diastolic: 100 }, // High BP
-        pulse: { value: 110 }, // High pulse
-        spo2: { value: 92 } // Low SpO2
+        bloodPressure: { systolic: 160, diastolic: 100 }, 
+        pulse: { value: 110 }, 
+        spo2: { value: 92 } 
       };
       
       const result = validateVitals(vitals);

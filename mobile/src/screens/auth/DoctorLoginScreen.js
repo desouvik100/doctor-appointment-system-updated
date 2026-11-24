@@ -1,6 +1,4 @@
-/**
- * Doctor Login Screen - Futuristic Medical Professional Portal
- */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -18,8 +16,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
-import { typography, spacing, borderRadius } from '../../theme/typography';
-// Direct import to avoid circular dependency issues
+import { typography, spacing, borderRadius } from '../../theme/typography';
 import { doctorLogin } from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 import whatsappService from '../../services/whatsappService';
@@ -48,9 +45,7 @@ const DoctorLoginScreen = ({ navigation }) => {
         duration: 600,
         useNativeDriver: true,
       }),
-    ]).start();
-
-    // Pulse animation for the icon
+    ]).start();
     Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -73,9 +68,7 @@ const DoctorLoginScreen = ({ navigation }) => {
       return;
     }
 
-    setLoading(true);
-    
-    // DEBUG: Log payload and URL
+    setLoading(true);
     const payload = {
       email: email.trim().toLowerCase(),
       password,
@@ -83,36 +76,29 @@ const DoctorLoginScreen = ({ navigation }) => {
     console.log('🔵 [DOCTOR LOGIN] PAYLOAD:', { email: payload.email, password: '***' });
     console.log('🔵 [DOCTOR LOGIN] ENDPOINT: /auth/doctor/login');
     
-    try {
-      // Use direct import of doctorLogin function
-      const { user, token } = await doctorLogin(payload);
-      
-      // DEBUG: Log success
+    try {
+      const { user, token } = await doctorLogin(payload);
       console.log('✅ [DOCTOR LOGIN] SUCCESS');
       console.log('✅ [DOCTOR LOGIN] TOKEN RECEIVED:', token ? 'YES' : 'NO');
       console.log('✅ [DOCTOR LOGIN] USER:', user?.email, user?.role);
       
       await login(user, token);
       navigation.replace('Main');
-    } catch (error) {
-      // DEBUG: Log full error details
+    } catch (error) {
       console.log('❌ [DOCTOR LOGIN] ERROR STATUS:', error.statusCode);
       console.log('❌ [DOCTOR LOGIN] ERROR MESSAGE:', error.message);
       console.log('❌ [DOCTOR LOGIN] ERROR CODE:', error.code);
       console.log('❌ [DOCTOR LOGIN] FULL ERROR:', JSON.stringify(error, null, 2));
       
       let message = 'Login failed. Please check your credentials.';
-      let title = 'Login Failed';
-      
-      // Check for network/connection errors
+      let title = 'Login Failed';
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         title = 'Server Starting Up';
         message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
       } else if (error.code === 'ERR_NETWORK' || error.statusCode === 0) {
         title = 'Connection Error';
         message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
-      } else if (error.statusCode === 403) {
-        // Handle suspended/pending/rejected accounts
+      } else if (error.statusCode === 403) {
         if (error.message?.includes('suspended')) {
           title = 'Account Suspended';
         } else if (error.message?.includes('pending')) {
@@ -137,7 +123,7 @@ const DoctorLoginScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
       
-      {/* Background */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={['#0A0A0F', '#1A1A2E', '#0A0A0F']}
@@ -166,7 +152,7 @@ const DoctorLoginScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Back Button */}
+          {}
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -183,7 +169,7 @@ const DoctorLoginScreen = ({ navigation }) => {
               },
             ]}
           >
-            {/* Header */}
+            {}
             <View style={styles.header}>
               <Animated.View 
                 style={[
@@ -204,14 +190,14 @@ const DoctorLoginScreen = ({ navigation }) => {
               <Text style={styles.title}>Doctor Portal</Text>
               <Text style={styles.subtitle}>Access your medical dashboard</Text>
               
-              {/* Status Badge */}
+              {}
               <View style={styles.statusBadge}>
                 <View style={styles.statusDot} />
                 <Text style={styles.statusText}>Secure Connection</Text>
               </View>
             </View>
 
-            {/* Login Form */}
+            {}
             <View style={styles.formContainer}>
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Medical ID / Email</Text>
@@ -251,7 +237,7 @@ const DoctorLoginScreen = ({ navigation }) => {
                 <Text style={styles.forgotText}>Forgot credentials?</Text>
               </TouchableOpacity>
 
-              {/* Login Button */}
+              {}
               <TouchableOpacity
                 style={styles.loginButton}
                 onPress={handleLogin}
@@ -275,7 +261,7 @@ const DoctorLoginScreen = ({ navigation }) => {
                 </LinearGradient>
               </TouchableOpacity>
 
-              {/* Quick Actions */}
+              {}
               <View style={styles.quickActions}>
                 <TouchableOpacity style={styles.quickAction}>
                   <View style={[styles.quickIcon, { backgroundColor: 'rgba(108, 92, 231, 0.2)' }]}>
@@ -298,7 +284,7 @@ const DoctorLoginScreen = ({ navigation }) => {
               </View>
             </View>
 
-            {/* Footer */}
+            {}
             <View style={styles.footer}>
               <TouchableOpacity onPress={() => whatsappService.contactSupport('Hi! I need IT support for Doctor Portal.')}>
                 <Text style={styles.footerText}>

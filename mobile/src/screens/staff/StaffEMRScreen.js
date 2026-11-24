@@ -1,7 +1,4 @@
-/**
- * Staff EMR Screen - Electronic Medical Records for Staff
- * Shows EMR subscription status, patients, prescriptions, and clinic analytics
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -54,8 +51,7 @@ const StaffEMRScreen = ({ navigation }) => {
       return;
     }
 
-    try {
-      // Fetch subscription status
+    try {
       const subResponse = await apiClient.get(`/emr/subscription/${clinicId}`).catch(() => ({ data: {} }));
       if (subResponse.data.success && subResponse.data.subscription) {
         setSubscription(subResponse.data.subscription);
@@ -64,16 +60,12 @@ const StaffEMRScreen = ({ navigation }) => {
         const today = new Date();
         const daysRemaining = Math.max(0, Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24)));
         setStats(prev => ({ ...prev, daysRemaining }));
-      }
-
-      // Fetch patients
+      }
       const patientsResponse = await apiClient.get(`/emr/patients/clinic/${clinicId}`).catch(() => ({ data: { patients: [] } }));
       if (patientsResponse.data.success) {
         setPatients(patientsResponse.data.patients || []);
         setStats(prev => ({ ...prev, totalPatients: patientsResponse.data.patients?.length || 0 }));
-      }
-
-      // Fetch today's appointments for stats
+      }
       const today = new Date().toISOString().split('T')[0];
       const appointmentsResponse = await apiClient.get(`/appointments/clinic/${clinicId}`, {
         params: { date: today }
@@ -133,7 +125,7 @@ const StaffEMRScreen = ({ navigation }) => {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -141,7 +133,7 @@ const StaffEMRScreen = ({ navigation }) => {
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>EMR System</Text>
           <View style={{ width: 40 }} />
         </View>
-        {/* Subscription Banner */}
+        {}
         {subscription ? (
           <LinearGradient colors={['#10B981', '#059669']} style={styles.subBanner}>
             <View style={styles.subBannerLeft}>
@@ -166,7 +158,7 @@ const StaffEMRScreen = ({ navigation }) => {
             </View>
           </LinearGradient>
         )}
-        {/* Stats Grid */}
+        {}
         <View style={styles.statsGrid}>
           <StatCard 
             icon="👥" 
@@ -196,7 +188,7 @@ const StaffEMRScreen = ({ navigation }) => {
             gradient={['#8B5CF6', '#6D28D9']}
           />
         </View>
-        {/* Quick Actions */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
@@ -238,7 +230,7 @@ const StaffEMRScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-        {/* Patient Search */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient Search</Text>
           <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
@@ -257,7 +249,7 @@ const StaffEMRScreen = ({ navigation }) => {
             )}
           </View>
 
-          {/* Patient List */}
+          {}
           {filteredPatients.length === 0 ? (
             <Card style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
               <Text style={styles.emptyIcon}>👤</Text>

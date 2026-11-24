@@ -1,8 +1,4 @@
-/**
- * Drug Interaction Service Tests
- * Tests Property 7: Drug Interaction Detection and Severity
- * Validates Requirements 5.1, 5.2, 5.3, 5.4
- */
+
 
 const fc = require('fast-check');
 const {
@@ -17,8 +13,7 @@ const {
   searchDrugs,
   hasKnownInteractions,
   getInteractionStats,
-  normalizeDrugName,
-  // Allergy cross-checking functions
+  normalizeDrugName,
   checkDrugAllergies,
   checkMultipleDrugAllergies,
   checkDrugAllergyMatch,
@@ -29,13 +24,9 @@ const {
 
 describe('Drug Interaction Service Tests', () => {
   
-  describe('Property 7: Drug Interaction Detection and Severity', () => {
+  describe('Property 7: Drug Interaction Detection and Severity', () => {
     
-    // Feature: emr-clinical-features, Property 7: Drug Interaction Detection and Severity
-    // **Validates: Requirements 5.1, 5.2, 5.3, 5.4**
-    
-    test('For any known interacting drug pair, checkDrugPair returns interaction with valid severity', () => {
-      // Known interacting pairs from the database
+    test('For any known interacting drug pair, checkDrugPair returns interaction with valid severity', () => {
       const knownInteractions = [
         ['warfarin', 'ibuprofen'],
         ['warfarin', 'aspirin'],
@@ -50,22 +41,16 @@ describe('Drug Interaction Service Tests', () => {
         fc.property(
           fc.constantFrom(...knownInteractions),
           ([drug1, drug2]) => {
-            const interaction = checkDrugPair(drug1, drug2);
-            
-            // Should find an interaction
+            const interaction = checkDrugPair(drug1, drug2);
             expect(interaction).not.toBeNull();
             expect(interaction).toHaveProperty('severity');
             expect(interaction).toHaveProperty('severityLevel');
             expect(interaction).toHaveProperty('mechanism');
             expect(interaction).toHaveProperty('clinicalEffect');
-            expect(interaction).toHaveProperty('recommendation');
-            
-            // Severity should be valid
+            expect(interaction).toHaveProperty('recommendation');
             expect(['contraindicated', 'major', 'moderate', 'minor']).toContain(interaction.severity);
             expect(interaction.severityLevel).toBeGreaterThanOrEqual(1);
-            expect(interaction.severityLevel).toBeLessThanOrEqual(4);
-            
-            // Should have meaningful content
+            expect(interaction.severityLevel).toBeLessThanOrEqual(4);
             expect(interaction.mechanism.length).toBeGreaterThan(0);
             expect(interaction.clinicalEffect.length).toBeGreaterThan(0);
             expect(interaction.recommendation.length).toBeGreaterThan(0);
@@ -86,19 +71,13 @@ describe('Drug Interaction Service Tests', () => {
             { minLength: 2, maxLength: 5 }
           ),
           (drugs) => {
-            const interactions = checkInteractions(drugs);
-            
-            // Should return an array
-            expect(Array.isArray(interactions)).toBe(true);
-            
-            // If multiple interactions, should be sorted by severity (lowest level = most severe)
+            const interactions = checkInteractions(drugs);
+            expect(Array.isArray(interactions)).toBe(true);
             if (interactions.length > 1) {
               for (let i = 0; i < interactions.length - 1; i++) {
                 expect(interactions[i].severityLevel).toBeLessThanOrEqual(interactions[i + 1].severityLevel);
               }
-            }
-            
-            // Each interaction should have required fields
+            }
             interactions.forEach(interaction => {
               expect(interaction).toHaveProperty('drug1');
               expect(interaction).toHaveProperty('drug2');
@@ -149,9 +128,7 @@ describe('Drug Interaction Service Tests', () => {
           fc.constantFrom(...drugPairs),
           ([drug1, drug2]) => {
             const interaction1 = checkDrugPair(drug1, drug2);
-            const interaction2 = checkDrugPair(drug2, drug1);
-            
-            // Both should find the same interaction (or both null)
+            const interaction2 = checkDrugPair(drug2, drug1);
             if (interaction1 === null) {
               expect(interaction2).toBeNull();
             } else {
@@ -201,9 +178,7 @@ describe('Drug Interaction Service Tests', () => {
           ({ newDrug, currentMeds }) => {
             const interactions = checkNewDrugInteractions(newDrug, currentMeds);
             
-            expect(Array.isArray(interactions)).toBe(true);
-            
-            // Each interaction should involve the new drug
+            expect(Array.isArray(interactions)).toBe(true);
             interactions.forEach(interaction => {
               const involvesDrug = 
                 normalizeDrugName(interaction.drug1) === normalizeDrugName(newDrug) ||
@@ -252,8 +227,7 @@ describe('Drug Interaction Service Tests', () => {
       expect(interaction).toBeNull();
     });
     
-    test('should detect contraindicated interactions', () => {
-      // SSRI + MAOI is contraindicated
+    test('should detect contraindicated interactions', () => {
       const interaction = checkDrugPair('fluoxetine', 'phenelzine');
       
       expect(interaction).not.toBeNull();
@@ -261,8 +235,7 @@ describe('Drug Interaction Service Tests', () => {
       expect(interaction.severityLevel).toBe(1);
     });
     
-    test('should detect major interactions', () => {
-      // Warfarin + NSAID is major
+    test('should detect major interactions', () => {
       const interaction = checkDrugPair('warfarin', 'ibuprofen');
       
       expect(interaction).not.toBeNull();
@@ -270,8 +243,7 @@ describe('Drug Interaction Service Tests', () => {
       expect(interaction.severityLevel).toBe(2);
     });
     
-    test('should detect class-based interactions', () => {
-      // Any SSRI + any MAOI should interact
+    test('should detect class-based interactions', () => {
       const interaction1 = checkDrugPair('sertraline', 'tranylcypromine');
       const interaction2 = checkDrugPair('paroxetine', 'isocarboxazid');
       
@@ -341,10 +313,7 @@ describe('Drug Interaction Service Tests', () => {
     });
   });
 
-  describe('Property 8: Allergy Cross-Checking During Prescription', () => {
-    
-    // Feature: emr-clinical-features, Property 8: Allergy Cross-Checking During Prescription
-    // **Validates: Requirements 5.6, 5.7**
+  describe('Property 8: Allergy Cross-Checking During Prescription', () => {
     
     test('For any drug prescribed to a patient with a direct allergy to that drug, an alert is generated', () => {
       const drugsWithAllergies = [
@@ -361,9 +330,7 @@ describe('Drug Interaction Service Tests', () => {
           fc.constantFrom('severe', 'moderate', 'mild', 'unknown'),
           ({ drug, allergen }, severity) => {
             const allergies = [{ allergen, severity, reaction: 'Test reaction' }];
-            const alerts = checkDrugAllergies(drug, allergies);
-            
-            // Should find an allergy alert
+            const alerts = checkDrugAllergies(drug, allergies);
             expect(alerts.length).toBeGreaterThan(0);
             expect(alerts[0]).toHaveProperty('type', 'allergy');
             expect(alerts[0]).toHaveProperty('drug', drug);
@@ -393,9 +360,7 @@ describe('Drug Interaction Service Tests', () => {
           fc.constantFrom(...classAllergies),
           ({ drug, allergenClass }) => {
             const allergies = [{ allergen: allergenClass, severity: 'moderate', reaction: 'Class allergy' }];
-            const alerts = checkDrugAllergies(drug, allergies);
-            
-            // Should find a class-based allergy alert
+            const alerts = checkDrugAllergies(drug, allergies);
             expect(alerts.length).toBeGreaterThan(0);
             expect(alerts[0]).toHaveProperty('type', 'allergy');
             expect(alerts[0]).toHaveProperty('drug', drug);
@@ -420,9 +385,7 @@ describe('Drug Interaction Service Tests', () => {
           fc.constantFrom(...crossReactivityPairs),
           ({ drug, allergen }) => {
             const allergies = [{ allergen, severity: 'severe', reaction: 'Anaphylaxis' }];
-            const alerts = checkDrugAllergies(drug, allergies);
-            
-            // Should find a cross-reactivity alert
+            const alerts = checkDrugAllergies(drug, allergies);
             expect(alerts.length).toBeGreaterThan(0);
             expect(alerts[0]).toHaveProperty('type', 'allergy');
             expect(alerts[0]).toHaveProperty('matchType', 'cross-reactivity');
@@ -473,23 +436,15 @@ describe('Drug Interaction Service Tests', () => {
             )
           }),
           ({ newDrug, currentMeds, allergies }) => {
-            const result = checkPrescriptionSafety(newDrug, currentMeds, allergies);
-            
-            // Should return proper structure
+            const result = checkPrescriptionSafety(newDrug, currentMeds, allergies);
             expect(result).toHaveProperty('status');
             expect(result).toHaveProperty('interactions');
             expect(result).toHaveProperty('allergyAlerts');
             expect(result).toHaveProperty('totalAlerts');
             expect(result).toHaveProperty('requiresOverride');
-            expect(result).toHaveProperty('summary');
-            
-            // Status should be valid
-            expect(['safe', 'monitor', 'caution', 'contraindicated']).toContain(result.status);
-            
-            // Total alerts should match
-            expect(result.totalAlerts).toBe(result.interactions.length + result.allergyAlerts.length);
-            
-            // Arrays should be arrays
+            expect(result).toHaveProperty('summary');
+            expect(['safe', 'monitor', 'caution', 'contraindicated']).toContain(result.status);
+            expect(result.totalAlerts).toBe(result.interactions.length + result.allergyAlerts.length);
             expect(Array.isArray(result.interactions)).toBe(true);
             expect(Array.isArray(result.allergyAlerts)).toBe(true);
           }
@@ -503,12 +458,8 @@ describe('Drug Interaction Service Tests', () => {
         { allergen: 'ibuprofen', severity: 'mild', reaction: 'Rash' },
         { allergen: 'nsaid', severity: 'severe', reaction: 'Anaphylaxis' },
         { allergen: 'aspirin', severity: 'moderate', reaction: 'Hives' }
-      ];
-      
-      // Naproxen is an NSAID, so it should trigger multiple alerts
-      const alerts = checkDrugAllergies('naproxen', allergies);
-      
-      // Should have alerts and be sorted by severity
+      ];
+      const alerts = checkDrugAllergies('naproxen', allergies);
       expect(alerts.length).toBeGreaterThan(0);
       
       for (let i = 0; i < alerts.length - 1; i++) {
@@ -544,9 +495,7 @@ describe('Drug Interaction Service Tests', () => {
       const drugs = ['aspirin', 'ibuprofen', 'metformin'];
       const allergies = [{ allergen: 'nsaid', severity: 'moderate' }];
       
-      const alerts = checkMultipleDrugAllergies(drugs, allergies);
-      
-      // Should find alerts for aspirin and ibuprofen (both NSAIDs)
+      const alerts = checkMultipleDrugAllergies(drugs, allergies);
       expect(alerts.length).toBe(2);
       expect(alerts.some(a => a.drug === 'aspirin')).toBe(true);
       expect(alerts.some(a => a.drug === 'ibuprofen')).toBe(true);
@@ -581,9 +530,7 @@ describe('Drug Interaction Service Tests', () => {
         'warfarin',
         ['aspirin'],
         [{ allergen: 'anticoagulant', severity: 'mild' }]
-      );
-      
-      // Should have both interaction (warfarin + aspirin) and allergy alert
+      );
       expect(result.interactions.length).toBeGreaterThan(0);
       expect(result.allergyAlerts.length).toBeGreaterThan(0);
     });

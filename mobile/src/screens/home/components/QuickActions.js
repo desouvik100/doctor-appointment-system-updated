@@ -1,6 +1,4 @@
-/**
- * QuickActions Component - Premium Healthcare Service Cards
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -62,7 +60,7 @@ const ACTIONS = [
 
 const QuickActions = () => {
   const { colors, isDarkMode } = useTheme();
-  // Obtain navigation reference directly via hook for reusability
+
   const navigation = useNavigation();
 
   return (

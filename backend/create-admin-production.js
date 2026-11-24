@@ -1,31 +1,17 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-
-// Import User model
+const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 
 const createAdminProduction = async () => {
   try {
-    console.log('🔧 Creating admin for production...');
-    
-    // Load environment variables
-    require('dotenv').config();
-    
-    // Use production MongoDB URI
-    const MONGODB_URI = process.env.MONGODB_URI;
-    
-    // Connect to MongoDB
+    console.log('🔧 Creating admin for production...');
+    require('dotenv').config();
+    const MONGODB_URI = process.env.MONGODB_URI;
     await mongoose.connect(MONGODB_URI);
-    console.log('✅ Connected to Production MongoDB');
-    
-    // Admin credentials
+    console.log('✅ Connected to Production MongoDB');
     const adminEmail = 'admin@healthsyncpro.in';
-    const adminPassword = 'Admin@123';
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-    
-    // Update or create admin
+    const adminPassword = 'Admin@123';
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
     const result = await User.findOneAndUpdate(
       { email: adminEmail },
       {

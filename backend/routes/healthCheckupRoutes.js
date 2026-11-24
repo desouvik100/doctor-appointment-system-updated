@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const HealthCheckup = require('../models/HealthCheckup');
-const Clinic = require('../models/Clinic');
-
-// Health checkup packages with tests
+const Clinic = require('../models/Clinic');
 const CHECKUP_PACKAGES = {
   basic: {
     name: 'Basic Health Checkup',
@@ -193,9 +191,7 @@ const CHECKUP_PACKAGES = {
     ],
     fastingRequired: true
   }
-};
-
-// Get all packages
+};
 router.get('/packages', (req, res) => {
   const packages = Object.entries(CHECKUP_PACKAGES).map(([key, pkg]) => ({
     id: key,
@@ -203,9 +199,7 @@ router.get('/packages', (req, res) => {
     discount: Math.round(((pkg.price - pkg.discountedPrice) / pkg.price) * 100)
   }));
   res.json(packages);
-});
-
-// Get package details
+});
 router.get('/packages/:packageId', (req, res) => {
   const pkg = CHECKUP_PACKAGES[req.params.packageId];
   if (!pkg) {
@@ -216,15 +210,11 @@ router.get('/packages/:packageId', (req, res) => {
     ...pkg,
     discount: Math.round(((pkg.price - pkg.discountedPrice) / pkg.price) * 100)
   });
-});
-
-// Get available slots for a clinic
+});
 router.get('/slots/:clinicId/:date', async (req, res) => {
   try {
     const { clinicId, date } = req.params;
-    const selectedDate = new Date(date);
-    
-    // Get existing bookings for the date
+    const selectedDate = new Date(date);
     const existingBookings = await HealthCheckup.find({
       clinicId,
       scheduledDate: {
@@ -234,9 +224,7 @@ router.get('/slots/:clinicId/:date', async (req, res) => {
       status: { $nin: ['cancelled'] }
     }).select('scheduledTime');
 
-    const bookedSlots = existingBookings.map(b => b.scheduledTime);
-    
-    // Available slots (assuming clinic operates 7 AM to 12 PM for checkups)
+    const bookedSlots = existingBookings.map(b => b.scheduledTime);
     const allSlots = ['07:00', '07:30', '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30'];
     const availableSlots = allSlots.filter(slot => !bookedSlots.includes(slot));
 
@@ -244,9 +232,7 @@ router.get('/slots/:clinicId/:date', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Book a health checkup
+});
 router.post('/book', async (req, res) => {
   try {
     const { userId, clinicId, packageType, scheduledDate, scheduledTime, patientDetails, reportDelivery } = req.body;
@@ -254,9 +240,7 @@ router.post('/book', async (req, res) => {
     const pkg = CHECKUP_PACKAGES[packageType];
     if (!pkg) {
       return res.status(400).json({ message: 'Invalid package type' });
-    }
-
-    // Check if slot is available
+    }
     const existingBooking = await HealthCheckup.findOne({
       clinicId,
       scheduledDate: new Date(scheduledDate),
@@ -286,9 +270,7 @@ router.post('/book', async (req, res) => {
       reportDelivery: reportDelivery || 'email'
     });
 
-    await checkup.save();
-
-    // Populate clinic details
+    await checkup.save();
     await checkup.populate('clinicId', 'name address phone');
 
     res.status(201).json({
@@ -298,9 +280,7 @@ router.post('/book', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get user's checkup bookings
+});
 router.get('/user/:userId', async (req, res) => {
   try {
     const checkups = await HealthCheckup.find({ userId: req.params.userId })
@@ -310,9 +290,7 @@ router.get('/user/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get checkup details
+});
 router.get('/:id', async (req, res) => {
   try {
     const checkup = await HealthCheckup.findById(req.params.id)
@@ -324,9 +302,7 @@ router.get('/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Cancel checkup
+});
 router.put('/:id/cancel', async (req, res) => {
   try {
     const { reason } = req.body;
@@ -346,9 +322,7 @@ router.put('/:id/cancel', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Update checkup status (for clinic)
+});
 router.put('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;

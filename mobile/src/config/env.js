@@ -1,39 +1,16 @@
-/**
- * Environment Configuration
- * Change API_URL based on your setup:
- * - Android Emulator: http://10.0.2.2:5005
- * - iOS Simulator: http://localhost:5005
- * - Real Device: http://YOUR_PC_IP:5005
- * - Production: https://your-api.com
- */
-
-// For development - using cloud backend
-// Physical device needs cloud backend URL
-const DEV_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
-
-// For production
-const PROD_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
-
-// Export based on environment
-export const API_URL = PROD_API_URL; // Always use cloud backend
-
-// API timeout in milliseconds
-export const API_TIMEOUT = 120000; // 120 seconds for Render cold starts
-
-// Social Auth Configuration
-// Google OAuth Web Client ID from Google Cloud Console
-export const GOOGLE_WEB_CLIENT_ID = '703204659246-q2jpikuoqkjsmsvbsrtfp3bcoush4h3r.apps.googleusercontent.com';
-// Google OAuth Android Client ID (for native Android sign-in)
+
+const DEV_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
+const PROD_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
+export const API_URL = PROD_API_URL; 
+export const API_TIMEOUT = 120000; 
+export const GOOGLE_WEB_CLIENT_ID = '703204659246-q2jpikuoqkjsmsvbsrtfp3bcoush4h3r.apps.googleusercontent.com';
 export const GOOGLE_ANDROID_CLIENT_ID = '703204659246-903fiib6d06eltj9qo7atppq816d0iok.apps.googleusercontent.com';
-export const FACEBOOK_APP_ID = '757040944108773';
-
-// Other config
+export const FACEBOOK_APP_ID = '757040944108773';
 export const CONFIG = {
   API_URL,
   API_TIMEOUT,
   GOOGLE_WEB_CLIENT_ID,
-  FACEBOOK_APP_ID,
-  // Feature flags
+  FACEBOOK_APP_ID,
   ENABLE_LOGGING: __DEV__,
   ENABLE_ANALYTICS: !__DEV__,
 };

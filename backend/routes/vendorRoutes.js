@@ -1,16 +1,10 @@
-/**
- * Vendor & Purchase Order Management Routes
- */
+
 
 const express = require('express');
 const router = express.Router();
 const Vendor = require('../models/Vendor');
 const PurchaseOrder = require('../models/PurchaseOrder');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// ===== VENDOR ROUTES =====
-
-// Create vendor
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 router.post('/vendors', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const vendor = new Vendor({ ...req.body, createdBy: req.user?.userId });
@@ -19,9 +13,7 @@ router.post('/vendors', verifyTokenWithRole(['admin', 'clinic', 'receptionist'])
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all vendors
+});
 router.get('/vendors/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { status, category, search } = req.query;
@@ -35,9 +27,7 @@ router.get('/vendors/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get vendor by ID
+});
 router.get('/vendors/:id', verifyToken, async (req, res) => {
   try {
     const vendor = await Vendor.findById(req.params.id);
@@ -46,9 +36,7 @@ router.get('/vendors/:id', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update vendor
+});
 router.put('/vendors/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -56,11 +44,7 @@ router.put('/vendors/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== PURCHASE ORDER ROUTES =====
-
-// Create PO
+});
 router.post('/purchase-orders', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const po = new PurchaseOrder({ ...req.body, createdBy: req.user?.userId });
@@ -69,9 +53,7 @@ router.post('/purchase-orders', verifyTokenWithRole(['admin', 'clinic', 'recepti
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all POs
+});
 router.get('/purchase-orders/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { status, vendorId, page = 1, limit = 20 } = req.query;
@@ -90,9 +72,7 @@ router.get('/purchase-orders/clinic/:clinicId', verifyToken, async (req, res) =>
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get PO by ID
+});
 router.get('/purchase-orders/:id', verifyToken, async (req, res) => {
   try {
     const po = await PurchaseOrder.findById(req.params.id)
@@ -104,9 +84,7 @@ router.get('/purchase-orders/:id', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update PO
+});
 router.put('/purchase-orders/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const po = await PurchaseOrder.findByIdAndUpdate(
@@ -118,9 +96,7 @@ router.put('/purchase-orders/:id', verifyTokenWithRole(['admin', 'clinic', 'rece
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Approve PO
+});
 router.post('/purchase-orders/:id/approve', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { approvalNotes } = req.body;
@@ -138,12 +114,10 @@ router.post('/purchase-orders/:id/approve', verifyTokenWithRole(['admin', 'clini
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Receive items
+});
 router.post('/purchase-orders/:id/receive', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const { items } = req.body; // Array of { itemIndex, receivedQuantity, batchNumber, expiryDate }
+    const { items } = req.body; 
     const po = await PurchaseOrder.findById(req.params.id);
     
     items.forEach(({ itemIndex, receivedQuantity, batchNumber, expiryDate }) => {
@@ -153,9 +127,7 @@ router.post('/purchase-orders/:id/receive', verifyTokenWithRole(['admin', 'clini
         po.items[itemIndex].expiryDate = expiryDate;
         po.items[itemIndex].status = receivedQuantity >= po.items[itemIndex].quantity ? 'received' : 'partial';
       }
-    });
-
-    // Check if all items received
+    });
     const allReceived = po.items.every(item => item.status === 'received');
     const anyReceived = po.items.some(item => item.receivedQuantity > 0);
     po.status = allReceived ? 'received' : (anyReceived ? 'partial_received' : po.status);
@@ -167,9 +139,7 @@ router.post('/purchase-orders/:id/receive', verifyTokenWithRole(['admin', 'clini
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get low stock items for auto-reorder
+});
 router.get('/low-stock/:clinicId', verifyToken, async (req, res) => {
   try {
     const PharmacyInventory = require('../models/PharmacyInventory');
@@ -182,9 +152,7 @@ router.get('/low-stock/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get expiring items
+});
 router.get('/expiring/:clinicId', verifyToken, async (req, res) => {
   try {
     const { days = 90 } = req.query;

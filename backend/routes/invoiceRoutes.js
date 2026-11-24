@@ -1,22 +1,18 @@
-// backend/routes/invoiceRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const Payment = require('../models/Payment');
-const { generateInvoiceHTML, generateInvoiceNumber, sendInvoiceEmail, generateAndSendInvoice } = require('../services/invoiceService');
-
-// Test endpoint - send invoice to specific email
+const { generateInvoiceHTML, generateInvoiceNumber, sendInvoiceEmail, generateAndSendInvoice } = require('../services/invoiceService');
 router.post('/test-send', async (req, res) => {
   try {
     const { email, appointmentId } = req.body;
     
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
-    }
-
-    // If appointmentId provided, use that appointment
+    }
     if (appointmentId) {
       const appointment = await Appointment.findById(appointmentId)
         .populate('userId', 'name email phone')
@@ -29,7 +25,7 @@ router.post('/test-send', async (req, res) => {
 
       const result = await generateAndSendInvoice(
         appointment,
-        { ...appointment.userId?.toObject(), email }, // Override email
+        { ...appointment.userId?.toObject(), email }, 
         appointment.doctorId,
         appointment.clinicId,
         {
@@ -42,9 +38,7 @@ router.post('/test-send', async (req, res) => {
       );
 
       return res.json(result);
-    }
-
-    // Send test invoice with dummy data
+    }
     const testInvoiceData = {
       invoiceNumber: generateInvoiceNumber(),
       patient: { name: 'Test Patient', email, phone: '+91-9876543210' },
@@ -61,24 +55,18 @@ router.post('/test-send', async (req, res) => {
     console.error('Test invoice error:', error);
     res.status(500).json({ message: 'Failed to send test invoice', error: error.message });
   }
-});
-
-// Send invoice for latest appointment of a user (by email)
+});
 router.post('/send-by-email', async (req, res) => {
   try {
     const { email } = req.body;
     
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
-    }
-
-    // Find user by email
+    }
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'User not found with this email' });
-    }
-
-    // Find latest appointment
+    }
     const appointment = await Appointment.findOne({ userId: user._id })
       .sort({ createdAt: -1 })
       .populate('userId', 'name email phone')
@@ -114,9 +102,7 @@ router.post('/send-by-email', async (req, res) => {
     console.error('Send by email error:', error);
     res.status(500).json({ message: 'Failed to send invoice', error: error.message });
   }
-});
-
-// Generate invoice for an appointment
+});
 router.get('/generate/:appointmentId', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId)
@@ -126,9 +112,7 @@ router.get('/generate/:appointmentId', async (req, res) => {
 
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
-    }
-
-    // Get payment info if exists
+    }
     const payment = await Payment.findOne({ appointmentId: appointment._id });
 
     const invoiceNumber = generateInvoiceNumber();
@@ -163,9 +147,7 @@ router.get('/generate/:appointmentId', async (req, res) => {
     console.error('Generate invoice error:', error);
     res.status(500).json({ message: 'Failed to generate invoice', error: error.message });
   }
-});
-
-// Send invoice via email
+});
 router.post('/send/:appointmentId', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId)
@@ -179,9 +161,7 @@ router.post('/send/:appointmentId', async (req, res) => {
 
     if (!appointment.userId?.email) {
       return res.status(400).json({ message: 'Patient email not found' });
-    }
-
-    // Get payment info
+    }
     const payment = await Payment.findOne({ appointmentId: appointment._id });
 
     const result = await generateAndSendInvoice(
@@ -196,8 +176,7 @@ router.post('/send/:appointmentId', async (req, res) => {
       }
     );
 
-    if (result.success) {
-      // Update appointment with invoice number
+    if (result.success) {
       appointment.invoiceNumber = result.invoiceNumber;
       appointment.invoiceSentAt = new Date();
       await appointment.save();
@@ -208,9 +187,7 @@ router.post('/send/:appointmentId', async (req, res) => {
     console.error('Send invoice error:', error);
     res.status(500).json({ message: 'Failed to send invoice', error: error.message });
   }
-});
-
-// Download invoice as HTML
+});
 router.get('/download/:appointmentId', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId)
@@ -239,9 +216,7 @@ router.get('/download/:appointmentId', async (req, res) => {
       generatedAt: new Date()
     };
 
-    const invoiceHTML = generateInvoiceHTML(invoiceData);
-
-    // Set headers for download
+    const invoiceHTML = generateInvoiceHTML(invoiceData);
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Content-Disposition', `attachment; filename=invoice-${invoiceNumber}.html`);
     res.send(invoiceHTML);
@@ -249,9 +224,7 @@ router.get('/download/:appointmentId', async (req, res) => {
     console.error('Download invoice error:', error);
     res.status(500).json({ message: 'Failed to download invoice', error: error.message });
   }
-});
-
-// Get invoice by appointment ID (view only)
+});
 router.get('/view/:appointmentId', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId)
@@ -280,18 +253,14 @@ router.get('/view/:appointmentId', async (req, res) => {
       generatedAt: appointment.invoiceSentAt || new Date()
     };
 
-    const invoiceHTML = generateInvoiceHTML(invoiceData);
-
-    // Return HTML directly for viewing in browser
+    const invoiceHTML = generateInvoiceHTML(invoiceData);
     res.setHeader('Content-Type', 'text/html');
     res.send(invoiceHTML);
   } catch (error) {
     console.error('View invoice error:', error);
     res.status(500).json({ message: 'Failed to view invoice', error: error.message });
   }
-});
-
-// Bulk send invoices (admin)
+});
 router.post('/bulk-send', async (req, res) => {
   try {
     const { appointmentIds } = req.body;

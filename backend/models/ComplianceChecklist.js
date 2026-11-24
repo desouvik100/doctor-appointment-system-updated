@@ -1,29 +1,20 @@
-/**
- * Compliance Checklist Model
- * NABH/JCI Compliance & Accreditation Management
- */
+
 
 const mongoose = require('mongoose');
 
 const complianceChecklistSchema = new mongoose.Schema({
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
-  branchId: { type: mongoose.Schema.Types.ObjectId, ref: 'HospitalBranch' },
-  
-  // Checklist Info
+  branchId: { type: mongoose.Schema.Types.ObjectId, ref: 'HospitalBranch' },
   checklistType: { 
     type: String, 
     enum: ['nabh', 'jci', 'hipaa', 'iso', 'fire_safety', 'biomedical_waste', 'infection_control', 'patient_safety', 'custom'],
     required: true 
   },
   checklistName: { type: String, required: true },
-  version: { type: String, default: '1.0' },
-  
-  // Assessment Period
-  assessmentPeriod: { type: String }, // Q1 2024, Monthly, etc.
+  version: { type: String, default: '1.0' },
+  assessmentPeriod: { type: String }, 
   assessmentDate: { type: Date },
-  nextAssessmentDate: { type: Date },
-  
-  // Categories & Items
+  nextAssessmentDate: { type: Date },
   categories: [{
     categoryName: { type: String, required: true },
     categoryCode: { type: String },
@@ -46,30 +37,20 @@ const complianceChecklistSchema = new mongoose.Schema({
       verifiedAt: { type: Date },
       comments: [{ text: String, addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, addedAt: Date }]
     }]
-  }],
-  
-  // Scoring
+  }],
   totalScore: { type: Number, default: 0 },
   maxScore: { type: Number, default: 100 },
   compliancePercentage: { type: Number, default: 0 },
-  grade: { type: String, enum: ['A', 'B', 'C', 'D', 'F', 'NA'] },
-  
-  // Status
-  status: { type: String, enum: ['draft', 'in_progress', 'completed', 'approved', 'expired'], default: 'draft' },
-  
-  // Approvals
+  grade: { type: String, enum: ['A', 'B', 'C', 'D', 'F', 'NA'] },
+  status: { type: String, enum: ['draft', 'in_progress', 'completed', 'approved', 'expired'], default: 'draft' },
   preparedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  approvedAt: { type: Date },
-  
-  // Certification
+  approvedAt: { type: Date },
   certificationStatus: { type: String, enum: ['not_applied', 'applied', 'under_review', 'certified', 'expired', 'revoked'] },
   certificationNumber: { type: String },
   certificationDate: { type: Date },
-  certificationExpiryDate: { type: Date },
-  
-  // Audit Trail
+  certificationExpiryDate: { type: Date },
   history: [{
     action: String,
     performedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -77,9 +58,7 @@ const complianceChecklistSchema = new mongoose.Schema({
     details: String
   }]
   
-}, { timestamps: true });
-
-// Calculate scores before save
+}, { timestamps: true });
 complianceChecklistSchema.pre('save', function(next) {
   let totalScore = 0;
   let maxScore = 0;
@@ -96,9 +75,7 @@ complianceChecklistSchema.pre('save', function(next) {
   
   this.totalScore = totalScore;
   this.maxScore = maxScore;
-  this.compliancePercentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-  
-  // Assign grade
+  this.compliancePercentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
   if (this.compliancePercentage >= 90) this.grade = 'A';
   else if (this.compliancePercentage >= 80) this.grade = 'B';
   else if (this.compliancePercentage >= 70) this.grade = 'C';
@@ -106,9 +83,7 @@ complianceChecklistSchema.pre('save', function(next) {
   else this.grade = 'F';
   
   next();
-});
-
-// Indexes
+});
 complianceChecklistSchema.index({ clinicId: 1, checklistType: 1 });
 complianceChecklistSchema.index({ status: 1 });
 

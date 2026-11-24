@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
-
-// Symptom sub-schema for each body system
+const Schema = mongoose.Schema;
 const SymptomSchema = new Schema({
   name: { type: String, required: true },
   present: { type: Boolean, default: false },
@@ -16,38 +14,28 @@ const SymptomSchema = new Schema({
     max: 5,
     default: null
   }
-}, { _id: false });
-
-// Body system sub-schema
+}, { _id: false });
 const BodySystemSchema = new Schema({
   symptoms: [SymptomSchema],
   reviewed: { type: Boolean, default: false },
   notes: { type: String, default: '' }
-}, { _id: false });
-
-// Medication sub-schema
+}, { _id: false });
 const MedicationSchema = new Schema({
   name: { type: String, required: true },
   dosage: { type: String, default: '' },
   frequency: { type: String, default: '' }
-}, { _id: false });
-
-// Attachment sub-schema
+}, { _id: false });
 const AttachmentSchema = new Schema({
   type: { type: String, default: 'document' },
   url: { type: String, required: true },
   name: { type: String, default: '' },
   uploadedAt: { type: Date, default: Date.now }
-}, { _id: false });
-
-// AI Recommendation sub-schema
+}, { _id: false });
 const RecommendationSchema = new Schema({
   specialization: { type: String, required: true },
   confidence: { type: Number, min: 0, max: 1, default: 0.5 },
   reason: { type: String, default: '' }
-}, { _id: false });
-
-// Main Systematic History Schema
+}, { _id: false });
 const SystematicHistorySchema = new Schema({
   userId: { 
     type: Schema.Types.ObjectId, 
@@ -60,9 +48,7 @@ const SystematicHistorySchema = new Schema({
     ref: 'Appointment',
     index: true
   },
-  version: { type: Number, default: 1 },
-  
-  // Body Systems - all 9 systems
+  version: { type: Number, default: 1 },
   general: BodySystemSchema,
   respiratory: BodySystemSchema,
   cardiovascular: BodySystemSchema,
@@ -71,39 +57,23 @@ const SystematicHistorySchema = new Schema({
   neurological: BodySystemSchema,
   musculoskeletal: BodySystemSchema,
   skin: BodySystemSchema,
-  endocrine: BodySystemSchema,
-
-  // Past Medical History
+  endocrine: BodySystemSchema,
   pastHistory: {
     conditions: [{ type: String }],
     surgeries: [{ type: String }],
     hospitalizations: [{ type: String }],
     familyHistory: [{ type: String }]
-  },
-  
-  // Current Medications
-  currentMedications: [MedicationSchema],
-  
-  // Allergies
+  },
+  currentMedications: [MedicationSchema],
   allergies: {
     drugs: [{ type: String }],
     food: [{ type: String }],
     other: [{ type: String }]
-  },
-  
-  // File Attachments (reports, prescriptions)
-  attachments: [AttachmentSchema],
-  
-  // AI-generated Recommendations
-  aiRecommendations: [RecommendationSchema],
-  
-  // Chief Complaint (main reason for visit)
-  chiefComplaint: { type: String, default: '' },
-  
-  // Additional Notes
-  additionalNotes: { type: String, default: '' },
-  
-  // Status tracking
+  },
+  attachments: [AttachmentSchema],
+  aiRecommendations: [RecommendationSchema],
+  chiefComplaint: { type: String, default: '' },
+  additionalNotes: { type: String, default: '' },
   status: {
     type: String,
     enum: ['draft', 'completed', 'reviewed'],
@@ -115,14 +85,10 @@ const SystematicHistorySchema = new Schema({
   
 }, {
   timestamps: true
-});
-
-// Indexes for efficient queries
+});
 SystematicHistorySchema.index({ userId: 1, createdAt: -1 });
 SystematicHistorySchema.index({ appointmentId: 1 });
-SystematicHistorySchema.index({ userId: 1, version: -1 });
-
-// Virtual to get all affected systems
+SystematicHistorySchema.index({ userId: 1, version: -1 });
 SystematicHistorySchema.virtual('affectedSystems').get(function() {
   const systems = ['general', 'respiratory', 'cardiovascular', 'gastrointestinal', 
                    'genitourinary', 'neurological', 'musculoskeletal', 'skin', 'endocrine'];
@@ -130,14 +96,10 @@ SystematicHistorySchema.virtual('affectedSystems').get(function() {
     const data = this[system];
     return data && data.symptoms && data.symptoms.some(s => s.present);
   });
-});
-
-// Virtual to count affected systems
+});
 SystematicHistorySchema.virtual('affectedSystemCount').get(function() {
   return this.affectedSystems ? this.affectedSystems.length : 0;
-});
-
-// Method to get all present symptoms
+});
 SystematicHistorySchema.methods.getAllPresentSymptoms = function() {
   const systems = ['general', 'respiratory', 'cardiovascular', 'gastrointestinal', 
                    'genitourinary', 'neurological', 'musculoskeletal', 'skin', 'endocrine'];
@@ -158,9 +120,7 @@ SystematicHistorySchema.methods.getAllPresentSymptoms = function() {
   });
   
   return presentSymptoms;
-};
-
-// Method to generate summary for doctor view
+};
 SystematicHistorySchema.methods.generateSummary = function() {
   const systems = ['general', 'respiratory', 'cardiovascular', 'gastrointestinal', 
                    'genitourinary', 'neurological', 'musculoskeletal', 'skin', 'endocrine'];
@@ -185,9 +145,7 @@ SystematicHistorySchema.methods.generateSummary = function() {
   });
   
   return summary;
-};
-
-// Ensure virtuals are included in JSON
+};
 SystematicHistorySchema.set('toJSON', { virtuals: true });
 SystematicHistorySchema.set('toObject', { virtuals: true });
 

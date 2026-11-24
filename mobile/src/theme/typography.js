@@ -1,6 +1,4 @@
-/**
- * HealthSync Mobile - Typography System
- */
+
 
 export const fonts = {
   regular: 'Inter-Regular',
@@ -9,8 +7,7 @@ export const fonts = {
   bold: 'Inter-Bold',
 };
 
-export const typography = {
-  // Display
+export const typography = {
   displayLarge: {
     fontFamily: fonts.bold,
     fontSize: 40,
@@ -28,9 +25,7 @@ export const typography = {
     fontSize: 28,
     lineHeight: 36,
     letterSpacing: -0.25,
-  },
-
-  // Headlines
+  },
   headlineLarge: {
     fontFamily: fonts.semiBold,
     fontSize: 24,
@@ -45,9 +40,7 @@ export const typography = {
     fontFamily: fonts.medium,
     fontSize: 18,
     lineHeight: 26,
-  },
-
-  // Body
+  },
   bodyLarge: {
     fontFamily: fonts.regular,
     fontSize: 16,
@@ -62,9 +55,7 @@ export const typography = {
     fontFamily: fonts.regular,
     fontSize: 12,
     lineHeight: 18,
-  },
-
-  // Labels
+  },
   labelLarge: {
     fontFamily: fonts.medium,
     fontSize: 14,
@@ -82,9 +73,7 @@ export const typography = {
     fontSize: 10,
     lineHeight: 14,
     letterSpacing: 0.5,
-  },
-
-  // Button
+  },
   button: {
     fontFamily: fonts.semiBold,
     fontSize: 16,

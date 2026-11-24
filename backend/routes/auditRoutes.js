@@ -4,10 +4,6 @@ const { authenticate, checkRole } = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
-/**
- * GET /api/audit/logs
- * Get audit logs with filtering (Admin only)
- */
 router.get('/logs', authenticate, checkRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const {
@@ -19,9 +15,7 @@ router.get('/logs', authenticate, checkRole(['admin', 'clinic', 'receptionist'])
       endDate,
       page = 1,
       limit = 50
-    } = req.query;
-
-    // Build query
+    } = req.query;
     const query = {};
     
     if (action) query.action = action;
@@ -61,10 +55,6 @@ router.get('/logs', authenticate, checkRole(['admin', 'clinic', 'receptionist'])
   }
 });
 
-/**
- * GET /api/audit/logs/:targetId
- * Get audit history for a specific entity (appointment, doctor, etc.)
- */
 router.get('/logs/target/:targetId', authenticate, async (req, res) => {
   try {
     const { targetId } = req.params;
@@ -82,31 +72,22 @@ router.get('/logs/target/:targetId', authenticate, async (req, res) => {
   }
 });
 
-/**
- * GET /api/audit/stats
- * Get audit statistics for dashboard (Admin only)
- */
 router.get('/stats', authenticate, checkRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { days = 7 } = req.query;
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(days));
 
-    const [actionCounts, recentActivity, topPerformers] = await Promise.all([
-      // Count by action type
+    const [actionCounts, recentActivity, topPerformers] = await Promise.all([
       AuditLog.aggregate([
         { $match: { timestamp: { $gte: startDate } } },
         { $group: { _id: '$action', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
-      ]),
-      
-      // Recent activity timeline
+      ]),
       AuditLog.find({ timestamp: { $gte: startDate } })
         .sort({ timestamp: -1 })
         .limit(10)
-        .lean(),
-      
-      // Most active users
+        .lean(),
       AuditLog.aggregate([
         { $match: { timestamp: { $gte: startDate } } },
         { $group: { 
@@ -135,10 +116,6 @@ router.get('/stats', authenticate, checkRole(['admin', 'clinic', 'receptionist']
   }
 });
 
-/**
- * GET /api/audit/export
- * Export audit logs as CSV (Admin only)
- */
 router.get('/export', authenticate, checkRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { startDate, endDate, action } = req.query;
@@ -154,9 +131,7 @@ router.get('/export', authenticate, checkRole(['admin', 'clinic', 'receptionist'
     const logs = await AuditLog.find(query)
       .sort({ timestamp: -1 })
       .limit(1000)
-      .lean();
-
-    // Convert to CSV
+      .lean();
     const headers = ['Timestamp', 'Action', 'Performed By', 'Role', 'Target', 'Details', 'IP Address'];
     const rows = logs.map(log => [
       new Date(log.timestamp).toISOString(),

@@ -1,7 +1,4 @@
-/**
- * Admin Approvals Screen - Pending Approvals Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -52,7 +49,6 @@ const AdminApprovalsScreen = ({ navigation }) => {
     await fetchData();
     setRefreshing(false);
   }, [fetchData]);
-
 
   const handleApproveDoctor = async (doctorId) => {
     try {
@@ -220,7 +216,7 @@ const AdminApprovalsScreen = ({ navigation }) => {
         <View style={styles.headerRight} />
       </View>
 
-      {/* Tabs */}
+      {}
       <View style={styles.tabContainer}>
         <TabButton label="Doctors" value="doctors" count={pendingDoctors.length} />
         <TabButton label="Staff" value="staff" count={pendingStaff.length} />

@@ -28,7 +28,7 @@ const couponSchema = new mongoose.Schema({
   },
   maxDiscount: {
     type: Number,
-    default: null // null means no cap
+    default: null 
   },
   validFrom: {
     type: Date,
@@ -40,7 +40,7 @@ const couponSchema = new mongoose.Schema({
   },
   usageLimit: {
     type: Number,
-    default: null // null means unlimited
+    default: null 
   },
   usedCount: {
     type: Number,
@@ -56,7 +56,7 @@ const couponSchema = new mongoose.Schema({
   },
   isPublic: {
     type: Boolean,
-    default: true // Show to all users for attraction
+    default: true 
   },
   applicableTo: {
     type: String,
@@ -72,9 +72,7 @@ const couponSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
-}, { timestamps: true });
-
-// Check if coupon is valid
+}, { timestamps: true });
 couponSchema.methods.isValid = function(userId = null, orderAmount = 0) {
   const now = new Date();
   
@@ -82,18 +80,14 @@ couponSchema.methods.isValid = function(userId = null, orderAmount = 0) {
   if (now < this.validFrom) return { valid: false, message: 'Coupon not yet active' };
   if (now > this.validUntil) return { valid: false, message: 'Coupon has expired' };
   if (this.usageLimit && this.usedCount >= this.usageLimit) return { valid: false, message: 'Coupon usage limit reached' };
-  if (orderAmount < this.minOrderAmount) return { valid: false, message: `Minimum order amount is ₹${this.minOrderAmount}` };
-  
-  // Check per-user limit
+  if (orderAmount < this.minOrderAmount) return { valid: false, message: `Minimum order amount is ₹${this.minOrderAmount}` };
   if (userId && this.perUserLimit) {
     const userUsage = this.usedBy.filter(u => u.userId?.toString() === userId.toString()).length;
     if (userUsage >= this.perUserLimit) return { valid: false, message: 'You have already used this coupon' };
   }
   
   return { valid: true };
-};
-
-// Calculate discount
+};
 couponSchema.methods.calculateDiscount = function(amount) {
   let discount = 0;
   
@@ -101,14 +95,12 @@ couponSchema.methods.calculateDiscount = function(amount) {
     discount = Math.round(amount * this.discountValue / 100);
   } else {
     discount = this.discountValue;
-  }
-  
-  // Apply max discount cap
+  }
   if (this.maxDiscount && discount > this.maxDiscount) {
     discount = this.maxDiscount;
   }
   
-  return Math.min(discount, amount); // Can't discount more than the amount
+  return Math.min(discount, amount); 
 };
 
 module.exports = mongoose.model('Coupon', couponSchema);

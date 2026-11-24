@@ -1,12 +1,6 @@
-/**
- * Property-Based Tests for Telemedicine Features
- * Feature: advanced-imaging
- * Properties 16, 17, 18, 19, 20, 24, 25, 26
- */
 
-const fc = require('fast-check');
 
-// Connection quality calculation (matching frontend)
+const fc = require('fast-check');
 const QUALITY_THRESHOLDS = {
   excellent: { packetLoss: 0.01, jitter: 30, rtt: 100 },
   good: { packetLoss: 0.03, jitter: 50, rtt: 200 },
@@ -38,9 +32,7 @@ const calculateConnectionQuality = (stats) => {
   }
   
   return 'poor';
-};
-
-// Media toggle state manager
+};
 class MediaToggleManager {
   constructor() {
     this.audioEnabled = true;
@@ -63,9 +55,7 @@ class MediaToggleManager {
   getState() {
     return { audioEnabled: this.audioEnabled, videoEnabled: this.videoEnabled };
   }
-}
-
-// Screen share state manager
+}
 class ScreenShareManager {
   constructor() {
     this.isSharing = false;
@@ -85,9 +75,7 @@ class ScreenShareManager {
     this.shareHistory.push({ action: 'stop', timestamp: Date.now() });
     return true;
   }
-}
-
-// Recording consent manager
+}
 class RecordingConsentManager {
   constructor() {
     this.doctorConsent = false;
@@ -119,9 +107,7 @@ class RecordingConsentManager {
     this.isRecording = false;
     return true;
   }
-}
-
-// Session logging service
+}
 class SessionLoggingService {
   constructor() {
     this.sessions = [];
@@ -173,9 +159,7 @@ class SessionLoggingService {
   getSession(sessionId) {
     return this.sessions.find(s => s.sessionId === sessionId);
   }
-}
-
-// Recording access control
+}
 class RecordingAccessControl {
   constructor() {
     this.recordings = new Map();
@@ -191,12 +175,8 @@ class RecordingAccessControl {
 
   canAccess(recordingId, userId, userRole) {
     const recording = this.recordings.get(recordingId);
-    if (!recording) return false;
-    
-    // Admin can access all
-    if (userRole === 'admin') return true;
-    
-    // Check if user is allowed
+    if (!recording) return false;
+    if (userRole === 'admin') return true;
     return recording.allowedUsers.includes(userId);
   }
 
@@ -219,9 +199,7 @@ class RecordingAccessControl {
   }
 }
 
-describe('Telemedicine Features - Property Tests', () => {
-
-  // Property 16: Media Toggle State
+describe('Telemedicine Features - Property Tests', () => {
   describe('Property 16: Media Toggle State', () => {
     
     test('audio toggle changes state correctly', () => {
@@ -278,9 +256,7 @@ describe('Telemedicine Features - Property Tests', () => {
       expect(manager.toggleHistory[1].type).toBe('video');
       expect(manager.toggleHistory[2].type).toBe('audio');
     });
-  });
-
-  // Property 17: Connection Quality Calculation
+  });
   describe('Property 17: Connection Quality Calculation', () => {
     
     test('excellent quality for low packet loss, jitter, and RTT', () => {
@@ -298,17 +274,10 @@ describe('Telemedicine Features - Property Tests', () => {
       );
     });
 
-    test('quality degrades with worse stats', () => {
-      // Excellent
-      expect(calculateConnectionQuality({ packetLoss: 0.005, jitter: 20, rtt: 50 })).toBe('excellent');
-      
-      // Good
-      expect(calculateConnectionQuality({ packetLoss: 0.02, jitter: 40, rtt: 150 })).toBe('good');
-      
-      // Fair
-      expect(calculateConnectionQuality({ packetLoss: 0.04, jitter: 80, rtt: 300 })).toBe('fair');
-      
-      // Poor
+    test('quality degrades with worse stats', () => {
+      expect(calculateConnectionQuality({ packetLoss: 0.005, jitter: 20, rtt: 50 })).toBe('excellent');
+      expect(calculateConnectionQuality({ packetLoss: 0.02, jitter: 40, rtt: 150 })).toBe('good');
+      expect(calculateConnectionQuality({ packetLoss: 0.04, jitter: 80, rtt: 300 })).toBe('fair');
       expect(calculateConnectionQuality({ packetLoss: 0.1, jitter: 200, rtt: 500 })).toBe('poor');
     });
 
@@ -331,9 +300,7 @@ describe('Telemedicine Features - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-  });
-
-  // Property 18: Session Logging Completeness
+  });
   describe('Property 18: Session Logging Completeness', () => {
     
     test('session has required fields after start', () => {
@@ -359,9 +326,7 @@ describe('Telemedicine Features - Property Tests', () => {
         appointmentId: 'apt_123',
         doctorId: 'doc_1',
         patientId: 'pat_1'
-      });
-      
-      // Simulate some time passing
+      });
       const endedSession = service.endSession(session.sessionId);
       
       expect(endedSession.endTime).toBeDefined();
@@ -402,25 +367,19 @@ describe('Telemedicine Features - Property Tests', () => {
       const retrieved = service.getSession(session.sessionId);
       expect(retrieved.emrActions.length).toBe(2);
     });
-  });
-
-  // Property 20: Screen Share State Transition
+  });
   describe('Property 20: Screen Share State Transition', () => {
     
     test('can only start sharing when not already sharing', () => {
       const manager = new ScreenShareManager();
       
       expect(manager.startSharing()).toBe(true);
-      expect(manager.isSharing).toBe(true);
-      
-      // Cannot start again
+      expect(manager.isSharing).toBe(true);
       expect(manager.startSharing()).toBe(false);
     });
 
     test('can only stop sharing when currently sharing', () => {
-      const manager = new ScreenShareManager();
-      
-      // Cannot stop when not sharing
+      const manager = new ScreenShareManager();
       expect(manager.stopSharing()).toBe(false);
       
       manager.startSharing();
@@ -440,9 +399,7 @@ describe('Telemedicine Features - Property Tests', () => {
       expect(manager.shareHistory[0].action).toBe('start');
       expect(manager.shareHistory[1].action).toBe('stop');
     });
-  });
-
-  // Property 24: Recording Consent Requirement
+  });
   describe('Property 24: Recording Consent Requirement', () => {
     
     test('cannot start recording without both consents', () => {
@@ -493,9 +450,7 @@ describe('Telemedicine Features - Property Tests', () => {
         { numRuns: 10 }
       );
     });
-  });
-
-  // Property 26: Recording Access Control
+  });
   describe('Property 26: Recording Access Control', () => {
     
     test('only authorized users can access recording', () => {
@@ -506,15 +461,9 @@ describe('Telemedicine Features - Property Tests', () => {
         doctorId: 'doc_1',
         patientId: 'pat_1',
         visitId: 'visit_1'
-      });
-      
-      // Doctor can access
-      expect(control.canAccess('rec_1', 'doc_1', 'doctor')).toBe(true);
-      
-      // Patient can access
-      expect(control.canAccess('rec_1', 'pat_1', 'patient')).toBe(true);
-      
-      // Other user cannot access
+      });
+      expect(control.canAccess('rec_1', 'doc_1', 'doctor')).toBe(true);
+      expect(control.canAccess('rec_1', 'pat_1', 'patient')).toBe(true);
       expect(control.canAccess('rec_1', 'other_user', 'doctor')).toBe(false);
     });
 
@@ -537,16 +486,11 @@ describe('Telemedicine Features - Property Tests', () => {
         recordingId: 'rec_1',
         doctorId: 'doc_1',
         patientId: 'pat_1'
-      });
-      
-      // Successful access
-      control.accessRecording('rec_1', 'doc_1', 'doctor');
-      
-      // Failed access
+      });
+      control.accessRecording('rec_1', 'doc_1', 'doctor');
       try {
         control.accessRecording('rec_1', 'other_user', 'doctor');
-      } catch (e) {
-        // Expected
+      } catch (e) {
       }
       
       expect(control.accessLog.length).toBe(2);

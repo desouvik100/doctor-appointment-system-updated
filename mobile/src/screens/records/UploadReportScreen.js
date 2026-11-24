@@ -1,6 +1,4 @@
-/**
- * UploadReportScreen - Upload medical reports from camera/gallery
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -19,8 +17,7 @@ import { useTheme } from '../../context/ThemeContext';
 import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-// import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import Button from '../../components/common/Button';
 
 const UploadReportScreen = ({ navigation }) => {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -39,19 +36,11 @@ const UploadReportScreen = ({ navigation }) => {
     { id: 'other', label: 'Other', icon: '📄' },
   ];
 
-  const handleCamera = async () => {
-    // const result = await launchCamera({ mediaType: 'photo', quality: 0.8 });
-    // if (!result.didCancel && result.assets?.[0]) {
-    //   setSelectedImage(result.assets[0]);
-    // }
+  const handleCamera = async () => {
     Alert.alert('Camera', 'Camera functionality will open native camera');
   };
 
-  const handleGallery = async () => {
-    // const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
-    // if (!result.didCancel && result.assets?.[0]) {
-    //   setSelectedImage(result.assets[0]);
-    // }
+  const handleGallery = async () => {
     Alert.alert('Gallery', 'Gallery picker will open');
   };
 
@@ -62,8 +51,7 @@ const UploadReportScreen = ({ navigation }) => {
     }
     
     setUploading(true);
-    try {
-      // Simulate upload
+    try {
       await new Promise(r => setTimeout(r, 2000));
       Alert.alert('Success', 'Report uploaded successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
@@ -88,7 +76,7 @@ const UploadReportScreen = ({ navigation }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Image Selection */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Image</Text>
           {selectedImage ? (
@@ -112,7 +100,7 @@ const UploadReportScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Report Type */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Report Type</Text>
           <View style={styles.typeGrid}>
@@ -129,7 +117,7 @@ const UploadReportScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Report Details */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Report Details</Text>
           <Card variant="default" style={styles.inputCard}>

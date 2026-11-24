@@ -1,7 +1,4 @@
-/**
- * Admin Doctors Screen - Doctor Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -26,7 +23,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('all'); // all, approved, pending
+  const [filter, setFilter] = useState('all'); 
 
   const fetchDoctors = useCallback(async () => {
     try {
@@ -50,8 +47,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchDoctors]);
 
-  const filteredDoctors = doctors.filter(doc => {
-    // Check approval status - backend uses approvalStatus field with 'pending'/'approved'/'rejected' values
+  const filteredDoctors = doctors.filter(doc => {
     const isApproved = doc.approvalStatus === 'approved' || doc.isApproved === true || doc.approved === true;
     const matchesSearch = doc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          doc.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -110,8 +106,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  const renderDoctor = ({ item }) => {
-    // Check approval status - backend uses approvalStatus field with 'pending'/'approved'/'rejected' values
+  const renderDoctor = ({ item }) => {
     const isApproved = item.approvalStatus === 'approved' || item.isApproved === true || item.approved === true;
     
     return (
@@ -182,7 +177,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -196,7 +191,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Search */}
+      {}
       <View style={styles.searchContainer}>
         <TextInput
           style={[styles.searchInput, { backgroundColor: colors.surface, color: colors.textPrimary }]}
@@ -207,14 +202,14 @@ const AdminDoctorsScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Filters */}
+      {}
       <View style={styles.filterContainer}>
         <FilterButton label="All" value="all" />
         <FilterButton label="Approved" value="approved" />
         <FilterButton label="Pending" value="pending" />
       </View>
 
-      {/* List */}
+      {}
       <FlatList
         data={filteredDoctors}
         renderItem={renderDoctor}
@@ -231,7 +226,6 @@ const AdminDoctorsScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

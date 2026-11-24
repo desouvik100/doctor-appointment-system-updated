@@ -1,6 +1,4 @@
-/**
- * WalletSummary - Stripe-Inspired Premium Health Wallet Snapshot
- */
+
 
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
@@ -23,7 +21,6 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
   const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation();
 
-  // Defensive coercion — parent may pass null/undefined despite default props
   const safeBalance = Number(balance) || 0;
   const safePoints  = Number(loyaltyPoints) || 0;
 
@@ -70,7 +67,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
         end={{ x: 1, y: 1 }}
         style={[styles.card, shadows.lg]}
       >
-        {/* Top metrics row */}
+        {}
         <View style={styles.balanceRow}>
           <View>
             <Text style={styles.balanceLabel}>Available Credits</Text>
@@ -87,7 +84,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
           </View>
         </View>
 
-        {/* Milestone tracking progress */}
+        {}
         <View style={styles.milestoneContainer}>
           <View style={styles.milestoneTextRow}>
             <Text style={styles.milestoneLabel}>Milestone: Free Consultation</Text>
@@ -98,7 +95,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
           </View>
         </View>
 
-        {/* Action row */}
+        {}
         <View style={styles.actions}>
           <TouchableOpacity 
             style={[styles.actionBtn, { backgroundColor: '#00D4AA' }]} 
@@ -186,7 +183,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 11,
   },
-  // Milestone Progress styles
+
   milestoneContainer: {
     marginBottom: spacing.lg,
   },

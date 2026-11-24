@@ -1,6 +1,4 @@
-/**
- * NotificationsScreen - View and manage all notifications
- */
+
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -22,14 +20,10 @@ import { useUser } from '../../context/UserContext';
 import Card from '../../components/common/Card';
 import { EmptyState, FilterChip } from '../../components/common';
 import { fadeIn, slideUp, stagger } from '../../utils/animations';
-import apiClient from '../../services/api/apiClient';
-
-// Standalone functional component for Notification Item to safely use React Hooks
+import apiClient from '../../services/api/apiClient';
 const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, getTimeAgo, getNotificationIcon }) => {
   const translateX = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  // Animate on mount
+  const opacity = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     fadeIn(opacity, 300, index * 50).start();
   }, []);
@@ -42,18 +36,15 @@ const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, g
       }
     },
     onPanResponderRelease: (_, gestureState) => {
-      if (gestureState.dx < -100) {
-        // Swipe left to delete
+      if (gestureState.dx < -100) {
         Animated.timing(translateX, {
           toValue: -400,
           duration: 200,
           useNativeDriver: true,
-        }).start(() => {
-          // Delete notification
+        }).start(() => {
           onDelete(item._id);
         });
-      } else {
-        // Reset position
+      } else {
         Animated.spring(translateX, {
           toValue: 0,
           useNativeDriver: true,
@@ -97,7 +88,7 @@ const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, g
           </Card>
         </TouchableOpacity>
         
-        {/* Delete action (revealed on swipe) */}
+        {}
         <View style={styles.deleteAction}>
           <Text style={styles.deleteText}>🗑️</Text>
         </View>
@@ -113,11 +104,9 @@ const NotificationsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [filter, setFilter] = useState('all'); // all, unread
+  const [filter, setFilter] = useState('all'); 
 
-  const userId = user?.id || user?._id;
-
-  // Animations
+  const userId = user?.id || user?._id;
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const listAnimations = useRef([]).current;
 
@@ -127,9 +116,7 @@ const NotificationsScreen = ({ navigation }) => {
       const params = filter === 'unread' ? '?unreadOnly=true' : '';
       const response = await apiClient.get(`/notifications/${userId}${params}`);
       setNotifications(response.data.notifications || []);
-      setUnreadCount(response.data.unreadCount || 0);
-      
-      // Animate header
+      setUnreadCount(response.data.unreadCount || 0);
       fadeIn(headerOpacity, 300).start();
     } catch (error) {
       console.log('Error fetching notifications:', error.message);
@@ -183,9 +170,7 @@ const NotificationsScreen = ({ navigation }) => {
   const handleNotificationPress = (notification) => {
     if (!notification.isRead) {
       markAsRead(notification._id);
-    }
-    
-    // Navigate based on notification type
+    }
     const { type, data } = notification;
     switch (type) {
       case 'appointment':
@@ -269,7 +254,7 @@ const NotificationsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -280,7 +265,7 @@ const NotificationsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Filter & Actions */}
+      {}
       <View style={styles.actionsRow}>
         <View style={styles.filterTabs}>
           <FilterChip
@@ -303,7 +288,7 @@ const NotificationsScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Notifications List */}
+      {}
       <FlatList
         data={notifications}
         renderItem={renderNotification}

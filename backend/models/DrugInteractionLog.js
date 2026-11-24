@@ -1,7 +1,4 @@
-/**
- * Drug Interaction Log Model
- * Audit trail for drug interaction checks and overrides
- */
+
 
 const mongoose = require('mongoose');
 
@@ -87,8 +84,7 @@ const allergyAlertSchema = new mongoose.Schema({
   }
 });
 
-const drugInteractionLogSchema = new mongoose.Schema({
-  // References
+const drugInteractionLogSchema = new mongoose.Schema({
   prescriptionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prescription',
@@ -114,15 +110,11 @@ const drugInteractionLogSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true
-  },
-  
-  // Check details
+  },
   checkedAt: {
     type: Date,
     default: Date.now
-  },
-  
-  // Drugs involved
+  },
   drugsPrescribed: [{
     type: String,
     trim: true
@@ -130,15 +122,9 @@ const drugInteractionLogSchema = new mongoose.Schema({
   existingMedications: [{
     type: String,
     trim: true
-  }],
-  
-  // Interactions found
-  interactionsFound: [interactionDetailSchema],
-  
-  // Allergy alerts
-  allergyAlerts: [allergyAlertSchema],
-  
-  // Summary counts
+  }],
+  interactionsFound: [interactionDetailSchema],
+  allergyAlerts: [allergyAlertSchema],
   totalInteractions: {
     type: Number,
     default: 0
@@ -162,22 +148,16 @@ const drugInteractionLogSchema = new mongoose.Schema({
   allergyAlertCount: {
     type: Number,
     default: 0
-  },
-  
-  // Override summary
+  },
   totalOverrides: {
     type: Number,
     default: 0
-  },
-  
-  // Check result
+  },
   checkResult: {
     type: String,
     enum: ['clear', 'warnings', 'blocked'],
     default: 'clear'
-  },
-  
-  // Whether prescription was finalized after check
+  },
   prescriptionFinalized: {
     type: Boolean,
     default: false
@@ -186,29 +166,20 @@ const drugInteractionLogSchema = new mongoose.Schema({
   
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 drugInteractionLogSchema.index({ clinicId: 1, checkedAt: -1 });
 drugInteractionLogSchema.index({ doctorId: 1, checkedAt: -1 });
-drugInteractionLogSchema.index({ patientId: 1, checkedAt: -1 });
-
-// Pre-save hook to calculate summary counts
-drugInteractionLogSchema.pre('save', function(next) {
-  // Count interactions by severity
+drugInteractionLogSchema.index({ patientId: 1, checkedAt: -1 });
+drugInteractionLogSchema.pre('save', function(next) {
   this.totalInteractions = this.interactionsFound?.length || 0;
   this.minorCount = this.interactionsFound?.filter(i => i.severity === 'minor').length || 0;
   this.moderateCount = this.interactionsFound?.filter(i => i.severity === 'moderate').length || 0;
   this.majorCount = this.interactionsFound?.filter(i => i.severity === 'major').length || 0;
   this.contraindicatedCount = this.interactionsFound?.filter(i => i.severity === 'contraindicated').length || 0;
-  this.allergyAlertCount = this.allergyAlerts?.length || 0;
-  
-  // Count overrides
+  this.allergyAlertCount = this.allergyAlerts?.length || 0;
   const interactionOverrides = this.interactionsFound?.filter(i => i.wasOverridden).length || 0;
   const allergyOverrides = this.allergyAlerts?.filter(a => a.wasOverridden).length || 0;
-  this.totalOverrides = interactionOverrides + allergyOverrides;
-  
-  // Determine check result
+  this.totalOverrides = interactionOverrides + allergyOverrides;
   if (this.contraindicatedCount > 0 || this.allergyAlertCount > 0) {
     this.checkResult = 'blocked';
   } else if (this.majorCount > 0 || this.moderateCount > 0) {
@@ -218,14 +189,10 @@ drugInteractionLogSchema.pre('save', function(next) {
   }
   
   next();
-});
-
-// Virtual for has critical alerts
+});
 drugInteractionLogSchema.virtual('hasCriticalAlerts').get(function() {
   return this.contraindicatedCount > 0 || this.allergyAlertCount > 0;
-});
-
-// Static method to get logs for audit
+});
 drugInteractionLogSchema.statics.getAuditLogs = async function(clinicId, options = {}) {
   const { startDate, endDate, doctorId, limit = 50, skip = 0 } = options;
   
@@ -245,9 +212,7 @@ drugInteractionLogSchema.statics.getAuditLogs = async function(clinicId, options
     .sort({ checkedAt: -1 })
     .skip(skip)
     .limit(limit);
-};
-
-// Static method to get override statistics
+};
 drugInteractionLogSchema.statics.getOverrideStats = async function(clinicId, startDate, endDate) {
   return this.aggregate([
     {
@@ -266,9 +231,7 @@ drugInteractionLogSchema.statics.getOverrideStats = async function(clinicId, sta
       }
     }
   ]);
-};
-
-// Include virtuals in JSON
+};
 drugInteractionLogSchema.set('toJSON', { virtuals: true });
 drugInteractionLogSchema.set('toObject', { virtuals: true });
 

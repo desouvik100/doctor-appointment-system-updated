@@ -1,9 +1,4 @@
-/**
- * Property-Based Tests for DICOM Parser Service
- * Feature: advanced-imaging
- * Property 2: DICOM Metadata Extraction Accuracy
- * Validates: Requirements 1.2, 10.2
- */
+
 
 const fc = require('fast-check');
 const {
@@ -13,33 +8,27 @@ const {
   VALID_MODALITIES
 } = require('../services/dicomParserService');
 
-describe('DICOM Parser Service - Property Tests', () => {
-  
-  // Property 2: DICOM Metadata Extraction Accuracy
-  describe('Property 2: DICOM Metadata Extraction Accuracy', () => {
-    
-    // Test date parsing accuracy
+describe('DICOM Parser Service - Property Tests', () => {
+  describe('Property 2: DICOM Metadata Extraction Accuracy', () => {
     test('parseDate correctly parses valid DICOM dates (YYYYMMDD format)', () => {
       fc.assert(
         fc.property(
-          fc.integer({ min: 1900, max: 2100 }), // year
-          fc.integer({ min: 1, max: 12 }),       // month
-          fc.integer({ min: 1, max: 28 }),       // day (use 28 to avoid month-end issues)
+          fc.integer({ min: 1900, max: 2100 }), 
+          fc.integer({ min: 1, max: 12 }),       
+          fc.integer({ min: 1, max: 28 }),       
           (year, month, day) => {
             const dateString = `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}`;
             const result = parseDate(dateString);
             
             expect(result).not.toBeNull();
             expect(result.getFullYear()).toBe(year);
-            expect(result.getMonth()).toBe(month - 1); // JS months are 0-indexed
+            expect(result.getMonth()).toBe(month - 1); 
             expect(result.getDate()).toBe(day);
           }
         ),
         { numRuns: 100 }
       );
-    });
-    
-    // Test patient name formatting
+    });
     test('formatPatientName correctly formats DICOM names (Last^First^Middle)', () => {
       fc.assert(
         fc.property(
@@ -56,9 +45,7 @@ describe('DICOM Parser Service - Property Tests', () => {
         ),
         { numRuns: 100 }
       );
-    });
-    
-    // Test that valid modalities are recognized
+    });
     test('all valid DICOM modalities are in the allowed set', () => {
       fc.assert(
         fc.property(
@@ -72,9 +59,7 @@ describe('DICOM Parser Service - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-  });
-  
-  // Additional unit tests for edge cases
+  });
   describe('Date Parsing Edge Cases', () => {
     test('returns null for invalid date strings', () => {
       expect(parseDate(null)).toBeNull();

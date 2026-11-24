@@ -1,7 +1,4 @@
-/**
- * Staff Management Routes
- * Attendance, Leave, Payroll Integration
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -11,25 +8,15 @@ const User = require('../models/User');
 const StaffNotification = require('../models/StaffNotification');
 const bcrypt = require('bcryptjs');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-const mongoose = require('mongoose');
-
-// ===== STAFF ROUTES =====
-
-// Add new staff member to clinic
+const mongoose = require('mongoose');
 router.post('/staff/add', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const { clinicId, name, email, phone, role, department, password } = req.body;
-
-    // Check if user already exists
+    const { clinicId, name, email, phone, role, department, password } = req.body;
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'User with this email already exists' });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password || 'Staff@123', 10);
-
-    // Create new user
+    }
+    const hashedPassword = await bcrypt.hash(password || 'Staff@123', 10);
     const user = new User({
       name,
       email: email.toLowerCase(),
@@ -40,9 +27,7 @@ router.post('/staff/add', verifyTokenWithRole(['admin', 'clinic', 'receptionist'
       department,
       isActive: true
     });
-    await user.save();
-
-    // Create initial attendance record for today
+    await user.save();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -70,9 +55,7 @@ router.post('/staff/add', verifyTokenWithRole(['admin', 'clinic', 'receptionist'
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all staff for a clinic
+});
 router.get('/staff/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const staff = await User.find({
@@ -85,11 +68,7 @@ router.get('/staff/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== ATTENDANCE ROUTES =====
-
-// Mark attendance (check-in)
+});
 router.post('/attendance/check-in', verifyToken, async (req, res) => {
   try {
     const { clinicId, staffId, shiftType, checkInMethod, location } = req.body;
@@ -100,9 +79,7 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
     if (!clinicId || !staffId) {
       console.log('Missing required fields - clinicId:', clinicId, 'staffId:', staffId);
       return res.status(400).json({ success: false, message: 'clinicId and staffId are required' });
-    }
-
-    // Convert to ObjectId if they're strings
+    }
     const clinicObjectId = mongoose.Types.ObjectId.isValid(clinicId) ? new mongoose.Types.ObjectId(clinicId) : clinicId;
     const staffObjectId = mongoose.Types.ObjectId.isValid(staffId) ? new mongoose.Types.ObjectId(staffId) : staffId;
     
@@ -142,9 +119,7 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
       attendance.checkInMethod = checkInMethod || 'manual';
       attendance.checkInLocation = location;
       attendance.status = 'present';
-    }
-
-    // Check if late
+    }
     const scheduledStart = attendance.scheduledStart || '09:00';
     const [hours, mins] = scheduledStart.split(':').map(Number);
     const scheduledTime = new Date(today);
@@ -162,9 +137,7 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
     console.error('Check-in error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Mark attendance (check-out)
+});
 router.post('/attendance/check-out', verifyToken, async (req, res) => {
   try {
     const { clinicId, staffId, checkOutMethod, location } = req.body;
@@ -183,9 +156,7 @@ router.post('/attendance/check-out', verifyToken, async (req, res) => {
 
     attendance.checkOutTime = new Date();
     attendance.checkOutMethod = checkOutMethod;
-    attendance.checkOutLocation = location;
-
-    // Check for early leave
+    attendance.checkOutLocation = location;
     const scheduledEnd = attendance.scheduledEnd || '18:00';
     const [hours, mins] = scheduledEnd.split(':').map(Number);
     const scheduledTime = new Date(today);
@@ -201,9 +172,7 @@ router.post('/attendance/check-out', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get attendance for date range
+});
 router.get('/attendance/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate, staffId, status } = req.query;
@@ -225,9 +194,7 @@ router.get('/attendance/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get attendance summary
+});
 router.get('/attendance/summary/:clinicId', verifyToken, async (req, res) => {
   try {
     const { month, year } = req.query;
@@ -255,11 +222,7 @@ router.get('/attendance/summary/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== LEAVE ROUTES =====
-
-// Apply for leave
+});
 router.post('/leave/apply', verifyToken, async (req, res) => {
   try {
     const leave = new LeaveRequest({ ...req.body, staffId: req.body.staffId || req.user?.userId });
@@ -268,9 +231,7 @@ router.post('/leave/apply', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get leave requests
+});
 router.get('/leave/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { status, staffId, leaveType } = req.query;
@@ -288,12 +249,10 @@ router.get('/leave/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Approve/Reject leave
+});
 router.post('/leave/:id/action', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const { action, comments } = req.body; // action: 'approve' or 'reject'
+    const { action, comments } = req.body; 
     const updates = {
       status: action === 'approve' ? 'approved' : 'rejected',
       [`${action === 'approve' ? 'approved' : 'rejected'}By`]: req.user?.userId,
@@ -305,9 +264,7 @@ router.post('/leave/:id/action', verifyTokenWithRole(['admin', 'clinic', 'recept
     
     if (!leave) {
       return res.status(404).json({ success: false, message: 'Leave request not found' });
-    }
-
-    // If approved, mark attendance as on_leave
+    }
     if (action === 'approve' && leave.startDate && leave.endDate) {
       const dates = [];
       let current = new Date(leave.startDate);
@@ -330,9 +287,7 @@ router.post('/leave/:id/action', verifyTokenWithRole(['admin', 'clinic', 'recept
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get leave balance
+});
 router.get('/leave/balance/:staffId', verifyToken, async (req, res) => {
   try {
     const year = new Date().getFullYear();
@@ -342,9 +297,7 @@ router.get('/leave/balance/:staffId', verifyToken, async (req, res) => {
     const usedLeaves = await LeaveRequest.aggregate([
       { $match: { staffId: mongoose.Types.ObjectId(req.params.staffId), status: 'approved', startDate: { $gte: startOfYear, $lte: endOfYear } } },
       { $group: { _id: '$leaveType', totalDays: { $sum: '$totalDays' } } }
-    ]);
-
-    // Default leave entitlements (can be configured per organization)
+    ]);
     const entitlements = {
       casual: 12,
       sick: 12,
@@ -363,16 +316,10 @@ router.get('/leave/balance/:staffId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== NOTIFICATION ROUTES =====
-
-// Send notification to staff (come to hospital, urgent, etc.)
+});
 router.post('/notification/send', verifyToken, async (req, res) => {
   try {
-    const { clinicId, recipientId, type, title, message, priority } = req.body;
-
-    // Get sender info
+    const { clinicId, recipientId, type, title, message, priority } = req.body;
     const sender = await User.findById(req.user?.userId);
 
     const notification = new StaffNotification({
@@ -397,9 +344,7 @@ router.post('/notification/send', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get notifications for current user
+});
 router.get('/notifications/my', verifyToken, async (req, res) => {
   try {
     const { unreadOnly, limit = 20 } = req.query;
@@ -422,9 +367,7 @@ router.get('/notifications/my', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Mark notification as read
+});
 router.post('/notification/:id/read', verifyToken, async (req, res) => {
   try {
     const notification = await StaffNotification.findByIdAndUpdate(
@@ -437,9 +380,7 @@ router.post('/notification/:id/read', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Mark all notifications as read
+});
 router.post('/notifications/read-all', verifyToken, async (req, res) => {
   try {
     await StaffNotification.updateMany(
@@ -451,9 +392,7 @@ router.post('/notifications/read-all', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Acknowledge action (e.g., confirm coming to hospital)
+});
 router.post('/notification/:id/acknowledge', verifyToken, async (req, res) => {
   try {
     const notification = await StaffNotification.findByIdAndUpdate(

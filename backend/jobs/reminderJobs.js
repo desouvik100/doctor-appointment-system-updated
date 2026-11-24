@@ -1,13 +1,4 @@
-/**
- * Reminder Jobs - Automated Appointment Reminders
- * ================================================
- * Sends timely reminders to patients about upcoming appointments
- * 
- * Reminder Schedule:
- * - 24 hours before appointment (email + SMS)
- * - 1 hour before appointment (email + SMS)
- * - 15 minutes before online consultations (push notification)
- */
+
 
 const cron = require('node-cron');
 const Appointment = require('../models/Appointment');
@@ -18,18 +9,13 @@ const { sendEmail } = require('../services/emailService');
 const { sendSMS } = require('../services/smsService');
 const Notification = require('../models/Notification');
 
-/**
- * Send 24-hour reminder emails
- */
 async function send24HourReminders() {
   try {
     console.log('📧 Checking for 24-hour appointment reminders...');
 
     const now = new Date();
     const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const twentyFourHoursWindow = new Date(twentyFourHoursLater.getTime() + 30 * 60 * 1000); // 30-minute window
-
-    // Find appointments in the next 24 hours that haven't been reminded
+    const twentyFourHoursWindow = new Date(twentyFourHoursLater.getTime() + 30 * 60 * 1000); 
     const appointments = await Appointment.find({
       date: {
         $gte: twentyFourHoursLater,
@@ -41,7 +27,7 @@ async function send24HourReminders() {
       .populate('userId', 'name email phone')
       .populate('doctorId', 'name specialization')
       .populate('clinicId', 'name address phone')
-      .limit(100); // Process in batches
+      .limit(100); 
 
     console.log(`Found ${appointments.length} appointments for 24h reminders`);
 
@@ -49,22 +35,17 @@ async function send24HourReminders() {
     let failedCount = 0;
 
     for (const appointment of appointments) {
-      try {
-        // Send email reminder
+      try {
         if (appointment.userId?.email) {
           await sendAppointmentReminderEmail(appointment, '24 hours');
           appointment.remindersSent.email24h = true;
           sentCount++;
-        }
-
-        // Send SMS if preference is set
+        }
         const reminderPref = appointment.reminderPreference || 'email';
         if ((reminderPref === 'sms' || reminderPref === 'both') && appointment.userId?.phone) {
           await sendAppointmentReminderSMS(appointment, '24 hours');
           appointment.remindersSent.sms24h = true;
-        }
-
-        // Create in-app notification
+        }
         await createReminderNotification(appointment, '24 hours');
 
         await appointment.save();
@@ -82,18 +63,13 @@ async function send24HourReminders() {
   }
 }
 
-/**
- * Send 1-hour reminder emails
- */
 async function send1HourReminders() {
   try {
     console.log('📧 Checking for 1-hour appointment reminders...');
 
     const now = new Date();
     const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-    const oneHourWindow = new Date(oneHourLater.getTime() + 15 * 60 * 1000); // 15-minute window
-
-    // Find appointments in the next 1 hour that haven't been reminded
+    const oneHourWindow = new Date(oneHourLater.getTime() + 15 * 60 * 1000); 
     const appointments = await Appointment.find({
       date: {
         $gte: oneHourLater,
@@ -113,22 +89,17 @@ async function send1HourReminders() {
     let failedCount = 0;
 
     for (const appointment of appointments) {
-      try {
-        // Send email reminder
+      try {
         if (appointment.userId?.email) {
           await sendAppointmentReminderEmail(appointment, '1 hour');
           appointment.remindersSent.email1h = true;
           sentCount++;
-        }
-
-        // Send SMS if preference is set
+        }
         const reminderPref = appointment.reminderPreference || 'email';
         if ((reminderPref === 'sms' || reminderPref === 'both') && appointment.userId?.phone) {
           await sendAppointmentReminderSMS(appointment, '1 hour');
           appointment.remindersSent.sms1h = true;
-        }
-
-        // Create in-app notification
+        }
         await createReminderNotification(appointment, '1 hour');
 
         await appointment.save();
@@ -146,9 +117,6 @@ async function send1HourReminders() {
   }
 }
 
-/**
- * Send appointment reminder email
- */
 async function sendAppointmentReminderEmail(appointment, timeframe) {
   const patient = appointment.userId;
   const doctor = appointment.doctorId;
@@ -270,9 +238,6 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
   console.log(`✅ ${timeframe} reminder email sent to ${patient.email}`);
 }
 
-/**
- * Send appointment reminder SMS
- */
 async function sendAppointmentReminderSMS(appointment, timeframe) {
   const patient = appointment.userId;
   const doctor = appointment.doctorId;
@@ -283,9 +248,6 @@ async function sendAppointmentReminderSMS(appointment, timeframe) {
   console.log(`✅ ${timeframe} reminder SMS sent to ${patient.phone}`);
 }
 
-/**
- * Create in-app notification for reminder
- */
 async function createReminderNotification(appointment, timeframe) {
   try {
     await Notification.create({
@@ -306,20 +268,12 @@ async function createReminderNotification(appointment, timeframe) {
   }
 }
 
-/**
- * Initialize reminder job scheduler
- * Runs every 15 minutes to check for reminders
- */
 function initializeReminderJobs() {
-  console.log('📧 Initializing reminder job scheduler...');
-
-  // Check for 24-hour reminders every hour
+  console.log('📧 Initializing reminder job scheduler...');
   cron.schedule('0 * * * *', async () => {
     console.log('⏰ Checking for 24-hour reminders...');
     await send24HourReminders();
-  });
-
-  // Check for 1-hour reminders every 15 minutes
+  });
   cron.schedule('*/15 * * * *', async () => {
     console.log('⏰ Checking for 1-hour reminders...');
     await send1HourReminders();

@@ -1,7 +1,4 @@
-/**
- * LoadingOverlay - Global loading overlay with HeartbeatLoader
- * Shows after 300ms delay to avoid flash for fast loads
- */
+
 
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
@@ -11,7 +8,7 @@ const LoadingOverlay = ({
   visible = false,
   message = 'Loading...',
   fullscreen = false,
-  delay = 300, // Only show if loading takes > 300ms
+  delay = 300, 
   variant = 'ecg',
 }) => {
   const [shouldShow, setShouldShow] = useState(false);

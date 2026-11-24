@@ -1,7 +1,4 @@
-/**
- * Visit Templates Service
- * Pre-built templates for common conditions
- */
+
 
 class VisitTemplateService {
   
@@ -10,8 +7,7 @@ class VisitTemplateService {
   }
   
   initializeTemplates() {
-    return {
-      // Primary Care Templates
+    return {
       'upper-respiratory-infection': {
         name: 'Upper Respiratory Infection',
         category: 'Primary Care',
@@ -204,9 +200,7 @@ class VisitTemplateService {
         ]
       }
     };
-  }
-  
-  // Get all templates
+  }
   getAllTemplates() {
     return Object.entries(this.templates).map(([id, template]) => ({
       id,
@@ -214,28 +208,20 @@ class VisitTemplateService {
       category: template.category,
       icdCodes: template.icdCodes
     }));
-  }
-  
-  // Get templates by category
+  }
   getTemplatesByCategory(category) {
     return Object.entries(this.templates)
       .filter(([_, t]) => t.category === category)
       .map(([id, template]) => ({ id, ...template }));
-  }
-  
-  // Get single template
+  }
   getTemplate(templateId) {
     const template = this.templates[templateId];
     if (!template) return null;
     return { id: templateId, ...template };
-  }
-  
-  // Apply template to visit with patient data
+  }
   applyTemplate(templateId, patientData = {}) {
     const template = this.templates[templateId];
-    if (!template) throw new Error('Template not found');
-    
-    // Replace placeholders in HPI
+    if (!template) throw new Error('Template not found');
     let hpi = template.hpiTemplate;
     Object.entries(patientData).forEach(([key, value]) => {
       hpi = hpi.replace(`{${key}}`, value || `[${key}]`);
@@ -247,9 +233,7 @@ class VisitTemplateService {
       appliedAt: new Date(),
       patientData
     };
-  }
-  
-  // Get categories
+  }
   getCategories() {
     const categories = new Set();
     Object.values(this.templates).forEach(t => categories.add(t.category));

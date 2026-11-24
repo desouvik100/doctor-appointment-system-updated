@@ -1,5 +1,4 @@
-// backend/routes/aiRoutes.js
-// AI-Powered Features API Routes
+
 
 const express = require('express');
 const router = express.Router();
@@ -15,15 +14,7 @@ const {
 const {
   processMessage,
   getQuickReplies
-} = require('../services/aiChatbotService');
-
-/**
- * ============================================
- * SMART WAIT TIME PREDICTION
- * ============================================
- */
-
-// Get predicted wait time for a queue position
+} = require('../services/aiChatbotService');
 router.get('/predict-wait/:doctorId/:position', async (req, res) => {
   try {
     const { doctorId, position } = req.params;
@@ -37,9 +28,7 @@ router.get('/predict-wait/:doctorId/:position', async (req, res) => {
     console.error('Error predicting wait time:', error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-// Get doctor's average consultation time
+});
 router.get('/doctor-avg-time/:doctorId', async (req, res) => {
   try {
     const avgTime = await getDoctorAverageConsultationTime(req.params.doctorId);
@@ -51,15 +40,7 @@ router.get('/doctor-avg-time/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-/**
- * ============================================
- * NO-SHOW PREDICTION
- * ============================================
- */
-
-// Get no-show risk for a patient
+});
 router.post('/no-show-risk', async (req, res) => {
   try {
     const { userId, appointmentDetails } = req.body;
@@ -78,9 +59,7 @@ router.post('/no-show-risk', async (req, res) => {
     console.error('Error predicting no-show risk:', error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-// Batch no-show risk for multiple appointments (for doctors)
+});
 router.post('/batch-no-show-risk', async (req, res) => {
   try {
     const { appointments } = req.body;
@@ -109,15 +88,7 @@ router.post('/batch-no-show-risk', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-/**
- * ============================================
- * SMART SCHEDULING OPTIMIZATION
- * ============================================
- */
-
-// Get optimal appointment slots for a doctor on a date
+});
 router.get('/optimal-slots/:doctorId/:date', async (req, res) => {
   try {
     const { doctorId, date } = req.params;
@@ -131,9 +102,7 @@ router.get('/optimal-slots/:doctorId/:date', async (req, res) => {
     console.error('Error getting optimal slots:', error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-// Get AI-suggested best appointment time
+});
 router.post('/suggest-time', async (req, res) => {
   try {
     const { doctorId, patientId, preferredDate } = req.body;
@@ -154,15 +123,7 @@ router.post('/suggest-time', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-/**
- * ============================================
- * AI CHATBOT
- * ============================================
- */
-
-// Process chatbot message
+});
 router.post('/chat', async (req, res) => {
   try {
     const { message, userId, conversationHistory } = req.body;
@@ -185,17 +146,13 @@ router.post('/chat', async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Get quick reply options
+});
 router.get('/chat/quick-replies', (req, res) => {
   res.json({
     success: true,
     quickReplies: getQuickReplies()
   });
-});
-
-// Get chatbot welcome message
+});
 router.get('/chat/welcome', (req, res) => {
   res.json({
     success: true,

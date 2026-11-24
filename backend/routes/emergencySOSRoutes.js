@@ -1,28 +1,19 @@
-/**
- * Emergency SOS API Routes
- * Requirement 9: Emergency SOS Feature
- */
+
 
 const express = require('express');
 const router = express.Router();
 const EmergencySOS = require('../models/EmergencySOS');
 const User = require('../models/User');
 const whatsappService = require('../services/whatsappService');
-const { authenticate } = require('../middleware/roleMiddleware');
-
-// Trigger SOS
+const { authenticate } = require('../middleware/roleMiddleware');
 router.post('/trigger', authenticate, async (req, res) => {
   try {
     const { type, latitude, longitude, address, landmark } = req.body;
     
     if (!latitude || !longitude) {
       return res.status(400).json({ message: 'Location is required for SOS' });
-    }
-    
-    // Get user's medical info
-    const user = await User.findById(req.user.id);
-    
-    // Create SOS record
+    }
+    const user = await User.findById(req.user.id);
     const sos = new EmergencySOS({
       userId: req.user.id,
       type: type || 'medical',
@@ -42,12 +33,8 @@ router.post('/trigger', authenticate, async (req, res) => {
           ? `Emergency Contact: ${user.medicalHistory.emergencyContact.name} - ${user.medicalHistory.emergencyContact.phone}`
           : ''
       }
-    });
-    
-    // Add initial timeline event
-    sos.addTimelineEvent('sos_triggered', `Emergency type: ${type || 'medical'}`);
-    
-    // Get emergency contacts from user profile
+    });
+    sos.addTimelineEvent('sos_triggered', `Emergency type: ${type || 'medical'}`);
     const emergencyContacts = [];
     
     if (user.medicalHistory?.emergencyContact?.phone) {
@@ -56,15 +43,11 @@ router.post('/trigger', authenticate, async (req, res) => {
         phone: user.medicalHistory.emergencyContact.phone,
         relationship: user.medicalHistory.emergencyContact.relationship
       });
-    }
-    
-    // Notify emergency contacts
+    }
     const mapLink = `https://maps.google.com/?q=${latitude},${longitude}`;
     
     for (const contact of emergencyContacts) {
-      sos.notifyContact(contact);
-      
-      // Send WhatsApp alert
+      sos.notifyContact(contact);
       await whatsappService.sendEmergencyAlert(contact.phone, {
         patientName: user.name,
         patientPhone: user.phone,
@@ -91,9 +74,7 @@ router.post('/trigger', authenticate, async (req, res) => {
     console.error('SOS trigger error:', error);
     res.status(500).json({ message: error.message });
   }
-});
-
-// Update location (live tracking)
+});
 router.put('/:id/location', authenticate, async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
@@ -106,16 +87,12 @@ router.put('/:id/location', authenticate, async (req, res) => {
     
     if (!sos) {
       return res.status(404).json({ message: 'Active SOS not found' });
-    }
-    
-    // Add to location history
+    }
     sos.locationHistory.push({
       latitude,
       longitude,
       timestamp: new Date()
-    });
-    
-    // Update current location
+    });
     sos.location.latitude = latitude;
     sos.location.longitude = longitude;
     
@@ -125,9 +102,7 @@ router.put('/:id/location', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Cancel SOS
+});
 router.post('/:id/cancel', authenticate, async (req, res) => {
   try {
     const { reason } = req.body;
@@ -143,9 +118,7 @@ router.post('/:id/cancel', authenticate, async (req, res) => {
     }
     
     sos.updateStatus('cancelled', reason || 'Cancelled by user', 'user');
-    await sos.save();
-    
-    // Notify contacts that SOS is cancelled
+    await sos.save();
     for (const contact of sos.emergencyContacts) {
       await whatsappService.sendTextMessage(contact.phone, 
         `✅ Emergency Alert Cancelled\n\nThe emergency alert for ${req.user.name} has been cancelled.\n\nReason: ${reason || 'User cancelled'}\n\n- HealthSyncPro`
@@ -156,9 +129,7 @@ router.post('/:id/cancel', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get active SOS
+});
 router.get('/active', authenticate, async (req, res) => {
   try {
     const sos = await EmergencySOS.findOne({
@@ -171,9 +142,7 @@ router.get('/active', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get SOS details
+});
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const sos = await EmergencySOS.findOne({
@@ -189,9 +158,7 @@ router.get('/:id', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get SOS history
+});
 router.get('/', authenticate, async (req, res) => {
   try {
     const history = await EmergencySOS.getUserHistory(req.user.id);
@@ -199,9 +166,7 @@ router.get('/', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Add note to SOS
+});
 router.post('/:id/notes', authenticate, async (req, res) => {
   try {
     const { content, type } = req.body;
@@ -228,9 +193,7 @@ router.post('/:id/notes', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Submit feedback after resolution
+});
 router.post('/:id/feedback', authenticate, async (req, res) => {
   try {
     const { rating, comment } = req.body;
@@ -256,11 +219,7 @@ router.post('/:id/feedback', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// ===== AMBULANCE/ADMIN ROUTES =====
-
-// Acknowledge SOS (for ambulance providers)
+});
 router.post('/:id/acknowledge', async (req, res) => {
   try {
     const { providerId, vehicleNumber, driverName, driverPhone, eta } = req.body;
@@ -280,9 +239,7 @@ router.post('/:id/acknowledge', async (req, res) => {
     };
     
     sos.updateStatus('acknowledged', `Ambulance ${vehicleNumber} assigned`, 'system');
-    await sos.save();
-    
-    // Notify user
+    await sos.save();
     const user = await User.findById(sos.userId);
     if (user?.phone) {
       await whatsappService.sendTextMessage(user.phone,
@@ -294,9 +251,7 @@ router.post('/:id/acknowledge', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Update ambulance location
+});
 router.put('/:id/ambulance-location', async (req, res) => {
   try {
     const { latitude, longitude } = req.body;
@@ -317,9 +272,7 @@ router.put('/:id/ambulance-location', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Update SOS status (ambulance arrived, patient picked, etc.)
+});
 router.put('/:id/status', async (req, res) => {
   try {
     const { status, details, hospitalName, hospitalAddress } = req.body;
@@ -340,9 +293,7 @@ router.put('/:id/status', async (req, res) => {
     }
     
     sos.updateStatus(status, details, 'driver');
-    await sos.save();
-    
-    // Notify user and contacts
+    await sos.save();
     const user = await User.findById(sos.userId);
     const statusMessages = {
       'ambulance_dispatched': '🚑 Ambulance is on the way!',
@@ -362,9 +313,7 @@ router.put('/:id/status', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get nearby active emergencies (for ambulance providers)
+});
 router.get('/nearby/active', async (req, res) => {
   try {
     const { latitude, longitude, radius } = req.query;

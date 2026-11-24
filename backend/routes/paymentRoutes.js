@@ -3,22 +3,14 @@ const router = express.Router();
 const razorpayService = require('../services/razorpayService');
 const Appointment = require('../models/Appointment');
 const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID, FRONTEND_URL, BACKEND_URL } = require('../config/paymentConfig');
-const { verifyToken } = require('../middleware/auth');
-
-// ── WEBHOOK REPLAY PROTECTION ─────────────────────────────────────────────
-// In-memory store of processed Razorpay event IDs (TTL: 24 hours).
-// Prevents duplicate payment confirmations from replayed webhook calls.
-// Replace with Redis SET in multi-instance deployments.
+const { verifyToken } = require('../middleware/auth');
 const processedWebhookEvents = new Map();
 setInterval(() => {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h ago
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000; 
   for (const [id, ts] of processedWebhookEvents.entries()) {
     if (ts < cutoff) processedWebhookEvents.delete(id);
   }
-}, 60 * 60 * 1000); // clean up every hour
-// ─────────────────────────────────────────────────────────────────────────
-
-// Get payment calculation for appointment (authenticated users)
+}, 60 * 60 * 1000); 
 router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -26,9 +18,7 @@ router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
     const appointment = await Appointment.findById(appointmentId).populate('doctorId');
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
-    }
-    
-    // Validate ownership
+    }
     if (req.user.role === 'patient' && appointment.userId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
     }
@@ -38,7 +28,7 @@ router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
     res.json({
       success: true,
       paymentsEnabled: USE_RAZORPAY_PAYMENTS,
-      testMode: !USE_RAZORPAY_PAYMENTS, // Only true when payments are DISABLED
+      testMode: !USE_RAZORPAY_PAYMENTS, 
       appointmentId,
       doctorName: appointment.doctorId.name,
       ...breakdown
@@ -47,9 +37,7 @@ router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
     console.error('Payment calculation error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Create a generic Razorpay order for lab tests / non-appointment payments
+});
 router.post('/create-lab-order', verifyToken, async (req, res) => {
   try {
     const { amount, description } = req.body;
@@ -83,9 +71,7 @@ router.post('/create-lab-order', verifyToken, async (req, res) => {
     console.error('Lab order creation error:', error);
     res.status(500).json({ success: false, message: error.message || 'Failed to create order' });
   }
-});
-
-// Create Razorpay Order (authenticated users)
+});
 router.post('/create-order', verifyToken, async (req, res) => {
   try {
     const { appointmentId, userId, couponCode } = req.body;
@@ -97,9 +83,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
-    }
-
-    // Validate ownership
+    }
     if (req.user.role === 'patient') {
       if (appointment.userId.toString() !== req.user.id.toString()) {
         return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
@@ -107,10 +91,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
       if (userId.toString() !== req.user.id.toString()) {
         return res.status(403).json({ message: 'Access denied - userId mismatch' });
       }
-    }
-
-    // ── IDEMPOTENCY: return existing order if already created ──────────────
-    // Prevents duplicate charges when user taps Pay twice or retries on network error
+    }
     if (appointment.razorpayOrderId) {
       console.log(`♻️ Returning existing Razorpay order for appointment ${appointmentId}: ${appointment.razorpayOrderId}`);
       return res.json({
@@ -122,10 +103,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
         currency: 'INR',
         appointmentId,
       });
-    }
-    // ──────────────────────────────────────────────────────────────────────
-
-    // If Razorpay is disabled, return test mode response
+    }
     if (!USE_RAZORPAY_PAYMENTS) {
       if (process.env.NODE_ENV === 'production') {
         console.error(`🚨 SECURITY WARNING: Attempted test mode payment bypass in production for appointment ${appointmentId}`);
@@ -142,9 +120,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
           amount: 0,
           paidAt: new Date()
         };
-        await appointment.save();
-        
-        // Award loyalty points in test mode
+        await appointment.save();
         try {
           const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
           await awardLoyaltyPoints(userId, 'appointment', appointment._id, null, `Booked appointment (Test Mode)`);
@@ -176,9 +152,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Verify Razorpay Payment
+});
 router.post('/verify', verifyToken, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = req.body;
@@ -186,14 +160,10 @@ router.post('/verify', verifyToken, async (req, res) => {
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
-    }
-
-    // Validate ownership
+    }
     if (req.user.role === 'patient' && appointment.userId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
-    }
-    
-    // If Razorpay is disabled, return test mode response
+    }
     if (!USE_RAZORPAY_PAYMENTS) {
       if (process.env.NODE_ENV === 'production') {
         console.error(`🚨 SECURITY WARNING: Attempted test mode payment verification bypass in production for appointment ${appointmentId}`);
@@ -214,14 +184,10 @@ router.post('/verify', verifyToken, async (req, res) => {
       razorpay_payment_id,
       razorpay_signature,
       appointmentId
-    });
-    
-    // Send invoice email after successful payment
+    });
     if (result.success && appointmentId) {
       try {
-        const { generateAndSendInvoice } = require('../services/invoiceService');
-        
-        // Fetch populated appointment for invoice
+        const { generateAndSendInvoice } = require('../services/invoiceService');
         const populatedAppointment = await Appointment.findById(appointmentId)
           .populate('userId', 'name email phone')
           .populate('doctorId', 'name specialization consultationFee email')
@@ -230,7 +196,7 @@ router.post('/verify', verifyToken, async (req, res) => {
         if (populatedAppointment && populatedAppointment.userId?.email) {
           const paymentDetails = result.paymentDetails || populatedAppointment.paymentDetails;
           const consultationFee = populatedAppointment.doctorId?.consultationFee || 500;
-          const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
+          const platformFee = Math.round(consultationFee * 0.05); 
           const totalAmount = consultationFee + platformFee;
           
           const invoiceResult = await generateAndSendInvoice(
@@ -250,12 +216,9 @@ router.post('/verify', verifyToken, async (req, res) => {
           );
           
           if (invoiceResult?.success) {
-            console.log(`✅ Invoice ${invoiceResult.invoiceNumber} sent to ${populatedAppointment.userId.email}`);
-            // Save invoice number to appointment
+            console.log(`✅ Invoice ${invoiceResult.invoiceNumber} sent to ${populatedAppointment.userId.email}`);
             populatedAppointment.invoiceNumber = invoiceResult.invoiceNumber;
-            await populatedAppointment.save();
-            
-            // Send WhatsApp payment confirmation
+            await populatedAppointment.save();
             if (populatedAppointment.userId?.phone) {
               try {
                 const whatsappService = require('../services/whatsappService');
@@ -282,8 +245,7 @@ router.post('/verify', verifyToken, async (req, res) => {
           }
         }
       } catch (invoiceError) {
-        console.error('❌ Error sending invoice after payment:', invoiceError.message);
-        // Don't fail the payment verification if invoice fails
+        console.error('❌ Error sending invoice after payment:', invoiceError.message);
       }
     }
     
@@ -300,9 +262,7 @@ router.post('/verify', verifyToken, async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Get current user's payment history (authenticated)
+});
 router.get('/history', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -312,9 +272,7 @@ router.get('/history', verifyToken, async (req, res) => {
     console.error('Payment history error:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch payment history', error: error.message });
   }
-});
-
-// Get payment history for user
+});
 router.get('/history/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -332,9 +290,7 @@ router.get('/history/:userId', verifyToken, async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Process refund
+});
 router.post('/refund', verifyToken, async (req, res) => {
   try {
     const { appointmentId, reason } = req.body;
@@ -358,15 +314,11 @@ router.post('/refund', verifyToken, async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Get Razorpay config for frontend
+});
 router.get('/config', (req, res) => {
   const config = razorpayService.getConfig();
   res.json(config);
-});
-
-// Get payment status for an appointment
+});
 router.get('/status/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -389,30 +341,22 @@ router.get('/status/:appointmentId', verifyToken, async (req, res) => {
     console.error('Payment status error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Verify payment by Razorpay order ID (used after UPI intent returns to app)
+});
 router.post('/verify-by-order', verifyToken, async (req, res) => {
   try {
     const { orderId, appointmentId } = req.body;
     if (!orderId || !appointmentId) {
       return res.status(400).json({ success: false, message: 'orderId and appointmentId required' });
-    }
-
-    // Check if already confirmed via webhook
+    }
     const appointment = await Appointment.findById(appointmentId).select('paymentStatus status razorpayOrderId razorpayPaymentId userId');
-    if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
-
-    // Validate ownership
+    if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
     if (req.user.role === 'patient' && appointment.userId.toString() !== req.user.id.toString()) {
       return res.status(403).json({ success: false, message: 'Access denied - you do not own this appointment' });
     }
 
     if (appointment.paymentStatus === 'completed') {
       return res.json({ success: true, alreadyVerified: true, message: 'Payment already confirmed' });
-    }
-
-    // Fetch order from Razorpay to check payment status
+    }
     if (!USE_RAZORPAY_PAYMENTS) {
       if (process.env.NODE_ENV === 'production') {
         console.error(`🚨 SECURITY WARNING: Attempted test mode payment verification by order bypass in production for appointment ${appointmentId}`);
@@ -423,9 +367,7 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
       }
       appointment.paymentStatus = 'completed';
       appointment.status = 'confirmed';
-      await appointment.save();
-
-      // Award loyalty points
+      await appointment.save();
       try {
         const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
         await awardLoyaltyPoints(appointment.userId, 'appointment', appointment._id, null, `Booked appointment (Test Mode)`);
@@ -441,8 +383,7 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
     const rzp = new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET });
 
     const order = await rzp.orders.fetch(orderId);
-    if (order.status === 'paid') {
-      // Fetch the payment for this order
+    if (order.status === 'paid') {
       const payments = await rzp.orders.fetchPayments(orderId);
       const payment = payments.items?.find(p => p.status === 'captured');
       if (payment) {
@@ -456,9 +397,7 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
           method: payment.method,
           paidAt: new Date()
         };
-        await appointment.save();
-        
-        // Award loyalty points on verified payment
+        await appointment.save();
         try {
           const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
           const populatedApt = await Appointment.findById(appointmentId).populate('doctorId');
@@ -482,21 +421,16 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
     console.error('verify-by-order error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Razorpay Callback - for Android app redirect flow
+});
 router.get('/razorpay-callback', async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = req.query;
     
     console.log('📱 Razorpay callback received:', { razorpay_order_id, razorpay_payment_id, appointmentId });
     
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      // Redirect to app with error
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.redirect(`healthsync://payment-failed?error=Missing payment details&appointmentId=${appointmentId || ''}`);
-    }
-    
-    // Verify the payment
+    }
     const result = await razorpayService.verifyPayment({
       razorpay_order_id,
       razorpay_payment_id,
@@ -504,8 +438,7 @@ router.get('/razorpay-callback', async (req, res) => {
       appointmentId
     });
     
-    if (result.success) {
-      // Redirect to app with success
+    if (result.success) {
       const successUrl = `healthsync://payment-success?razorpay_order_id=${razorpay_order_id}&razorpay_payment_id=${razorpay_payment_id}&razorpay_signature=${razorpay_signature}&appointmentId=${appointmentId || ''}`;
       console.log('✅ Payment verified, redirecting to:', successUrl);
       return res.redirect(successUrl);
@@ -516,26 +449,16 @@ router.get('/razorpay-callback', async (req, res) => {
     console.error('❌ Razorpay callback error:', error);
     return res.redirect(`healthsync://payment-failed?error=${encodeURIComponent(error.message)}&appointmentId=${req.query.appointmentId || ''}`);
   }
-});
-
-// Razorpay Cancel - for Android app redirect flow
+});
 router.get('/razorpay-cancel', async (req, res) => {
   const { appointmentId } = req.query;
   console.log('📱 Razorpay payment cancelled for appointment:', appointmentId);
   return res.redirect(`healthsync://payment-failed?error=Payment cancelled by user&appointmentId=${appointmentId || ''}`);
-});
-
-// Mobile Payment Page - serves a full-page Razorpay checkout for Android
-// verifyToken validates the session; ownership check ensures the orderId
-// belongs to the authenticated user's appointment.
+});
 router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { appointmentId, amount, name, email, contact, doctorName, method, upiApp } = req.query;
-
-    // ── OWNERSHIP VALIDATION ──────────────────────────────────────────────
-    // Verify the appointment belongs to the authenticated user.
-    // Prevents one user from loading another user's checkout page.
+    const { appointmentId, amount, name, email, contact, doctorName, method, upiApp } = req.query;
     if (appointmentId) {
       const appt = await Appointment.findById(appointmentId).select('userId razorpayOrderId').lean();
       if (!appt) {
@@ -545,16 +468,12 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
       if (tokenUserId && appt.userId?.toString() !== tokenUserId) {
         console.error(`❌ Checkout ownership mismatch: token=${tokenUserId} appt.userId=${appt.userId}`);
         return res.status(403).json({ error: 'Access denied — appointment does not belong to this user' });
-      }
-      // Verify the orderId matches what we stored for this appointment
+      }
       if (appt.razorpayOrderId && appt.razorpayOrderId !== orderId) {
         console.error(`❌ Checkout orderId mismatch: param=${orderId} stored=${appt.razorpayOrderId}`);
         return res.status(403).json({ error: 'Order ID mismatch' });
       }
-    }
-    // ─────────────────────────────────────────────────────────────────────
-    
-    // Map upiApp param to Razorpay's app name
+    }
     const upiAppMap = { gpay: 'google_pay', phonepe: 'phonepe', paytm: 'paytm', bhim: 'bhim' };
     const razorpayUpiApp = upiApp ? (upiAppMap[upiApp] || upiApp) : null;
     
@@ -765,9 +684,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
             '</button>' +
             '<p class="return-hint">Tap the button above to go back to the app</p>' +
           '</div>' +
-        '</div>';
-      
-      // Auto-redirect after 3 seconds
+        '</div>';
       setTimeout(function() { returnToApp(success); }, 3000);
     }
     
@@ -838,8 +755,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
         script.async = true;
         
         script.onload = function() {
-          log('Script loaded, checking Razorpay object...');
-          // Wait a bit for Razorpay to initialize
+          log('Script loaded, checking Razorpay object...');
           setTimeout(function() {
             if (window.Razorpay) {
               log('Razorpay SDK ready');
@@ -971,9 +887,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
     
     function cancelPayment() {
       showResultPage(false, 'Payment Cancelled', 'You cancelled the payment.');
-    }
-    
-    // Initialize on page load
+    }
     document.addEventListener('DOMContentLoaded', function() {
       log('Page loaded, initializing...');
       log('Key ID: ' + (keyId ? keyId.substring(0, 15) + '...' : 'NOT SET'));
@@ -1004,15 +918,11 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
     console.error('❌ Mobile checkout error:', error);
     res.redirect(`healthsync://payment-failed?error=${encodeURIComponent(error.message)}`);
   }
-});
-
-// Razorpay Webhook - for payment confirmations (backup verification)
+});
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
     const crypto = require('crypto');
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    
-    // Verify webhook signature
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const signature = req.headers['x-razorpay-signature'];
     
     if (webhookSecret && signature) {
@@ -1025,33 +935,22 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         console.error('❌ Webhook signature verification failed');
         return res.status(400).json({ error: 'Invalid signature' });
       }
-    }
-
-    // ── REPLAY ATTACK PROTECTION ──────────────────────────────────────────
-    // Razorpay sends a unique event ID in every webhook payload.
-    // We track processed event IDs in-memory (TTL 24h) to reject replays.
-    // In a multi-instance deployment, replace this with a Redis SET.
+    }
     const eventId = req.body?.id;
     if (eventId) {
       if (processedWebhookEvents.has(eventId)) {
         console.warn(`⚠️ Webhook replay blocked: event ${eventId} already processed`);
         return res.status(200).json({ received: true, duplicate: true });
-      }
-      // Mark as processed — auto-expire after 24 hours
+      }
       processedWebhookEvents.set(eventId, Date.now());
-    }
-    // ─────────────────────────────────────────────────────────────────────
+    }
     
     const event = req.body;
-    console.log('📥 Razorpay webhook received:', event.event);
-    
-    // Handle different webhook events
+    console.log('📥 Razorpay webhook received:', event.event);
     switch (event.event) {
       case 'payment.captured':
         const payment = event.payload.payment.entity;
-        const orderId = payment.order_id;
-        
-        // Find appointment by order ID and update status
+        const orderId = payment.order_id;
         const appointment = await Appointment.findOne({ razorpayOrderId: orderId });
         if (appointment && appointment.paymentStatus !== 'completed') {
           appointment.paymentStatus = 'completed';
@@ -1090,9 +989,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       case 'refund.created':
       case 'refund.processed':
         const refund = event.payload.refund.entity;
-        console.log(`💰 Refund ${event.event}: ${refund.id} for payment ${refund.payment_id}`);
-        
-        // Update appointment refund status
+        console.log(`💰 Refund ${event.event}: ${refund.id} for payment ${refund.payment_id}`);
         const refundAppointment = await Appointment.findOne({ razorpayPaymentId: refund.payment_id });
         if (refundAppointment) {
           refundAppointment.paymentStatus = 'refunded';

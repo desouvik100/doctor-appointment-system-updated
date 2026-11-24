@@ -22,8 +22,7 @@ const loyaltyPointsSchema = new mongoose.Schema({
   expiredPoints: {
     type: Number,
     default: 0
-  },
-  // Membership tier
+  },
   tier: {
     type: String,
     enum: ['basic', 'silver', 'gold', 'platinum'],
@@ -32,8 +31,7 @@ const loyaltyPointsSchema = new mongoose.Schema({
   tierProgress: {
     type: Number,
     default: 0
-  },
-  // Points history
+  },
   transactions: [{
     type: {
       type: String,
@@ -50,8 +48,7 @@ const loyaltyPointsSchema = new mongoose.Schema({
       default: Date.now
     },
     expiresAt: Date
-  }],
-  // Streak tracking
+  }],
   currentStreak: {
     type: Number,
     default: 0
@@ -60,8 +57,7 @@ const loyaltyPointsSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  lastActivityDate: Date,
-  // Achievements
+  lastActivityDate: Date,
   achievements: [{
     name: String,
     description: String,
@@ -71,9 +67,7 @@ const loyaltyPointsSchema = new mongoose.Schema({
   }]
 }, {
   timestamps: true
-});
-
-// Points earning rates
+});
 const POINTS_CONFIG = {
   appointmentBooked: 10,
   appointmentCompleted: 50,
@@ -81,22 +75,18 @@ const POINTS_CONFIG = {
   referralSuccess: 100,
   profileCompleted: 50,
   firstAppointment: 100,
-  streakBonus: 20, // Per day streak
+  streakBonus: 20, 
   birthdayBonus: 200
-};
-
-// Tier thresholds
+};
 const TIER_THRESHOLDS = {
   basic: 0,
   silver: 500,
   gold: 2000,
   platinum: 5000
-};
-
-// Add points
+};
 loyaltyPointsSchema.methods.addPoints = function(points, type, description, appointmentId = null) {
   const expiresAt = new Date();
-  expiresAt.setFullYear(expiresAt.getFullYear() + 1); // Points expire in 1 year
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1); 
 
   this.transactions.push({
     type,
@@ -112,9 +102,7 @@ loyaltyPointsSchema.methods.addPoints = function(points, type, description, appo
   
   this.updateTier();
   this.checkAchievements();
-};
-
-// Redeem points
+};
 loyaltyPointsSchema.methods.redeemPoints = function(points, description) {
   if (points > this.availablePoints) {
     throw new Error('Insufficient points');
@@ -128,9 +116,7 @@ loyaltyPointsSchema.methods.redeemPoints = function(points, description) {
 
   this.availablePoints -= points;
   this.redeemedPoints += points;
-};
-
-// Update tier based on total points
+};
 loyaltyPointsSchema.methods.updateTier = function() {
   if (this.totalPoints >= TIER_THRESHOLDS.platinum) {
     this.tier = 'platinum';
@@ -140,9 +126,7 @@ loyaltyPointsSchema.methods.updateTier = function() {
     this.tier = 'silver';
   } else {
     this.tier = 'basic';
-  }
-
-  // Calculate progress to next tier
+  }
   const tiers = ['basic', 'silver', 'gold', 'platinum'];
   const currentIndex = tiers.indexOf(this.tier);
   if (currentIndex < tiers.length - 1) {
@@ -153,9 +137,7 @@ loyaltyPointsSchema.methods.updateTier = function() {
   } else {
     this.tierProgress = 100;
   }
-};
-
-// Check and award achievements
+};
 loyaltyPointsSchema.methods.checkAchievements = function() {
   const achievements = [
     { name: 'First Steps', description: 'Earned your first points', threshold: 1, points: 10 },
@@ -174,20 +156,15 @@ loyaltyPointsSchema.methods.checkAchievements = function() {
         icon: 'fa-trophy',
         earnedAt: new Date(),
         pointsAwarded: achievement.points
-      });
-      // Award bonus points for achievement
+      });
       this.availablePoints += achievement.points;
       this.totalPoints += achievement.points;
     }
   });
-};
-
-// Convert points to rupees (100 points = ₹10)
+};
 loyaltyPointsSchema.methods.getPointsValue = function() {
   return Math.floor(this.availablePoints / 10);
-};
-
-// Static method to get points config
+};
 loyaltyPointsSchema.statics.getPointsConfig = function() {
   return POINTS_CONFIG;
 };

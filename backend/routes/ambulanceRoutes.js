@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const AmbulanceBooking = require('../models/AmbulanceBooking');
-
-// Book ambulance
+const AmbulanceBooking = require('../models/AmbulanceBooking');
 router.post('/book', async (req, res) => {
   try {
     const {
@@ -19,12 +17,10 @@ router.post('/book', async (req, res) => {
       destinationHospital,
       ambulanceType: ambulanceType || 'Basic',
       notes,
-      estimatedArrival: new Date(Date.now() + 15 * 60000) // 15 mins ETA
+      estimatedArrival: new Date(Date.now() + 15 * 60000) 
     });
 
-    await booking.save();
-
-    // Simulate dispatch (in production, integrate with ambulance service)
+    await booking.save();
     setTimeout(async () => {
       await AmbulanceBooking.findByIdAndUpdate(booking._id, {
         status: 'Dispatched',
@@ -48,9 +44,7 @@ router.post('/book', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get user's ambulance bookings
+});
 router.get('/user/:userId', async (req, res) => {
   try {
     const bookings = await AmbulanceBooking.find({ userId: req.params.userId })
@@ -59,9 +53,7 @@ router.get('/user/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get booking status
+});
 router.get('/status/:bookingId', async (req, res) => {
   try {
     const booking = await AmbulanceBooking.findById(req.params.bookingId);
@@ -72,9 +64,7 @@ router.get('/status/:bookingId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Cancel booking
+});
 router.put('/cancel/:bookingId', async (req, res) => {
   try {
     const booking = await AmbulanceBooking.findByIdAndUpdate(
@@ -86,13 +76,9 @@ router.put('/cancel/:bookingId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get nearby hospitals (mock data)
+});
 router.get('/nearby-hospitals', async (req, res) => {
-  const { lat, lng } = req.query;
-  
-  // Mock nearby hospitals - in production, use Google Places API
+  const { lat, lng } = req.query;
   const hospitals = [
     { name: 'Bankura Sammilani Medical College', distance: '2.5 km', phone: '03242-255555', emergency: true },
     { name: 'District Hospital Bankura', distance: '3.1 km', phone: '03242-252222', emergency: true },

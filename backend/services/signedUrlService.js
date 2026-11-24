@@ -1,17 +1,10 @@
-/**
- * Signed URL Service - Secure Access to Reports and Files
- * =======================================================
- * Generates time-limited, signed URLs for accessing sensitive files.
- * Prevents unauthorized access to medical reports, prescriptions, etc.
- */
+
 
 const crypto = require('crypto');
-const path = require('path');
-
-// Configuration
+const path = require('path');
 const CONFIG = {
-  DEFAULT_EXPIRY: 15 * 60 * 1000,      // 15 minutes
-  MAX_EXPIRY: 24 * 60 * 60 * 1000,     // 24 hours
+  DEFAULT_EXPIRY: 15 * 60 * 1000,      
+  MAX_EXPIRY: 24 * 60 * 60 * 1000,     
   SIGNATURE_ALGORITHM: 'sha256'
 };
 
@@ -21,11 +14,6 @@ class SignedUrlService {
     this.baseUrl = process.env.API_BASE_URL || 'http://localhost:5000';
   }
 
-  /**
-   * Generate a signed URL for a resource
-   * @param {string} resourcePath - Path to the resource (e.g., /reports/123.pdf)
-   * @param {object} options - Options for the signed URL
-   */
   generateSignedUrl(resourcePath, options = {}) {
     const {
       expiresIn = CONFIG.DEFAULT_EXPIRY,
@@ -33,13 +21,9 @@ class SignedUrlService {
       clinicId = null,
       resourceType = 'file',
       metadata = {}
-    } = options;
-
-    // Validate expiry
+    } = options;
     const expiry = Math.min(expiresIn, CONFIG.MAX_EXPIRY);
-    const expiresAt = Date.now() + expiry;
-
-    // Create payload
+    const expiresAt = Date.now() + expiry;
     const payload = {
       path: resourcePath,
       exp: expiresAt,
@@ -48,12 +32,8 @@ class SignedUrlService {
       type: resourceType,
       nonce: crypto.randomBytes(8).toString('hex'),
       ...metadata
-    };
-
-    // Generate signature
-    const signature = this.generateSignature(payload);
-
-    // Build URL
+    };
+    const signature = this.generateSignature(payload);
     const params = new URLSearchParams({
       exp: expiresAt.toString(),
       sig: signature,
@@ -70,9 +50,6 @@ class SignedUrlService {
     };
   }
 
-  /**
-   * Generate signature for payload
-   */
   generateSignature(payload) {
     const data = JSON.stringify(payload);
     return crypto
@@ -81,21 +58,14 @@ class SignedUrlService {
       .digest('hex');
   }
 
-  /**
-   * Verify a signed URL
-   */
   verifySignedUrl(req) {
     try {
       const { exp, sig, nonce, uid, cid } = req.query;
-      const resourcePath = req.path.replace('/api/secure-files', '');
-
-      // Check expiry
+      const resourcePath = req.path.replace('/api/secure-files', '');
       const expiresAt = parseInt(exp);
       if (isNaN(expiresAt) || Date.now() > expiresAt) {
         return { valid: false, error: 'URL has expired' };
-      }
-
-      // Reconstruct payload
+      }
       const payload = {
         path: resourcePath,
         exp: expiresAt,
@@ -103,9 +73,7 @@ class SignedUrlService {
         cid: cid || null,
         type: 'file',
         nonce
-      };
-
-      // Verify signature
+      };
       const expectedSignature = this.generateSignature(payload);
       if (sig !== expectedSignature) {
         return { valid: false, error: 'Invalid signature' };
@@ -126,9 +94,6 @@ class SignedUrlService {
     }
   }
 
-  /**
-   * Generate signed URL for lab report
-   */
   generateLabReportUrl(reportId, userId, clinicId, expiresIn = CONFIG.DEFAULT_EXPIRY) {
     return this.generateSignedUrl(`/reports/lab/${reportId}`, {
       expiresIn,
@@ -138,9 +103,6 @@ class SignedUrlService {
     });
   }
 
-  /**
-   * Generate signed URL for prescription
-   */
   generatePrescriptionUrl(prescriptionId, userId, clinicId, expiresIn = CONFIG.DEFAULT_EXPIRY) {
     return this.generateSignedUrl(`/reports/prescription/${prescriptionId}`, {
       expiresIn,
@@ -150,9 +112,6 @@ class SignedUrlService {
     });
   }
 
-  /**
-   * Generate signed URL for medical file
-   */
   generateMedicalFileUrl(fileId, userId, clinicId, expiresIn = CONFIG.DEFAULT_EXPIRY) {
     return this.generateSignedUrl(`/files/medical/${fileId}`, {
       expiresIn,
@@ -162,9 +121,6 @@ class SignedUrlService {
     });
   }
 
-  /**
-   * Generate signed URL for imaging report (X-ray, MRI, etc.)
-   */
   generateImagingUrl(imagingId, userId, clinicId, expiresIn = CONFIG.DEFAULT_EXPIRY) {
     return this.generateSignedUrl(`/reports/imaging/${imagingId}`, {
       expiresIn,
@@ -174,16 +130,11 @@ class SignedUrlService {
     });
   }
 
-  /**
-   * Generate download URL with content disposition
-   */
   generateDownloadUrl(resourcePath, filename, options = {}) {
     const signedUrl = this.generateSignedUrl(resourcePath, {
       ...options,
       metadata: { download: true, filename }
-    });
-
-    // Add download parameter
+    });
     const url = new URL(signedUrl.url);
     url.searchParams.append('download', '1');
     url.searchParams.append('filename', encodeURIComponent(filename));
@@ -194,9 +145,6 @@ class SignedUrlService {
     };
   }
 
-  /**
-   * Middleware to verify signed URLs
-   */
   verifyMiddleware() {
     return (req, res, next) => {
       const verification = this.verifySignedUrl(req);
@@ -207,17 +155,12 @@ class SignedUrlService {
           error: verification.error,
           code: 'INVALID_SIGNED_URL'
         });
-      }
-
-      // Attach verified payload to request
+      }
       req.signedUrlPayload = verification.payload;
       next();
     };
   }
 
-  /**
-   * Generate Cloudinary signed URL (if using Cloudinary)
-   */
   generateCloudinarySignedUrl(publicId, options = {}) {
     const cloudinary = require('cloudinary').v2;
     
@@ -247,7 +190,5 @@ class SignedUrlService {
       return null;
     }
   }
-}
-
-// Export singleton
+}
 module.exports = new SignedUrlService();

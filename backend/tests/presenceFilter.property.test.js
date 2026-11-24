@@ -1,32 +1,15 @@
-/**
- * Property-Based Tests for Presence Filtering
- * Feature: staff-presence-analytics
- * Property 1: Filter by Attribute Correctness
- * Property 2: Combined Filter AND Logic
- * Validates: Requirements 1.2, 1.3, 1.4, 1.5
- */
+
 
 const fc = require('fast-check');
-const mongoose = require('mongoose');
-
-// Valid role values from BranchStaff model
-const validRoles = ['branch_admin', 'branch_manager', 'receptionist', 'doctor', 'nurse', 'pharmacist', 'lab_tech', 'accountant'];
-
-// Valid custom status values
-const validStatuses = ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable', null];
-
-// Sample departments
-const sampleDepartments = ['Emergency', 'Cardiology', 'Pediatrics', 'Orthopedics', 'General', 'ICU', 'OPD', null];
-
-// Helper to generate valid ObjectIds
+const mongoose = require('mongoose');
+const validRoles = ['branch_admin', 'branch_manager', 'receptionist', 'doctor', 'nurse', 'pharmacist', 'lab_tech', 'accountant'];
+const validStatuses = ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable', null];
+const sampleDepartments = ['Emergency', 'Cardiology', 'Pediatrics', 'Orthopedics', 'General', 'ICU', 'OPD', null];
 const objectIdArbitrary = fc.string({ 
   minLength: 24, 
   maxLength: 24 
 }).map(() => new mongoose.Types.ObjectId());
 
-/**
- * Arbitrary for generating a staff presence record
- */
 const staffPresenceArbitrary = fc.record({
   _id: objectIdArbitrary,
   name: fc.string({ minLength: 1, maxLength: 50 }),
@@ -41,37 +24,21 @@ const staffPresenceArbitrary = fc.record({
   lastActivity: fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
 });
 
-/**
- * Generates a list of staff presence records
- */
 const staffListArbitrary = fc.array(staffPresenceArbitrary, { minLength: 0, maxLength: 50 });
 
-/**
- * Filter function that mimics the backend filtering logic
- * @param {Array} staffList - List of staff presence records
- * @param {Object} filters - Filter criteria { role, branchId, department, status }
- * @returns {Array} Filtered staff list
- */
 function filterStaffPresence(staffList, filters) {
   const { role, branchId, department, status } = filters;
   
-  return staffList.filter(staff => {
-    // Apply role filter (Requirements: 1.2)
+  return staffList.filter(staff => {
     if (role && staff.role !== role) {
       return false;
-    }
-    
-    // Apply branchId filter (Requirements: 1.3)
+    }
     if (branchId && staff.branchId.toString() !== branchId.toString()) {
       return false;
-    }
-    
-    // Apply department filter (Requirements: 1.4)
+    }
     if (department && staff.department !== department) {
       return false;
-    }
-    
-    // Apply status filter
+    }
     if (status) {
       if (status === 'checked_in' && !staff.isCheckedIn) {
         return false;
@@ -88,9 +55,6 @@ function filterStaffPresence(staffList, filters) {
   });
 }
 
-/**
- * Verifies that all items in filtered result match the filter criteria
- */
 function verifyFilterMatch(filteredList, filters) {
   const { role, branchId, department, status } = filters;
   
@@ -120,10 +84,7 @@ function verifyFilterMatch(filteredList, filters) {
   return { valid: true };
 }
 
-describe('Presence Filter - Property Tests', () => {
-  
-  // Property 1: Filter by Attribute Correctness
-  // Validates: Requirements 1.2, 1.3, 1.4
+describe('Presence Filter - Property Tests', () => {
   describe('Property 1: Filter by Attribute Correctness', () => {
     
     test('*For any* staff list and role filter, filtered result SHALL contain only staff with matching role', () => {
@@ -132,16 +93,10 @@ describe('Presence Filter - Property Tests', () => {
           staffListArbitrary,
           fc.constantFrom(...validRoles),
           (staffList, role) => {
-            const filtered = filterStaffPresence(staffList, { role });
-            
-            // All filtered results should have the matching role
+            const filtered = filterStaffPresence(staffList, { role });
             const verification = verifyFilterMatch(filtered, { role });
-            expect(verification.valid).toBe(true);
-            
-            // Filtered result should be a subset of original
-            expect(filtered.length).toBeLessThanOrEqual(staffList.length);
-            
-            // Every item in filtered should exist in original
+            expect(verification.valid).toBe(true);
+            expect(filtered.length).toBeLessThanOrEqual(staffList.length);
             for (const item of filtered) {
               expect(staffList.some(s => s._id.toString() === item._id.toString())).toBe(true);
             }
@@ -157,13 +112,9 @@ describe('Presence Filter - Property Tests', () => {
           staffListArbitrary,
           objectIdArbitrary,
           (staffList, branchId) => {
-            const filtered = filterStaffPresence(staffList, { branchId });
-            
-            // All filtered results should have the matching branchId
+            const filtered = filterStaffPresence(staffList, { branchId });
             const verification = verifyFilterMatch(filtered, { branchId });
-            expect(verification.valid).toBe(true);
-            
-            // Filtered result should be a subset of original
+            expect(verification.valid).toBe(true);
             expect(filtered.length).toBeLessThanOrEqual(staffList.length);
           }
         ),
@@ -177,13 +128,9 @@ describe('Presence Filter - Property Tests', () => {
           staffListArbitrary,
           fc.constantFrom('Emergency', 'Cardiology', 'Pediatrics', 'Orthopedics', 'General', 'ICU', 'OPD'),
           (staffList, department) => {
-            const filtered = filterStaffPresence(staffList, { department });
-            
-            // All filtered results should have the matching department
+            const filtered = filterStaffPresence(staffList, { department });
             const verification = verifyFilterMatch(filtered, { department });
-            expect(verification.valid).toBe(true);
-            
-            // Filtered result should be a subset of original
+            expect(verification.valid).toBe(true);
             expect(filtered.length).toBeLessThanOrEqual(staffList.length);
           }
         ),
@@ -197,13 +144,9 @@ describe('Presence Filter - Property Tests', () => {
           staffListArbitrary,
           fc.constantFrom('checked_in', 'checked_out', 'available', 'with_patient', 'in_surgery', 'on_break'),
           (staffList, status) => {
-            const filtered = filterStaffPresence(staffList, { status });
-            
-            // All filtered results should match the status criteria
+            const filtered = filterStaffPresence(staffList, { status });
             const verification = verifyFilterMatch(filtered, { status });
-            expect(verification.valid).toBe(true);
-            
-            // Filtered result should be a subset of original
+            expect(verification.valid).toBe(true);
             expect(filtered.length).toBeLessThanOrEqual(staffList.length);
           }
         ),
@@ -216,19 +159,14 @@ describe('Presence Filter - Property Tests', () => {
         fc.property(
           staffListArbitrary,
           (staffList) => {
-            const filtered = filterStaffPresence(staffList, {});
-            
-            // No filters should return all staff
+            const filtered = filterStaffPresence(staffList, {});
             expect(filtered.length).toBe(staffList.length);
           }
         ),
         { numRuns: 20 }
       );
     });
-  });
-  
-  // Property 2: Combined Filter AND Logic
-  // Validates: Requirements 1.5
+  });
   describe('Property 2: Combined Filter AND Logic', () => {
     
     test('*For any* staff list and combination of filters, result SHALL contain only staff matching ALL criteria', () => {
@@ -239,13 +177,9 @@ describe('Presence Filter - Property Tests', () => {
           fc.constantFrom('Emergency', 'Cardiology', 'Pediatrics', 'General'),
           (staffList, role, department) => {
             const filters = { role, department };
-            const filtered = filterStaffPresence(staffList, filters);
-            
-            // All filtered results should match ALL filter criteria
+            const filtered = filterStaffPresence(staffList, filters);
             const verification = verifyFilterMatch(filtered, filters);
-            expect(verification.valid).toBe(true);
-            
-            // Each item must satisfy both conditions
+            expect(verification.valid).toBe(true);
             for (const staff of filtered) {
               expect(staff.role).toBe(role);
               expect(staff.department).toBe(department);
@@ -265,13 +199,9 @@ describe('Presence Filter - Property Tests', () => {
           fc.constantFrom('Emergency', 'Cardiology', 'Pediatrics'),
           (staffList, role, branchId, department) => {
             const filters = { role, branchId, department };
-            const filtered = filterStaffPresence(staffList, filters);
-            
-            // Verify all criteria are met
+            const filtered = filterStaffPresence(staffList, filters);
             const verification = verifyFilterMatch(filtered, filters);
-            expect(verification.valid).toBe(true);
-            
-            // Each item must satisfy all three conditions
+            expect(verification.valid).toBe(true);
             for (const staff of filtered) {
               expect(staff.role).toBe(role);
               expect(staff.branchId.toString()).toBe(branchId.toString());
@@ -291,13 +221,9 @@ describe('Presence Filter - Property Tests', () => {
           fc.constantFrom('checked_in', 'checked_out'),
           (staffList, role, status) => {
             const filters = { role, status };
-            const filtered = filterStaffPresence(staffList, filters);
-            
-            // Verify all criteria are met
+            const filtered = filterStaffPresence(staffList, filters);
             const verification = verifyFilterMatch(filtered, filters);
-            expect(verification.valid).toBe(true);
-            
-            // Each item must satisfy both conditions
+            expect(verification.valid).toBe(true);
             for (const staff of filtered) {
               expect(staff.role).toBe(role);
               if (status === 'checked_in') {
@@ -318,14 +244,9 @@ describe('Presence Filter - Property Tests', () => {
           staffListArbitrary,
           fc.constantFrom(...validRoles),
           fc.constantFrom('Emergency', 'Cardiology', 'Pediatrics'),
-          (staffList, role, department) => {
-            // Filter with just role
-            const filteredByRole = filterStaffPresence(staffList, { role });
-            
-            // Filter with role AND department
-            const filteredByBoth = filterStaffPresence(staffList, { role, department });
-            
-            // Adding more filters should never increase result size
+          (staffList, role, department) => {
+            const filteredByRole = filterStaffPresence(staffList, { role });
+            const filteredByBoth = filterStaffPresence(staffList, { role, department });
             expect(filteredByBoth.length).toBeLessThanOrEqual(filteredByRole.length);
           }
         ),
@@ -339,8 +260,7 @@ describe('Presence Filter - Property Tests', () => {
           staffListArbitrary,
           fc.constantFrom(...validRoles),
           fc.constantFrom('Emergency', 'Cardiology', 'Pediatrics'),
-          (staffList, role, department) => {
-            // Apply filters in different orders (simulated by applying sequentially)
+          (staffList, role, department) => {
             const filtered1 = filterStaffPresence(
               filterStaffPresence(staffList, { role }), 
               { department }
@@ -349,12 +269,8 @@ describe('Presence Filter - Property Tests', () => {
             const filtered2 = filterStaffPresence(
               filterStaffPresence(staffList, { department }), 
               { role }
-            );
-            
-            // Results should be the same regardless of order
-            expect(filtered1.length).toBe(filtered2.length);
-            
-            // Same IDs should be present
+            );
+            expect(filtered1.length).toBe(filtered2.length);
             const ids1 = new Set(filtered1.map(s => s._id.toString()));
             const ids2 = new Set(filtered2.map(s => s._id.toString()));
             expect(ids1.size).toBe(ids2.size);
@@ -366,9 +282,7 @@ describe('Presence Filter - Property Tests', () => {
         { numRuns: 20 }
       );
     });
-  });
-  
-  // Additional edge case tests
+  });
   describe('Edge Cases', () => {
     test('filtering empty list returns empty list', () => {
       const filtered = filterStaffPresence([], { role: 'doctor' });
@@ -379,8 +293,7 @@ describe('Presence Filter - Property Tests', () => {
       fc.assert(
         fc.property(
           staffListArbitrary,
-          (staffList) => {
-            // Use a role that doesn't exist in validRoles
+          (staffList) => {
             const filtered = filterStaffPresence(staffList, { role: 'non_existent_role' });
             expect(filtered.length).toBe(0);
           }
@@ -393,12 +306,9 @@ describe('Presence Filter - Property Tests', () => {
       fc.assert(
         fc.property(
           staffListArbitrary,
-          (staffList) => {
-            // Use a branchId that won't match any staff
+          (staffList) => {
             const nonExistentBranchId = new mongoose.Types.ObjectId();
-            const filtered = filterStaffPresence(staffList, { branchId: nonExistentBranchId });
-            
-            // Should only return staff that happen to have this exact branchId (very unlikely)
+            const filtered = filterStaffPresence(staffList, { branchId: nonExistentBranchId });
             for (const staff of filtered) {
               expect(staff.branchId.toString()).toBe(nonExistentBranchId.toString());
             }
@@ -408,9 +318,7 @@ describe('Presence Filter - Property Tests', () => {
       );
     });
   });
-});
-
-// Export filter function for use in other modules
+});
 module.exports = {
   filterStaffPresence,
   verifyFilterMatch

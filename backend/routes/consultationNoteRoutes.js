@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const ConsultationNote = require('../models/ConsultationNote');
-
-// Get all notes for a patient (doctor view)
+const ConsultationNote = require('../models/ConsultationNote');
 router.get('/patient/:patientId/doctor/:doctorId', async (req, res) => {
   try {
     const notes = await ConsultationNote.find({
@@ -13,9 +11,7 @@ router.get('/patient/:patientId/doctor/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Create/Update note
+});
 router.post('/', async (req, res) => {
   try {
     const { doctorId, patientId, appointmentId } = req.body;
@@ -34,9 +30,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Add flag to patient
+});
 router.post('/flag/:patientId', async (req, res) => {
   try {
     const { doctorId, type, note } = req.body;
@@ -54,9 +48,7 @@ router.post('/flag/:patientId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get patient flags
+});
 router.get('/flags/:patientId/doctor/:doctorId', async (req, res) => {
   try {
     const notes = await ConsultationNote.find({

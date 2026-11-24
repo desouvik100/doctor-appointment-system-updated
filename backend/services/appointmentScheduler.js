@@ -1,47 +1,30 @@
-// backend/services/appointmentScheduler.js
+
 const cron = require('node-cron');
 const Appointment = require('../models/Appointment');
 const { generateGoogleMeetLink } = require('./googleMeetService');
 const { sendAppointmentEmail } = require('./emailService');
-const { sendAppointmentReminderSMS } = require('./smsService');
-
-// Store scheduled jobs
+const { sendAppointmentReminderSMS } = require('./smsService');
 const scheduledJobs = new Map();
 
-/**
- * Schedule Google Meet link generation 18 minutes before appointment
- * @param {Object} appointment - Appointment document
- */
 function scheduleGoogleMeetGeneration(appointment) {
-  try {
-    // Skip if not online consultation
+  try {
     if (appointment.consultationType !== 'online') {
       return;
-    }
-
-    // Skip if already generated
+    }
     if (appointment.meetLinkGenerated) {
       console.log(`✅ Meet link already generated for appointment ${appointment._id}`);
       return;
-    }
-
-    // Calculate appointment datetime
+    }
     const appointmentDate = new Date(appointment.date);
     const [hours, minutes] = appointment.time.split(':');
-    appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-    // Calculate trigger time (18 minutes before)
+    appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     const triggerTime = new Date(appointmentDate.getTime() - 18 * 60 * 1000);
-    const now = new Date();
-
-    // If trigger time has passed, generate immediately
+    const now = new Date();
     if (triggerTime <= now) {
       console.log(`⚡ Generating Meet link immediately for appointment ${appointment._id}`);
       generateAndSendMeetLink(appointment._id);
       return;
-    }
-
-    // Schedule for future
+    }
     const delay = triggerTime.getTime() - now.getTime();
     
     console.log(`📅 Scheduling Meet link generation for appointment ${appointment._id}`);
@@ -52,9 +35,7 @@ function scheduleGoogleMeetGeneration(appointment) {
     const timeoutId = setTimeout(async () => {
       await generateAndSendMeetLink(appointment._id);
       scheduledJobs.delete(appointment._id.toString());
-    }, delay);
-
-    // Store the timeout ID
+    }, delay);
     scheduledJobs.set(appointment._id.toString(), timeoutId);
 
   } catch (error) {
@@ -62,10 +43,6 @@ function scheduleGoogleMeetGeneration(appointment) {
   }
 }
 
-/**
- * Generate and send Google Meet link
- * @param {String} appointmentId - Appointment ID
- */
 async function generateAndSendMeetLink(appointmentId) {
   try {
     console.log(`🔄 Generating Meet link for appointment ${appointmentId}...`);
@@ -78,47 +55,35 @@ async function generateAndSendMeetLink(appointmentId) {
     if (!appointment) {
       console.error(`❌ Appointment ${appointmentId} not found`);
       return;
-    }
-
-    // Skip if already generated
+    }
     if (appointment.meetLinkGenerated) {
       console.log(`✅ Meet link already exists for appointment ${appointmentId}`);
       return;
-    }
-
-    // Generate Google Meet link
+    }
     const meetResult = await generateGoogleMeetLink(appointment);
 
     if (!meetResult.success) {
       console.error(`❌ Failed to generate Meet link for appointment ${appointmentId}`);
       return;
-    }
-
-    // Update appointment with Meet link
+    }
     appointment.googleMeetLink = meetResult.meetLink;
     appointment.googleEventId = meetResult.eventId;
     appointment.meetLinkGenerated = true;
-    appointment.meetLinkGeneratedAt = new Date();
-    
-    // Also update the legacy meetingLink field for backward compatibility
+    appointment.meetLinkGeneratedAt = new Date();
     appointment.meetingLink = meetResult.meetLink;
 
     await appointment.save();
 
     console.log(`✅ Meet link saved for appointment ${appointmentId}`);
     console.log(`   Link: ${meetResult.meetLink}`);
-    console.log(`   Provider: ${meetResult.provider}`);
-
-    // Send email to patient
+    console.log(`   Provider: ${meetResult.provider}`);
     try {
       await sendAppointmentEmail(appointment, 'patient');
       appointment.meetLinkSentToPatient = true;
       console.log(`✅ Email sent to patient: ${appointment.userId.email}`);
     } catch (emailError) {
       console.error(`❌ Failed to send email to patient:`, emailError.message);
-    }
-
-    // Send SMS reminder to patient if they have a phone number
+    }
     const reminderPref = appointment.reminderPreference || 'email';
     if ((reminderPref === 'sms' || reminderPref === 'both') && appointment.userId?.phone) {
       try {
@@ -127,9 +92,7 @@ async function generateAndSendMeetLink(appointmentId) {
       } catch (smsError) {
         console.error(`❌ Failed to send SMS to patient:`, smsError.message);
       }
-    }
-
-    // Send email to doctor
+    }
     try {
       await sendAppointmentEmail(appointment, 'doctor');
       appointment.meetLinkSentToDoctor = true;
@@ -145,10 +108,6 @@ async function generateAndSendMeetLink(appointmentId) {
   }
 }
 
-/**
- * Cancel scheduled Meet link generation
- * @param {String} appointmentId - Appointment ID
- */
 function cancelScheduledGeneration(appointmentId) {
   const jobId = appointmentId.toString();
   
@@ -159,14 +118,9 @@ function cancelScheduledGeneration(appointmentId) {
   }
 }
 
-/**
- * Initialize scheduler - scan for pending appointments on startup
- */
 async function initializeScheduler() {
   try {
-    console.log('🚀 Initializing appointment scheduler...');
-
-    // Find all confirmed online appointments in the future
+    console.log('🚀 Initializing appointment scheduler...');
     const now = new Date();
     const futureAppointments = await Appointment.find({
       consultationType: 'online',
@@ -175,14 +129,10 @@ async function initializeScheduler() {
       meetLinkGenerated: false
     });
 
-    console.log(`📋 Found ${futureAppointments.length} appointments to schedule`);
-
-    // Schedule each appointment
+    console.log(`📋 Found ${futureAppointments.length} appointments to schedule`);
     for (const appointment of futureAppointments) {
       scheduleGoogleMeetGeneration(appointment);
-    }
-
-    // Run cleanup job every hour to check for missed appointments
+    }
     cron.schedule('0 * * * *', async () => {
       console.log('🔍 Running hourly appointment check...');
       await checkMissedAppointments();
@@ -195,15 +145,10 @@ async function initializeScheduler() {
   }
 }
 
-/**
- * Check for appointments that missed their scheduled generation
- */
 async function checkMissedAppointments() {
   try {
     const now = new Date();
-    const eighteenMinutesAgo = new Date(now.getTime() - 18 * 60 * 1000);
-
-    // Find appointments that should have had links generated
+    const eighteenMinutesAgo = new Date(now.getTime() - 18 * 60 * 1000);
     const missedAppointments = await Appointment.find({
       consultationType: 'online',
       status: { $in: ['pending', 'confirmed'] },
@@ -224,9 +169,6 @@ async function checkMissedAppointments() {
   }
 }
 
-/**
- * Get scheduler status
- */
 function getSchedulerStatus() {
   return {
     activeJobs: scheduledJobs.size,

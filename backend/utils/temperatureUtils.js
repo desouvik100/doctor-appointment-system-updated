@@ -1,19 +1,7 @@
-/**
- * Temperature Conversion Utilities
- * Handles temperature unit conversions between Fahrenheit and Celsius
- */
 
-/**
- * Convert temperature between Fahrenheit and Celsius
- * @param {number} value - Temperature value to convert
- * @param {string} fromUnit - Source unit ('F' or 'C')
- * @param {string} toUnit - Target unit ('F' or 'C')
- * @returns {number} Converted temperature value
- */
+
 function convertTemperature(value, fromUnit, toUnit) {
-  if (fromUnit === toUnit) return value;
-  
-  // Normalize unit strings - extract F or C from various formats
+  if (fromUnit === toUnit) return value;
   const from = fromUnit.toUpperCase().includes('F') ? 'F' : 
                fromUnit.toUpperCase().includes('C') ? 'C' : 
                fromUnit.toUpperCase().charAt(0);
@@ -21,41 +9,23 @@ function convertTemperature(value, fromUnit, toUnit) {
              toUnit.toUpperCase().includes('C') ? 'C' : 
              toUnit.toUpperCase().charAt(0);
   
-  if (from === 'F' && to === 'C') {
-    // Fahrenheit to Celsius: (F - 32) × 5/9
+  if (from === 'F' && to === 'C') {
     return Math.round(((value - 32) * 5 / 9) * 10) / 10;
-  } else if (from === 'C' && to === 'F') {
-    // Celsius to Fahrenheit: C × 9/5 + 32
+  } else if (from === 'C' && to === 'F') {
     return Math.round((value * 9 / 5 + 32) * 10) / 10;
   }
   
   return value;
 }
 
-/**
- * Convert Fahrenheit to Celsius
- * @param {number} fahrenheit - Temperature in Fahrenheit
- * @returns {number} Temperature in Celsius
- */
 function fahrenheitToCelsius(fahrenheit) {
   return convertTemperature(fahrenheit, 'F', 'C');
 }
 
-/**
- * Convert Celsius to Fahrenheit
- * @param {number} celsius - Temperature in Celsius
- * @returns {number} Temperature in Fahrenheit
- */
 function celsiusToFahrenheit(celsius) {
   return convertTemperature(celsius, 'C', 'F');
 }
 
-/**
- * Get temperature with both units
- * @param {number} value - Temperature value
- * @param {string} unit - Current unit ('F' or 'C')
- * @returns {object} Object with both Fahrenheit and Celsius values
- */
 function getTemperatureInBothUnits(value, unit) {
   const normalizedUnit = unit.toUpperCase().charAt(0);
   
@@ -74,12 +44,6 @@ function getTemperatureInBothUnits(value, unit) {
   }
 }
 
-/**
- * Validate temperature value for given unit
- * @param {number} value - Temperature value
- * @param {string} unit - Unit ('F' or 'C')
- * @returns {object} Validation result
- */
 function validateTemperature(value, unit) {
   const normalizedUnit = unit.toUpperCase().charAt(0);
   

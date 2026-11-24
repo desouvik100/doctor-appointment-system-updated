@@ -1,7 +1,3 @@
-/**
- * Enterprise Appointment Card - Dynamic Theme & Premium Edition
- */
-
 import React from 'react';
 import {
   View,

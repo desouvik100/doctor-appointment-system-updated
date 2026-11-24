@@ -1,6 +1,4 @@
-/**
- * App Navigator - Main Navigation Structure
- */
+
 
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -84,7 +82,7 @@ const AppContent = () => {
   }, []);
 
   if (onboardingLoading) {
-    return null; // Let AuthGate handle the loading/splash transition
+    return null; 
   }
 
   const getInitialRoute = () => {
@@ -116,7 +114,7 @@ const AppContent = () => {
         }}
         initialRouteName={getInitialRoute()}
       >
-        {/* Onboarding & Patient auth flow */}
+        {}
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Welcome" component={RoleSelectionScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -125,13 +123,13 @@ const AppContent = () => {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-        {/* Pro app screens — kept for deep-link compatibility */}
+        {}
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
         <Stack.Screen name="DoctorLogin" component={DoctorLoginScreen} />
         <Stack.Screen name="StaffLogin" component={StaffLoginScreen} />
         <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
         
-        {/* Main App - Role-based navigation */}
+        {}
         <Stack.Screen name="Main" component={RoleBasedNavigator} />
         <Stack.Screen name="DoctorSearch" component={BookingScreen} />
         <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />

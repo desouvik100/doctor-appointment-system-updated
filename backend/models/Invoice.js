@@ -35,9 +35,7 @@ const invoiceSchema = new mongoose.Schema({
     claimAmount: Number,
     status: { type: String, enum: ['pending', 'approved', 'rejected'] }
   }
-}, { timestamps: true });
-
-// Generate invoice number
+}, { timestamps: true });
 invoiceSchema.pre('save', async function(next) {
   if (!this.invoiceNumber) {
     const count = await this.constructor.countDocuments();

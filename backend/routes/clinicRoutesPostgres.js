@@ -1,25 +1,18 @@
-// routes/clinicRoutesPostgres.js - PostgreSQL-based clinic routes with tenant support
+
 const express = require('express');
 const router = express.Router();
 const Clinic = require('../models/ClinicPostgres');
 const { identifyTenant, ensureTenantContext, validateTenantAccess } = require('../middleware/tenantMiddleware');
-const { auth, requireTenantAdmin } = require('../middleware/authMiddlewarePostgres');
-
-// Apply tenant middleware to all routes
+const { auth, requireTenantAdmin } = require('../middleware/authMiddlewarePostgres');
 router.use(identifyTenant);
-router.use(ensureTenantContext);
-
-// Test route
+router.use(ensureTenantContext);
 router.get('/test', (req, res) => {
   res.json({ 
     message: 'PostgreSQL Clinic routes are working!',
     tenant: req.tenant.name,
     tenantId: req.tenantId
   });
-});
-
-// GET ALL CLINICS
-// GET /api/clinics
+});
 router.get('/', async (req, res) => {
   try {
     const { 
@@ -39,10 +32,8 @@ router.get('/', async (req, res) => {
       filters.parentClinicId = parentClinicId === 'null' ? null : parentClinicId;
     }
     if (search) filters.search = search;
-    if (city) filters.city = city;
-    
-    // Pagination
-    filters.limit = Math.min(parseInt(limit), 100); // Max 100 per page
+    if (city) filters.city = city;
+    filters.limit = Math.min(parseInt(limit), 100); 
     filters.offset = (parseInt(page) - 1) * filters.limit;
 
     const clinics = await Clinic.findAll(req.tenantId, filters);
@@ -69,10 +60,7 @@ router.get('/', async (req, res) => {
       message: err.message 
     });
   }
-});
-
-// GET CLINIC BY ID
-// GET /api/clinics/:id
+});
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -86,9 +74,7 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    let response = clinic.toSafeJSON();
-
-    // Include hierarchy if requested
+    let response = clinic.toSafeJSON();
     if (includeHierarchy === 'true') {
       const hierarchy = await clinic.getHierarchy();
       response.hierarchy = {
@@ -106,23 +92,16 @@ router.get('/:id', async (req, res) => {
       message: err.message 
     });
   }
-});
-
-// CREATE CLINIC
-// POST /api/clinics
+});
 router.post('/', auth(['admin', 'receptionist']), validateTenantAccess, async (req, res) => {
   try {
-    const clinicData = req.body;
-
-    // Validate required fields
+    const clinicData = req.body;
     if (!clinicData.name) {
       return res.status(400).json({ 
         error: 'Validation failed',
         message: 'Clinic name is required' 
       });
-    }
-
-    // Convert legacy format to new format if needed
+    }
     if (clinicData.address && typeof clinicData.address === 'string') {
       const legacyAddress = {
         street: clinicData.address,
@@ -160,10 +139,7 @@ router.post('/', auth(['admin', 'receptionist']), validateTenantAccess, async (r
       message: err.message 
     });
   }
-});
-
-// UPDATE CLINIC
-// PUT /api/clinics/:id
+});
 router.put('/:id', auth(['admin', 'receptionist']), validateTenantAccess, async (req, res) => {
   try {
     const { id } = req.params;
@@ -175,9 +151,7 @@ router.put('/:id', auth(['admin', 'receptionist']), validateTenantAccess, async 
         error: 'Clinic not found',
         message: 'Clinic not found in this tenant' 
       });
-    }
-
-    // Convert legacy format to new format if needed
+    }
     if (updateData.address && typeof updateData.address === 'string') {
       const legacyAddress = {
         street: updateData.address,
@@ -215,10 +189,7 @@ router.put('/:id', auth(['admin', 'receptionist']), validateTenantAccess, async 
       message: err.message 
     });
   }
-});
-
-// SOFT DELETE CLINIC (deactivate)
-// PUT /api/clinics/:id/deactivate
+});
 router.put('/:id/deactivate', auth('admin'), validateTenantAccess, async (req, res) => {
   try {
     const { id } = req.params;
@@ -245,10 +216,7 @@ router.put('/:id/deactivate', auth('admin'), validateTenantAccess, async (req, r
       message: err.message 
     });
   }
-});
-
-// REACTIVATE CLINIC
-// PUT /api/clinics/:id/activate
+});
 router.put('/:id/activate', auth('admin'), validateTenantAccess, async (req, res) => {
   try {
     const { id } = req.params;
@@ -275,10 +243,7 @@ router.put('/:id/activate', auth('admin'), validateTenantAccess, async (req, res
       message: err.message 
     });
   }
-});
-
-// HARD DELETE CLINIC (permanent deletion)
-// DELETE /api/clinics/:id
+});
 router.delete('/:id', requireTenantAdmin, validateTenantAccess, async (req, res) => {
   try {
     const { id } = req.params;
@@ -309,10 +274,7 @@ router.delete('/:id', requireTenantAdmin, validateTenantAccess, async (req, res)
       message: err.message 
     });
   }
-});
-
-// GET CLINIC HIERARCHY
-// GET /api/clinics/:id/hierarchy
+});
 router.get('/:id/hierarchy', async (req, res) => {
   try {
     const { id } = req.params;
@@ -340,23 +302,18 @@ router.get('/:id/hierarchy', async (req, res) => {
       message: err.message 
     });
   }
-});
-
-// GET ROOT CLINICS (clinics without parent)
-// GET /api/clinics/root
+});
 router.get('/root/list', async (req, res) => {
   try {
     const { search, city, page = 1, limit = 50 } = req.query;
     
     const filters = {
-      parentClinicId: null, // Only root clinics
+      parentClinicId: null, 
       isActive: true
     };
     
     if (search) filters.search = search;
-    if (city) filters.city = city;
-    
-    // Pagination
+    if (city) filters.city = city;
     filters.limit = Math.min(parseInt(limit), 100);
     filters.offset = (parseInt(page) - 1) * filters.limit;
 
@@ -378,10 +335,7 @@ router.get('/root/list', async (req, res) => {
       message: err.message 
     });
   }
-});
-
-// GET CLINIC STATISTICS
-// GET /api/clinics/stats
+});
 router.get('/stats/summary', auth('admin'), validateTenantAccess, async (req, res) => {
   try {
     const stats = await Clinic.getStats(req.tenantId);
@@ -401,15 +355,10 @@ router.get('/stats/summary', auth('admin'), validateTenantAccess, async (req, re
       message: err.message 
     });
   }
-});
-
-// LEGACY COMPATIBILITY ROUTE
-// GET /api/clinics/legacy (returns data in old MongoDB format)
+});
 router.get('/legacy/format', async (req, res) => {
   try {
-    const clinics = await Clinic.findAll(req.tenantId, { isActive: true });
-    
-    // Convert to legacy format for backward compatibility
+    const clinics = await Clinic.findAll(req.tenantId, { isActive: true });
     const legacyClinics = clinics.map(clinic => clinic.toLegacyJSON());
 
     res.json(legacyClinics);

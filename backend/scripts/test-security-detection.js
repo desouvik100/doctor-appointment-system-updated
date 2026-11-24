@@ -1,19 +1,10 @@
-/**
- * Security Detection Test Script
- * 
- * This script simulates various suspicious activities to test
- * if the AI Security Monitor is detecting them properly.
- * 
- * Run with: node scripts/test-security-detection.js
- */
+
 
 const mongoose = require('mongoose');
 require('dotenv').config();
 
 const aiSecurityService = require('../services/aiSecurityService');
-const SuspiciousActivity = require('../models/SuspiciousActivity');
-
-// Connect to MongoDB
+const SuspiciousActivity = require('../models/SuspiciousActivity');
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/healthsync');
@@ -22,9 +13,7 @@ const connectDB = async () => {
     console.error('❌ MongoDB connection error:', error);
     process.exit(1);
   }
-};
-
-// Test scenarios
+};
 const testScenarios = [
   {
     name: '🔐 Multiple Failed Login Attempts (Brute Force)',
@@ -48,9 +37,7 @@ const testScenarios = [
     name: '⚡ Rapid Actions (Bot Detection)',
     test: async () => {
       console.log('\n--- Simulating 70 rapid actions in 1 minute ---');
-      const userId = new mongoose.Types.ObjectId();
-      
-      // Simulate 70 rapid actions
+      const userId = new mongoose.Types.ObjectId();
       for (let i = 0; i < 70; i++) {
         await aiSecurityService.analyzeActivity({
           userId,
@@ -62,9 +49,7 @@ const testScenarios = [
           method: 'GET',
           ipAddress: '10.0.0.50'
         });
-      }
-      
-      // Check if alert was created
+      }
       const alert = await SuspiciousActivity.findOne({
         userEmail: 'suspicious.doctor@test.com',
         activityType: 'rapid_actions'
@@ -109,9 +94,7 @@ const testScenarios = [
     name: '🌙 Off-Hours Access',
     test: async () => {
       console.log('\n--- Simulating off-hours access ---');
-      const userId = new mongoose.Types.ObjectId();
-      
-      // Temporarily modify the hour check (this will only trigger if current time is off-hours)
+      const userId = new mongoose.Types.ObjectId();
       const currentHour = new Date().getHours();
       console.log(`   Current hour: ${currentHour}:00`);
       
@@ -135,9 +118,7 @@ const testScenarios = [
           }
         }
       } else {
-        console.log('   ℹ️ Not off-hours currently. This test triggers between 11 PM - 5 AM');
-        
-        // Create a manual test alert for demonstration
+        console.log('   ℹ️ Not off-hours currently. This test triggers between 11 PM - 5 AM');
         const alert = await aiSecurityService.createAlert({
           userId,
           userType: 'Admin',
@@ -162,7 +143,7 @@ const testScenarios = [
       
       const alerts = await aiSecurityService.analyzeActivity({
         userId,
-        userType: 'User', // Regular user trying to access admin
+        userType: 'User', 
         userName: 'Sneaky Patient',
         userEmail: 'patient@test.com',
         action: 'data_access',
@@ -213,9 +194,7 @@ const testScenarios = [
     name: '👤 Account Manipulation',
     test: async () => {
       console.log('\n--- Simulating multiple account operations ---');
-      const userId = new mongoose.Types.ObjectId();
-      
-      // Simulate 6 account operations in quick succession
+      const userId = new mongoose.Types.ObjectId();
       for (let i = 0; i < 6; i++) {
         await aiSecurityService.analyzeActivity({
           userId,
@@ -241,9 +220,7 @@ const testScenarios = [
       return alert;
     }
   }
-];
-
-// Run all tests
+];
 const runTests = async () => {
   console.log('═══════════════════════════════════════════════════════════');
   console.log('       🛡️  AI SECURITY DETECTION TEST SUITE  🛡️');
@@ -270,16 +247,12 @@ const runTests = async () => {
       console.log(`❌ FAILED - Error: ${error.message}`);
       failed++;
     }
-  }
-  
-  // Summary
+  }
   console.log('\n═══════════════════════════════════════════════════════════');
   console.log('                    📊 TEST SUMMARY');
-  console.log('═══════════════════════════════════════════════════════════');
-  
-  // Get all alerts created during test
+  console.log('═══════════════════════════════════════════════════════════');
   const recentAlerts = await SuspiciousActivity.find({
-    createdAt: { $gte: new Date(Date.now() - 5 * 60000) } // Last 5 minutes
+    createdAt: { $gte: new Date(Date.now() - 5 * 60000) } 
   }).sort({ createdAt: -1 });
   
   console.log(`\n📈 Total alerts created: ${recentAlerts.length}`);
@@ -299,7 +272,5 @@ const runTests = async () => {
   
   await mongoose.disconnect();
   process.exit(0);
-};
-
-// Run
+};
 runTests().catch(console.error);

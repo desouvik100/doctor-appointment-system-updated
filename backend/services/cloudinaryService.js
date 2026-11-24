@@ -1,20 +1,12 @@
-/**
- * Cloudinary Service
- * Handles secure file uploads to Cloudinary cloud storage
- * Never stores images locally or in database
- */
 
-const cloudinary = require('cloudinary').v2;
 
-// Configure Cloudinary with environment variables
+const cloudinary = require('cloudinary').v2;
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
   secure: true
-});
-
-// Check if Cloudinary is configured
+});
 const isConfigured = () => {
   return !!(
     process.env.CLOUDINARY_CLOUD_NAME &&
@@ -23,12 +15,6 @@ const isConfigured = () => {
   );
 };
 
-/**
- * Upload file to Cloudinary
- * @param {string} filePath - Local file path or base64 data
- * @param {object} options - Upload options
- * @returns {Promise<object>} Cloudinary upload result
- */
 const uploadFile = async (filePath, options = {}) => {
   if (!isConfigured()) {
     throw new Error('Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in .env');
@@ -38,7 +24,7 @@ const uploadFile = async (filePath, options = {}) => {
     folder: 'healthsync/medical-files',
     resource_type: 'auto',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'webp'],
-    max_bytes: 10 * 1024 * 1024, // 10MB max
+    max_bytes: 10 * 1024 * 1024, 
     transformation: [
       { quality: 'auto:good' },
       { fetch_format: 'auto' }
@@ -69,12 +55,6 @@ const uploadFile = async (filePath, options = {}) => {
   }
 };
 
-/**
- * Upload medical file with specific folder structure
- * @param {string} filePath - File path or base64
- * @param {string} patientId - Patient's user ID
- * @param {string} category - File category (prescription, lab_report, etc.)
- */
 const uploadMedicalFile = async (filePath, patientId, category = 'general') => {
   const folder = `healthsync/patients/${patientId}/${category}`;
   
@@ -89,10 +69,6 @@ const uploadMedicalFile = async (filePath, patientId, category = 'general') => {
   });
 };
 
-/**
- * Delete file from Cloudinary
- * @param {string} publicId - Cloudinary public ID
- */
 const deleteFile = async (publicId) => {
   if (!isConfigured()) {
     throw new Error('Cloudinary is not configured');
@@ -110,11 +86,6 @@ const deleteFile = async (publicId) => {
   }
 };
 
-/**
- * Generate a signed URL with expiration (for secure access)
- * @param {string} publicId - Cloudinary public ID
- * @param {number} expiresInSeconds - URL expiration time (default 1 hour)
- */
 const getSignedUrl = (publicId, expiresInSeconds = 3600) => {
   if (!isConfigured()) {
     throw new Error('Cloudinary is not configured');
@@ -130,11 +101,6 @@ const getSignedUrl = (publicId, expiresInSeconds = 3600) => {
   });
 };
 
-/**
- * Get optimized URL for displaying images
- * @param {string} publicId - Cloudinary public ID
- * @param {object} transformations - Image transformations
- */
 const getOptimizedUrl = (publicId, transformations = {}) => {
   const defaultTransformations = {
     quality: 'auto',
@@ -145,12 +111,6 @@ const getOptimizedUrl = (publicId, transformations = {}) => {
   return cloudinary.url(publicId, { ...defaultTransformations, ...transformations });
 };
 
-/**
- * Get thumbnail URL
- * @param {string} publicId - Cloudinary public ID
- * @param {number} width - Thumbnail width
- * @param {number} height - Thumbnail height
- */
 const getThumbnailUrl = (publicId, width = 150, height = 150) => {
   return cloudinary.url(publicId, {
     width,
@@ -160,18 +120,8 @@ const getThumbnailUrl = (publicId, width = 150, height = 150) => {
     fetch_format: 'auto',
     secure: true
   });
-};
+};
 
-// ============================================
-// PROFILE PHOTO UPLOADS
-// ============================================
-
-/**
- * Upload profile photo with face detection & auto-crop
- * @param {string} filePath - File path or base64
- * @param {string} userId - User ID
- * @param {string} userType - 'patient', 'doctor', 'clinic'
- */
 const uploadProfilePhoto = async (filePath, userId, userType = 'patient') => {
   const folder = `healthsync/profiles/${userType}s`;
   
@@ -188,9 +138,6 @@ const uploadProfilePhoto = async (filePath, userId, userType = 'patient') => {
   });
 };
 
-/**
- * Get profile photo URL with different sizes
- */
 const getProfilePhotoUrl = (publicId, size = 'medium') => {
   const sizes = {
     small: { width: 50, height: 50 },
@@ -210,15 +157,8 @@ const getProfilePhotoUrl = (publicId, size = 'medium') => {
     secure: true,
     default_image: 'healthsync/defaults/avatar_placeholder'
   });
-};
+};
 
-// ============================================
-// DOCTOR VERIFICATION DOCUMENTS
-// ============================================
-
-/**
- * Upload doctor verification document (license, degree, ID)
- */
 const uploadVerificationDoc = async (filePath, doctorId, docType) => {
   const folder = `healthsync/verification/${doctorId}`;
   
@@ -234,15 +174,8 @@ const uploadVerificationDoc = async (filePath, doctorId, docType) => {
       status: 'pending_review'
     }
   });
-};
+};
 
-// ============================================
-// PRESCRIPTION UPLOADS WITH OCR
-// ============================================
-
-/**
- * Upload prescription image
- */
 const uploadPrescription = async (filePath, appointmentId, uploadedBy) => {
   const folder = `healthsync/prescriptions/${appointmentId}`;
   
@@ -257,9 +190,6 @@ const uploadPrescription = async (filePath, appointmentId, uploadedBy) => {
   });
 };
 
-/**
- * Extract text from prescription using Cloudinary OCR
- */
 const extractTextFromImage = async (publicId) => {
   try {
     const result = await cloudinary.api.resource(publicId, {
@@ -277,15 +207,8 @@ const extractTextFromImage = async (publicId) => {
     console.error('OCR extraction error:', error);
     return { success: false, text: '', error: error.message };
   }
-};
+};
 
-// ============================================
-// CHAT ATTACHMENTS
-// ============================================
-
-/**
- * Upload chat attachment (image/document)
- */
 const uploadChatAttachment = async (filePath, conversationId, senderId) => {
   const folder = `healthsync/chat/${conversationId}`;
   
@@ -298,15 +221,8 @@ const uploadChatAttachment = async (filePath, conversationId, senderId) => {
       sent_at: new Date().toISOString()
     }
   });
-};
+};
 
-// ============================================
-// CLINIC PHOTOS & LOGOS
-// ============================================
-
-/**
- * Upload clinic logo
- */
 const uploadClinicLogo = async (filePath, clinicId) => {
   const folder = 'healthsync/clinics/logos';
   
@@ -322,9 +238,6 @@ const uploadClinicLogo = async (filePath, clinicId) => {
   });
 };
 
-/**
- * Upload clinic gallery photo
- */
 const uploadClinicPhoto = async (filePath, clinicId, photoIndex) => {
   const folder = `healthsync/clinics/${clinicId}/gallery`;
   
@@ -337,15 +250,8 @@ const uploadClinicPhoto = async (filePath, clinicId, photoIndex) => {
     ],
     tags: ['clinic', 'gallery', clinicId]
   });
-};
+};
 
-// ============================================
-// HEALTH ARTICLES / BLOG IMAGES
-// ============================================
-
-/**
- * Upload article featured image
- */
 const uploadArticleImage = async (filePath, articleId) => {
   const folder = 'healthsync/articles';
   
@@ -354,20 +260,13 @@ const uploadArticleImage = async (filePath, articleId) => {
     public_id: `article_${articleId}`,
     overwrite: true,
     transformation: [
-      { width: 1200, height: 630, crop: 'fill' }, // OG image size
+      { width: 1200, height: 630, crop: 'fill' }, 
       { quality: 'auto:good' }
     ],
     tags: ['article', 'blog', articleId]
   });
-};
+};
 
-// ============================================
-// WATERMARKING (for doctor uploads)
-// ============================================
-
-/**
- * Get watermarked image URL
- */
 const getWatermarkedUrl = (publicId, watermarkText = 'HealthSync') => {
   return cloudinary.url(publicId, {
     transformation: [
@@ -386,15 +285,8 @@ const getWatermarkedUrl = (publicId, watermarkText = 'HealthSync') => {
     ],
     secure: true
   });
-};
+};
 
-// ============================================
-// PDF PREVIEW
-// ============================================
-
-/**
- * Get PDF preview as image (first page)
- */
 const getPdfPreviewUrl = (publicId, page = 1) => {
   return cloudinary.url(publicId, {
     page: page,
@@ -404,15 +296,8 @@ const getPdfPreviewUrl = (publicId, page = 1) => {
     quality: 'auto',
     secure: true
   });
-};
+};
 
-// ============================================
-// BULK DELETE
-// ============================================
-
-/**
- * Delete multiple files by prefix (folder)
- */
 const deleteByPrefix = async (prefix) => {
   try {
     const result = await cloudinary.api.delete_resources_by_prefix(prefix);
@@ -423,9 +308,6 @@ const deleteByPrefix = async (prefix) => {
   }
 };
 
-/**
- * Delete all files for a user (GDPR compliance)
- */
 const deleteUserData = async (userId, userType = 'patient') => {
   const prefixes = [
     `healthsync/profiles/${userType}s/${userType}_${userId}`,
@@ -440,15 +322,8 @@ const deleteUserData = async (userId, userType = 'patient') => {
   }
   
   return results;
-};
+};
 
-// ============================================
-// VIDEO UPLOADS (for testimonials/consultations)
-// ============================================
-
-/**
- * Upload video file
- */
 const uploadVideo = async (filePath, folder, options = {}) => {
   return uploadFile(filePath, {
     folder: `healthsync/videos/${folder}`,
@@ -462,9 +337,6 @@ const uploadVideo = async (filePath, folder, options = {}) => {
   });
 };
 
-/**
- * Get video thumbnail
- */
 const getVideoThumbnail = (publicId, time = '0') => {
   return cloudinary.url(publicId, {
     resource_type: 'video',
@@ -476,49 +348,28 @@ const getVideoThumbnail = (publicId, time = '0') => {
   });
 };
 
-module.exports = {
-  // Core
+module.exports = {
   isConfigured,
   uploadFile,
   deleteFile,
   getSignedUrl,
   getOptimizedUrl,
   getThumbnailUrl,
-  cloudinary,
-  
-  // Medical Files
-  uploadMedicalFile,
-  
-  // Profile Photos
+  cloudinary,
+  uploadMedicalFile,
   uploadProfilePhoto,
-  getProfilePhotoUrl,
-  
-  // Doctor Verification
-  uploadVerificationDoc,
-  
-  // Prescriptions & OCR
+  getProfilePhotoUrl,
+  uploadVerificationDoc,
   uploadPrescription,
-  extractTextFromImage,
-  
-  // Chat
-  uploadChatAttachment,
-  
-  // Clinic
+  extractTextFromImage,
+  uploadChatAttachment,
   uploadClinicLogo,
-  uploadClinicPhoto,
-  
-  // Articles
-  uploadArticleImage,
-  
-  // Transformations
+  uploadClinicPhoto,
+  uploadArticleImage,
   getWatermarkedUrl,
-  getPdfPreviewUrl,
-  
-  // Cleanup
+  getPdfPreviewUrl,
   deleteByPrefix,
-  deleteUserData,
-  
-  // Video
+  deleteUserData,
   uploadVideo,
   getVideoThumbnail
 };

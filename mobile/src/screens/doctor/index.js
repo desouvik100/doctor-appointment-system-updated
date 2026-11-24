@@ -1,4 +1,4 @@
-// Doctor Dashboard Screens - 100% Web Parity
+
 export { default as DoctorDashboardScreen } from './DoctorDashboardScreen';
 export { default as DoctorAppointmentsScreen } from './DoctorAppointmentsScreen';
 export { default as DoctorPatientsScreen } from './DoctorPatientsScreen';

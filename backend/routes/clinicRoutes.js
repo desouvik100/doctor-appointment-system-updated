@@ -3,50 +3,6 @@ const Clinic = require('../models/Clinic');
 const Doctor = require('../models/Doctor');
 const router = express.Router();
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Clinic:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         name:
- *           type: string
- *         address:
- *           type: string
- *         city:
- *           type: string
- *         state:
- *           type: string
- *         phone:
- *           type: string
- *         email:
- *           type: string
- *         timings:
- *           type: object
- *         isActive:
- *           type: boolean
- */
-
-/**
- * @swagger
- * /clinics:
- *   get:
- *     summary: Get all clinics
- *     description: Retrieves a list of all active clinics
- *     tags: [Clinics]
- *     responses:
- *       200:
- *         description: List of clinics
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Clinic'
- */
 router.get('/', async (req, res) => {
   try {
     const clinics = await Clinic.find({ isActive: true }).sort({ name: 1 });
@@ -57,28 +13,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /clinics/{id}:
- *   get:
- *     summary: Get clinic by ID
- *     tags: [Clinics]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Clinic details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Clinic'
- *       404:
- *         description: Clinic not found
- */
 router.get('/:id', async (req, res) => {
   try {
     const clinic = await Clinic.findById(req.params.id);
@@ -94,35 +28,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /clinics/{id}/doctors:
- *   get:
- *     summary: Get clinic with its doctors
- *     tags: [Clinics]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Clinic with doctors list
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 clinic:
- *                   $ref: '#/components/schemas/Clinic'
- *                 doctors:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Doctor'
- *       404:
- *         description: Clinic not found
- */
 router.get('/:id/doctors', async (req, res) => {
   try {
     const clinic = await Clinic.findById(req.params.id);
@@ -146,39 +51,10 @@ router.get('/:id/doctors', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /clinics/nearby/{lat}/{lng}:
- *   get:
- *     summary: Find clinics near a location
- *     tags: [Clinics]
- *     parameters:
- *       - in: path
- *         name: lat
- *         required: true
- *         schema:
- *           type: number
- *         description: Latitude
- *       - in: path
- *         name: lng
- *         required: true
- *         schema:
- *           type: number
- *         description: Longitude
- *       - in: query
- *         name: maxDistance
- *         schema:
- *           type: number
- *           default: 10
- *         description: Maximum distance in km
- *     responses:
- *       200:
- *         description: List of nearby clinics
- */
 router.get('/nearby/:lat/:lng', async (req, res) => {
   try {
     const { lat, lng } = req.params;
-    const { maxDistance = 10 } = req.query; // Default 10km
+    const { maxDistance = 10 } = req.query; 
     
     const clinics = await Clinic.findNearby(
       parseFloat(lat), 
@@ -191,9 +67,7 @@ router.get('/nearby/:lat/:lng', async (req, res) => {
     console.error('Error finding nearby clinics:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Create new clinic (admin only)
+});
 router.post('/', async (req, res) => {
   try {
     const {
@@ -220,9 +94,7 @@ router.post('/', async (req, res) => {
       operatingHours,
       logoUrl,
       images
-    } = req.body;
-
-    // Check if clinic with name already exists in the same city
+    } = req.body;
     const existingClinic = await Clinic.findOne({ name, city });
     if (existingClinic) {
       return res.status(400).json({ message: 'Clinic with this name already exists in this city' });
@@ -250,9 +122,7 @@ router.post('/', async (req, res) => {
       images: images || [],
       googleMapsUrl,
       placeId
-    });
-
-    // Set coordinates if provided
+    });
     if (latitude && longitude) {
       clinic.setCoordinates(parseFloat(latitude), parseFloat(longitude));
     }
@@ -263,9 +133,7 @@ router.post('/', async (req, res) => {
     console.error('Error creating clinic:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Update clinic
+});
 router.put('/:id', async (req, res) => {
   try {
     const { latitude, longitude, ...updateData } = req.body;
@@ -274,14 +142,10 @@ router.put('/:id', async (req, res) => {
     
     if (!clinic) {
       return res.status(404).json({ message: 'Clinic not found' });
-    }
-
-    // Update all fields
+    }
     Object.keys(updateData).forEach(key => {
       clinic[key] = updateData[key];
-    });
-
-    // Update coordinates if provided
+    });
     if (latitude !== undefined && longitude !== undefined) {
       clinic.setCoordinates(parseFloat(latitude), parseFloat(longitude));
     }
@@ -292,9 +156,7 @@ router.put('/:id', async (req, res) => {
     console.error('Error updating clinic:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Delete clinic (soft delete)
+});
 router.delete('/:id', async (req, res) => {
   try {
     const clinic = await Clinic.findByIdAndUpdate(
@@ -305,9 +167,7 @@ router.delete('/:id', async (req, res) => {
 
     if (!clinic) {
       return res.status(404).json({ message: 'Clinic not found' });
-    }
-
-    // Also deactivate all doctors in this clinic
+    }
     await Doctor.updateMany(
       { clinicId: req.params.id },
       { isActive: false }
@@ -318,13 +178,7 @@ router.delete('/:id', async (req, res) => {
     console.error('Error deleting clinic:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// ==========================================
-// CLINIC APPROVAL SYSTEM (Admin Only)
-// ==========================================
-
-// Get pending clinics
+});
 router.get('/admin/pending', async (req, res) => {
   try {
     const pendingClinics = await Clinic.find({ approvalStatus: 'pending' })
@@ -334,9 +188,7 @@ router.get('/admin/pending', async (req, res) => {
     console.error('Error fetching pending clinics:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Approve clinic
+});
 router.put('/:id/approve', async (req, res) => {
   try {
     const { adminId } = req.body;
@@ -364,9 +216,7 @@ router.put('/:id/approve', async (req, res) => {
     console.error('Error approving clinic:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Reject clinic
+});
 router.put('/:id/reject', async (req, res) => {
   try {
     const { reason } = req.body;

@@ -1,15 +1,10 @@
-/**
- * Family Wallet API Routes
- * Requirement 5: Family Health Wallet
- */
+
 
 const express = require('express');
 const router = express.Router();
 const FamilyWallet = require('../models/FamilyWallet');
 const FamilyMember = require('../models/FamilyMember');
-const { authenticate } = require('../middleware/roleMiddleware');
-
-// Get or create wallet
+const { authenticate } = require('../middleware/roleMiddleware');
 router.get('/', authenticate, async (req, res) => {
   try {
     const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
@@ -17,9 +12,7 @@ router.get('/', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Add money to wallet
+});
 router.post('/add-money', authenticate, async (req, res) => {
   try {
     const { amount, paymentMethod, paymentId } = req.body;
@@ -40,9 +33,7 @@ router.post('/add-money', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Deduct for booking
+});
 router.post('/deduct', authenticate, async (req, res) => {
   try {
     const { amount, memberId, memberName, category, appointmentId, description } = req.body;
@@ -61,16 +52,12 @@ router.post('/deduct', authenticate, async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-});
-
-// Add family member to wallet
+});
 router.post('/members', authenticate, async (req, res) => {
   try {
     const { memberId, name, relationship, spendingLimit, monthlyLimit, canAddMoney } = req.body;
     
-    const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
-    
-    // Check if member already exists
+    const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
     const existingMember = wallet.members.find(m => 
       m.memberId?.toString() === memberId || m.name === name
     );
@@ -97,9 +84,7 @@ router.post('/members', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Update member limits
+});
 router.put('/members/:memberId', authenticate, async (req, res) => {
   try {
     const { memberId } = req.params;
@@ -126,9 +111,7 @@ router.put('/members/:memberId', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Remove member from wallet
+});
 router.delete('/members/:memberId', authenticate, async (req, res) => {
   try {
     const { memberId } = req.params;
@@ -141,9 +124,7 @@ router.delete('/members/:memberId', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Update budget settings
+});
 router.put('/settings', authenticate, async (req, res) => {
   try {
     const { monthlyBudget, lowBalanceThreshold, budgetResetDay, notifications } = req.body;
@@ -169,34 +150,24 @@ router.put('/settings', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get transaction history
+});
 router.get('/transactions', authenticate, async (req, res) => {
   try {
     const { page = 1, limit = 20, category, startDate, endDate } = req.query;
     
     const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
     
-    let transactions = wallet.transactions;
-    
-    // Filter by category
+    let transactions = wallet.transactions;
     if (category) {
       transactions = transactions.filter(t => t.category === category);
-    }
-    
-    // Filter by date range
+    }
     if (startDate) {
       transactions = transactions.filter(t => new Date(t.createdAt) >= new Date(startDate));
     }
     if (endDate) {
       transactions = transactions.filter(t => new Date(t.createdAt) <= new Date(endDate));
-    }
-    
-    // Sort by date (newest first)
-    transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    // Paginate
+    }
+    transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     const startIndex = (page - 1) * limit;
     const paginatedTransactions = transactions.slice(startIndex, startIndex + parseInt(limit));
     
@@ -209,24 +180,17 @@ router.get('/transactions', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get spending analytics
+});
 router.get('/analytics', authenticate, async (req, res) => {
   try {
-    const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
-    
-    // Calculate spending by category
+    const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
     const spendingByCategory = {};
     const spendingByMember = {};
     
     wallet.transactions
       .filter(t => t.type === 'debit')
-      .forEach(t => {
-        // By category
-        spendingByCategory[t.category] = (spendingByCategory[t.category] || 0) + t.amount;
-        
-        // By member
+      .forEach(t => {
+        spendingByCategory[t.category] = (spendingByCategory[t.category] || 0) + t.amount;
         if (t.memberName) {
           spendingByMember[t.memberName] = (spendingByMember[t.memberName] || 0) + t.amount;
         }
@@ -244,9 +208,7 @@ router.get('/analytics', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get 80D tax report
+});
 router.get('/tax-report', authenticate, async (req, res) => {
   try {
     const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
@@ -256,9 +218,7 @@ router.get('/tax-report', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get alerts
+});
 router.get('/alerts', authenticate, async (req, res) => {
   try {
     const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
@@ -272,9 +232,7 @@ router.get('/alerts', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Mark alerts as read
+});
 router.put('/alerts/read', authenticate, async (req, res) => {
   try {
     const { alertIds } = req.body;

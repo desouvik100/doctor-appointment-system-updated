@@ -1,6 +1,4 @@
-/**
- * PrescriptionViewScreen - View prescription details with API integration
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -161,13 +159,13 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Prescription Number */}
+        {}
         <View style={styles.rxHeader}>
           <Text style={styles.rxNumber}>{prescription.prescriptionNumber}</Text>
           <Text style={styles.rxDate}>{formatDate(prescription.createdAt)}</Text>
         </View>
 
-        {/* Doctor Info */}
+        {}
         <Card variant="gradient" style={styles.doctorCard}>
           <View style={styles.doctorRow}>
             <Avatar name={prescription.doctorId?.name || 'Doctor'} size="large" />
@@ -178,7 +176,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
           </View>
         </Card>
 
-        {/* Patient & Diagnosis */}
+        {}
         <Card variant="default" style={styles.infoCard}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Patient</Text>
@@ -207,7 +205,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
           )}
         </Card>
 
-        {/* Medicines */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>💊 Medicines</Text>
           {prescription.medicines?.length > 0 ? (
@@ -248,7 +246,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Advice */}
+        {}
         {prescription.advice && (
           <Card variant="default" style={styles.adviceCard}>
             <Text style={styles.adviceTitle}>Doctor's Advice</Text>
@@ -256,7 +254,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
           </Card>
         )}
 
-        {/* Notes */}
+        {}
         {prescription.notes && (
           <Card variant="default" style={styles.adviceCard}>
             <Text style={styles.adviceTitle}>Additional Notes</Text>
@@ -264,7 +262,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
           </Card>
         )}
 
-        {/* Follow Up */}
+        {}
         {prescription.followUpDate && (
           <Card variant="default" style={styles.followUpCard}>
             <View style={styles.followUpRow}>
@@ -280,7 +278,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
           </Card>
         )}
 
-        {/* Actions */}
+        {}
         <View style={styles.actions}>
           <TouchableOpacity 
             style={styles.actionBtn} 

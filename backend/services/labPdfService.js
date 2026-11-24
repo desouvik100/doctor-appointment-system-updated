@@ -1,16 +1,5 @@
-/**
- * Lab PDF Service
- * PDF generation for lab requisitions and clinical summaries
- */
 
-/**
- * Generate Lab Requisition HTML
- * @param {Object} labOrder - Lab order details
- * @param {Object} patient - Patient information
- * @param {Object} doctor - Ordering physician
- * @param {Object} clinic - Clinic information
- * @returns {string} HTML content for PDF
- */
+
 function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
   const orderDate = new Date(labOrder.createdAt || Date.now()).toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -198,15 +187,6 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
   `;
 }
 
-/**
- * Generate Clinical Summary HTML
- * @param {Object} visit - Visit/encounter details
- * @param {Object} patient - Patient information
- * @param {Object} doctor - Treating physician
- * @param {Object} clinic - Clinic information
- * @param {Object} options - Additional options
- * @returns {string} HTML content for PDF
- */
 function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {}) {
   const visitDate = new Date(visit.visitDate || visit.createdAt || Date.now()).toLocaleDateString('en-IN', {
     day: '2-digit',
@@ -214,9 +194,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     year: 'numeric'
   });
 
-  const summaryNumber = visit.summaryNumber || `CS-${Date.now().toString().slice(-8)}`;
-  
-  // Vitals section
+  const summaryNumber = visit.summaryNumber || `CS-${Date.now().toString().slice(-8)}`;
   const vitalsHTML = visit.vitals ? `
     <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <h4 style="color: #166534; margin-bottom: 12px;">📊 Vital Signs</h4>
@@ -232,9 +210,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         ${visit.vitals.bloodSugar ? `<div><small style="color: #6b7280;">Blood Sugar</small><br><strong>${visit.vitals.bloodSugar} mg/dL</strong></div>` : ''}
       </div>
     </div>
-  ` : '';
-
-  // Diagnoses section
+  ` : '';
   const diagnosesHTML = visit.diagnoses?.length > 0 ? `
     <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
       <h4 style="color: #92400e; margin-bottom: 10px;">🔍 Diagnoses</h4>
@@ -248,9 +224,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         `).join('')}
       </ul>
     </div>
-  ` : '';
-
-  // Medications section
+  ` : '';
   const medicationsHTML = visit.medications?.length > 0 ? `
     <div style="margin-bottom: 20px;">
       <h4 style="color: #1f2937; margin-bottom: 10px;">💊 Medications Prescribed</h4>
@@ -275,9 +249,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         </tbody>
       </table>
     </div>
-  ` : '';
-
-  // Lab results section
+  ` : '';
   const labResultsHTML = visit.labResults?.length > 0 ? `
     <div style="margin-bottom: 20px;">
       <h4 style="color: #1f2937; margin-bottom: 10px;">🧪 Laboratory Results</h4>
@@ -307,9 +279,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         </tbody>
       </table>
     </div>
-  ` : '';
-
-  // Procedures section
+  ` : '';
   const proceduresHTML = visit.procedures?.length > 0 ? `
     <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <h4 style="color: #1d4ed8; margin-bottom: 10px;">🏥 Procedures Performed</h4>
@@ -323,9 +293,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         `).join('')}
       </ul>
     </div>
-  ` : '';
-
-  // Allergies section
+  ` : '';
   const allergiesHTML = patient.allergies?.length > 0 ? `
     <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <h4 style="color: #dc2626; margin-bottom: 10px;">⚠️ Known Allergies</h4>
@@ -338,9 +306,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         `).join('')}
       </div>
     </div>
-  ` : '';
-
-  // Medical history section
+  ` : '';
   const historyHTML = options.includeMedicalHistory && patient.medicalHistory ? `
     <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <h4 style="color: #374151; margin-bottom: 10px;">📋 Relevant Medical History</h4>
@@ -389,7 +355,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
       </div>
     </div>
 
-    <!-- Patient & Provider Info -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
       <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
         <h4 style="color: #667eea; font-size: 12px; margin-bottom: 10px; text-transform: uppercase;">👤 Patient Information</h4>
@@ -408,7 +373,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
       </div>
     </div>
 
-    <!-- Chief Complaint -->
     ${visit.chiefComplaint ? `
     <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
       <h4 style="color: #92400e; margin-bottom: 8px;">🎯 Chief Complaint</h4>
@@ -416,7 +380,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     </div>
     ` : ''}
 
-    <!-- History of Present Illness -->
     ${visit.historyOfPresentIllness ? `
     <div style="margin-bottom: 20px;">
       <h4 style="color: #1f2937; margin-bottom: 8px;">📝 History of Present Illness</h4>
@@ -427,7 +390,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     ${allergiesHTML}
     ${vitalsHTML}
 
-    <!-- Physical Examination -->
     ${visit.physicalExamination ? `
     <div style="margin-bottom: 20px;">
       <h4 style="color: #1f2937; margin-bottom: 8px;">🩺 Physical Examination</h4>
@@ -448,7 +410,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     ${medicationsHTML}
     ${historyHTML}
 
-    <!-- Treatment Plan -->
     ${visit.treatmentPlan ? `
     <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
       <h4 style="color: #065f46; margin-bottom: 8px;">📋 Treatment Plan</h4>
@@ -456,7 +417,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     </div>
     ` : ''}
 
-    <!-- Patient Instructions -->
     ${visit.patientInstructions ? `
     <div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <h4 style="color: #1d4ed8; margin-bottom: 8px;">📌 Patient Instructions</h4>
@@ -464,7 +424,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     </div>
     ` : ''}
 
-    <!-- Follow-up -->
     ${visit.followUp ? `
     <div style="background: #faf5ff; border: 1px solid #a855f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <h4 style="color: #7c3aed; margin-bottom: 8px;">📆 Follow-up</h4>
@@ -474,7 +433,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     </div>
     ` : ''}
 
-    <!-- Referrals -->
     ${visit.referrals?.length > 0 ? `
     <div style="margin-bottom: 20px;">
       <h4 style="color: #1f2937; margin-bottom: 10px;">🔗 Referrals</h4>
@@ -488,7 +446,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     </div>
     ` : ''}
 
-    <!-- Footer -->
     <div style="border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 30px;">
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
         <div>
@@ -518,14 +475,6 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
   `;
 }
 
-/**
- * Generate Discharge Summary HTML
- * @param {Object} admission - Admission/discharge details
- * @param {Object} patient - Patient information
- * @param {Object} doctor - Attending physician
- * @param {Object} clinic - Hospital/clinic information
- * @returns {string} HTML content for PDF
- */
 function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
   const admissionDate = new Date(admission.admissionDate || admission.createdAt).toLocaleDateString('en-IN', {
     day: '2-digit', month: 'long', year: 'numeric'
@@ -572,7 +521,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
       </div>
     </div>
 
-    <!-- Admission Details -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #fef2f2; padding: 15px; border-radius: 8px;">
       <div>
         <small style="color: #6b7280;">Admission Date</small><br>
@@ -588,7 +536,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
       </div>
     </div>
 
-    <!-- Patient Info -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
       <div style="background: #f9fafb; padding: 15px; border-radius: 8px;">
         <h4 style="color: #dc2626; font-size: 12px; margin-bottom: 10px;">👤 PATIENT</h4>
@@ -605,7 +552,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
       </div>
     </div>
 
-    <!-- Admission Diagnosis -->
     ${admission.admissionDiagnosis ? `
     <div class="section">
       <div class="section-title">🔍 Admission Diagnosis</div>
@@ -613,7 +559,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     </div>
     ` : ''}
 
-    <!-- Final Diagnosis -->
     ${admission.finalDiagnosis ? `
     <div class="section" style="background: #fef3c7; padding: 15px; border-radius: 8px;">
       <div class="section-title" style="border-bottom: none;">📋 Final Diagnosis</div>
@@ -622,7 +567,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     </div>
     ` : ''}
 
-    <!-- Hospital Course -->
     ${admission.hospitalCourse ? `
     <div class="section">
       <div class="section-title">📝 Hospital Course</div>
@@ -630,7 +574,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     </div>
     ` : ''}
 
-    <!-- Procedures -->
     ${admission.procedures?.length > 0 ? `
     <div class="section">
       <div class="section-title">🏥 Procedures Performed</div>
@@ -646,7 +589,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     </div>
     ` : ''}
 
-    <!-- Discharge Medications -->
     ${admission.dischargeMedications?.length > 0 ? `
     <div class="section">
       <div class="section-title">💊 Discharge Medications</div>
@@ -673,7 +615,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     </div>
     ` : ''}
 
-    <!-- Discharge Instructions -->
     ${admission.dischargeInstructions ? `
     <div class="section" style="background: #ecfdf5; border: 1px solid #10b981; padding: 15px; border-radius: 8px;">
       <div class="section-title" style="color: #065f46; border-bottom: none;">📌 Discharge Instructions</div>
@@ -681,7 +622,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     </div>
     ` : ''}
 
-    <!-- Follow-up -->
     ${admission.followUp ? `
     <div class="section" style="background: #eff6ff; padding: 15px; border-radius: 8px;">
       <div class="section-title" style="color: #1d4ed8; border-bottom: none;">📆 Follow-up Appointments</div>
@@ -691,13 +631,11 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     </div>
     ` : ''}
 
-    <!-- Condition at Discharge -->
     <div class="section">
       <div class="section-title">🏃 Condition at Discharge</div>
       <p><strong>${admission.conditionAtDischarge || 'Stable'}</strong></p>
     </div>
 
-    <!-- Signature -->
     <div style="border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 30px; text-align: right;">
       <div style="border-top: 1px solid #1f2937; margin-top: 50px; padding-top: 8px; display: inline-block; min-width: 200px;">
         <strong>Dr. ${doctor?.name || 'Doctor'}</strong><br>
@@ -716,11 +654,6 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
   `;
 }
 
-/**
- * Calculate age from date of birth
- * @param {Date|string} dateOfBirth - Date of birth
- * @returns {number} Age in years
- */
 function calculateAge(dateOfBirth) {
   if (!dateOfBirth) return '—';
   const dob = new Date(dateOfBirth);
@@ -733,14 +666,6 @@ function calculateAge(dateOfBirth) {
   return age;
 }
 
-/**
- * Generate Referral Letter HTML
- * @param {Object} referral - Referral details
- * @param {Object} patient - Patient information
- * @param {Object} referringDoctor - Referring physician
- * @param {Object} clinic - Clinic information
- * @returns {string} HTML content for PDF
- */
 function generateReferralLetterHTML(referral, patient, referringDoctor, clinic) {
   const referralDate = new Date(referral.createdAt || Date.now()).toLocaleDateString('en-IN', {
     day: '2-digit', month: 'long', year: 'numeric'

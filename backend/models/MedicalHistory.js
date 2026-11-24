@@ -1,8 +1,4 @@
-/**
- * Medical History Model
- * Comprehensive patient medical background including allergies, chronic conditions,
- * family history, surgical history, and current medications
- */
+
 
 const mongoose = require('mongoose');
 
@@ -89,7 +85,6 @@ const familyHistorySchema = new mongoose.Schema({
     trim: true
   }
 });
-
 
 const surgicalHistorySchema = new mongoose.Schema({
   procedure: {
@@ -192,27 +187,13 @@ const medicalHistorySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
     index: true
-  },
-  
-  // Allergies section
-  allergies: [allergySchema],
-  
-  // Chronic conditions section
-  chronicConditions: [chronicConditionSchema],
-  
-  // Family history section
-  familyHistory: [familyHistorySchema],
-  
-  // Surgical history section
-  surgicalHistory: [surgicalHistorySchema],
-  
-  // Current medications section
-  currentMedications: [currentMedicationSchema],
-  
-  // Immunizations section
-  immunizations: [immunizationSchema],
-  
-  // Social history
+  },
+  allergies: [allergySchema],
+  chronicConditions: [chronicConditionSchema],
+  familyHistory: [familyHistorySchema],
+  surgicalHistory: [surgicalHistorySchema],
+  currentMedications: [currentMedicationSchema],
+  immunizations: [immunizationSchema],
   socialHistory: {
     smoking: {
       type: String,
@@ -228,22 +209,16 @@ const medicalHistorySchema = new mongoose.Schema({
     occupation: String,
     exerciseFrequency: String,
     diet: String
-  },
-  
-  // Blood group
+  },
   bloodGroup: {
     type: String,
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'unknown']
-  },
-  
-  // Emergency contact
+  },
   emergencyContact: {
     name: String,
     relationship: String,
     phone: String
-  },
-  
-  // Audit fields
+  },
   lastUpdated: {
     type: Date,
     default: Date.now
@@ -258,27 +233,17 @@ const medicalHistorySchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
-});
-
-// Indexes for efficient queries
-medicalHistorySchema.index({ patientId: 1, clinicId: 1 });
-
-// Virtual for active allergies count
+});
+medicalHistorySchema.index({ patientId: 1, clinicId: 1 });
 medicalHistorySchema.virtual('activeAllergiesCount').get(function() {
   return this.allergies ? this.allergies.filter(a => a.isActive).length : 0;
-});
-
-// Virtual for active conditions count
+});
 medicalHistorySchema.virtual('activeConditionsCount').get(function() {
   return this.chronicConditions ? this.chronicConditions.filter(c => c.status === 'active').length : 0;
-});
-
-// Virtual for active medications count
+});
 medicalHistorySchema.virtual('activeMedicationsCount').get(function() {
   return this.currentMedications ? this.currentMedications.filter(m => m.isActive).length : 0;
-});
-
-// Method to get critical summary (allergies + active conditions)
+});
 medicalHistorySchema.methods.getCriticalSummary = function() {
   return {
     allergies: this.allergies.filter(a => a.isActive).map(a => ({
@@ -295,9 +260,7 @@ medicalHistorySchema.methods.getCriticalSummary = function() {
       dosage: m.dosage
     }))
   };
-};
-
-// Static method to get or create history for patient
+};
 medicalHistorySchema.statics.getOrCreate = async function(patientId, clinicId) {
   let history = await this.findOne({ patientId });
   if (!history) {
@@ -305,9 +268,7 @@ medicalHistorySchema.statics.getOrCreate = async function(patientId, clinicId) {
     await history.save();
   }
   return history;
-};
-
-// Include virtuals in JSON
+};
 medicalHistorySchema.set('toJSON', { virtuals: true });
 medicalHistorySchema.set('toObject', { virtuals: true });
 

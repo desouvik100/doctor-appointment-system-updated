@@ -1,6 +1,4 @@
-/**
- * Payment Methods Screen - Manage payment options and wallet
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -63,21 +61,15 @@ const PaymentMethodsScreen = ({ navigation }) => {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
-
-  // Socket event listener for real-time wallet updates
+  }, [fetchData]);
   useEffect(() => {
     if (!isConnected) return;
 
     const unsubWalletTransaction = subscribe(SOCKET_EVENTS.WALLET_TRANSACTION, (data) => {
-      console.log('🔔 [PaymentMethods] Wallet transaction:', data);
-      
-      // Update balance
+      console.log('🔔 [PaymentMethods] Wallet transaction:', data);
       if (data.balance !== undefined) {
         setWalletBalance(data.balance);
-      }
-      
-      // Add new transaction to the list
+      }
       if (data.transaction) {
         setTransactions(prev => [data.transaction, ...prev].slice(0, 10));
       }

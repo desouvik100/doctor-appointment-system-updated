@@ -1,14 +1,9 @@
-/**
- * Health Reminder API Routes
- * Requirement 6: Smart Health Reminders
- */
+
 
 const express = require('express');
 const router = express.Router();
 const HealthReminder = require('../models/HealthReminder');
-const { authenticate } = require('../middleware/roleMiddleware');
-
-// Get all reminders for user
+const { authenticate } = require('../middleware/roleMiddleware');
 router.get('/', authenticate, async (req, res) => {
   try {
     const { status, type, condition } = req.query;
@@ -26,9 +21,7 @@ router.get('/', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get due reminders
+});
 router.get('/due', authenticate, async (req, res) => {
   try {
     const now = new Date();
@@ -49,9 +42,7 @@ router.get('/due', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Create custom reminder
+});
 router.post('/', authenticate, async (req, res) => {
   try {
     const {
@@ -88,9 +79,7 @@ router.post('/', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Setup condition-based reminders
+});
 router.post('/setup/:condition', authenticate, async (req, res) => {
   try {
     const { condition } = req.params;
@@ -122,9 +111,7 @@ router.post('/setup/:condition', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Update reminder
+});
 router.put('/:id', authenticate, async (req, res) => {
   try {
     const reminder = await HealthReminder.findOne({
@@ -157,9 +144,7 @@ router.put('/:id', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Mark reminder as completed
+});
 router.post('/:id/complete', authenticate, async (req, res) => {
   try {
     const { action, appointmentId } = req.body;
@@ -183,9 +168,7 @@ router.post('/:id/complete', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Snooze reminder
+});
 router.post('/:id/snooze', authenticate, async (req, res) => {
   try {
     const { days } = req.body;
@@ -209,9 +192,7 @@ router.post('/:id/snooze', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Delete reminder
+});
 router.delete('/:id', authenticate, async (req, res) => {
   try {
     const reminder = await HealthReminder.findOneAndDelete({
@@ -227,9 +208,7 @@ router.delete('/:id', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get reminder statistics
+});
 router.get('/stats', authenticate, async (req, res) => {
   try {
     const reminders = await HealthReminder.find({

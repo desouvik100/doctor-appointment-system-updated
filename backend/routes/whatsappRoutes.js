@@ -1,13 +1,8 @@
-/**
- * WhatsApp Business API Routes
- * Webhook for receiving messages and status updates
- */
+
 
 const express = require('express');
 const router = express.Router();
-const whatsappService = require('../services/whatsappService');
-
-// Webhook verification (GET request from Meta)
+const whatsappService = require('../services/whatsappService');
 router.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
@@ -26,9 +21,7 @@ router.get('/webhook', (req, res) => {
   } else {
     res.sendStatus(400);
   }
-});
-
-// Webhook for receiving messages and status updates (POST)
+});
 router.post('/webhook', async (req, res) => {
   try {
     const body = req.body;
@@ -37,16 +30,12 @@ router.post('/webhook', async (req, res) => {
       body.entry?.forEach((entry) => {
         entry.changes?.forEach((change) => {
           if (change.field === 'messages') {
-            const value = change.value;
-            
-            // Handle incoming messages
+            const value = change.value;
             if (value.messages) {
               value.messages.forEach((message) => {
                 handleIncomingMessage(message, value.contacts?.[0]);
               });
-            }
-            
-            // Handle message status updates
+            }
             if (value.statuses) {
               value.statuses.forEach((status) => {
                 handleStatusUpdate(status);
@@ -66,21 +55,14 @@ router.post('/webhook', async (req, res) => {
   }
 });
 
-/**
- * Handle incoming WhatsApp messages
- */
 async function handleIncomingMessage(message, contact) {
   const from = message.from;
   const messageType = message.type;
   const timestamp = message.timestamp;
 
-  console.log(`📩 WhatsApp message from ${from}:`, message);
-
-  // Handle different message types
+  console.log(`📩 WhatsApp message from ${from}:`, message);
   if (messageType === 'text') {
-    const text = message.text.body.toLowerCase().trim();
-    
-    // Auto-reply for common queries
+    const text = message.text.body.toLowerCase().trim();
     if (text === 'hi' || text === 'hello' || text === 'hey') {
       await whatsappService.sendTextMessage(from, 
         `👋 Hello! Welcome to HealthSync.
@@ -121,8 +103,7 @@ Your upcoming appointments and history are available in the "My Appointments" se
 Our support team is available Mon-Sat, 9 AM - 6 PM IST.`
       );
     }
-  } else if (messageType === 'interactive') {
-    // Handle button/list replies
+  } else if (messageType === 'interactive') {
     const interactiveType = message.interactive.type;
     if (interactiveType === 'button_reply') {
       const buttonId = message.interactive.button_reply.id;
@@ -134,25 +115,18 @@ Our support team is available Mon-Sat, 9 AM - 6 PM IST.`
   }
 }
 
-/**
- * Handle message status updates
- */
 function handleStatusUpdate(status) {
   const messageId = status.id;
-  const statusType = status.status; // sent, delivered, read, failed
+  const statusType = status.status; 
   const timestamp = status.timestamp;
   const recipientId = status.recipient_id;
 
-  console.log(`📊 Message ${messageId} status: ${statusType}`);
-
-  // You can store these status updates in database for tracking
+  console.log(`📊 Message ${messageId} status: ${statusType}`);
   if (statusType === 'failed') {
     const errors = status.errors;
     console.error(`❌ Message failed:`, errors);
   }
-}
-
-// Test endpoint to send a message
+}
 router.post('/send-test', async (req, res) => {
   try {
     const { phone, message } = req.body;
@@ -166,26 +140,20 @@ router.post('/send-test', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-// Test endpoint using hello_world template (pre-approved)
+});
 router.post('/send-template-test', async (req, res) => {
   try {
     const { phone } = req.body;
 
     if (!phone) {
       return res.status(400).json({ success: false, message: 'Phone is required' });
-    }
-
-    // Use hello_world template which is pre-approved
+    }
     const result = await whatsappService.sendTemplateMessage(phone, 'hello_world', 'en_US');
     res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-// Check WhatsApp configuration status
+});
 router.get('/status', (req, res) => {
   const configured = whatsappService.isWhatsAppConfigured();
   

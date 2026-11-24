@@ -4,10 +4,6 @@ const { authenticate, checkRole } = require('../middleware/roleMiddleware');
 
 const router = express.Router();
 
-/**
- * GET /api/coupons/public
- * Get all active public coupons (for user attraction)
- */
 router.get('/public', async (req, res) => {
   try {
     const now = new Date();
@@ -30,10 +26,6 @@ router.get('/public', async (req, res) => {
   }
 });
 
-/**
- * POST /api/coupons/validate
- * Validate a coupon code
- */
 router.post('/validate', authenticate, async (req, res) => {
   try {
     const { code, amount } = req.body;
@@ -74,10 +66,6 @@ router.post('/validate', authenticate, async (req, res) => {
   }
 });
 
-/**
- * POST /api/coupons/apply
- * Apply coupon to an appointment (called during booking)
- */
 router.post('/apply', authenticate, async (req, res) => {
   try {
     const { code, appointmentId, amount } = req.body;
@@ -94,9 +82,7 @@ router.post('/apply', authenticate, async (req, res) => {
       return res.status(400).json({ success: false, message: validation.message });
     }
 
-    const discount = coupon.calculateDiscount(amount);
-
-    // Record usage
+    const discount = coupon.calculateDiscount(amount);
     coupon.usedBy.push({ userId, appointmentId, usedAt: new Date() });
     coupon.usedCount += 1;
     await coupon.save();
@@ -111,14 +97,8 @@ router.post('/apply', authenticate, async (req, res) => {
     console.error('Apply coupon error:', error);
     res.status(500).json({ success: false, message: 'Failed to apply coupon' });
   }
-});
+});
 
-// ============ ADMIN ROUTES ============
-
-/**
- * GET /api/coupons
- * Get all coupons (Admin only)
- */
 router.get('/', authenticate, checkRole('admin'), async (req, res) => {
   try {
     const coupons = await Coupon.find().sort({ createdAt: -1 });
@@ -129,10 +109,6 @@ router.get('/', authenticate, checkRole('admin'), async (req, res) => {
   }
 });
 
-/**
- * POST /api/coupons
- * Create a new coupon (Admin only)
- */
 router.post('/', authenticate, checkRole('admin'), async (req, res) => {
   try {
     const coupon = new Coupon({
@@ -151,10 +127,6 @@ router.post('/', authenticate, checkRole('admin'), async (req, res) => {
   }
 });
 
-/**
- * PUT /api/coupons/:id
- * Update a coupon (Admin only)
- */
 router.put('/:id', authenticate, checkRole('admin'), async (req, res) => {
   try {
     const coupon = await Coupon.findByIdAndUpdate(
@@ -172,10 +144,6 @@ router.put('/:id', authenticate, checkRole('admin'), async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/coupons/:id
- * Delete a coupon (Admin only)
- */
 router.delete('/:id', authenticate, checkRole('admin'), async (req, res) => {
   try {
     const coupon = await Coupon.findByIdAndDelete(req.params.id);

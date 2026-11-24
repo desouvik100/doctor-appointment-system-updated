@@ -1,6 +1,4 @@
-/**
- * DoctorCard - Premium card with verified badge, availability tag, favorite option, and visual hierarchy
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -95,7 +93,7 @@ const DoctorCard = ({
       ]}
     >
       <View style={styles.cardHeader}>
-        {/* Availability tag */}
+        {}
         <View style={[
           styles.availabilityTag,
           { backgroundColor: isAvailableNow ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)' }
@@ -112,14 +110,14 @@ const DoctorCard = ({
           </Text>
         </View>
 
-        {/* Favorite */}
+        {}
         <TouchableOpacity style={styles.favoriteButton} onPress={onFavoritePress} activeOpacity={0.7}>
           <Text style={styles.favoriteIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.mainContent}>
-        {/* Doctor photo & verified check */}
+        {}
         <View style={styles.avatarContainer}>
           <Avatar imageUrl={displayPhoto} name={displayName} size="large" showBorder={false} customBorderRadius={8} />
           {verified && (
@@ -129,7 +127,7 @@ const DoctorCard = ({
           )}
         </View>
 
-        {/* Info */}
+        {}
         <View style={styles.detailsContainer}>
           <Text style={[styles.nameText, { color: colors.textPrimary }]} numberOfLines={1}>
             Dr. {displayName}
@@ -139,7 +137,7 @@ const DoctorCard = ({
           </Text>
 
           <View style={styles.ratingAndExpRow}>
-            {/* Rating pill */}
+            {}
             <View style={[styles.ratingPill, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#FFFBEB' }]}>
               <Text style={styles.ratingStar}>⭐</Text>
               <Text style={[styles.ratingValue, { color: colors.warning }]}>
@@ -150,7 +148,7 @@ const DoctorCard = ({
               </Text>
             </View>
 
-            {/* Experience text */}
+            {}
             <Text style={[styles.experienceText, { color: colors.textSecondary }]}>
               🎓 {displayExp} yrs exp
             </Text>
@@ -162,7 +160,7 @@ const DoctorCard = ({
         </View>
       </View>
 
-      {/* Footer */}
+      {}
       <View style={[styles.footer, { borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : colors.divider || '#F1F5F9' }]}>
         <View style={styles.feeWrapper}>
           <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consultation Fee</Text>
@@ -346,8 +344,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 13,
     letterSpacing: 0.3,
-  },
-  // Compact Mode styling
+  },
   compactCard: {
     flexDirection: 'row',
     alignItems: 'center',

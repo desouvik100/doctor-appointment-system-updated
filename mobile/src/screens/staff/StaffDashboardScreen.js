@@ -1,6 +1,4 @@
-/**
- * Staff Dashboard Screen - Main dashboard for clinic staff/receptionists
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -95,7 +93,7 @@ const StaffDashboardScreen = ({ navigation }) => {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <View>
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()} 👩‍💼</Text>
@@ -109,7 +107,7 @@ const StaffDashboardScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Stats */}
+        {}
         <View style={styles.statsGrid}>
           <StatCard icon="📅" value={stats.todayAppointments} label="Today" color="#FF6B6B" onPress={() => navigation.navigate('Appointments')} />
           <StatCard icon="✅" value={stats.checkedIn} label="Checked In" color="#10B981" onPress={() => navigation.navigate('StaffQueue')} />
@@ -117,7 +115,7 @@ const StaffDashboardScreen = ({ navigation }) => {
           <StatCard icon="🏁" value={stats.completed} label="Completed" color="#6C5CE7" onPress={() => navigation.navigate('Appointments')} />
         </View>
 
-        {/* Quick Actions */}
+        {}
         <QuickActionsGrid
           actions={STAFF_ACTIONS}
           variant="grid"
@@ -126,7 +124,7 @@ const StaffDashboardScreen = ({ navigation }) => {
           showBadge={false}
         />
 
-        {/* Queue Status */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Current Queue</Text>
           <TouchableOpacity style={[styles.queueCard, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('StaffQueue')} activeOpacity={0.7}>
@@ -143,7 +141,7 @@ const StaffDashboardScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Recent Appointments */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Appointments</Text>

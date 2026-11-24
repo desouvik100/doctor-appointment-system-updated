@@ -2,37 +2,25 @@ const mongoose = require('mongoose');
 
 const dicomStudySchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic' }, // Optional for patient uploads
-  visitId: { type: mongoose.Schema.Types.ObjectId, ref: 'EMRVisit' },
-  
-  // DICOM UIDs
+  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic' }, 
+  visitId: { type: mongoose.Schema.Types.ObjectId, ref: 'EMRVisit' },
   studyInstanceUID: { type: String, required: true, unique: true },
-  accessionNumber: String,
-  
-  // Study Information
-  studyDate: { type: Date, default: Date.now }, // Default to now if not in DICOM
+  accessionNumber: String,
+  studyDate: { type: Date, default: Date.now }, 
   studyTime: String,
-  studyDescription: String,
-  
-  // Patient Info (from DICOM metadata)
+  studyDescription: String,
   dicomPatientId: String,
   dicomPatientName: String,
   patientBirthDate: Date,
-  patientSex: String,
-  
-  // Modality and Body Part
+  patientSex: String,
   modality: { 
     type: String, 
     enum: ['CR', 'CT', 'MR', 'US', 'XA', 'NM', 'PT', 'DX', 'MG', 'OT'],
     required: true 
   },
-  bodyPartExamined: String,
-  
-  // Institution
+  bodyPartExamined: String,
   institutionName: String,
-  referringPhysician: String,
-  
-  // Series array
+  referringPhysician: String,
   series: [{
     seriesInstanceUID: { type: String, required: true },
     seriesNumber: Number,
@@ -53,9 +41,7 @@ const dicomStudySchema = new mongoose.Schema({
       sliceLocation: Number,
       sliceThickness: Number
     }]
-  }],
-  
-  // Annotations
+  }],
   annotations: [{
     annotationId: { type: String, required: true },
     imageSOPUID: String,
@@ -79,9 +65,7 @@ const dicomStudySchema = new mongoose.Schema({
     visible: { type: Boolean, default: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     createdAt: { type: Date, default: Date.now }
-  }],
-
-  // Reports
+  }],
   reports: [{
     reportId: { type: String, required: true },
     reportType: { type: String, enum: ['preliminary', 'final', 'addendum'], default: 'preliminary' },
@@ -101,34 +85,24 @@ const dicomStudySchema = new mongoose.Schema({
     verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
     verifiedAt: Date,
     status: { type: String, enum: ['draft', 'preliminary', 'final'], default: 'draft' }
-  }],
-  
-  // Metadata
+  }],
   totalImages: Number,
   totalSeries: Number,
   storageSize: Number,
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  uploadedAt: { type: Date, default: Date.now },
-  
-  // Patient ID validation
+  uploadedAt: { type: Date, default: Date.now },
   patientIdValidated: { type: Boolean, default: false },
   patientIdMismatchAcknowledged: { type: Boolean, default: false },
   patientIdMismatchReason: String
-}, { timestamps: true });
-
-// Indexes for efficient querying
+}, { timestamps: true });
 dicomStudySchema.index({ patientId: 1, studyDate: -1 });
 dicomStudySchema.index({ studyInstanceUID: 1 });
 dicomStudySchema.index({ clinicId: 1, modality: 1 });
 dicomStudySchema.index({ clinicId: 1, studyDate: -1 });
-dicomStudySchema.index({ 'series.seriesInstanceUID': 1 });
-
-// Virtual for formatted study date
+dicomStudySchema.index({ 'series.seriesInstanceUID': 1 });
 dicomStudySchema.virtual('formattedStudyDate').get(function() {
   return this.studyDate ? this.studyDate.toISOString().split('T')[0] : '';
-});
-
-// Method to get study summary
+});
 dicomStudySchema.methods.getSummary = function() {
   return {
     studyId: this._id,
@@ -141,9 +115,7 @@ dicomStudySchema.methods.getSummary = function() {
     totalImages: this.totalImages || 0,
     hasReports: this.reports?.length > 0
   };
-};
-
-// Static method to get patient imaging history
+};
 dicomStudySchema.statics.getPatientHistory = async function(patientId, options = {}) {
   const { limit = 50, modality, startDate, endDate } = options;
   

@@ -9,46 +9,6 @@ const { loginLimiter, registrationLimiter, otpLimiter } = require('../middleware
 
 const router = express.Router();
 
-/**
- * @swagger
- * /auth/send-registration-otp:
- *   post:
- *     summary: Send OTP for registration
- *     description: Sends a one-time password to the user's email for registration verification
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *                 example: user@example.com
- *     responses:
- *       200:
- *         description: OTP sent successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/OTPResponse'
- *       400:
- *         description: Email already exists or validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error400'
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error500'
- */
 router.post('/send-registration-otp', otpLimiter, async (req, res) => {
   try {
     const { email } = req.body;
@@ -57,15 +17,11 @@ router.post('/send-registration-otp', otpLimiter, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Check if user already exists
+    const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'User with this email already exists' });
-    }
-
-    // Import email service and send OTP
+    }
     const { sendOTP } = require('../services/emailService');
     const result = await sendOTP(normalizedEmail, 'registration');
 
@@ -73,8 +29,7 @@ router.post('/send-registration-otp', otpLimiter, async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'OTP sent to your email. Please verify to complete registration.',
-      // Only return OTP in development mode for testing
+      message: 'OTP sent to your email. Please verify to complete registration.',
       ...(process.env.NODE_ENV === 'development' && { otp: result.otp })
     });
 
@@ -84,50 +39,6 @@ router.post('/send-registration-otp', otpLimiter, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /auth/verify-registration-otp:
- *   post:
- *     summary: Verify registration OTP
- *     description: Verifies the OTP sent to user's email during registration
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - otp
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               otp:
- *                 type: string
- *                 example: "123456"
- *     responses:
- *       200:
- *         description: OTP verified successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 verified:
- *                   type: boolean
- *       400:
- *         description: Invalid or expired OTP
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error400'
- */
 router.post('/verify-registration-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -136,9 +47,7 @@ router.post('/verify-registration-otp', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and OTP are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Import email service and verify OTP
+    const normalizedEmail = email.toLowerCase().trim();
     const { verifyOTP } = require('../services/emailService');
     const verification = verifyOTP(normalizedEmail, otp, 'registration');
 
@@ -160,88 +69,22 @@ router.post('/verify-registration-otp', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /auth/register:
- *   post:
- *     summary: Register a new patient user
- *     description: Creates a new patient account. Requires OTP verification first.
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *               - otpVerified
- *             properties:
- *               name:
- *                 type: string
- *                 example: John Doe
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *                 minLength: 6
- *               phone:
- *                 type: string
- *               role:
- *                 type: string
- *                 default: patient
- *               otpVerified:
- *                 type: boolean
- *                 description: Must be true after OTP verification
- *     responses:
- *       201:
- *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/RegisterResponse'
- *       400:
- *         description: Validation error or user already exists
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error400'
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error500'
- */
 router.post('/register', registrationLimiter, async (req, res) => {
   try {
-    const { name, email, password, phone, role, otpVerified } = req.body;
-
-    // Validate required fields
+    const { name, email, password, phone, role, otpVerified } = req.body;
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
-    }
-
-    // Check if OTP was verified (skip for Google sign-in which sets otpVerified: true)
+    }
     if (!otpVerified) {
       return res.status(400).json({ message: 'Please verify your email with OTP first' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Check if user exists
+    const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
       name,
       email: normalizedEmail,
@@ -250,9 +93,7 @@ router.post('/register', registrationLimiter, async (req, res) => {
       role: role || 'patient'
     });
 
-    await user.save();
-
-    // Award signup bonus loyalty points
+    await user.save();
     let signupBonus = null;
     try {
       const loyalty = new LoyaltyPoints({ userId: user._id });
@@ -262,9 +103,7 @@ router.post('/register', registrationLimiter, async (req, res) => {
       console.log(`🎁 Awarded 100 signup bonus points to new user ${user._id}`);
     } catch (loyaltyError) {
       console.error('Error creating loyalty account:', loyaltyError);
-    }
-
-    // Create token with clinicId for role-based access
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,
@@ -282,7 +121,7 @@ router.post('/register', registrationLimiter, async (req, res) => {
         phone: user.phone,
         profilePhoto: user.profilePhoto,
         clinicId: user.clinicId || null,
-        locationCaptured: false // New users haven't captured location yet
+        locationCaptured: false 
       },
       loyaltyBonus: signupBonus
     });
@@ -292,73 +131,17 @@ router.post('/register', registrationLimiter, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /auth/login:
- *   post:
- *     summary: Patient login
- *     description: Authenticates a patient user and returns a JWT token
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoginResponse'
- *       400:
- *         description: Invalid credentials
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error400'
- *       403:
- *         description: Account suspended
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error403'
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error500'
- */
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
-    const aiSecurityService = require('../services/aiSecurityService');
-
-    // Validate required fields
+    const aiSecurityService = require('../services/aiSecurityService');
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    // Normalize email to lowercase
+    }
     const normalizedEmail = email.toLowerCase().trim();
     const ipAddress = req.ip || req.headers['x-forwarded-for'];
-    const userAgent = req.headers['user-agent'];
-
-    // First check if user exists (regardless of isActive status)
-    const userCheck = await User.findOne({ email: normalizedEmail, role: 'patient' });
-    
-    // Check if user is suspended
+    const userAgent = req.headers['user-agent'];
+    const userCheck = await User.findOne({ email: normalizedEmail, role: 'patient' });
     if (userCheck && userCheck.isActive === false) {
       console.log(`🚫 Login blocked: User suspended - ${normalizedEmail}`);
       return res.status(403).json({ 
@@ -366,35 +149,25 @@ router.post('/login', loginLimiter, async (req, res) => {
         reason: userCheck.suspendReason || 'Contact admin for more information',
         suspended: true
       });
-    }
-
-    // Find active user (isActive defaults to true, so check for !== false)
+    }
     const user = userCheck && userCheck.isActive !== false ? userCheck : null;
     if (!user) {
-      console.log(`❌ Login failed: User not found for email: ${normalizedEmail}`);
-      // Track failed login attempt
+      console.log(`❌ Login failed: User not found for email: ${normalizedEmail}`);
       await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Check password
+    }
     console.log(`🔐 Attempting login for: ${normalizedEmail}`);
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log(`❌ Login failed: Password mismatch for ${normalizedEmail}`);
-      // Track failed login attempt
+      console.log(`❌ Login failed: Password mismatch for ${normalizedEmail}`);
       await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Create token with clinicId for role-based access
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
-    );
-
-    // Update last login (non-blocking)
+    );
     User.findByIdAndUpdate(user._id, {
       lastLogin: new Date(),
       lastLoginIP: req.ip || req.headers['x-forwarded-for']
@@ -420,64 +193,16 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /auth/admin/login:
- *   post:
- *     summary: Admin login
- *     description: Authenticates an admin user and returns a JWT token. Sends login notification email.
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/LoginResponse'
- *       400:
- *         description: Invalid credentials
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error400'
- *       403:
- *         description: Account suspended
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error403'
- */
 router.post('/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const aiSecurityService = require('../services/aiSecurityService');
     const ipAddress = req.ip || req.headers['x-forwarded-for'];
-    const userAgent = req.headers['user-agent'];
-
-    // Validate required fields
+    const userAgent = req.headers['user-agent'];
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    // First check if admin exists (regardless of isActive status)
-    const userCheck = await User.findOne({ email, role: 'admin' });
-    
-    // Check if admin is suspended
+    }
+    const userCheck = await User.findOne({ email, role: 'admin' });
     if (userCheck && userCheck.isActive === false) {
       console.log(`🚫 Admin login blocked: Account suspended - ${email}`);
       return res.status(403).json({ 
@@ -485,35 +210,25 @@ router.post('/admin/login', async (req, res) => {
         reason: userCheck.suspendReason || 'Contact system administrator',
         suspended: true
       });
-    }
-
-    // Find active admin user (isActive defaults to true, so check for !== false)
+    }
     const user = userCheck && userCheck.isActive !== false ? userCheck : null;
     if (!user) {
       console.log(`❌ Admin login failed: User not found or inactive - ${email}`);
       await aiSecurityService.trackFailedLogin(email, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid admin credentials' });
-    }
-
-    // Check password
+    }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       await aiSecurityService.trackFailedLogin(email, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid admin credentials' });
-    }
-
-    // Create token (admin has no clinicId restriction)
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: null },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
-    );
-
-    // Send login notification email to admin (non-blocking)
+    );
     const loginTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-    const adminEmailAddr = process.env.ADMIN_EMAIL || user.email;
-    
-    // Fire and forget - don't wait for email
+    const adminEmailAddr = process.env.ADMIN_EMAIL || user.email;
     setImmediate(async () => {
       try {
         const nodemailer = require('nodemailer');
@@ -603,85 +318,17 @@ router.post('/admin/login', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /auth/clinic/login:
- *   post:
- *     summary: Clinic/Receptionist login
- *     description: Authenticates a receptionist or clinic staff user. Requires admin approval.
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     role:
- *                       type: string
- *                     clinicId:
- *                       type: string
- *                     clinicName:
- *                       type: string
- *                     approvalStatus:
- *                       type: string
- *                     emrPlan:
- *                       type: string
- *       400:
- *         description: Invalid credentials
- *       403:
- *         description: Account pending approval, rejected, or suspended
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error403'
- */
 router.post('/clinic/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    // Validate required fields
+    const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    // Normalize email
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // First check if receptionist exists at all
+    }
+    const normalizedEmail = email.toLowerCase().trim();
     const anyUser = await User.findOne({ 
       email: normalizedEmail, 
       role: { $in: ['receptionist', 'clinic'] }
-    });
-
-    // Check if the email exists but under a different role (e.g. patient)
+    });
     if (!anyUser) {
       const otherUser = await User.findOne({ email: normalizedEmail });
       if (otherUser) {
@@ -690,40 +337,31 @@ router.post('/clinic/login', async (req, res) => {
           message: 'This email is not registered as a staff account. If you registered as a patient, please use the patient login instead.',
           wrongRole: true
         });
-      }
-      // Email doesn't exist at all
+      }
       return res.status(400).json({ 
         message: 'No staff account found with this email. Please register first or check your email address.',
         notFound: true
       });
-    }
-
-    // Check if user exists but is pending approval
+    }
     if (anyUser && anyUser.approvalStatus === 'pending') {
       console.log(`⏳ Receptionist login blocked: Pending approval - ${normalizedEmail}`);
       return res.status(403).json({ 
         message: 'Your account is pending admin approval. You will receive a confirmation email within 24–48 hours.',
         pending: true
       });
-    }
-
-    // Check if user exists but is rejected
+    }
     if (anyUser && anyUser.approvalStatus === 'rejected') {
       console.log(`❌ Receptionist login blocked: Rejected - ${normalizedEmail}`);
       return res.status(403).json({ 
         message: 'Your account registration was rejected. Please contact admin at support@healthsyncpro.in for assistance.',
         rejected: true
       });
-    }
-
-    // Now check for approved user
+    }
     const userCheck = await User.findOne({ 
       email: normalizedEmail, 
       role: { $in: ['receptionist', 'clinic'] },
       approvalStatus: 'approved'
-    });
-    
-    // Check if receptionist is suspended (isActive explicitly set to false)
+    });
     if (userCheck && userCheck.isActive === false) {
       console.log(`🚫 Receptionist login blocked: Account suspended - ${normalizedEmail}`);
       return res.status(403).json({ 
@@ -731,22 +369,16 @@ router.post('/clinic/login', async (req, res) => {
         reason: userCheck.suspendReason || 'Contact admin for more information',
         suspended: true
       });
-    }
-
-    // Find active receptionist user (isActive is true or undefined/null - default is true)
+    }
     const user = userCheck && userCheck.isActive !== false ? userCheck : null;
     
     if (!user) {
       return res.status(400).json({ message: 'No approved staff account found with this email. Please contact admin.' });
-    }
-
-    // Check password
+    }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid receptionist credentials' });
-    }
-
-    // Create token with clinicId for clinic isolation
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,
@@ -776,197 +408,54 @@ router.post('/clinic/login', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /auth/receptionist/test:
- *   get:
- *     summary: Test receptionist routes
- *     description: Simple endpoint to verify receptionist routes are accessible
- *     tags: [Auth]
- *     responses:
- *       200:
- *         description: Routes working
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- */
 router.get('/receptionist/test', (req, res) => {
   res.json({ message: 'Receptionist routes are working' });
-});
-
-/**
- * @swagger
- * /auth/receptionist/register:
- *   post:
- *     summary: Register a new receptionist
- *     description: Creates a new receptionist account. Requires email verification and admin approval.
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *               - clinicName
- *               - emailVerified
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *                 minLength: 6
- *               phone:
- *                 type: string
- *               clinicName:
- *                 type: string
- *               emailVerified:
- *                 type: boolean
- *     responses:
- *       201:
- *         description: Registration submitted, pending admin approval
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                 user:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     role:
- *                       type: string
- *                     approvalStatus:
- *                       type: string
- *                     clinicName:
- *                       type: string
- *       400:
- *         description: Validation error or email not verified
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error400'
- */
-/**
- * @swagger
- * /auth/receptionist/register:
- *   post:
- *     summary: Register a new receptionist
- *     description: Creates a new receptionist account. Requires email verification and admin approval.
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *               - clinicName
- *               - emailVerified
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *                 minLength: 6
- *               phone:
- *                 type: string
- *               clinicName:
- *                 type: string
- *               emailVerified:
- *                 type: boolean
- *     responses:
- *       201:
- *         description: Registration submitted, pending admin approval
- *       400:
- *         description: Validation error or email not verified
- */
-// Receptionist sign-up
+});
 router.post('/receptionist/register', async (req, res) => {
   try {
-    const { name, email, password, phone, clinicName, emailVerified, otpToken } = req.body;
-
-    // Validate required fields
+    const { name, email, password, phone, clinicName, emailVerified, otpToken } = req.body;
     if (!name || !email || !password || !clinicName) {
       return res.status(400).json({ message: 'Name, email, password, and clinic name are required' });
-    }
-
-    // IMPORTANT: Require email verification before registration
+    }
     if (!emailVerified) {
       return res.status(400).json({ 
         message: 'Email verification is required. Please verify your email with OTP first.',
         requiresOTP: true
       });
-    }
-
-    // Normalize email
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Check if user exists — give specific messages based on their status
+    }
+    const normalizedEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: normalizedEmail });
-    if (existingUser) {
-      // Staff account already submitted and waiting for admin approval
+    if (existingUser) {
       if (['receptionist', 'clinic'].includes(existingUser.role) && existingUser.approvalStatus === 'pending') {
         return res.status(400).json({ 
           message: 'Your registration is already submitted and pending admin approval. Please wait 24–48 hours for confirmation email.',
           pending: true
         });
-      }
-      // Staff account was rejected — allow them to see why
+      }
       if (['receptionist', 'clinic'].includes(existingUser.role) && existingUser.approvalStatus === 'rejected') {
         return res.status(400).json({ 
           message: 'Your previous registration was rejected. Please contact admin at support@healthsyncpro.in for assistance.',
           rejected: true
         });
-      }
-      // Staff account already approved and active
+      }
       if (['receptionist', 'clinic'].includes(existingUser.role) && existingUser.approvalStatus === 'approved') {
         return res.status(400).json({ 
           message: 'An account with this email already exists and is active. Please use the Sign In option instead.',
           alreadyActive: true
         });
-      }
-      // Patient or other role using same email
+      }
       return res.status(400).json({ message: 'This email is already registered. Please use a different email or sign in.' });
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create receptionist user with pending status (requires admin approval)
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
       name,
       email: normalizedEmail,
       password: hashedPassword,
       phone: phone || '',
       role: 'receptionist',
-      approvalStatus: 'pending', // MUST be approved by admin before login
-      emailVerified: true, // Email was verified via OTP
-      clinicName: clinicName,
-      // Terms and conditions acceptance
+      approvalStatus: 'pending', 
+      emailVerified: true, 
+      clinicName: clinicName,
       termsAccepted: true,
       termsAcceptedAt: new Date(),
       privacyPolicyAccepted: true,
@@ -976,8 +465,7 @@ router.post('/receptionist/register', async (req, res) => {
     try {
       await user.save();
     } catch (saveError) {
-      console.error('Error saving user:', saveError);
-      // Handle validation errors
+      console.error('Error saving user:', saveError);
       if (saveError.name === 'ValidationError') {
         const errors = Object.values(saveError.errors).map(err => err.message);
         return res.status(400).json({ message: errors.join(', ') });
@@ -1000,9 +488,7 @@ router.post('/receptionist/register', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Receptionist registration error:', error);
-    
-    // Handle specific error types
+    console.error('Receptionist registration error:', error);
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({ message: errors.join(', ') });
@@ -1020,72 +506,31 @@ router.post('/receptionist/register', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /auth/forgot-password:
- *   post:
- *     summary: Request password reset
- *     description: Sends a password reset OTP to the user's email
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *     responses:
- *       200:
- *         description: OTP sent if account exists
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/OTPResponse'
- *       500:
- *         description: Server error
- */
 router.post('/forgot-password', async (req, res) => {
   try {
-    const { email } = req.body;
-
-    // Validate required fields
+    const { email } = req.body;
     if (!email) {
       return res.status(400).json({ 
         success: false,
         message: 'Email is required' 
       });
-    }
-
-    // Normalize email to lowercase
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Find user by email
+    }
+    const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
-    if (!user) {
-      // Don't reveal if email exists for security
+    if (!user) {
       return res.status(200).json({ 
         success: true,
         message: 'If an account exists with this email, a password reset code has been sent.' 
       });
-    }
-
-    // Import email service
-    const { sendOTP } = require('../services/emailService');
-
-    // Send OTP for password reset (use normalized email for consistency)
+    }
+    const { sendOTP } = require('../services/emailService');
     const result = await sendOTP(normalizedEmail, 'password-reset');
 
     console.log(`✅ Password reset OTP sent to: ${normalizedEmail}`);
 
     res.status(200).json({
       success: true,
-      message: 'If an account exists with this email, a password reset code has been sent.',
-      // For development only - remove in production
+      message: 'If an account exists with this email, a password reset code has been sent.',
       ...(process.env.NODE_ENV === 'development' && { otp: result.otp })
     });
 
@@ -1097,9 +542,7 @@ router.post('/forgot-password', async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Clinic/Receptionist Reset Password (after OTP verification - OTP already verified)
+});
 router.post('/clinic/reset-password', async (req, res) => {
   try {
     console.log('📧 Clinic reset password request:', { email: req.body.email });
@@ -1118,9 +561,7 @@ router.post('/clinic/reset-password', async (req, res) => {
         success: false,
         message: 'Password must be at least 6 characters' 
       });
-    }
-
-    // Find user by email
+    }
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
       console.log('❌ User not found:', email);
@@ -1130,12 +571,8 @@ router.post('/clinic/reset-password', async (req, res) => {
       });
     }
 
-    console.log('✅ User found:', user.email, 'Role:', user.role);
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update password
+    console.log('✅ User found:', user.email, 'Role:', user.role);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     await User.findByIdAndUpdate(user._id, { password: hashedPassword });
 
     console.log(`✅ Password reset successful for: ${email}`);
@@ -1154,95 +591,41 @@ router.post('/clinic/reset-password', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /auth/reset-password:
- *   post:
- *     summary: Reset password with OTP
- *     description: Resets user password after OTP verification
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - otp
- *               - newPassword
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               otp:
- *                 type: string
- *               newPassword:
- *                 type: string
- *                 minLength: 6
- *     responses:
- *       200:
- *         description: Password reset successful
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/OTPResponse'
- *       400:
- *         description: Invalid OTP or validation error
- *       404:
- *         description: User not found
- */
 router.post('/reset-password', async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
-
-    // Validate required fields
+    const { email, otp, newPassword } = req.body;
     if (!email || !otp || !newPassword) {
       return res.status(400).json({ 
         success: false,
         message: 'Email, OTP, and new password are required' 
       });
-    }
-
-    // Normalize email to lowercase (must match how it was stored during forgot-password)
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Validate password length
+    }
+    const normalizedEmail = email.toLowerCase().trim();
     if (newPassword.length < 6) {
       return res.status(400).json({ 
         success: false,
         message: 'Password must be at least 6 characters long' 
       });
-    }
-
-    // Import email service
-    const { verifyOTP } = require('../services/emailService');
-
-    // Verify OTP (use normalized email to match the stored OTP key)
+    }
+    const { verifyOTP } = require('../services/emailService');
     const otpVerification = verifyOTP(normalizedEmail, otp, 'password-reset');
     if (!otpVerification.success) {
       return res.status(400).json({ 
         success: false,
         message: otpVerification.message 
       });
-    }
-
-    // Find user by email
+    }
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(404).json({ 
         success: false,
         message: 'User not found' 
       });
-    }
-
-    // Hash new password
+    }
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     
     console.log(`🔐 Resetting password for user: ${normalizedEmail}`);
-    console.log(`🔐 New password hash: ${hashedPassword.substring(0, 20)}...`);
-
-    // Update password using findByIdAndUpdate to avoid any potential pre-save hooks
+    console.log(`🔐 New password hash: ${hashedPassword.substring(0, 20)}...`);
     const updateResult = await User.findByIdAndUpdate(
       user._id, 
       { password: hashedPassword },
@@ -1255,9 +638,7 @@ router.post('/reset-password', async (req, res) => {
         success: false,
         message: 'Failed to update password in database' 
       });
-    }
-    
-    // Verify the update by re-fetching the user
+    }
     const verifyUser = await User.findById(user._id);
     console.log(`🔐 Password updated in DB. New hash starts with: ${updateResult.password.substring(0, 20)}...`);
     console.log(`🔐 Verification - DB hash starts with: ${verifyUser.password.substring(0, 20)}...`);
@@ -1277,62 +658,8 @@ router.post('/reset-password', async (req, res) => {
       error: error.message 
     });
   }
-});
+});
 
-// ==========================================
-// DOCTOR AUTHENTICATION
-// ==========================================
-
-/**
- * @swagger
- * /auth/doctor/login:
- *   post:
- *     summary: Doctor login
- *     description: Authenticates a doctor and returns a JWT token
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                 doctor:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     specialization:
- *                       type: string
- *                     clinicId:
- *                       type: string
- *       400:
- *         description: Invalid credentials or needs password setup
- *       403:
- *         description: Account suspended or pending approval
- */
 router.post('/doctor/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -1344,13 +671,9 @@ router.post('/doctor/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // First check if doctor exists (regardless of isActive status)
+    const normalizedEmail = email.toLowerCase().trim();
     const doctorCheck = await Doctor.findOne({ email: normalizedEmail })
-      .populate('clinicId', 'name address city phone');
-
-    // Check if doctor is suspended
+      .populate('clinicId', 'name address city phone');
     if (doctorCheck && doctorCheck.isActive === false) {
       console.log(`🚫 Doctor login blocked: Account suspended - ${normalizedEmail}`);
       return res.status(403).json({ 
@@ -1358,17 +681,13 @@ router.post('/doctor/login', async (req, res) => {
         reason: doctorCheck.suspendReason || 'Contact admin for more information',
         suspended: true
       });
-    }
-
-    // Find active doctor
+    }
     const doctor = doctorCheck && doctorCheck.isActive ? doctorCheck : null;
 
     if (!doctor) {
       await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid credentials or doctor not found' });
-    }
-
-    // Check approval status
+    }
     if (doctor.approvalStatus === 'pending') {
       return res.status(403).json({ 
         message: 'Your account is pending admin approval. Please wait for confirmation.',
@@ -1382,29 +701,21 @@ router.post('/doctor/login', async (req, res) => {
         status: 'rejected',
         reason: doctor.rejectionReason
       });
-    }
-
-    // Check if doctor has set up password
+    }
     if (!doctor.password) {
       return res.status(400).json({ 
         message: 'Please set up your password first',
         needsPasswordSetup: true,
         doctorEmail: doctor.email
       });
-    }
-
-    // Verify password
+    }
     const isMatch = await bcrypt.compare(password, doctor.password);
     if (!isMatch) {
       await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    // Update last login
+    }
     doctor.lastLogin = new Date();
-    await doctor.save();
-
-    // Generate token with clinicId for clinic isolation
+    await doctor.save();
     const token = jwt.sign(
       { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
       process.env.JWT_SECRET,
@@ -1429,9 +740,7 @@ router.post('/doctor/login', async (req, res) => {
     console.error('Doctor login error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Doctor Password Setup (first time)
+});
 router.post('/doctor/setup-password', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -1442,9 +751,7 @@ router.post('/doctor/setup-password', async (req, res) => {
 
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
-    }
-
-    // Find doctor by email
+    }
     const doctor = await Doctor.findOne({ email: email.toLowerCase().trim() });
 
     if (!doctor) {
@@ -1453,9 +760,7 @@ router.post('/doctor/setup-password', async (req, res) => {
 
     if (doctor.password) {
       return res.status(400).json({ message: 'Password already set. Please use login or reset password.' });
-    }
-
-    // Hash and save password
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     doctor.password = hashedPassword;
     doctor.isVerified = true;
@@ -1469,9 +774,7 @@ router.post('/doctor/setup-password', async (req, res) => {
     console.error('Doctor password setup error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Doctor Reset Password
+});
 router.post('/doctor/reset-password', async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -1484,9 +787,7 @@ router.post('/doctor/reset-password', async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // OTP was already verified in verify-reset-otp endpoint, no need to verify again
+    const normalizedEmail = email.toLowerCase().trim();
 
     const doctor = await Doctor.findOne({ email: normalizedEmail });
 
@@ -1506,9 +807,7 @@ router.post('/doctor/reset-password', async (req, res) => {
     console.error('Doctor reset password error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Doctor Forgot Password - Send OTP
+});
 router.post('/doctor/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -1517,15 +816,11 @@ router.post('/doctor/forgot-password', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Check if doctor exists
+    const normalizedEmail = email.toLowerCase().trim();
     const doctor = await Doctor.findOne({ email: normalizedEmail });
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'No doctor account found with this email' });
-    }
-
-    // Send OTP
+    }
     const { sendOTP } = require('../services/emailService');
     const result = await sendOTP(normalizedEmail, 'doctor-password-reset');
 
@@ -1540,9 +835,7 @@ router.post('/doctor/forgot-password', async (req, res) => {
     console.error('❌ Doctor forgot password error:', error);
     res.status(500).json({ success: false, message: 'Failed to send OTP', error: error.message });
   }
-});
-
-// Doctor Verify Reset OTP
+});
 router.post('/doctor/verify-reset-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -1551,9 +844,7 @@ router.post('/doctor/verify-reset-otp', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and OTP are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Verify OTP
+    const normalizedEmail = email.toLowerCase().trim();
     const { verifyOTP } = require('../services/emailService');
     const verification = verifyOTP(normalizedEmail, otp, 'doctor-password-reset');
 
@@ -1572,55 +863,8 @@ router.post('/doctor/verify-reset-otp', async (req, res) => {
     console.error('❌ Doctor verify reset OTP error:', error);
     res.status(500).json({ success: false, message: 'Failed to verify OTP', error: error.message });
   }
-});
+});
 
-// ==========================================
-// GOOGLE SIGN-IN
-// ==========================================
-
-/**
- * @swagger
- * /auth/google-signin:
- *   post:
- *     summary: Google Sign-In for patients
- *     description: Authenticates or registers a patient using Google OAuth
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - googleId
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *               name:
- *                 type: string
- *               googleId:
- *                 type: string
- *               profilePhoto:
- *                 type: string
- *     responses:
- *       200:
- *         description: Sign-in successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                 isNewUser:
- *                   type: boolean
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *       400:
- *         description: Missing required fields
- */
 router.post('/google-signin', async (req, res) => {
   try {
     const { idToken } = req.body;
@@ -1656,8 +900,6 @@ router.post('/google-signin', async (req, res) => {
     const profilePhoto = googleProfile.picture || null;
     let isNewUser = false;
 
-    // The immutable Google subject is the primary identity; email is only a
-    // migration path for an existing password account without Google linked.
     let user = await User.findOne({ googleId }) || await User.findOne({ email: normalizedEmail });
 
     if (user) {
@@ -1669,11 +911,8 @@ router.post('/google-signin', async (req, res) => {
         user.profilePhoto = profilePhoto;
       }
       await user.save();
-    } else {
-      // Create new user with Google
-      isNewUser = true;
-      
-      // Generate a random password for Google users (they won't use it)
+    } else {
+      isNewUser = true;
       const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
       const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
@@ -1687,9 +926,7 @@ router.post('/google-signin', async (req, res) => {
         isActive: true
       });
 
-      await user.save();
-
-      // Award signup bonus loyalty points for new Google users
+      await user.save();
       try {
         const loyalty = new LoyaltyPoints({ userId: user._id });
         loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up with Google!', user._id);
@@ -1698,9 +935,7 @@ router.post('/google-signin', async (req, res) => {
       } catch (loyaltyError) {
         console.error('Error creating loyalty account:', loyaltyError);
       }
-    }
-
-    // Create token with clinicId for role-based access
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,
@@ -1727,9 +962,7 @@ router.post('/google-signin', async (req, res) => {
     console.error('Google sign-in error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Google Sign-In for Doctors
+});
 router.post('/doctor/google-signin', async (req, res) => {
   try {
     const { email, name, googleId, profilePhoto } = req.body;
@@ -1738,13 +971,10 @@ router.post('/doctor/google-signin', async (req, res) => {
       return res.status(400).json({ message: 'Email and Google ID are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Check if doctor exists
+    const normalizedEmail = email.toLowerCase().trim();
     let doctor = await Doctor.findOne({ email: normalizedEmail });
 
-    if (doctor) {
-      // Doctor exists - check approval status
+    if (doctor) {
       if (doctor.approvalStatus === 'pending') {
         return res.status(403).json({ 
           message: 'Your account is pending admin approval. Please wait for confirmation.',
@@ -1757,9 +987,7 @@ router.post('/doctor/google-signin', async (req, res) => {
           message: 'Your account has been rejected. Please contact admin.',
           status: 'rejected'
         });
-      }
-
-      // Update Google ID and profile photo if not set
+      }
       if (!doctor.googleId) {
         doctor.googleId = googleId;
       }
@@ -1767,9 +995,7 @@ router.post('/doctor/google-signin', async (req, res) => {
         doctor.profilePhoto = profilePhoto;
       }
       doctor.lastLogin = new Date();
-      await doctor.save();
-
-      // Generate token with clinicId for clinic isolation
+      await doctor.save();
       const token = jwt.sign(
         { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
         process.env.JWT_SECRET,
@@ -1793,8 +1019,7 @@ router.post('/doctor/google-signin', async (req, res) => {
           experience: doctor.experience
         }
       });
-    } else {
-      // Doctor doesn't exist - return error (doctors must register first)
+    } else {
       return res.status(404).json({ 
         message: 'No doctor account found with this email. Please register first or contact admin.',
         needsRegistration: true
@@ -1804,9 +1029,7 @@ router.post('/doctor/google-signin', async (req, res) => {
     console.error('Doctor Google sign-in error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Google Sign-In for Staff/Receptionist
+});
 router.post('/clinic/google-signin', async (req, res) => {
   try {
     const { email, name, googleId, profilePhoto } = req.body;
@@ -1815,13 +1038,10 @@ router.post('/clinic/google-signin', async (req, res) => {
       return res.status(400).json({ message: 'Email and Google ID are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Check if staff user exists (receptionist or clinic role)
+    const normalizedEmail = email.toLowerCase().trim();
     let user = await User.findOne({ email: normalizedEmail, role: { $in: ['receptionist', 'clinic'] } });
 
-    if (user) {
-      // Staff exists - check approval status
+    if (user) {
       if (user.approvalStatus === 'pending') {
         return res.status(403).json({ 
           message: 'Your account is pending admin approval. Please wait for confirmation.',
@@ -1841,18 +1061,14 @@ router.post('/clinic/google-signin', async (req, res) => {
           message: 'Your account is inactive. Please contact admin.',
           status: 'inactive'
         });
-      }
-
-      // Update Google ID and profile photo if not set
+      }
       if (!user.googleId) {
         user.googleId = googleId;
       }
       if (profilePhoto && !user.profilePhoto) {
         user.profilePhoto = profilePhoto;
       }
-      await user.save();
-
-      // Generate token with clinicId for clinic isolation
+      await user.save();
       const token = jwt.sign(
         { userId: user._id, role: user.role, clinicId: user.clinicId || null },
         process.env.JWT_SECRET,
@@ -1877,8 +1093,7 @@ router.post('/clinic/google-signin', async (req, res) => {
           emrPlan: user.emrPlan || 'basic'
         }
       });
-    } else {
-      // Staff doesn't exist - return error (staff must register first)
+    } else {
       return res.status(404).json({ 
         message: 'No staff account found with this email. Please register first or contact admin.',
         needsRegistration: true
@@ -1888,20 +1103,8 @@ router.post('/clinic/google-signin', async (req, res) => {
     console.error('Staff Google sign-in error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 
-// ==========================================
-// FACEBOOK SIGN-IN
-// ==========================================
-
-/**
- * @swagger
- * /auth/facebook-signin:
- *   post:
- *     summary: Facebook Sign-In for patients
- *     description: Authenticates or registers a patient using Facebook OAuth
- *     tags: [Auth]
- */
 router.post('/facebook-signin', async (req, res) => {
   try {
     const { email, name, facebookId, profilePhoto, accessToken } = req.body;
@@ -1910,14 +1113,11 @@ router.post('/facebook-signin', async (req, res) => {
       return res.status(400).json({ message: 'Email and Facebook ID are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
-
-    // Check if user exists
+    const normalizedEmail = email.toLowerCase().trim();
     let user = await User.findOne({ email: normalizedEmail, role: 'patient' });
     let isNewUser = false;
 
-    if (user) {
-      // User exists - update Facebook ID if not set
+    if (user) {
       if (!user.facebookId) {
         user.facebookId = facebookId;
       }
@@ -1925,8 +1125,7 @@ router.post('/facebook-signin', async (req, res) => {
         user.profilePhoto = profilePhoto;
       }
       await user.save();
-    } else {
-      // Create new user
+    } else {
       isNewUser = true;
       user = new User({
         name: name || 'Facebook User',
@@ -1934,12 +1133,10 @@ router.post('/facebook-signin', async (req, res) => {
         facebookId: facebookId,
         profilePhoto: profilePhoto,
         role: 'patient',
-        password: await bcrypt.hash(facebookId + Date.now(), 10), // Random password for social users
+        password: await bcrypt.hash(facebookId + Date.now(), 10), 
         isVerified: true
       });
-      await user.save();
-
-      // Award signup bonus
+      await user.save();
       try {
         const loyalty = new LoyaltyPoints({ userId: user._id });
         loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up!', user._id);
@@ -1947,9 +1144,7 @@ router.post('/facebook-signin', async (req, res) => {
       } catch (loyaltyError) {
         console.error('Error creating loyalty account:', loyaltyError);
       }
-    }
-
-    // Generate token
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,
@@ -1975,51 +1170,33 @@ router.post('/facebook-signin', async (req, res) => {
     console.error('Facebook sign-in error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 
-// ==========================================
-// APPLE SIGN-IN
-// ==========================================
-
-/**
- * @swagger
- * /auth/apple-signin:
- *   post:
- *     summary: Apple Sign-In for patients (iOS only)
- *     description: Authenticates or registers a patient using Apple Sign-In
- *     tags: [Auth]
- */
 router.post('/apple-signin', async (req, res) => {
   try {
     const { email, name, appleId, identityToken } = req.body;
 
     if (!appleId) {
       return res.status(400).json({ message: 'Apple ID is required' });
-    }
-
-    // Apple may not provide email on subsequent sign-ins, so we need to handle that
+    }
     let user = await User.findOne({ appleId: appleId, role: 'patient' });
     let isNewUser = false;
 
-    if (user) {
-      // User exists - update name if provided and not set
+    if (user) {
       if (name && !user.name) {
         user.name = name;
       }
       await user.save();
-    } else if (email) {
-      // Check if user exists with this email
+    } else if (email) {
       user = await User.findOne({ email: email.toLowerCase().trim(), role: 'patient' });
       
-      if (user) {
-        // Link Apple ID to existing account
+      if (user) {
         user.appleId = appleId;
         if (name && !user.name) {
           user.name = name;
         }
         await user.save();
-      } else {
-        // Create new user
+      } else {
         isNewUser = true;
         user = new User({
           name: name || 'Apple User',
@@ -2029,9 +1206,7 @@ router.post('/apple-signin', async (req, res) => {
           password: await bcrypt.hash(appleId + Date.now(), 10),
           isVerified: true
         });
-        await user.save();
-
-        // Award signup bonus
+        await user.save();
         try {
           const loyalty = new LoyaltyPoints({ userId: user._id });
           loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up!', user._id);
@@ -2044,9 +1219,7 @@ router.post('/apple-signin', async (req, res) => {
       return res.status(400).json({ 
         message: 'Email is required for first-time Apple Sign-In. Please allow email access in Apple Sign-In settings.' 
       });
-    }
-
-    // Generate token
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,
@@ -2072,11 +1245,7 @@ router.post('/apple-signin', async (req, res) => {
     console.error('Apple sign-in error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// ============================================
-// TEST EMAIL ENDPOINT (for debugging)
-// ============================================
+});
 router.post('/test-email', async (req, res) => {
   try {
     const { email } = req.body;
@@ -2113,9 +1282,7 @@ router.post('/test-email', async (req, res) => {
       }
     });
   }
-});
-
-// Check email and meet configuration status
+});
 router.get('/config-status', async (req, res) => {
   try {
     const { getGoogleStatus } = require('../services/googleMeetService');
@@ -2132,23 +1299,15 @@ router.get('/config-status', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
-
-// ============================================
-// CREATE TEST USER FOR RAZORPAY VERIFICATION
-// ============================================
+});
 router.post('/create-test-user', async (req, res) => {
   try {
-    const { secretKey } = req.body;
-    
-    // Simple security check - require a secret key
+    const { secretKey } = req.body;
     if (secretKey !== 'razorpay-verification-2024') {
       return res.status(403).json({ success: false, message: 'Invalid secret key' });
     }
     
-    const bcrypt = require('bcryptjs');
-    
-    // Test User Credentials
+    const bcrypt = require('bcryptjs');
     const TEST_USER = {
       name: 'Razorpay Test User',
       email: 'testuser@healthsync.com',
@@ -2171,9 +1330,7 @@ router.post('/create-test-user', async (req, res) => {
         phone: '+91-8888888888',
         relationship: 'Family'
       }
-    };
-    
-    // Check if test user already exists
+    };
     const existingUser = await User.findOne({ email: TEST_USER.email });
     
     if (existingUser) {
@@ -2185,13 +1342,9 @@ router.post('/create-test-user', async (req, res) => {
           password: 'Test@123456'
         }
       });
-    }
-    
-    // Hash password
+    }
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(TEST_USER.password, salt);
-    
-    // Create test user
+    const hashedPassword = await bcrypt.hash(TEST_USER.password, salt);
     const testUser = new User({
       ...TEST_USER,
       password: hashedPassword

@@ -1,27 +1,17 @@
-/**
- * Medical History Service
- * Handles CRUD operations for patient medical history including allergies,
- * chronic conditions, family history, surgical history, and current medications
- */
+
 
 const MedicalHistory = require('../models/MedicalHistory');
 const mongoose = require('mongoose');
 
-/**
- * Create or update complete medical history for a patient
- */
 async function createOrUpdateHistory(patientId, historyData, clinicId, updatedBy) {
-  try {
-    // Find existing history or create new one
+  try {
     let history = await MedicalHistory.findOne({ patientId });
     
-    if (history) {
-      // Update existing history
+    if (history) {
       Object.assign(history, historyData);
       history.lastUpdated = new Date();
       history.updatedBy = updatedBy;
-    } else {
-      // Create new history
+    } else {
       history = new MedicalHistory({
         patientId,
         clinicId,
@@ -38,9 +28,6 @@ async function createOrUpdateHistory(patientId, historyData, clinicId, updatedBy
   }
 }
 
-/**
- * Get complete medical history for a patient
- */
 async function getHistory(patientId, clinicId = null) {
   try {
     const query = { patientId };
@@ -58,9 +45,6 @@ async function getHistory(patientId, clinicId = null) {
   }
 }
 
-/**
- * Get or create medical history for a patient
- */
 async function getOrCreateHistory(patientId, clinicId) {
   try {
     return await MedicalHistory.getOrCreate(patientId, clinicId);
@@ -69,19 +53,12 @@ async function getOrCreateHistory(patientId, clinicId) {
   }
 }
 
-/**
- * Update allergies section
- */
 async function updateAllergies(patientId, allergies, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate allergies data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!Array.isArray(allergies)) {
       throw new Error('Allergies must be an array');
-    }
-    
-    // Validate each allergy
+    }
     allergies.forEach((allergy, index) => {
       if (!allergy.allergen || !allergy.type || !allergy.severity) {
         throw new Error(`Allergy at index ${index} is missing required fields`);
@@ -110,14 +87,9 @@ async function updateAllergies(patientId, allergies, updatedBy) {
   }
 }
 
-/**
- * Add single allergy
- */
 async function addAllergy(patientId, allergyData, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate allergy data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!allergyData.allergen || !allergyData.type || !allergyData.severity) {
       throw new Error('Allergy must have allergen, type, and severity');
     }
@@ -133,9 +105,6 @@ async function addAllergy(patientId, allergyData, updatedBy) {
   }
 }
 
-/**
- * Remove allergy by ID
- */
 async function removeAllergy(patientId, allergyId, updatedBy) {
   try {
     const history = await MedicalHistory.findOne({ patientId });
@@ -154,19 +123,12 @@ async function removeAllergy(patientId, allergyId, updatedBy) {
   }
 }
 
-/**
- * Update chronic conditions section
- */
 async function updateConditions(patientId, conditions, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate conditions data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!Array.isArray(conditions)) {
       throw new Error('Conditions must be an array');
-    }
-    
-    // Validate each condition
+    }
     conditions.forEach((condition, index) => {
       if (!condition.condition) {
         throw new Error(`Condition at index ${index} is missing required condition field`);
@@ -189,14 +151,9 @@ async function updateConditions(patientId, conditions, updatedBy) {
   }
 }
 
-/**
- * Add single chronic condition
- */
 async function addCondition(patientId, conditionData, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate condition data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!conditionData.condition) {
       throw new Error('Condition must have a condition field');
     }
@@ -212,19 +169,12 @@ async function addCondition(patientId, conditionData, updatedBy) {
   }
 }
 
-/**
- * Update family history section
- */
 async function updateFamilyHistory(patientId, familyHistory, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate family history data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!Array.isArray(familyHistory)) {
       throw new Error('Family history must be an array');
-    }
-    
-    // Validate each family history entry
+    }
     familyHistory.forEach((entry, index) => {
       if (!entry.relationship || !entry.condition) {
         throw new Error(`Family history entry at index ${index} is missing required fields`);
@@ -247,25 +197,16 @@ async function updateFamilyHistory(patientId, familyHistory, updatedBy) {
   }
 }
 
-/**
- * Update surgical history section
- */
 async function updateSurgicalHistory(patientId, surgicalHistory, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate surgical history data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!Array.isArray(surgicalHistory)) {
       throw new Error('Surgical history must be an array');
-    }
-    
-    // Validate each surgical history entry
+    }
     surgicalHistory.forEach((entry, index) => {
       if (!entry.procedure || !entry.date) {
         throw new Error(`Surgical history entry at index ${index} is missing required fields`);
-      }
-      
-      // Validate date
+      }
       if (!(entry.date instanceof Date) && !Date.parse(entry.date)) {
         throw new Error(`Invalid date in surgical history entry at index ${index}`);
       }
@@ -282,19 +223,12 @@ async function updateSurgicalHistory(patientId, surgicalHistory, updatedBy) {
   }
 }
 
-/**
- * Update current medications section
- */
 async function updateMedications(patientId, medications, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate medications data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!Array.isArray(medications)) {
       throw new Error('Medications must be an array');
-    }
-    
-    // Validate each medication
+    }
     medications.forEach((medication, index) => {
       if (!medication.drugName || !medication.dosage) {
         throw new Error(`Medication at index ${index} is missing required fields`);
@@ -317,14 +251,9 @@ async function updateMedications(patientId, medications, updatedBy) {
   }
 }
 
-/**
- * Add single medication
- */
 async function addMedication(patientId, medicationData, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate medication data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!medicationData.drugName || !medicationData.dosage) {
       throw new Error('Medication must have drugName and dosage');
     }
@@ -340,14 +269,9 @@ async function addMedication(patientId, medicationData, updatedBy) {
   }
 }
 
-/**
- * Update social history section
- */
 async function updateSocialHistory(patientId, socialHistory, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
-    
-    // Validate social history data
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (socialHistory.smoking) {
       const validSmokingValues = ['never', 'former', 'current'];
       if (!validSmokingValues.includes(socialHistory.smoking)) {
@@ -373,9 +297,6 @@ async function updateSocialHistory(patientId, socialHistory, updatedBy) {
   }
 }
 
-/**
- * Get critical medical summary (allergies + active conditions)
- */
 async function getCriticalSummary(patientId) {
   try {
     const history = await MedicalHistory.findOne({ patientId });
@@ -393,9 +314,6 @@ async function getCriticalSummary(patientId) {
   }
 }
 
-/**
- * Search patients by allergy
- */
 async function searchPatientsByAllergy(allergen, clinicId = null) {
   try {
     const query = {
@@ -422,9 +340,6 @@ async function searchPatientsByAllergy(allergen, clinicId = null) {
   }
 }
 
-/**
- * Search patients by condition
- */
 async function searchPatientsByCondition(condition, clinicId = null) {
   try {
     const query = {
@@ -451,9 +366,6 @@ async function searchPatientsByCondition(condition, clinicId = null) {
   }
 }
 
-/**
- * Get patients with specific medication
- */
 async function searchPatientsByMedication(drugName, clinicId = null) {
   try {
     const query = {
@@ -480,45 +392,32 @@ async function searchPatientsByMedication(drugName, clinicId = null) {
   }
 }
 
-/**
- * Validate complete medical history data
- */
 function validateMedicalHistoryData(historyData) {
-  const errors = [];
-  
-  // Validate allergies
+  const errors = [];
   if (historyData.allergies && Array.isArray(historyData.allergies)) {
     historyData.allergies.forEach((allergy, index) => {
       if (!allergy.allergen) errors.push(`Allergy ${index + 1}: allergen is required`);
       if (!allergy.type) errors.push(`Allergy ${index + 1}: type is required`);
       if (!allergy.severity) errors.push(`Allergy ${index + 1}: severity is required`);
     });
-  }
-  
-  // Validate chronic conditions
+  }
   if (historyData.chronicConditions && Array.isArray(historyData.chronicConditions)) {
     historyData.chronicConditions.forEach((condition, index) => {
       if (!condition.condition) errors.push(`Condition ${index + 1}: condition is required`);
     });
-  }
-  
-  // Validate family history
+  }
   if (historyData.familyHistory && Array.isArray(historyData.familyHistory)) {
     historyData.familyHistory.forEach((entry, index) => {
       if (!entry.relationship) errors.push(`Family history ${index + 1}: relationship is required`);
       if (!entry.condition) errors.push(`Family history ${index + 1}: condition is required`);
     });
-  }
-  
-  // Validate surgical history
+  }
   if (historyData.surgicalHistory && Array.isArray(historyData.surgicalHistory)) {
     historyData.surgicalHistory.forEach((entry, index) => {
       if (!entry.procedure) errors.push(`Surgical history ${index + 1}: procedure is required`);
       if (!entry.date) errors.push(`Surgical history ${index + 1}: date is required`);
     });
-  }
-  
-  // Validate medications
+  }
   if (historyData.currentMedications && Array.isArray(historyData.currentMedications)) {
     historyData.currentMedications.forEach((medication, index) => {
       if (!medication.drugName) errors.push(`Medication ${index + 1}: drugName is required`);

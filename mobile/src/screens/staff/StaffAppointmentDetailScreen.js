@@ -1,7 +1,4 @@
-/**
- * Staff Appointment Detail Screen - View/Manage Appointment
- * 100% Parity with Web Staff Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -28,8 +25,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchAppointment = useCallback(async () => {
-    try {
-      // Use the billing endpoint to get appointment details
+    try {
       const data = await staffApi.getAppointmentBilling(appointmentId).catch(() => null);
       setAppointment(data?.appointment || data);
     } catch (error) {
@@ -140,7 +136,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B6B" />}
       >
-        {/* Status Badge */}
+        {}
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(appointment.status) + '20' }]}>
           <View style={[styles.statusDot, { backgroundColor: getStatusColor(appointment.status) }]} />
           <Text style={[styles.statusText, { color: getStatusColor(appointment.status) }]}>
@@ -148,7 +144,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Date & Time */}
+        {}
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>📅</Text>
@@ -162,7 +158,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Patient Info */}
+        {}
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>👤</Text>
@@ -176,7 +172,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Doctor Info */}
+        {}
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>👨‍⚕️</Text>
@@ -190,7 +186,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Notes */}
+        {}
         {appointment.notes && (
           <View style={[styles.card, { backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
@@ -201,7 +197,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Actions */}
+        {}
         {appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
           <View style={styles.actionsContainer}>
             {appointment.status === 'confirmed' && (
@@ -240,7 +236,6 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

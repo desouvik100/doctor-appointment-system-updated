@@ -1,9 +1,4 @@
-/**
- * Vitals Service
- * Handles vitals validation, range checking, abnormal flagging, and unit conversions
- */
 
-// Validation ranges for vital signs
 const VITAL_RANGES = {
   bloodPressure: {
     systolic: {
@@ -94,9 +89,6 @@ const VITAL_RANGES = {
   }
 };
 
-/**
- * Convert temperature between Fahrenheit and Celsius
- */
 function convertTemperature(value, fromUnit, toUnit) {
   if (fromUnit === toUnit) return value;
   
@@ -109,9 +101,6 @@ function convertTemperature(value, fromUnit, toUnit) {
   return value;
 }
 
-/**
- * Convert weight between kg and lbs
- */
 function convertWeight(value, fromUnit, toUnit) {
   if (fromUnit === toUnit) return value;
   
@@ -124,9 +113,6 @@ function convertWeight(value, fromUnit, toUnit) {
   return value;
 }
 
-/**
- * Convert height between cm and feet/inches
- */
 function convertHeight(value, fromUnit, toUnit) {
   if (fromUnit === toUnit) return value;
   
@@ -135,8 +121,7 @@ function convertHeight(value, fromUnit, toUnit) {
     const feet = Math.floor(totalInches / 12);
     const inches = Math.round(totalInches % 12);
     return { feet, inches, total: Math.round(totalInches * 10) / 10 };
-  } else if (fromUnit === 'ft' && toUnit === 'cm') {
-    // Assuming value is in inches or { feet, inches }
+  } else if (fromUnit === 'ft' && toUnit === 'cm') {
     const totalInches = typeof value === 'object' ? (value.feet * 12 + value.inches) : value;
     return Math.round(totalInches * 2.54 * 10) / 10;
   }
@@ -144,11 +129,7 @@ function convertHeight(value, fromUnit, toUnit) {
   return value;
 }
 
-/**
- * Calculate BMI from weight and height
- */
-function calculateBMI(weight, weightUnit, height, heightUnit) {
-  // Convert to kg and cm
+function calculateBMI(weight, weightUnit, height, heightUnit) {
   const weightKg = weightUnit === 'lbs' ? convertWeight(weight, 'lbs', 'kg') : weight;
   const heightCm = heightUnit === 'ft' ? convertHeight(height, 'ft', 'cm') : height;
   
@@ -160,9 +141,6 @@ function calculateBMI(weight, weightUnit, height, heightUnit) {
   return Math.round(bmi * 10) / 10;
 }
 
-/**
- * Get BMI category
- */
 function getBMICategory(bmi) {
   if (bmi < 18.5) return 'underweight';
   if (bmi < 25) return 'normal';
@@ -170,10 +148,6 @@ function getBMICategory(bmi) {
   return 'obese';
 }
 
-
-/**
- * Validate a single vital sign value
- */
 function validateVitalValue(vitalType, value, options = {}) {
   const result = {
     isValid: false,
@@ -217,26 +191,20 @@ function validateVitalValue(vitalType, value, options = {}) {
     default:
       result.isValid = true;
       return result;
-  }
-  
-  // Check valid range
+  }
   if (value < range.validMin || value > range.validMax) {
     result.error = `${vitalType} value ${value} is outside valid range (${range.validMin}-${range.validMax})`;
     return result;
   }
   
-  result.isValid = true;
-  
-  // Check normal range
+  result.isValid = true;
   if (value < range.normalMin) {
     result.isAbnormal = true;
     result.abnormalDirection = 'low';
   } else if (value > range.normalMax) {
     result.isAbnormal = true;
     result.abnormalDirection = 'high';
-  }
-  
-  // Check critical range
+  }
   if (range.criticalLow && value <= range.criticalLow) {
     result.isCritical = true;
     result.abnormalDirection = 'critical_low';
@@ -248,9 +216,6 @@ function validateVitalValue(vitalType, value, options = {}) {
   return result;
 }
 
-/**
- * Validate all vitals and return validation result with abnormal flags
- */
 function validateVitals(vitals) {
   const result = {
     isValid: true,
@@ -258,9 +223,7 @@ function validateVitals(vitals) {
     abnormalFlags: [],
     criticalFlags: [],
     validatedVitals: {}
-  };
-  
-  // Validate blood pressure
+  };
   if (vitals.bloodPressure) {
     const { systolic, diastolic } = vitals.bloodPressure;
     
@@ -293,9 +256,7 @@ function validateVitals(vitals) {
         }
       }
     }
-  }
-  
-  // Validate pulse
+  }
   if (vitals.pulse?.value !== undefined && vitals.pulse?.value !== null) {
     const pulseResult = validateVitalValue('pulse', vitals.pulse.value);
     if (!pulseResult.isValid) {
@@ -309,9 +270,7 @@ function validateVitals(vitals) {
         isAbnormal: pulseResult.isAbnormal
       };
     }
-  }
-  
-  // Validate temperature
+  }
   if (vitals.temperature?.value !== undefined && vitals.temperature?.value !== null) {
     const unit = vitals.temperature.unit === '°C' || vitals.temperature.unit === 'C' ? 'C' : 'F';
     const tempResult = validateVitalValue('temperature', vitals.temperature.value, { unit });
@@ -326,9 +285,7 @@ function validateVitals(vitals) {
         isAbnormal: tempResult.isAbnormal
       };
     }
-  }
-  
-  // Validate SpO2
+  }
   if (vitals.spo2?.value !== undefined && vitals.spo2?.value !== null) {
     const spo2Result = validateVitalValue('spo2', vitals.spo2.value);
     if (!spo2Result.isValid) {
@@ -342,9 +299,7 @@ function validateVitals(vitals) {
         isAbnormal: spo2Result.isAbnormal
       };
     }
-  }
-  
-  // Validate blood sugar
+  }
   if (vitals.bloodSugar?.value !== undefined && vitals.bloodSugar?.value !== null) {
     const sugarType = vitals.bloodSugar.type || 'random';
     const sugarResult = validateVitalValue('bloodSugar', vitals.bloodSugar.value, { type: sugarType });
@@ -359,9 +314,7 @@ function validateVitals(vitals) {
         isAbnormal: sugarResult.isAbnormal
       };
     }
-  }
-  
-  // Validate respiratory rate
+  }
   if (vitals.respiratoryRate?.value !== undefined && vitals.respiratoryRate?.value !== null) {
     const rrResult = validateVitalValue('respiratoryRate', vitals.respiratoryRate.value);
     if (!rrResult.isValid) {
@@ -375,13 +328,9 @@ function validateVitals(vitals) {
         isAbnormal: rrResult.isAbnormal
       };
     }
-  }
-  
-  // Copy weight and height (no abnormal flagging for these)
+  }
   if (vitals.weight) result.validatedVitals.weight = vitals.weight;
-  if (vitals.height) result.validatedVitals.height = vitals.height;
-  
-  // Calculate BMI if weight and height provided
+  if (vitals.height) result.validatedVitals.height = vitals.height;
   if (vitals.weight?.value && vitals.height?.value) {
     const bmi = calculateBMI(
       vitals.weight.value,
@@ -390,9 +339,7 @@ function validateVitals(vitals) {
       vitals.height.unit || 'cm'
     );
     result.validatedVitals.bmi = bmi;
-  }
-  
-  // Store abnormal flags
+  }
   result.validatedVitals.abnormalFlags = result.abnormalFlags;
   
   return result;

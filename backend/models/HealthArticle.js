@@ -33,7 +33,7 @@ const healthArticleSchema = new mongoose.Schema({
   authorName: String,
   authorCredentials: String,
   readTime: {
-    type: Number, // minutes
+    type: Number, 
     default: 5
   },
   views: {
@@ -53,9 +53,7 @@ const healthArticleSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   }
-}, { timestamps: true });
-
-// Generate slug from title
+}, { timestamps: true });
 healthArticleSchema.pre('save', function(next) {
   if (!this.slug) {
     this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');

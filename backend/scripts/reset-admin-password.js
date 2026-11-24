@@ -1,4 +1,4 @@
-// Reset admin password
+
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -11,15 +11,12 @@ async function resetAdminPassword() {
     const User = require('../models/User');
     
     const email = 'admin@healthsyncpro.in';
-    const newPassword = 'Admin@123'; // New password
+    const newPassword = 'Admin@123'; 
     
     const admin = await User.findOne({ email: email.toLowerCase() });
     
-    if (admin) {
-      // Hash new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      
-      // Update password
+    if (admin) {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
       await User.findByIdAndUpdate(admin._id, {
         password: hashedPassword
       });

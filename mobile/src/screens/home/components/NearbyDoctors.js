@@ -1,6 +1,4 @@
-/**
- * NearbyDoctors - Location-aware local doctor finder with skeleton loader
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
@@ -63,7 +61,6 @@ const FALLBACK_NEARBY = [
   },
 ];
 
-// Reanimated 3 Shimmer Card for loading states
 const SkeletonCard = () => {
   const { colors, isDarkMode } = useTheme();
   const opacityVal = useSharedValue(0.35);
@@ -175,14 +172,14 @@ const NearbyDoctors = () => {
 
   const fetchNearby = useCallback(async () => {
     setLoading(true);
-    let coords = { latitude: 28.6139, longitude: 77.2090 }; // Default/fallback
+    let coords = { latitude: 28.6139, longitude: 77.2090 }; 
 
     const retrieveDoctors = async (lat, lng) => {
       try {
         const res = await getNearbyDoctors(lat, lng, 15);
         const list = res?.doctors || res?.data || res || [];
         if (list.length > 0) {
-          // Format distances nicely
+
           setDoctors(list.map((d, i) => ({
             ...d,
             distance: d.distance ? `${d.distance.toFixed(1)} km` : `${(1 + i * 0.8).toFixed(1)} km`,
@@ -357,7 +354,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'center',
   },
-  // Skeleton / Shimmer elements
+
   skeletonCard: {
     borderWidth: 0,
     opacity: 0.5,
@@ -389,7 +386,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.08)',
     marginTop: spacing.md,
   },
-  // Empty State styles
+
   emptyState: {
     padding: spacing.xl,
     borderRadius: borderRadius.lg,

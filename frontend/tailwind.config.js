@@ -1,7 +1,7 @@
-/** @type {import('tailwindcss').Config} */
+
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
+    "./src*.{js,jsx,ts,tsx}",
     "./public/index.html"
   ],
   darkMode: 'class',
@@ -13,7 +13,7 @@ module.exports = {
         mono:    ['SF Mono', 'Roboto Mono', 'Fira Code', 'monospace'],
       },
       colors: {
-        /* ── Brand: Deep Indigo (mapped to Sky Blue scale) ── */
+        
         indigo: {
           50:  '#f0f9ff',
           100: '#e0f2fe',
@@ -27,7 +27,7 @@ module.exports = {
           900: '#0c4a6e',
           950: '#082f49',
         },
-        /* ── Brand: Purple (mapped to Teal scale) ── */
+        
         purple: {
           50:  '#f0fdfa',
           100: '#ccfbf1',
@@ -41,7 +41,7 @@ module.exports = {
           900: '#134e4a',
           950: '#042f2e',
         },
-        /* ── Accent: Calming Teal ── */
+        
         teal: {
           50:  '#f0fdfa',
           100: '#ccfbf1',
@@ -54,7 +54,7 @@ module.exports = {
           800: '#115e59',
           900: '#134e4a',
         },
-        /* ── Canvas: Slate ── */
+        
         slate: {
           50:  '#f8fafc',
           100: '#f1f5f9',
@@ -68,7 +68,7 @@ module.exports = {
           900: '#0f172a',
           950: '#020617',
         },
-        /* ── Semantic ── */
+        
         success: {
           light:   '#f0fdf4',
           DEFAULT: '#22c55e',
@@ -89,7 +89,7 @@ module.exports = {
           DEFAULT: '#3b82f6',
           dark:    '#2563eb',
         },
-        /* ── Legacy aliases (backward compat) ── */
+        
         primary: {
           50:  '#f0f9ff',
           100: '#e0f2fe',
@@ -127,7 +127,7 @@ module.exports = {
         '4xl': '2rem',
       },
       boxShadow: {
-        /* Soft micro-elevation — no harsh gray outlines */
+        
         'card':       '0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04)',
         'card-hover': '0 8px 28px rgba(15, 23, 42, 0.10), 0 4px 10px rgba(15, 23, 42, 0.05)',
         'soft':       '0 2px 8px rgba(15, 23, 42, 0.06)',
@@ -146,7 +146,7 @@ module.exports = {
         'gradient-hero':    'linear-gradient(135deg, #0369a1 0%, #0ea5e9 50%, #14b8a6 100%)',
         'gradient-card':    'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)',
         'gradient-radial':  'radial-gradient(var(--tw-gradient-stops))',
-        /* Legacy */
+        
         'gradient-health':   'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
         'gradient-primary':  'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
         'gradient-fresh':    'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 50%, #22c55e 100%)',

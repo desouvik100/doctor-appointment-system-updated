@@ -1,6 +1,4 @@
-/**
- * HealthReminders - Personalised clinical reminders and medication tasks
- */
+
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
@@ -18,8 +16,7 @@ import { shadows } from '../../../theme/shadows';
 const HealthReminders = () => {
   const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation();
-  
-  // Dynamic state for marking medication as taken
+
   const [medsTaken, setMedsTaken] = useState(false);
 
   const handleMedsToggle = () => {
@@ -38,7 +35,7 @@ const HealthReminders = () => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.horizontalScroll}
       >
-        {/* Medication Reminder */}
+        {}
         <Animated.View
           entering={FadeInRight.delay(100)}
           style={[
@@ -78,7 +75,7 @@ const HealthReminders = () => {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Follow-up Reminder */}
+        {}
         <Animated.View
           entering={FadeInRight.delay(200)}
           style={[
@@ -113,7 +110,7 @@ const HealthReminders = () => {
           </TouchableOpacity>
         </Animated.View>
 
-        {/* Lab Test Reminder */}
+        {}
         <Animated.View
           entering={FadeInRight.delay(300)}
           style={[

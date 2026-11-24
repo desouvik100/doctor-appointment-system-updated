@@ -1,12 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-console.log('🤖 Chatbot routes loading...');
-
-// AI Providers
-let openai, gemini;
-
-// Initialize AI clients based on environment
+console.log('🤖 Chatbot routes loading...');
+let openai, gemini;
 const initializeAI = () => {
   const provider = process.env.AI_PROVIDER || 'gemini';
   
@@ -25,8 +21,7 @@ const initializeAI = () => {
   if (provider === 'gemini' && process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here') {
     try {
       const { GoogleGenerativeAI } = require('@google/generative-ai');
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      // Use gemini-2.0-flash (latest available model)
+      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
       gemini = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
       console.log('✅ Gemini 2.0 Flash initialized successfully');
     } catch (error) {
@@ -37,14 +32,10 @@ const initializeAI = () => {
   if (!openai && !gemini) {
     console.log('⚠️  No AI providers configured. Chatbot will use fallback responses.');
   }
-};
-
-// Initialize on startup
+};
 initializeAI();
 
-console.log('🤖 Chatbot routes loaded - Updated');
-
-// System prompt for HealthSync AI - General Purpose Assistant
+console.log('🤖 Chatbot routes loaded - Updated');
 const SYSTEM_PROMPT = `You are HealthSync AI, an intelligent and versatile AI assistant. You are knowledgeable, helpful, and can assist with a wide range of topics and questions.
 
 Your capabilities include:
@@ -77,9 +68,7 @@ Guidelines:
 - Keep responses informative but appropriately concise
 - Use examples and analogies to explain complex topics
 
-Remember: You're a general-purpose AI assistant named HealthSync AI, not limited to healthcare topics, but with special awareness of the healthcare context you're operating in.`;
-
-// Enhanced chat endpoint with multiple AI providers
+Remember: You're a general-purpose AI assistant named HealthSync AI, not limited to healthcare topics, but with special awareness of the healthcare context you're operating in.`;
 router.post('/chat', async (req, res) => {
   try {
     const { message, conversationHistory = [], systemContext = {} } = req.body;
@@ -89,9 +78,7 @@ router.post('/chat', async (req, res) => {
     }
 
     const provider = process.env.AI_PROVIDER || 'gemini';
-    let aiResponse;
-
-    // Add system context to prompt if provided
+    let aiResponse;
     let contextualPrompt = SYSTEM_PROMPT;
     if (systemContext.stats) {
       contextualPrompt += `\n\nCurrent System Statistics:
@@ -121,9 +108,7 @@ router.post('/chat', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Chatbot API Error:', error);
-    
-    // Handle specific error types
+    console.error('Chatbot API Error:', error);
     if (error.message?.includes('quota') || error.message?.includes('limit')) {
       return res.status(429).json({ 
         error: 'API quota exceeded. Please try again later.',
@@ -144,9 +129,7 @@ router.post('/chat', async (req, res) => {
       response: getFallbackResponse(req.body.message)
     });
   }
-});
-
-// OpenAI handler
+});
 async function handleOpenAIRequest(message, conversationHistory, systemPrompt) {
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -167,15 +150,10 @@ async function handleOpenAIRequest(message, conversationHistory, systemPrompt) {
   });
 
   return completion.choices[0].message.content;
-}
-
-// Gemini handler
+}
 async function handleGeminiRequest(message, conversationHistory, systemPrompt) {
-  try {
-    // Build conversation context for Gemini
-    let conversationText = systemPrompt + '\n\n';
-    
-    // Add recent conversation history
+  try {
+    let conversationText = systemPrompt + '\n\n';
     conversationHistory.slice(-6).forEach(msg => {
       const role = msg.role === 'assistant' ? 'Assistant' : 'User';
       conversationText += `${role}: ${msg.content}\n`;
@@ -202,9 +180,7 @@ async function handleGeminiRequest(message, conversationHistory, systemPrompt) {
     console.error('Full error:', error);
     throw error;
   }
-}
-
-// Fallback responses for when AI is unavailable
+}
 function getFallbackResponse(message) {
   const lowerMessage = message.toLowerCase();
   
@@ -233,9 +209,7 @@ function getFallbackResponse(message) {
   }
   
   return 'Hello! I\'m HealthSync AI, your intelligent assistant. I can help with a wide range of topics - from answering questions and explaining concepts to helping with creative projects and problem-solving. What would you like to explore today?';
-}
-
-// Get suggested questions based on context
+}
 router.get('/suggestions', (req, res) => {
   const { context } = req.query;
   
@@ -292,9 +266,7 @@ router.get('/suggestions', (req, res) => {
     suggestions: randomSuggestions,
     context: context || 'general'
   });
-});
-
-// Get AI provider status
+});
 router.get('/status', (req, res) => {
   const provider = process.env.AI_PROVIDER || 'gemini';
   const hasOpenAIKey = !!(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here');
@@ -313,7 +285,7 @@ router.get('/status', (req, res) => {
       openai: hasOpenAIKey,
       gemini: hasGeminiKey
     },
-    status: 'ready', // Always show as ready - fallback mode provides intelligent responses
+    status: 'ready', 
     fallbackMode: !((provider === 'openai' && hasOpenAI) || (provider === 'gemini' && hasGemini))
   });
 });
@@ -324,9 +296,7 @@ router.get('/health', (req, res) => {
     provider: process.env.AI_PROVIDER || 'gemini',
     timestamp: new Date().toISOString()
   });
-});
-
-// Health check endpoint
+});
 router.get('/health', (req, res) => {
   const provider = process.env.AI_PROVIDER || 'gemini';
   const isConfigured = (provider === 'openai' && openai) || (provider === 'gemini' && gemini);

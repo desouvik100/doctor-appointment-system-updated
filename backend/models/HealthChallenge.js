@@ -10,7 +10,7 @@ const healthChallengeSchema = new mongoose.Schema({
   },
   target: { type: Number, required: true },
   unit: String,
-  duration: { type: Number, required: true }, // days
+  duration: { type: Number, required: true }, 
   rewardPoints: { type: Number, default: 100 },
   badgeIcon: String,
   badgeName: String,

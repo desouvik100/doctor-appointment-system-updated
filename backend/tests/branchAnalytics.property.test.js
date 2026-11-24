@@ -1,27 +1,14 @@
-/**
- * Property-Based Tests for Branch Comparison Analytics
- * Feature: staff-presence-analytics
- * Property 12: Branch Aggregation Correctness
- * Property 13: Branch Normalization
- * Validates: Requirements 7.1, 7.2, 7.3, 7.4
- */
+
 
 const fc = require('fast-check');
 const mongoose = require('mongoose');
-const attendanceAnalytics = require('../services/attendanceAnalytics');
-
-// Helper to generate valid ObjectIds
+const attendanceAnalytics = require('../services/attendanceAnalytics');
 const objectIdArbitrary = fc.string({ 
   minLength: 24, 
   maxLength: 24 
-}).map(() => new mongoose.Types.ObjectId());
-
-// Valid role values
+}).map(() => new mongoose.Types.ObjectId());
 const validRoles = ['branch_admin', 'branch_manager', 'receptionist', 'doctor', 'nurse', 'pharmacist', 'lab_tech', 'accountant'];
 
-/**
- * Arbitrary for generating a staff member
- */
 const staffArbitrary = fc.record({
   _id: objectIdArbitrary,
   name: fc.string({ minLength: 1, maxLength: 50 }),
@@ -31,9 +18,6 @@ const staffArbitrary = fc.record({
   isActive: fc.boolean()
 });
 
-/**
- * Arbitrary for generating a check-in record
- */
 const checkInRecordArbitrary = fc.record({
   _id: objectIdArbitrary,
   staffId: objectIdArbitrary,
@@ -43,9 +27,6 @@ const checkInRecordArbitrary = fc.record({
   timestamp: fc.date({ min: new Date('2024-01-01'), max: new Date('2024-12-31') })
 });
 
-/**
- * Arbitrary for generating a check-out record with shift duration
- */
 const checkOutRecordArbitrary = fc.record({
   _id: objectIdArbitrary,
   staffId: objectIdArbitrary,
@@ -53,12 +34,9 @@ const checkOutRecordArbitrary = fc.record({
   organizationId: objectIdArbitrary,
   eventType: fc.constant('check_out'),
   timestamp: fc.date({ min: new Date('2024-01-01'), max: new Date('2024-12-31') }),
-  shiftDuration: fc.integer({ min: 60, max: 720 }) // 1-12 hours in minutes
+  shiftDuration: fc.integer({ min: 60, max: 720 }) 
 });
 
-/**
- * Arbitrary for generating branch data
- */
 const branchArbitrary = fc.record({
   _id: objectIdArbitrary,
   branchName: fc.string({ minLength: 1, maxLength: 30 }),
@@ -67,10 +45,7 @@ const branchArbitrary = fc.record({
   isActive: fc.constant(true)
 });
 
-describe('Branch Analytics - Property Tests', () => {
-
-  // Property 12: Branch Aggregation Correctness
-  // Validates: Requirements 7.1, 7.2, 7.3
+describe('Branch Analytics - Property Tests', () => {
   describe('Property 12: Branch Aggregation Correctness', () => {
 
     test('*For any* branch, staff count SHALL equal the number of active staff assigned to that branch', () => {
@@ -79,9 +54,7 @@ describe('Branch Analytics - Property Tests', () => {
           fc.array(staffArbitrary, { minLength: 0, maxLength: 50 }),
           objectIdArbitrary,
           (staffList, branchId) => {
-            const calculatedCount = attendanceAnalytics.calculateBranchStaffCount(staffList, branchId);
-            
-            // Manual count for verification
+            const calculatedCount = attendanceAnalytics.calculateBranchStaffCount(staffList, branchId);
             const expectedCount = staffList.filter(s => 
               s.branchId && s.branchId.toString() === branchId.toString() && s.isActive
             ).length;
@@ -131,8 +104,7 @@ describe('Branch Analytics - Property Tests', () => {
             if (checkInRecords.length === 0) {
               expect(result.peakHour).toBeNull();
               expect(result.count).toBe(0);
-            } else {
-              // Verify the peak hour has the maximum count
+            } else {
               const hourCounts = {};
               for (const record of checkInRecords) {
                 const hour = new Date(record.timestamp).getHours();
@@ -171,11 +143,7 @@ describe('Branch Analytics - Property Tests', () => {
       expect(result.peakHour).toBeNull();
       expect(result.count).toBe(0);
     });
-  });
-
-
-  // Property 13: Branch Normalization
-  // Validates: Requirements 7.4
+  });
   describe('Property 13: Branch Normalization', () => {
 
     test('*For any* branch, normalized hours SHALL equal total hours divided by staff count', () => {
@@ -227,15 +195,12 @@ describe('Branch Analytics - Property Tests', () => {
           fc.float({ min: 100, max: 1000, noNaN: true }),
           fc.integer({ min: 1, max: 100 }),
           fc.integer({ min: 1, max: 100 }),
-          (hoursPerStaff, smallBranchSize, largeBranchSize) => {
-            // Two branches with same hours per staff but different sizes
+          (hoursPerStaff, smallBranchSize, largeBranchSize) => {
             const smallBranchTotal = hoursPerStaff * smallBranchSize;
             const largeBranchTotal = hoursPerStaff * largeBranchSize;
             
             const smallNormalized = attendanceAnalytics.calculateNormalizedHours(smallBranchTotal, smallBranchSize);
-            const largeNormalized = attendanceAnalytics.calculateNormalizedHours(largeBranchTotal, largeBranchSize);
-            
-            // Normalized values should be approximately equal (within rounding tolerance)
+            const largeNormalized = attendanceAnalytics.calculateNormalizedHours(largeBranchTotal, largeBranchSize);
             expect(Math.abs(smallNormalized - largeNormalized)).toBeLessThan(0.02);
           }
         ),
@@ -248,22 +213,16 @@ describe('Branch Analytics - Property Tests', () => {
         fc.property(
           fc.float({ min: 10, max: 100, noNaN: true }),
           fc.integer({ min: 2, max: 10 }),
-          (baseHours, multiplier) => {
-            // Small branch: baseHours total, 1 staff
-            // Large branch: baseHours * multiplier total, multiplier staff
+          (baseHours, multiplier) => {
             const smallNormalized = attendanceAnalytics.calculateNormalizedHours(baseHours, 1);
-            const largeNormalized = attendanceAnalytics.calculateNormalizedHours(baseHours * multiplier, multiplier);
-            
-            // Should be equal (same efficiency)
+            const largeNormalized = attendanceAnalytics.calculateNormalizedHours(baseHours * multiplier, multiplier);
             expect(Math.abs(smallNormalized - largeNormalized)).toBeLessThan(0.02);
           }
         ),
         { numRuns: 50 }
       );
     });
-  });
-
-  // Additional integration-style property tests
+  });
   describe('Branch Comparison Integration Properties', () => {
 
     test('total hours across all branches equals sum of individual branch hours', () => {
@@ -313,20 +272,14 @@ describe('Branch Analytics - Property Tests', () => {
         fc.property(
           fc.array(staffArbitrary, { minLength: 0, maxLength: 50 }),
           fc.array(objectIdArbitrary, { minLength: 1, maxLength: 5 }),
-          (staffList, branchIds) => {
-            // Count staff per branch
+          (staffList, branchIds) => {
             const branchCounts = branchIds.map(branchId => 
               attendanceAnalytics.calculateBranchStaffCount(staffList, branchId)
-            );
-            
-            // Each count should be non-negative
+            );
             branchCounts.forEach(count => {
               expect(count).toBeGreaterThanOrEqual(0);
-            });
-            
-            // Total should not exceed total active staff
-            const totalActiveStaff = staffList.filter(s => s.isActive).length;
-            // Note: sum of branch counts could be less than total if some staff have different branchIds
+            });
+            const totalActiveStaff = staffList.filter(s => s.isActive).length;
             branchCounts.forEach(count => {
               expect(count).toBeLessThanOrEqual(totalActiveStaff);
             });
@@ -335,9 +288,7 @@ describe('Branch Analytics - Property Tests', () => {
         { numRuns: 50 }
       );
     });
-  });
-
-  // Edge cases
+  });
   describe('Edge Cases', () => {
     
     test('handles single staff member correctly', () => {
@@ -362,7 +313,7 @@ describe('Branch Analytics - Property Tests', () => {
       ];
       
       const count = attendanceAnalytics.calculateBranchStaffCount(staff, branchId);
-      expect(count).toBe(2); // Only active staff
+      expect(count).toBe(2); 
     });
 
     test('handles staff with null branchId', () => {

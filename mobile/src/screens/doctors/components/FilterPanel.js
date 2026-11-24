@@ -1,6 +1,4 @@
-/**
- * FilterPanel Component - Doctor search filters
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -123,7 +121,7 @@ const FilterPanel = ({
         />
         
         <View style={styles.container}>
-          {/* Header */}
+          {}
           <View style={styles.header}>
             <Text style={styles.title}>Filters</Text>
             <TouchableOpacity onPress={handleClear}>
@@ -131,14 +129,14 @@ const FilterPanel = ({
             </TouchableOpacity>
           </View>
 
-          {/* Handle */}
+          {}
           <View style={styles.handle} />
 
           <ScrollView 
             style={styles.content}
             showsVerticalScrollIndicator={false}
           >
-            {/* Specialization */}
+            {}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Specialization</Text>
               <View style={styles.chipContainer}>
@@ -153,7 +151,7 @@ const FilterPanel = ({
               </View>
             </View>
 
-            {/* Gender */}
+            {}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Gender</Text>
               <View style={styles.chipContainer}>
@@ -172,7 +170,7 @@ const FilterPanel = ({
               </View>
             </View>
 
-            {/* Experience */}
+            {}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Experience</Text>
               <View style={styles.chipContainer}>
@@ -187,7 +185,7 @@ const FilterPanel = ({
               </View>
             </View>
 
-            {/* Consultation Fee */}
+            {}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Consultation Fee</Text>
               <View style={styles.chipContainer}>
@@ -202,7 +200,7 @@ const FilterPanel = ({
               </View>
             </View>
 
-            {/* Rating */}
+            {}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Rating</Text>
               <View style={styles.chipContainer}>
@@ -217,7 +215,7 @@ const FilterPanel = ({
               </View>
             </View>
 
-            {/* Availability */}
+            {}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Availability</Text>
               <View style={styles.chipContainer}>
@@ -233,7 +231,7 @@ const FilterPanel = ({
             </View>
           </ScrollView>
 
-          {/* Actions */}
+          {}
           <View style={styles.actions}>
             <Button
               title="Apply Filters"

@@ -1,6 +1,4 @@
-/**
- * Medical Imaging Screen - View imaging reports and scans
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -48,12 +46,9 @@ const MedicalImagingScreen = ({ navigation }) => {
   const [downloading, setDownloading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const patientId = user?.id || user?._id;
-
-  // Handle DICOM file upload
+  const patientId = user?.id || user?._id;
   const handleUpload = async () => {
-    try {
-      // Pick DICOM files
+    try {
       const results = await DocumentPicker.pick({
         type: [DocumentPicker.types.allFiles],
         allowMultiSelection: true,
@@ -61,9 +56,7 @@ const MedicalImagingScreen = ({ navigation }) => {
 
       if (!results || results.length === 0) {
         return;
-      }
-
-      // Filter for DICOM files
+      }
       const dicomFiles = results.filter(file => {
         const ext = file.name?.toLowerCase().split('.').pop();
         return ['dcm', 'dicom', 'dic'].includes(ext) || file.type === 'application/dicom';
@@ -78,9 +71,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         return;
       }
 
-      setUploading(true);
-
-      // Create FormData for upload
+      setUploading(true);
       const formData = new FormData();
       dicomFiles.forEach((file, index) => {
         formData.append('files', {
@@ -89,9 +80,7 @@ const MedicalImagingScreen = ({ navigation }) => {
           name: file.name || `dicom_${index}.dcm`,
         });
       });
-      formData.append('patientId', patientId);
-
-      // Upload to server
+      formData.append('patientId', patientId);
       const response = await fetch(`${API_BASE_URL}/imaging/upload`, {
         method: 'POST',
         headers: {
@@ -113,8 +102,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         throw new Error(data.message || 'Upload failed');
       }
     } catch (error) {
-      if (DocumentPicker.isCancel(error)) {
-        // User cancelled - do nothing
+      if (DocumentPicker.isCancel(error)) {
         return;
       }
       console.error('Upload error:', error);
@@ -135,20 +123,14 @@ const MedicalImagingScreen = ({ navigation }) => {
     { id: 'MRI', label: 'MRI', emoji: '🧲' },
     { id: 'Ultrasound', label: 'Ultrasound', emoji: '📡' },
     { id: 'other', label: 'Other', emoji: '📷' },
-  ];
-
-  // Handle image download
+  ];
   const handleDownload = async () => {
     if (!selectedImage || !selectedReport) return;
 
     try {
-      setDownloading(true);
-      
-      // Build the correct download URL from the image's fileUrl
+      setDownloading(true);
       let imageUrl;
-      if (selectedImage.fileUrl) {
-        // fileUrl is like /uploads/imaging/patientId/filename
-        // Need to prepend the base URL (without /api)
+      if (selectedImage.fileUrl) {
         const baseUrl = API_BASE_URL.replace('/api', '');
         imageUrl = `${baseUrl}${selectedImage.fileUrl}`;
       } else if (selectedImage.url) {
@@ -159,9 +141,7 @@ const MedicalImagingScreen = ({ navigation }) => {
       
       console.log('Download URL:', imageUrl);
 
-      if (Platform.OS === 'android') {
-        // For Android 13+ (API 33+), we don't need WRITE_EXTERNAL_STORAGE
-        // For older versions, request permission
+      if (Platform.OS === 'android') {
         const androidVersion = Platform.Version;
         
         if (androidVersion < 33) {
@@ -189,9 +169,7 @@ const MedicalImagingScreen = ({ navigation }) => {
             return;
           }
         }
-      }
-
-      // Show download options
+      }
       Alert.alert(
         'Download Medical Image',
         `File: ${selectedImage.fileName || selectedImage.description}\n\nThis is a DICOM medical imaging file.`,
@@ -211,8 +189,7 @@ const MedicalImagingScreen = ({ navigation }) => {
           },
           {
             text: 'Copy URL',
-            onPress: () => {
-              // Import Clipboard if needed, for now just show the URL
+            onPress: () => {
               Alert.alert(
                 'File URL',
                 imageUrl,
@@ -228,14 +205,11 @@ const MedicalImagingScreen = ({ navigation }) => {
     } finally {
       setDownloading(false);
     }
-  };
-
-  // Handle image share
+  };
   const handleShare = async () => {
     if (!selectedImage || !selectedReport) return;
 
-    try {
-      // Build the correct URL
+    try {
       let imageUrl = '';
       if (selectedImage.fileUrl) {
         const baseUrl = API_BASE_URL.replace('/api', '');
@@ -257,8 +231,7 @@ const MedicalImagingScreen = ({ navigation }) => {
 
       const result = await Share.share(shareContent);
       
-      if (result.action === Share.sharedAction) {
-        // Successfully shared
+      if (result.action === Share.sharedAction) {
         console.log('Shared successfully');
       }
     } catch (error) {
@@ -270,23 +243,19 @@ const MedicalImagingScreen = ({ navigation }) => {
   useEffect(() => {
     if (patientId) {
       fetchReports();
-    } else {
-      // No user ID — show demo data immediately
+    } else {
       setReports(getDemoReports());
       setLoading(false);
     }
   }, [patientId]);
 
-  const fetchReports = async () => {
-    // Show demo data immediately so screen loads fast
+  const fetchReports = async () => {
     const demo = getDemoReports();
     setReports(demo);
-    setLoading(false);
-
-    // Then try to fetch real data in background (short timeout)
+    setLoading(false);
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 5000); // 5s max
+      const timeout = setTimeout(() => controller.abort(), 5000); 
 
       const response = await fetch(`${API_BASE_URL}/imaging/patient/${patientId}`, {
         headers: {
@@ -303,8 +272,7 @@ const MedicalImagingScreen = ({ navigation }) => {
           setReports(data.reports);
         }
       }
-    } catch {
-      // Silently keep demo data — no error shown
+    } catch {
     } finally {
       setRefreshing(false);
     }
@@ -514,7 +482,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
           
-          {/* Modal Header */}
+          {}
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setSelectedReport(null)} style={[styles.backButton, { backgroundColor: colors.surface }]}>
               <Text style={[styles.backEmoji, { color: colors.textPrimary }]}>←</Text>
@@ -524,7 +492,7 @@ const MedicalImagingScreen = ({ navigation }) => {
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-            {/* Report Info Card */}
+            {}
             <Card variant="gradient" style={styles.detailCard}>
               <View style={styles.detailHeader}>
                 <Text style={styles.detailEmoji}>{getImagingEmoji(selectedReport.imagingType)}</Text>
@@ -543,7 +511,7 @@ const MedicalImagingScreen = ({ navigation }) => {
               </View>
             </Card>
 
-            {/* Dates & Doctors */}
+            {}
             <Card variant="default" style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Study Information</Text>
               
@@ -565,7 +533,7 @@ const MedicalImagingScreen = ({ navigation }) => {
               )}
             </Card>
 
-            {/* Findings */}
+            {}
             {selectedReport.findings && (
               <Card variant="default" style={styles.infoCard}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Findings</Text>
@@ -573,7 +541,7 @@ const MedicalImagingScreen = ({ navigation }) => {
               </Card>
             )}
 
-            {/* Impression */}
+            {}
             {selectedReport.impression && (
               <Card variant="default" style={styles.infoCard}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Impression</Text>
@@ -581,7 +549,7 @@ const MedicalImagingScreen = ({ navigation }) => {
               </Card>
             )}
 
-            {/* Recommendations */}
+            {}
             {selectedReport.recommendations && (
               <Card variant="default" style={styles.infoCard}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recommendations</Text>
@@ -589,13 +557,12 @@ const MedicalImagingScreen = ({ navigation }) => {
               </Card>
             )}
 
-            {/* Images */}
+            {}
             {selectedReport.images && selectedReport.images.length > 0 && (
               <Card variant="default" style={styles.infoCard}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Images ({selectedReport.images.length})</Text>
                 <View style={styles.imagesGrid}>
-                  {selectedReport.images.map((img, index) => {
-                    // Get the image URL - check thumbnailUrl, url, or fileUrl
+                  {selectedReport.images.map((img, index) => {
                     const imageUrl = img.thumbnailUrl || img.url || (img.fileUrl ? `${API_BASE_URL.replace('/api', '')}${img.fileUrl}` : null);
                     
                     return (
@@ -628,7 +595,7 @@ const MedicalImagingScreen = ({ navigation }) => {
               </Card>
             )}
 
-            {/* No Report Yet */}
+            {}
             {!selectedReport.findings && !selectedReport.impression && (
               <Card variant="default" style={styles.infoCard}>
                 <View style={styles.pendingContainer}>
@@ -649,34 +616,22 @@ const MedicalImagingScreen = ({ navigation }) => {
   };
 
   const renderImageViewer = () => {
-    if (!selectedImage) return null;
-
-    // Build the image URL from available sources
-    const baseUrl = API_BASE_URL.replace('/api', '');
-    
-    // Check if we have a fileUrl that's a DICOM file - use render endpoint
+    if (!selectedImage) return null;
+    const baseUrl = API_BASE_URL.replace('/api', '');
     let imageUrl = selectedImage.thumbnailUrl || selectedImage.url;
     
-    if (!imageUrl && selectedImage.fileUrl) {
-      // fileUrl is like /uploads/imaging/patientId/filename.dcm
-      // Convert to render endpoint: /api/imaging/render/patientId/filename.dcm
+    if (!imageUrl && selectedImage.fileUrl) {
       const fileUrlParts = selectedImage.fileUrl.split('/');
       const filename = fileUrlParts.pop();
-      const patientIdFromPath = fileUrlParts.pop();
-      
-      // Use render endpoint for DICOM files
+      const patientIdFromPath = fileUrlParts.pop();
       if (filename.toLowerCase().endsWith('.dcm') || filename.toLowerCase().endsWith('.dicom')) {
         imageUrl = `${API_BASE_URL}/imaging/render/${patientIdFromPath}/${filename}`;
       } else {
         imageUrl = `${baseUrl}${selectedImage.fileUrl}`;
       }
-    }
-
-    // Debug logging
+    }
     console.log('selectedImage:', JSON.stringify(selectedImage, null, 2));
-    console.log('Built imageUrl:', imageUrl);
-
-    // Build metadata for the viewer
+    console.log('Built imageUrl:', imageUrl);
     const imageMetadata = {
       modality: selectedReport?.imagingType || 'IMG',
       bodyPart: selectedReport?.bodyPart || '',
@@ -708,7 +663,7 @@ const MedicalImagingScreen = ({ navigation }) => {
             showMetadata={true}
           />
           
-          {/* Footer with download/share buttons */}
+          {}
           <View style={styles.imageViewerFooter}>
             <TouchableOpacity 
               style={[styles.imageViewerButton, { backgroundColor: colors.primary }, downloading && styles.imageViewerButtonDisabled]} 
@@ -742,7 +697,7 @@ const MedicalImagingScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surface }]}>
           <Text style={[styles.backEmoji, { color: colors.textPrimary }]}>←</Text>
@@ -757,7 +712,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Banner */}
+      {}
       <LinearGradient
         colors={['#6366f1', '#8b5cf6']}
         start={{ x: 0, y: 0 }}
@@ -775,7 +730,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         </View>
       </LinearGradient>
 
-      {/* Filter Tabs */}
+      {}
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -804,7 +759,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         ))}
       </ScrollView>
 
-      {/* Reports List */}
+      {}
       {filteredReports.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>🩻</Text>
@@ -842,15 +797,14 @@ const MedicalImagingScreen = ({ navigation }) => {
         />
       )}
 
-      {/* Report Detail Modal */}
+      {}
       {renderReportDetail()}
       
-      {/* Image Viewer Modal */}
+      {}
       {renderImageViewer()}
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

@@ -28,7 +28,7 @@ const medicineReminderSchema = new mongoose.Schema({
   times: [{
     hour: { type: Number, min: 0, max: 23 },
     minute: { type: Number, min: 0, max: 59 },
-    label: { type: String } // 'Morning', 'Afternoon', 'Evening', 'Night'
+    label: { type: String } 
   }],
   timing: {
     type: String,
@@ -61,8 +61,7 @@ const medicineReminderSchema = new mongoose.Schema({
   notificationMinutesBefore: {
     type: Number,
     default: 5
-  },
-  // Track doses taken
+  },
   dosesTaken: [{
     scheduledTime: Date,
     takenAt: Date,
@@ -72,8 +71,7 @@ const medicineReminderSchema = new mongoose.Schema({
       default: 'pending'
     },
     notes: String
-  }],
-  // Stats
+  }],
   totalDoses: {
     type: Number,
     default: 0
@@ -89,29 +87,24 @@ const medicineReminderSchema = new mongoose.Schema({
   adherenceRate: {
     type: Number,
     default: 100
-  },
-  // Refill reminder
+  },
   pillCount: {
     type: Number
   },
   refillReminderAt: {
-    type: Number // Remind when pills reach this count
+    type: Number 
   },
   lastRefillDate: {
     type: Date
   }
 }, {
   timestamps: true
-});
-
-// Calculate adherence rate
+});
 medicineReminderSchema.methods.calculateAdherence = function() {
   if (this.totalDoses === 0) return 100;
   this.adherenceRate = Math.round((this.dosesTakenCount / this.totalDoses) * 100);
   return this.adherenceRate;
-};
-
-// Check if reminder is still active
+};
 medicineReminderSchema.methods.isStillActive = function() {
   if (!this.isActive) return false;
   if (this.endDate && new Date() > this.endDate) return false;

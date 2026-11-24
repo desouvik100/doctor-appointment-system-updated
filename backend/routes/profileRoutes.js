@@ -1,13 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-
-// Test route to verify profile routes are loaded
+const User = require('../models/User');
 router.get('/test', (req, res) => {
   res.json({ success: true, message: 'Profile routes are working!' });
-});
-
-// Update profile photo
+});
 router.post('/update-photo', async (req, res) => {
   try {
     const { userId, profilePhoto } = req.body;
@@ -22,9 +18,7 @@ router.post('/update-photo', async (req, res) => {
         success: false,
         message: 'User ID and profile photo are required'
       });
-    }
-
-    // Validate base64 image or URL
+    }
     const isBase64 = profilePhoto.startsWith('data:image/');
     const isUrl = profilePhoto.startsWith('http://') || profilePhoto.startsWith('https://');
 
@@ -34,9 +28,7 @@ router.post('/update-photo', async (req, res) => {
         success: false,
         message: 'Invalid profile photo format. Must be base64 image or URL.'
       });
-    }
-
-    // Update user profile photo
+    }
     const user = await User.findByIdAndUpdate(
       userId,
       { profilePhoto },
@@ -74,9 +66,7 @@ router.post('/update-photo', async (req, res) => {
       error: error.message
     });
   }
-});
-
-// Get user profile
+});
 router.get('/profile/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -110,9 +100,7 @@ router.get('/profile/:userId', async (req, res) => {
       error: error.message
     });
   }
-});
-
-// Delete profile photo
+});
 router.delete('/delete-photo/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -151,9 +139,7 @@ router.delete('/delete-photo/:userId', async (req, res) => {
       error: error.message
     });
   }
-});
-
-// Update full profile (name, phone, photo)
+});
 router.put('/update/:userId', async (req, res) => {
   try {
     const { userId } = req.params;

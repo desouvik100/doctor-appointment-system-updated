@@ -1,7 +1,4 @@
-/**
- * Enterprise Input Component
- * Accessible, validated text input with consistent styling
- */
+
 
 import React, { useState } from 'react';
 import {

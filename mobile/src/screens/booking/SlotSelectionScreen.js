@@ -1,7 +1,4 @@
-/**
- * SlotSelectionScreen - Queue-based and Slot-based appointment booking flow
- * Step 1: Select Type | Step 2: Smart Details & Symptoms | Step 3: Date & Slot Matrix
- */
+
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -15,9 +12,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
-import doctorService from '../../services/api/doctorService';
-
-// Independent Animated DateCell Component
+import doctorService from '../../services/api/doctorService';
 const DateCell = React.memo(({ day, isSelected, onSelect }) => {
   const { colors, isDarkMode } = useTheme();
   const animatedValue = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
@@ -26,7 +21,7 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
     Animated.timing(animatedValue, {
       toValue: isSelected ? 1 : 0,
       duration: 220,
-      useNativeDriver: false, // color interpolation not supported on native driver
+      useNativeDriver: false, 
     }).start();
   }, [isSelected]);
 
@@ -87,9 +82,7 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
       </TouchableOpacity>
     </Animated.View>
   );
-});
-
-// Independent Animated SlotCell Component
+});
 const SlotCell = React.memo(({ timeStr, isBooked, isSelected, onSelect }) => {
   const { colors, isDarkMode } = useTheme();
   const animatedValue = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
@@ -198,7 +191,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
   };
 
   const [consultationType, setConsultationType] = useState(route.params?.consultationType || null);
-  const [step, setStep] = useState(route.params?.consultationType ? 2 : 1); // 1=Type, 2=Smart Details, 3=Date & Slots
+  const [step, setStep] = useState(route.params?.consultationType ? 2 : 1); 
   const [selectedDate, setSelectedDate] = useState(route.params?.preselectedDate || null);
   const [selectedSlot, setSelectedSlot] = useState(route.params?.preselectedTime ? formatToTwelveHour(route.params?.preselectedTime) : null);
   const [reason, setReason] = useState('');
@@ -341,9 +334,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     if (!user) {
       Alert.alert('Login Required', 'Please login to book an appointment');
       return;
-    }
-
-    // Force clean database string primitives for IDs
+    }
     const rawUserId = user.id || user._id || user.userId;
     const cleanUserId = rawUserId && typeof rawUserId === 'object'
       ? String(rawUserId._id || rawUserId.id || '')
@@ -422,9 +413,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         paymentMethod: 'razorpay',
       },
     });
-  };
-
-  // Animated scale refs
+  };
   const scaleIn = useRef(new Animated.Value(1)).current;
   const scaleOut = useRef(new Animated.Value(1)).current;
 
@@ -456,9 +445,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       scaleRef: scaleOut,
       tag: 'Recommended',
     },
-  ];
-
-  // Render Step 1: Consultation Type with minimal pastel fills & solid borders
+  ];
   const renderTypeSelection = () => (
     <View style={styles.stepContent}>
       <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Consultation Type</Text>
@@ -467,9 +454,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       </Text>
 
       {CONSULT_TYPES.map(({ key, icon, title, desc, tag, wait, hours, scaleRef }) => {
-        const active = consultationType === key;
-        
-        // Solid border contrast and minimal pastel fills
+        const active = consultationType === key;
         let borderStyleColor = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
         let backgroundFillColor = colors.surface;
         
@@ -538,9 +523,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         </Text>
       </View>
     </View>
-  );
-
-  // Render Step 2: Smart Details & Symptoms
+  );
   const renderDetailsStep = () => {
     const URGENCY_CONFIG = {
       normal: { icon: '🟢', label: 'Normal', color: colors.success, bg: 'rgba(16,185,129,0.08)' },
@@ -555,7 +538,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           Provide context to help the clinic prepare for your consultation
         </Text>
 
-        {/* Symptoms */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Select Symptoms</Text>
@@ -593,7 +576,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Urgency */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Urgency Level</Text>
           <View style={styles.urgencyRow}>
@@ -627,7 +610,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Description */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Brief Description</Text>
           <TextInput
@@ -652,9 +635,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         </View>
       </View>
     );
-  };
-
-  // Render Step 3: Date & Slot Matrix
+  };
   const renderDateSelection = () => {
     const queueNum = queueInfo?.nextQueueNumber || 1;
     const queueCount = queueInfo?.currentQueueCount || 0;
@@ -696,7 +677,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           Select an available date and scheduled time slot
         </Text>
 
-        {/* Horizontal Scrollable Date ribbon */}
+        {}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesContainer}>
           {dates.map((day, index) => (
             <DateCell
@@ -705,7 +686,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
               isSelected={selectedDate === day.full}
               onSelect={() => {
                 setSelectedDate(day.full);
-                setSelectedSlot(null); // Reset slot choice when date changes
+                setSelectedSlot(null); 
                 setAvailableSlots([]);
                 setSlotsMessage('');
                 fetchQueueInfo(day.full);
@@ -714,7 +695,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           ))}
         </ScrollView>
 
-        {/* Live slots generated from the doctor's configured schedule. */}
+        {}
         {selectedDate && (
           <View style={styles.slotSection}>
             {slotsLoading ? (
@@ -731,7 +712,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Live Queue Tracker */}
+        {}
         {selectedDate && (
           <View style={styles.queueContainer}>
             <Text style={[styles.queueHeaderTitle, { color: colors.textPrimary }]}>Live Queue Status</Text>
@@ -811,7 +792,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Header Banner */}
+      {}
       <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
@@ -837,7 +818,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         <View style={{ width: 36 }} />
       </LinearGradient>
 
-      {/* Step Indicator Progress Bar */}
+      {}
       <View style={[styles.progressWrap, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F1F5F9' }]}>
         {['Type', 'Details', 'Date'].map((label, i) => {
           const s = i + 1;
@@ -896,7 +877,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         })}
       </View>
 
-      {/* Doctor Summary Header Card */}
+      {}
       <View style={[styles.doctorSummaryCard, { backgroundColor: colors.surface }]}>
         <View style={styles.doctorSummaryRow}>
           {activeDoc?.profilePhoto ? (
@@ -928,14 +909,14 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Scrollable Step Content */}
+      {}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {step === 1 && renderTypeSelection()}
         {step === 2 && renderDetailsStep()}
         {step === 3 && renderDateSelection()}
       </ScrollView>
 
-      {/* Bottom Sticky Action Button */}
+      {}
       <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#F1F5F9' }]}>
         {step === 1 && (
           <TouchableOpacity
@@ -1003,9 +984,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-
-  // Header Banner
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1023,9 +1002,7 @@ const styles = StyleSheet.create({
   backIcon: { fontSize: 18, color: '#fff', fontWeight: '700' },
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
-  headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2 },
-
-  // Progress Bar
+  headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2 },
   progressWrap: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1045,9 +1022,7 @@ const styles = StyleSheet.create({
   progressNum: { ...typography.labelSmall, fontWeight: '700' },
   progressCheck: { color: '#fff', fontSize: 12, fontWeight: '800' },
   progressLabel: { ...typography.labelSmall },
-  progressLine: { flex: 1, height: 2, marginHorizontal: spacing.sm, marginBottom: 18, borderRadius: 1 },
-
-  // Doctor Info Card Header
+  progressLine: { flex: 1, height: 2, marginHorizontal: spacing.sm, marginBottom: 18, borderRadius: 1 },
   doctorSummaryCard: {
     marginHorizontal: spacing.xl,
     borderRadius: borderRadius.lg,
@@ -1076,9 +1051,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 150 },
   stepContent: { paddingTop: spacing.md },
   stepTitle: { ...typography.headlineSmall, fontWeight: '800', marginBottom: spacing.xs },
-  stepSubtitle: { ...typography.bodyMedium, marginBottom: spacing.lg },
-
-  // Step 1: Type cards
+  stepSubtitle: { ...typography.bodyMedium, marginBottom: spacing.lg },
   typeCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1101,9 +1074,7 @@ const styles = StyleSheet.create({
   checkIcon: { color: '#fff', fontSize: 11, fontWeight: '900' },
   infoNote: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: borderRadius.lg, padding: spacing.md, marginTop: spacing.md, borderWidth: 1 },
   infoIcon: { fontSize: 16, marginRight: spacing.sm, marginTop: 1 },
-  infoText: { ...typography.bodySmall, flex: 1, lineHeight: 18 },
-
-  // Step 2: Assessment Grid
+  infoText: { ...typography.bodySmall, flex: 1, lineHeight: 18 },
   section: { marginBottom: spacing.lg },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   sectionTitle: { ...typography.bodyLarge, fontWeight: '700' },
@@ -1116,9 +1087,7 @@ const styles = StyleSheet.create({
   urgencyIcon: { fontSize: 16, marginRight: spacing.xs },
   urgencyText: { ...typography.labelMedium },
   reasonInput: { borderRadius: borderRadius.lg, padding: spacing.md, ...typography.bodyMedium, minHeight: 80 },
-  charCount: { ...typography.labelSmall, textAlign: 'right', marginTop: 4 },
-
-  // Step 3: Date selection (Horizontal strip ribbon)
+  charCount: { ...typography.labelSmall, textAlign: 'right', marginTop: 4 },
   datesContainer: { paddingVertical: spacing.md, paddingRight: spacing.xl, gap: spacing.sm },
   dateCard: { width: 70, height: 90, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: spacing.xs },
   dateDay: { ...typography.labelSmall, marginBottom: 2 },
@@ -1126,18 +1095,14 @@ const styles = StyleSheet.create({
   dateMonth: { ...typography.labelSmall, marginTop: 2 },
   todayDot: { position: 'absolute', bottom: 4, backgroundColor: '#00D4AA', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
   todayDotText: { color: '#fff', fontSize: 6, fontWeight: '700' },
-  closedBadge: { position: 'absolute', bottom: 4, fontSize: 8, fontWeight: '700' },
-
-  // Slot Matrix Styling (Responsive Multi-column Grid)
+  closedBadge: { position: 'absolute', bottom: 4, fontSize: 8, fontWeight: '700' },
   slotSection: { marginTop: spacing.md, marginBottom: spacing.lg },
   slotsLoading: { minHeight: 96, alignItems: 'center', justifyContent: 'center' },
   noSlotsText: { ...typography.bodyMedium, textAlign: 'center', paddingVertical: spacing.xl },
   slotSectionTitle: { ...typography.labelMedium, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.md, marginTop: spacing.lg },
   slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   slotChip: { width: '31%', paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
-  slotChipText: { fontSize: 11, fontFamily: 'Inter-SemiBold' },
-
-  // Queue Status Card
+  slotChipText: { fontSize: 11, fontFamily: 'Inter-SemiBold' },
   queueContainer: { marginTop: spacing.xl },
   queueHeaderTitle: { ...typography.bodyLarge, fontWeight: '700', marginBottom: spacing.md },
   queueCard: { borderRadius: borderRadius.xl, padding: spacing.lg, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 1 },
@@ -1152,9 +1117,7 @@ const styles = StyleSheet.create({
   queueBarWrap: { gap: 6 },
   queueBarTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
   queueBarFill: { height: '100%', borderRadius: 4 },
-  queueBarLabel: { fontSize: 10, fontWeight: '600' },
-
-  // Bottom action bar
+  queueBarLabel: { fontSize: 10, fontWeight: '600' },
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingHorizontal: spacing.xl, paddingTop: spacing.md, paddingBottom: spacing.xxl,

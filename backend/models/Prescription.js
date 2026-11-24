@@ -39,8 +39,7 @@ const medicineSchema = new mongoose.Schema({
 const prescriptionSchema = new mongoose.Schema({
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Appointment'
-    // Not required - prescriptions can be created without appointments (walk-ins, EMR)
+    ref: 'Appointment'
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -59,7 +58,7 @@ const prescriptionSchema = new mongoose.Schema({
   prescriptionNumber: {
     type: String,
     unique: true,
-    sparse: true // Allow null/undefined, but enforce uniqueness when present
+    sparse: true 
   },
   diagnosis: {
     type: String,
@@ -140,9 +139,7 @@ const prescriptionSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
-});
-
-// Generate prescription number
+});
 prescriptionSchema.pre('save', async function(next) {
   if (!this.prescriptionNumber) {
     const date = new Date();
@@ -153,9 +150,7 @@ prescriptionSchema.pre('save', async function(next) {
     this.prescriptionNumber = `RX${year}${month}${day}${random}`;
   }
   next();
-});
-
-// Virtual for medicine count
+});
 prescriptionSchema.virtual('medicineCount').get(function() {
   return this.medicines ? this.medicines.length : 0;
 });

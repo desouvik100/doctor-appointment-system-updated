@@ -1,12 +1,6 @@
-/**
- * Property-Based Tests for Multi-Panel Viewer
- * Feature: advanced-imaging
- * Properties 14, 15: Panel Synchronization and Imaging History
- */
 
-const fc = require('fast-check');
 
-// Mock panel state management
+const fc = require('fast-check');
 class PanelSyncManager {
   constructor(panelCount = 4) {
     this.panels = Array(panelCount).fill(null).map(() => ({
@@ -65,8 +59,7 @@ class PanelSyncManager {
     panel.totalSlices = totalSlices;
     const clampedSlice = Math.max(0, Math.min(sliceIndex, totalSlices - 1));
     
-    if (this.syncEnabled) {
-      // Sync slice as percentage of total
+    if (this.syncEnabled) {
       const percentage = totalSlices > 1 ? clampedSlice / (totalSlices - 1) : 0;
       this.panels.forEach(p => {
         if (p.totalSlices > 1) {
@@ -85,9 +78,7 @@ class PanelSyncManager {
   getAllPanels() {
     return this.panels;
   }
-}
-
-// Mock imaging history service
+}
 class ImagingHistoryService {
   constructor() {
     this.studies = [];
@@ -121,9 +112,7 @@ class ImagingHistoryService {
   }
 }
 
-describe('Multi-Panel Viewer - Property Tests', () => {
-
-  // Property 14: Panel Synchronization
+describe('Multi-Panel Viewer - Property Tests', () => {
   describe('Property 14: Panel Synchronization', () => {
     
     test('zoom synchronization applies to all panels when enabled', () => {
@@ -156,9 +145,7 @@ describe('Multi-Panel Viewer - Property Tests', () => {
           fc.integer({ min: 0, max: 3 }),
           (zoom, panelIndex) => {
             const manager = new PanelSyncManager(4);
-            manager.disableSync();
-            
-            // Set different initial zooms
+            manager.disableSync();
             manager.panels.forEach((p, i) => p.zoom = 1.0 + i * 0.1);
             
             manager.setZoom(panelIndex, zoom);
@@ -227,22 +214,14 @@ describe('Multi-Panel Viewer - Property Tests', () => {
 
     test('slice navigation syncs proportionally across different series', () => {
       const manager = new PanelSyncManager(2);
-      manager.enableSync();
-      
-      // Panel 0 has 100 slices, Panel 1 has 50 slices
+      manager.enableSync();
       manager.panels[0].totalSlices = 100;
-      manager.panels[1].totalSlices = 50;
-      
-      // Navigate to slice 50 (50% through) on panel 0
-      manager.setSlice(0, 50, 100);
-      
-      // Panel 1 should be at slice 25 (50% of 50)
+      manager.panels[1].totalSlices = 50;
+      manager.setSlice(0, 50, 100);
       expect(manager.panels[0].sliceIndex).toBe(50);
       expect(manager.panels[1].sliceIndex).toBe(25);
     });
-  });
-
-  // Property 15: Imaging History Retrieval
+  });
   describe('Property 15: Imaging History Retrieval', () => {
     
     test('studies are returned sorted by date (newest first)', () => {
@@ -356,9 +335,7 @@ describe('Multi-Panel Viewer - Property Tests', () => {
       const studies = service.getStudiesForPatient('non_existent');
       expect(studies.length).toBe(0);
     });
-  });
-
-  // Layout management
+  });
   describe('Layout Management', () => {
     
     test('panel count matches layout configuration', () => {

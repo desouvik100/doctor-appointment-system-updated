@@ -41,10 +41,8 @@ const paymentSchema = new mongoose.Schema(
     totalAmount: {
       type: Number,
       required: true
-    },
-    // ===== NEW: Detailed Financial Breakdown =====
-    financialBreakdown: {
-      // Platform commission details
+    },
+    financialBreakdown: {
       platformCommission: {
         type: {
           type: String,
@@ -52,25 +50,21 @@ const paymentSchema = new mongoose.Schema(
         },
         rate: Number,
         amount: Number
-      },
-      // GST on commission only (18%)
+      },
       gstOnCommission: {
         rate: Number,
         amount: Number
-      },
-      // Payment gateway charges
+      },
       paymentGatewayFee: {
         feePercentage: Number,
         feeAmount: Number,
         gstOnFee: Number,
         totalGatewayCharge: Number
-      },
-      // Net amounts
+      },
       netDoctorPayout: Number,
       netPlatformRevenue: Number,
       platformGSTLiability: Number
-    },
-    // Reference to financial ledger entry
+    },
     ledgerEntryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "FinancialLedger"

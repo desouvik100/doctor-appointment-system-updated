@@ -1,44 +1,28 @@
-/**
- * Jobs Index - Central Job Management
- * ====================================
- * Exports all automated jobs for easy initialization
- */
+
 
 const cleanupJobs = require('./cleanupJobs');
 const reminderJobs = require('./reminderJobs');
 const appointmentJobs = require('./appointmentJobs');
 const analyticsJobs = require('./analyticsJobs');
 
-/**
- * Initialize all automation jobs
- */
 function initializeAllJobs() {
   console.log('\n' + '='.repeat(70));
   console.log('🚀 INITIALIZING ALL AUTOMATION JOBS FOR SCALABILITY');
   console.log('='.repeat(70) + '\n');
 
-  try {
-    // Initialize cleanup jobs
+  try {
     cleanupJobs.initializeCleanupJobs();
-    console.log('');
-
-    // Initialize reminder jobs
+    console.log('');
     reminderJobs.initializeReminderJobs();
-    console.log('');
-
-    // Initialize appointment jobs
+    console.log('');
     appointmentJobs.initializeAppointmentJobs();
-    console.log('');
-
-    // Initialize analytics jobs
+    console.log('');
     analyticsJobs.initializeAnalyticsJobs();
     console.log('');
 
     console.log('='.repeat(70));
     console.log('✅ ALL AUTOMATION JOBS INITIALIZED SUCCESSFULLY');
-    console.log('='.repeat(70) + '\n');
-
-    // Log summary
+    console.log('='.repeat(70) + '\n');
     console.log('📋 JOB SUMMARY:');
     console.log('   🧹 Cleanup Jobs:');
     console.log('      - Daily cleanup: 3:00 AM');
@@ -69,9 +53,6 @@ function initializeAllJobs() {
   }
 }
 
-/**
- * Get status of all jobs
- */
 function getJobsStatus() {
   return {
     cleanupJobs: {
@@ -93,9 +74,6 @@ function getJobsStatus() {
   };
 }
 
-/**
- * Run all jobs manually (for testing or immediate execution)
- */
 async function runAllJobsManually() {
   console.log('\n' + '='.repeat(70));
   console.log('🔧 RUNNING ALL JOBS MANUALLY');

@@ -1,6 +1,4 @@
-/**
- * Insurance Screen - Manage insurance policies
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -24,18 +22,14 @@ const InsuranceScreen = ({ navigation }) => {
   const [policies, setPolicies] = useState([]);
 
   const fetchPolicies = useCallback(async () => {
-    try {
-      // Note: Backend doesn't have patient insurance endpoint yet
-      // This will gracefully fail and show empty state
+    try {
       const response = await apiClient.get(`/insurance/patient/${user?.id || user?._id}`).catch(() => null);
       if (response?.data?.policies) {
         setPolicies(response.data.policies);
-      } else {
-        // No policies endpoint - show empty state
+      } else {
         setPolicies([]);
       }
-    } catch (error) {
-      // Expected to fail - endpoint doesn't exist yet
+    } catch (error) {
       setPolicies([]);
     } finally {
       setLoading(false);

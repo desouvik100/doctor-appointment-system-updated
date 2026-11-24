@@ -1,8 +1,4 @@
-/**
- * HealthSync UI/UX Design Tokens
- * Standardizes spacing, corners, typography hierarchy, and color palettes.
- * Mapped to native Android / iOS specifications.
- */
+
 
 import { Dimensions as RNDimensions } from 'react-native';
 
@@ -10,9 +6,7 @@ const { width, height } = RNDimensions.get('window');
 
 export const Dimensions = {
   windowWidth: width,
-  windowHeight: height,
-  
-  // 8pt Grid Spacing System
+  windowHeight: height,
   spacing: {
     xs: 4,
     sm: 8,
@@ -22,9 +16,7 @@ export const Dimensions = {
     xxl: 24,
     xxxl: 32,
     huge: 48,
-  },
-  
-  // Corner Radii Tokens
+  },
   borderRadius: {
     xs: 4,
     sm: 8,
@@ -33,19 +25,17 @@ export const Dimensions = {
     xl: 20,
     xxl: 24,
     full: 9999,
-  },
-  
-  // Component Size Tokens
+  },
   components: {
     avatar: {
       small: 32,
       medium: 44,
       large: 56,
       xlarge: 80,
-      radius: 8, // Smoothly rounded profile container (8dp radius)
+      radius: 8, 
     },
     card: {
-      radius: 16, // Uniform corner radius of 16dp
+      radius: 16, 
       elevation: 2,
     },
     timeline: {
@@ -56,14 +46,11 @@ export const Dimensions = {
 };
 
 export const Colors = {
-  light: {
-    // Primary Brand Surface: Rich Slate / Deep Indigo (structural headers, primary text, brand containers)
+  light: {
     primaryBrand: '#1A1F2E', 
-    primaryText: '#1E293B',
-    // Action Accents: Calming Teal / Vibrant Cyan (primary actions, active states)
+    primaryText: '#1E293B',
     actionAccent: '#00B894', 
-    actionCyan: '#00D4AA',
-    // Neutral Backgrounds: Soft off-white
+    actionCyan: '#00D4AA',
     background: '#F8F9FA',
     surface: '#FFFFFF',
     surfaceBorder: 'rgba(0, 0, 0, 0.03)',

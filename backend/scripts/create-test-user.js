@@ -1,13 +1,10 @@
-// Script to create a test user account for Razorpay verification
-// Run this once on production to create the test account
+
 
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-// Test User Credentials for Razorpay Verification
+const MONGODB_URI = process.env.MONGODB_URI;
 const TEST_USER = {
   name: 'Razorpay Test User',
   email: 'testuser@healthsync.com',
@@ -36,9 +33,7 @@ async function createTestUser() {
   try {
     console.log('🔄 Connecting to MongoDB...');
     await mongoose.connect(MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
-
-    // Define User schema inline (to avoid import issues)
+    console.log('✅ Connected to MongoDB');
     const userSchema = new mongoose.Schema({
       name: String,
       email: { type: String, unique: true, lowercase: true },
@@ -64,9 +59,7 @@ async function createTestUser() {
       createdAt: { type: Date, default: Date.now }
     }, { collection: 'users' });
 
-    const User = mongoose.models.User || mongoose.model('User', userSchema);
-
-    // Check if test user already exists
+    const User = mongoose.models.User || mongoose.model('User', userSchema);
     const existingUser = await User.findOne({ email: TEST_USER.email });
     
     if (existingUser) {
@@ -79,12 +72,9 @@ async function createTestUser() {
       console.log('   Password: Test@123456');
       console.log('═══════════════════════════════════════════════════════');
       console.log('');
-    } else {
-      // Hash password
+    } else {
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(TEST_USER.password, salt);
-
-      // Create test user
+      const hashedPassword = await bcrypt.hash(TEST_USER.password, salt);
       const testUser = new User({
         ...TEST_USER,
         password: hashedPassword

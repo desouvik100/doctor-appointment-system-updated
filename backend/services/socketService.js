@@ -1,8 +1,8 @@
-// Socket.io service for WebRTC signaling
+
 const socketIO = require('socket.io');
 
 let io;
-const activeConsultations = new Map(); // Store active consultation rooms
+const activeConsultations = new Map(); 
 
 const initializeSocket = (server) => {
   io = socketIO(server, {
@@ -14,9 +14,7 @@ const initializeSocket = (server) => {
   });
 
   io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
-
-    // Join consultation room
+    console.log('New client connected:', socket.id);
     socket.on('join-consultation', ({ appointmentId, userId, userType }) => {
       socket.join(appointmentId);
       
@@ -34,23 +32,17 @@ const initializeSocket = (server) => {
         userType
       });
 
-      console.log(`User ${userId} (${userType}) joined consultation ${appointmentId}`);
-
-      // Notify other participants
+      console.log(`User ${userId} (${userType}) joined consultation ${appointmentId}`);
       socket.to(appointmentId).emit('user-joined', {
         userId,
         userType,
         socketId: socket.id
-      });
-
-      // Send existing participants to the new user
+      });
       const otherParticipants = consultation.participants.filter(
         p => p.socketId !== socket.id
       );
       socket.emit('existing-participants', otherParticipants);
-    });
-
-    // WebRTC signaling
+    });
     socket.on('offer', ({ appointmentId, offer, to }) => {
       socket.to(to).emit('offer', {
         offer,
@@ -70,9 +62,7 @@ const initializeSocket = (server) => {
         candidate,
         from: socket.id
       });
-    });
-
-    // Media controls
+    });
     socket.on('toggle-audio', ({ appointmentId, enabled }) => {
       socket.to(appointmentId).emit('peer-audio-toggle', {
         socketId: socket.id,
@@ -85,16 +75,13 @@ const initializeSocket = (server) => {
         socketId: socket.id,
         enabled
       });
-    });
-
-    // Leave consultation
+    });
     socket.on('leave-consultation', ({ appointmentId }) => {
       handleLeaveConsultation(socket, appointmentId);
     });
 
     socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
-      // Find and clean up any consultations this socket was part of
+      console.log('Client disconnected:', socket.id);
       activeConsultations.forEach((consultation, appointmentId) => {
         const participant = consultation.participants.find(
           p => p.socketId === socket.id
@@ -114,14 +101,10 @@ const handleLeaveConsultation = (socket, appointmentId) => {
   if (consultation) {
     consultation.participants = consultation.participants.filter(
       p => p.socketId !== socket.id
-    );
-
-    // Notify others
+    );
     socket.to(appointmentId).emit('user-left', {
       socketId: socket.id
-    });
-
-    // Clean up if no participants left
+    });
     if (consultation.participants.length === 0) {
       const duration = Math.floor((new Date() - consultation.startTime) / 1000);
       activeConsultations.delete(appointmentId);

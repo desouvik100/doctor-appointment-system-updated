@@ -1,18 +1,12 @@
 const mongoose = require('mongoose');
-require('dotenv').config();
-
-// Import User model
+require('dotenv').config();
 const User = require('../models/User');
 
 const checkAdmin = async () => {
   try {
-    console.log('🔍 Checking admin user in database...');
-    
-    // Connect to MongoDB
+    console.log('🔍 Checking admin user in database...');
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
-    
-    // Find admin user
+    console.log('✅ Connected to MongoDB');
     const adminEmail = 'admin@healthsyncpro.in';
     const admin = await User.findOne({ email: adminEmail });
     
@@ -26,13 +20,9 @@ const checkAdmin = async () => {
       console.log('🆔 ID:', admin._id);
       console.log('🔐 Password Hash:', admin.password ? 'Present' : 'Missing');
     } else {
-      console.log('❌ Admin user not found!');
-      
-      // Check if any users exist
+      console.log('❌ Admin user not found!');
       const userCount = await User.countDocuments();
-      console.log('👥 Total users in database:', userCount);
-      
-      // Check if any admin users exist
+      console.log('👥 Total users in database:', userCount);
       const adminCount = await User.countDocuments({ role: 'admin' });
       console.log('👑 Total admin users:', adminCount);
     }

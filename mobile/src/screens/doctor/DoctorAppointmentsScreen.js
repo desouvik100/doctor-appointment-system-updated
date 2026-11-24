@@ -1,6 +1,4 @@
-/**
- * Doctor Appointments Screen - View and manage appointments
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -21,7 +19,7 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [appointments, setAppointments] = useState([]);
-  const [filter, setFilter] = useState('all'); // all, today, upcoming, completed
+  const [filter, setFilter] = useState('all'); 
 
   const fetchAppointments = useCallback(async () => {
     try {
@@ -136,12 +134,12 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Appointments</Text>
       </View>
 
-      {/* Filters */}
+      {}
       <View style={styles.filters}>
         <FilterButton label="All" value="all" />
         <FilterButton label="Today" value="today" />
@@ -149,7 +147,7 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
         <FilterButton label="Completed" value="completed" />
       </View>
 
-      {/* Appointments List */}
+      {}
       <FlatList
         data={appointments}
         renderItem={renderAppointment}

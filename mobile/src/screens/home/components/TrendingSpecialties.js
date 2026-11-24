@@ -1,6 +1,4 @@
-/**
- * TrendingSpecialties - Compact specialty selection pills
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';

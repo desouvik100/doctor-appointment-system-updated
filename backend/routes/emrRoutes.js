@@ -1,7 +1,4 @@
-/**
- * EMR Routes
- * Handles EMR subscription, screen access, and core EMR functionality
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -17,21 +14,12 @@ const {
   SUBSCRIPTION_PLANS,
   getScreensForPlan,
   getScreensForRole 
-} = require('../config/emrConfig');
-
-// Helper function to check if user has access to patient data
-// Allows: admin, doctor, staff, receptionist, or the patient themselves
+} = require('../config/emrConfig');
 const hasPatientAccess = (userRole, userId, patientId) => {
   const allowedRoles = ['admin', 'doctor', 'staff', 'receptionist'];
   return allowedRoles.includes(userRole) || userId === patientId;
-};
+};
 
-// ===== SUBSCRIPTION ROUTES =====
-
-/**
- * Get all available EMR plans
- * Public route for plan comparison
- */
 router.get('/plans', (req, res) => {
   try {
     const plans = EMRSubscriptionService.getPlans();
@@ -48,9 +36,6 @@ router.get('/plans', (req, res) => {
   }
 });
 
-/**
- * Get specific plan details
- */
 router.get('/plans/:planId', (req, res) => {
   try {
     const plan = EMRSubscriptionService.getPlanDetails(req.params.planId);
@@ -60,9 +45,7 @@ router.get('/plans/:planId', (req, res) => {
         success: false,
         message: 'Plan not found'
       });
-    }
-    
-    // Get screens for this plan
+    }
     const screens = getScreensForPlan(req.params.planId);
     
     res.json({
@@ -79,9 +62,6 @@ router.get('/plans/:planId', (req, res) => {
   }
 });
 
-/**
- * Create subscription order
- */
 router.post('/subscribe', verifyToken, async (req, res) => {
   try {
     const { clinicId, planId, duration } = req.body;
@@ -114,9 +94,6 @@ router.post('/subscribe', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Verify payment and activate subscription
- */
 router.post('/verify-payment', verifyToken, async (req, res) => {
   try {
     const result = await EMRSubscriptionService.verifyAndActivate(req.body);
@@ -134,9 +111,6 @@ router.post('/verify-payment', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get clinic's active subscription
- */
 router.get('/subscription/:clinicId', verifyToken, async (req, res) => {
   try {
     const subscription = await EMRSubscriptionService.getActiveSubscription(
@@ -157,9 +131,6 @@ router.get('/subscription/:clinicId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get subscription history
- */
 router.get('/subscription/:clinicId/history', verifyToken, async (req, res) => {
   try {
     const history = await EMRSubscriptionService.getSubscriptionHistory(
@@ -179,9 +150,6 @@ router.get('/subscription/:clinicId/history', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Upgrade subscription plan
- */
 router.post('/upgrade', verifyToken, async (req, res) => {
   try {
     const { clinicId, newPlanId } = req.body;
@@ -206,9 +174,6 @@ router.post('/upgrade', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Renew subscription
- */
 router.post('/renew', verifyToken, async (req, res) => {
   try {
     const { clinicId, duration } = req.body;
@@ -233,9 +198,6 @@ router.post('/renew', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Toggle auto-renewal
- */
 router.post('/auto-renew', verifyToken, async (req, res) => {
   try {
     const { clinicId, enabled } = req.body;
@@ -253,13 +215,8 @@ router.post('/auto-renew', verifyToken, async (req, res) => {
       message: error.message || 'Error updating auto-renewal'
     });
   }
-});
+});
 
-// ===== SCREEN ACCESS ROUTES =====
-
-/**
- * Get available screens for user
- */
 router.get('/screens/:clinicId', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -280,9 +237,6 @@ router.get('/screens/:clinicId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Check access to specific screen
- */
 router.get('/access/:clinicId/:screenId', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -338,14 +292,9 @@ router.get('/access/:clinicId/:screenId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get all EMR screens (for admin/documentation)
- */
 router.get('/all-screens', (req, res) => {
   try {
-    const screens = Object.values(EMR_SCREENS);
-    
-    // Group by plan
+    const screens = Object.values(EMR_SCREENS);
     const grouped = {
       basic: screens.filter(s => s.plan === 'basic'),
       standard: screens.filter(s => s.plan === 'standard'),
@@ -364,9 +313,7 @@ router.get('/all-screens', (req, res) => {
       error: error.message
     });
   }
-});
-
-// ===== EMR DASHBOARD ROUTES =====
+});
 
 const EMRVisit = require('../models/EMRVisit');
 const User = require('../models/User');
@@ -374,10 +321,6 @@ const EMRAuditLog = require('../models/EMRAuditLog');
 const Appointment = require('../models/Appointment');
 const FollowUp = require('../models/FollowUp');
 
-/**
- * Get EMR dashboard stats
- * Requires active subscription with advanced plan
- */
 router.get('/dashboard/:clinicId/stats', 
   verifyToken, 
   checkEMRAccess('emr_dashboard'),
@@ -453,9 +396,6 @@ router.get('/dashboard/:clinicId/stats',
   }
 );
 
-/**
- * Get today's appointments for dashboard
- */
 router.get('/dashboard/:clinicId/today-appointments', 
   verifyToken, 
   checkEMRAccess('emr_dashboard'),
@@ -467,9 +407,7 @@ router.get('/dashboard/:clinicId/today-appointments',
       today.setHours(0, 0, 0, 0);
       
       const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      // Try to get from Appointments first, fallback to EMRVisit
+      tomorrow.setDate(tomorrow.getDate() + 1);
       let appointments = [];
       
       try {
@@ -482,8 +420,7 @@ router.get('/dashboard/:clinicId/today-appointments',
         .sort({ appointmentTime: 1 })
         .limit(20)
         .lean();
-      } catch (e) {
-        // Fallback to EMRVisit
+      } catch (e) {
         appointments = await EMRVisit.find({
           clinicId,
           visitDate: { $gte: today, $lt: tomorrow }
@@ -518,9 +455,6 @@ router.get('/dashboard/:clinicId/today-appointments',
   }
 );
 
-/**
- * Get recent activity for dashboard
- */
 router.get('/dashboard/:clinicId/recent-activity', 
   verifyToken, 
   checkEMRAccess('emr_dashboard'),
@@ -547,10 +481,6 @@ router.get('/dashboard/:clinicId/recent-activity',
   }
 );
 
-/**
- * Get EMR dashboard data (legacy route)
- * Requires active subscription
- */
 router.get('/dashboard/:clinicId', 
   verifyToken, 
   checkEMRAccess('emr_dashboard'),
@@ -584,13 +514,8 @@ router.get('/dashboard/:clinicId',
       });
     }
   }
-);
+);
 
-// ===== ANALYTICS ROUTES =====
-
-/**
- * Get audit logs for clinic
- */
 router.get('/audit/:clinicId',
   verifyToken,
   checkEMRAccess('audit_logs'),
@@ -641,9 +566,6 @@ router.get('/audit/:clinicId',
   }
 );
 
-/**
- * Get patient audit trail
- */
 router.get('/audit/:clinicId/patient/:patientId',
   verifyToken,
   checkEMRAccess('audit_logs'),
@@ -667,9 +589,6 @@ router.get('/audit/:clinicId/patient/:patientId',
   }
 );
 
-/**
- * Get analytics overview
- */
 router.get('/analytics/:clinicId/overview',
   verifyToken,
   checkEMRAccess('analytics_reports'),
@@ -713,7 +632,7 @@ router.get('/analytics/:clinicId/overview',
           previousPeriodVisits,
           newPatients,
           avgVisitsPerDay: totalVisits / daysDiff,
-          totalRevenue: 0, // Would need Payment model integration
+          totalRevenue: 0, 
           visitTypeDistribution: visitTypeAgg.map(v => ({ type: v._id || 'unknown', count: v.count }))
         }
       });
@@ -727,9 +646,6 @@ router.get('/analytics/:clinicId/overview',
   }
 );
 
-/**
- * Get visit trends
- */
 router.get('/analytics/:clinicId/visit-trends',
   verifyToken,
   checkEMRAccess('analytics_reports'),
@@ -777,9 +693,6 @@ router.get('/analytics/:clinicId/visit-trends',
   }
 );
 
-/**
- * Get patient statistics
- */
 router.get('/analytics/:clinicId/patient-stats',
   verifyToken,
   checkEMRAccess('analytics_reports'),
@@ -856,9 +769,6 @@ router.get('/analytics/:clinicId/patient-stats',
   }
 );
 
-/**
- * Get revenue statistics
- */
 router.get('/analytics/:clinicId/revenue',
   verifyToken,
   checkEMRAccess('analytics_reports'),
@@ -869,9 +779,7 @@ router.get('/analytics/:clinicId/revenue',
       
       const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const end = endDate ? new Date(endDate) : new Date();
-      end.setHours(23, 59, 59, 999);
-      
-      // Try to get Payment model if it exists
+      end.setHours(23, 59, 59, 999);
       let Payment;
       try {
         Payment = require('../models/Payment');
@@ -935,15 +843,10 @@ router.get('/analytics/:clinicId/revenue',
       });
     }
   }
-);
-
-// ===== STAFF MANAGEMENT ROUTES =====
+);
 
 const ClinicStaffService = require('../services/clinicStaffService');
 
-/**
- * Get clinic staff list
- */
 router.get('/staff/:clinicId',
   verifyToken,
   async (req, res) => {
@@ -973,9 +876,6 @@ router.get('/staff/:clinicId',
   }
 );
 
-/**
- * Invite staff member
- */
 router.post('/staff/:clinicId/invite',
   verifyToken,
   checkEMRAccess('staff_management'),
@@ -1000,9 +900,6 @@ router.post('/staff/:clinicId/invite',
   }
 );
 
-/**
- * Update staff role
- */
 router.put('/staff/:clinicId/:staffId/role',
   verifyToken,
   checkEMRAccess('staff_management'),
@@ -1027,9 +924,6 @@ router.put('/staff/:clinicId/:staffId/role',
   }
 );
 
-/**
- * Deactivate staff member
- */
 router.put('/staff/:clinicId/:staffId/deactivate',
   verifyToken,
   checkEMRAccess('staff_management'),
@@ -1054,9 +948,6 @@ router.put('/staff/:clinicId/:staffId/deactivate',
   }
 );
 
-/**
- * Reactivate staff member
- */
 router.put('/staff/:clinicId/:staffId/reactivate',
   verifyToken,
   checkEMRAccess('staff_management'),
@@ -1080,9 +971,6 @@ router.put('/staff/:clinicId/:staffId/reactivate',
   }
 );
 
-/**
- * Resend invitation
- */
 router.post('/staff/:clinicId/:staffId/resend-invite',
   verifyToken,
   checkEMRAccess('staff_management'),
@@ -1104,25 +992,18 @@ router.post('/staff/:clinicId/:staffId/resend-invite',
       });
     }
   }
-);
-
-// ===== DATA EXPORT ROUTES =====
+);
 
 const PDFDocument = require('pdfkit');
 const Prescription = require('../models/Prescription');
 const SystematicHistory = require('../models/SystematicHistory');
 
-/**
- * Get export history
- */
 router.get('/export/:clinicId/history',
   verifyToken,
   checkEMRAccess('data_export'),
   async (req, res) => {
     try {
-      const { clinicId } = req.params;
-      
-      // For now, return empty array - could be stored in a separate collection
+      const { clinicId } = req.params;
       res.json({
         success: true,
         exports: []
@@ -1137,9 +1018,6 @@ router.get('/export/:clinicId/history',
   }
 );
 
-/**
- * Generate PDF export
- */
 router.post('/export/generate',
   verifyToken,
   checkEMRAccess('data_export'),
@@ -1159,25 +1037,19 @@ router.post('/export/generate',
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename=export_${Date.now()}.pdf`);
       
-      doc.pipe(res);
-      
-      // Header
+      doc.pipe(res);
       doc.fontSize(20).text('HealthSync EMR Export', { align: 'center' });
       doc.fontSize(10).text(`Generated on: ${new Date().toLocaleString('en-IN')}`, { align: 'center' });
       doc.moveDown(2);
       
-      if (exportType === 'bulk_patients' && patientIds?.length > 0) {
-        // Bulk export
+      if (exportType === 'bulk_patients' && patientIds?.length > 0) {
         for (let i = 0; i < patientIds.length; i++) {
           if (i > 0) doc.addPage();
           await generatePatientSection(doc, patientIds[i], clinicId, dateRange, includeOptions);
         }
-      } else if (patientId) {
-        // Single patient export
+      } else if (patientId) {
         await generatePatientSection(doc, patientId, clinicId, dateRange, includeOptions);
-      }
-      
-      // Footer
+      }
       doc.fontSize(8).text('EMR powered by HealthSync', 50, doc.page.height - 50, { align: 'center' });
       
       doc.end();
@@ -1200,9 +1072,7 @@ async function generatePatientSection(doc, patientId, clinicId, dateRange, inclu
     if (!patient) {
       doc.fontSize(12).text('Patient not found', { align: 'center' });
       return;
-    }
-    
-    // Patient Info
+    }
     doc.fontSize(16).text('Patient Information', { underline: true });
     doc.moveDown(0.5);
     doc.fontSize(11);
@@ -1216,9 +1086,7 @@ async function generatePatientSection(doc, patientId, clinicId, dateRange, inclu
     
     const start = dateRange?.startDate ? new Date(dateRange.startDate) : new Date(0);
     const end = dateRange?.endDate ? new Date(dateRange.endDate) : new Date();
-    end.setHours(23, 59, 59, 999);
-    
-    // Visit History
+    end.setHours(23, 59, 59, 999);
     if (includeOptions?.visitHistory) {
       doc.fontSize(14).text('Visit History', { underline: true });
       doc.moveDown(0.5);
@@ -1246,9 +1114,7 @@ async function generatePatientSection(doc, patientId, clinicId, dateRange, inclu
         });
       }
       doc.moveDown();
-    }
-    
-    // Prescriptions
+    }
     if (includeOptions?.prescriptions) {
       doc.fontSize(14).text('Prescriptions', { underline: true });
       doc.moveDown(0.5);
@@ -1264,8 +1130,7 @@ async function generatePatientSection(doc, patientId, clinicId, dateRange, inclu
         .sort({ createdAt: -1 })
         .limit(30)
         .lean();
-      } catch (e) {
-        // Prescription model might not exist
+      } catch (e) {
       }
       
       if (prescriptions.length === 0) {
@@ -1282,9 +1147,7 @@ async function generatePatientSection(doc, patientId, clinicId, dateRange, inclu
         });
       }
       doc.moveDown();
-    }
-    
-    // Clinical Notes
+    }
     if (includeOptions?.clinicalNotes) {
       doc.fontSize(14).text('Clinical Notes', { underline: true });
       doc.moveDown(0.5);
@@ -1310,9 +1173,7 @@ async function generatePatientSection(doc, patientId, clinicId, dateRange, inclu
         });
       }
       doc.moveDown();
-    }
-    
-    // Systematic History
+    }
     if (includeOptions?.systematicHistory) {
       doc.fontSize(14).text('Systematic History', { underline: true });
       doc.moveDown(0.5);
@@ -1325,8 +1186,7 @@ async function generatePatientSection(doc, patientId, clinicId, dateRange, inclu
         })
         .sort({ createdAt: -1 })
         .lean();
-      } catch (e) {
-        // Model might not exist
+      } catch (e) {
       }
       
       if (!history) {
@@ -1357,10 +1217,7 @@ function calculateAge(dateOfBirth) {
     age--;
   }
   return age;
-}
-
-
-// ===== LAB ORDER ROUTES =====
+}
 
 const {
   getTestCatalog,
@@ -1376,10 +1233,6 @@ const {
   getOrderStats
 } = require('../services/labOrderService');
 
-/**
- * GET /api/emr/lab-tests/catalog
- * Get complete lab test catalog with tests and panels
- */
 router.get('/lab-tests/catalog', verifyToken, async (req, res) => {
   try {
     const catalog = getTestCatalog();
@@ -1397,10 +1250,6 @@ router.get('/lab-tests/catalog', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/emr/lab-tests/search
- * Search lab tests and panels by query
- */
 router.get('/lab-tests/search', verifyToken, async (req, res) => {
   try {
     const { q } = req.query;
@@ -1427,16 +1276,10 @@ router.get('/lab-tests/search', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/emr/lab-orders
- * Create new lab order
- */
 router.post('/lab-orders', verifyToken, async (req, res) => {
   try {
     const orderData = req.body;
-    const orderedBy = req.user.id;
-    
-    // Validate required fields
+    const orderedBy = req.user.id;
     if (!orderData.patientId || !orderData.clinicId || !orderData.visitId) {
       return res.status(400).json({
         success: false,
@@ -1449,14 +1292,11 @@ router.post('/lab-orders', verifyToken, async (req, res) => {
         success: false,
         message: 'At least one test or panel must be selected'
       });
-    }
-    
-    // Check access permissions
+    }
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin') {
-      // Check if user has access to this patient/visit
+    if (userRole !== 'admin') {
       const hasAccess = await EMRVisit.findOne({
         _id: orderData.visitId,
         $or: [
@@ -1490,10 +1330,6 @@ router.post('/lab-orders', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/emr/lab-orders/:orderId
- * Get specific lab order details
- */
 router.get('/lab-orders/:orderId', verifyToken, async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -1504,9 +1340,7 @@ router.get('/lab-orders/:orderId', verifyToken, async (req, res) => {
         success: false,
         message: 'Lab order not found'
       });
-    }
-    
-    // Check access permissions
+    }
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -1533,10 +1367,6 @@ router.get('/lab-orders/:orderId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * PUT /api/emr/lab-orders/:orderId/status
- * Update lab order status
- */
 router.put('/lab-orders/:orderId/status', verifyToken, async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -1548,9 +1378,7 @@ router.put('/lab-orders/:orderId/status', verifyToken, async (req, res) => {
         success: false,
         message: 'Status is required'
       });
-    }
-    
-    // Check if order exists and user has access
+    }
     const existingOrder = await getOrder(orderId);
     if (!existingOrder) {
       return res.status(404).json({
@@ -1586,10 +1414,6 @@ router.put('/lab-orders/:orderId/status', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * PUT /api/emr/lab-orders/:orderId/tests/:testCode/status
- * Update individual test status
- */
 router.put('/lab-orders/:orderId/tests/:testCode/status', verifyToken, async (req, res) => {
   try {
     const { orderId, testCode } = req.params;
@@ -1601,9 +1425,7 @@ router.put('/lab-orders/:orderId/tests/:testCode/status', verifyToken, async (re
         success: false,
         message: 'Status is required'
       });
-    }
-    
-    // Check if order exists and user has access
+    }
     const existingOrder = await getOrder(orderId);
     if (!existingOrder) {
       return res.status(404).json({
@@ -1639,10 +1461,6 @@ router.put('/lab-orders/:orderId/tests/:testCode/status', verifyToken, async (re
   }
 });
 
-/**
- * POST /api/emr/lab-orders/:orderId/tests/:testCode/results
- * Add test results
- */
 router.post('/lab-orders/:orderId/tests/:testCode/results', verifyToken, async (req, res) => {
   try {
     const { orderId, testCode } = req.params;
@@ -1654,9 +1472,7 @@ router.post('/lab-orders/:orderId/tests/:testCode/results', verifyToken, async (
         success: false,
         message: 'Results values array is required'
       });
-    }
-    
-    // Check if order exists and user has access
+    }
     const existingOrder = await getOrder(orderId);
     if (!existingOrder) {
       return res.status(404).json({
@@ -1692,10 +1508,6 @@ router.post('/lab-orders/:orderId/tests/:testCode/results', verifyToken, async (
   }
 });
 
-/**
- * GET /api/emr/patients/:patientId/lab-orders
- * Get lab orders for a patient
- */
 router.get('/patients/:patientId/lab-orders', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -1706,14 +1518,11 @@ router.get('/patients/:patientId/lab-orders', verifyToken, async (req, res) => {
       endDate, 
       page = 1, 
       limit = 20 
-    } = req.query;
-    
-    // Check access permissions
+    } = req.query;
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (!hasPatientAccess(userRole, userId, patientId)) {
-      // Check if user has access via EMRVisit
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -1755,10 +1564,6 @@ router.get('/patients/:patientId/lab-orders', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/emr/clinics/:clinicId/lab-orders
- * Get lab orders for a clinic
- */
 router.get('/clinics/:clinicId/lab-orders', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -1768,10 +1573,7 @@ router.get('/clinics/:clinicId/lab-orders', verifyToken, async (req, res) => {
       endDate, 
       page = 1, 
       limit = 50 
-    } = req.query;
-    
-    // Check clinic access permissions would go here
-    // For now, assuming user has access if they're authenticated
+    } = req.query;
     
     const options = {
       status,
@@ -1797,17 +1599,11 @@ router.get('/clinics/:clinicId/lab-orders', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/emr/lab-orders/:orderId
- * Cancel lab order
- */
 router.delete('/lab-orders/:orderId', verifyToken, async (req, res) => {
   try {
     const { orderId } = req.params;
     const { reason } = req.body;
-    const cancelledBy = req.user.id;
-    
-    // Check if order exists and user has access
+    const cancelledBy = req.user.id;
     const existingOrder = await getOrder(orderId);
     if (!existingOrder) {
       return res.status(404).json({
@@ -1845,16 +1641,10 @@ router.delete('/lab-orders/:orderId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/emr/clinics/:clinicId/lab-orders/stats
- * Get lab order statistics for clinic
- */
 router.get('/clinics/:clinicId/lab-orders/stats', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
-    const { startDate, endDate } = req.query;
-    
-    // Check clinic access permissions would go here
+    const { startDate, endDate } = req.query;
     
     const stats = await getOrderStats(clinicId, startDate, endDate);
     
@@ -1870,9 +1660,7 @@ router.get('/clinics/:clinicId/lab-orders/stats', verifyToken, async (req, res) 
       message: error.message || 'Failed to fetch lab order statistics'
     });
   }
-});
-
-// ===== MEDICAL HISTORY ROUTES =====
+});
 
 const {
   createOrUpdateHistory,
@@ -1886,10 +1674,6 @@ const {
   getCriticalSummary
 } = require('../services/medicalHistoryService');
 
-/**
- * POST /api/emr/patients/:patientId/history
- * Create or update complete medical history for a patient
- */
 router.post('/patients/:patientId/history', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -1901,14 +1685,11 @@ router.post('/patients/:patientId/history', verifyToken, async (req, res) => {
         success: false,
         message: 'Clinic ID is required'
       });
-    }
-    
-    // Check access permissions
+    }
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (!hasPatientAccess(userRole, userId, patientId)) {
-      // Check if user has access via EMRVisit
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -1942,22 +1723,13 @@ router.post('/patients/:patientId/history', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/emr/patients/:patientId/history
- * Get complete medical history for a patient
- */
 router.get('/patients/:patientId/history', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
-    const { clinicId } = req.query;
-    
-    // Check access permissions
+    const { clinicId } = req.query;
     const userId = req.user.id;
-    const userRole = req.user.role;
-    
-    // Allow access for: admin, the patient themselves, doctors, staff/receptionists
-    if (userRole !== 'admin' && userRole !== 'doctor' && userRole !== 'staff' && userRole !== 'receptionist' && patientId !== userId) {
-      // For other roles, check if user has access via EMRVisit
+    const userRole = req.user.role;
+    if (userRole !== 'admin' && userRole !== 'doctor' && userRole !== 'staff' && userRole !== 'receptionist' && patientId !== userId) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2002,17 +1774,11 @@ router.get('/patients/:patientId/history', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * PUT /api/emr/patients/:patientId/history/allergies
- * Update allergies section
- */
 router.put('/patients/:patientId/history/allergies', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
     const { allergies } = req.body;
-    const updatedBy = req.user.id;
-    
-    // Check access permissions
+    const updatedBy = req.user.id;
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2050,17 +1816,11 @@ router.put('/patients/:patientId/history/allergies', verifyToken, async (req, re
   }
 });
 
-/**
- * PUT /api/emr/patients/:patientId/history/conditions
- * Update chronic conditions section
- */
 router.put('/patients/:patientId/history/conditions', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
     const { conditions } = req.body;
-    const updatedBy = req.user.id;
-    
-    // Check access permissions
+    const updatedBy = req.user.id;
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2098,17 +1858,11 @@ router.put('/patients/:patientId/history/conditions', verifyToken, async (req, r
   }
 });
 
-/**
- * PUT /api/emr/patients/:patientId/history/family-history
- * Update family history section
- */
 router.put('/patients/:patientId/history/family-history', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
     const { familyHistory } = req.body;
-    const updatedBy = req.user.id;
-    
-    // Check access permissions
+    const updatedBy = req.user.id;
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2146,17 +1900,11 @@ router.put('/patients/:patientId/history/family-history', verifyToken, async (re
   }
 });
 
-/**
- * PUT /api/emr/patients/:patientId/history/surgical-history
- * Update surgical history section
- */
 router.put('/patients/:patientId/history/surgical-history', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
     const { surgicalHistory } = req.body;
-    const updatedBy = req.user.id;
-    
-    // Check access permissions
+    const updatedBy = req.user.id;
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2194,17 +1942,11 @@ router.put('/patients/:patientId/history/surgical-history', verifyToken, async (
   }
 });
 
-/**
- * PUT /api/emr/patients/:patientId/history/medications
- * Update current medications section
- */
 router.put('/patients/:patientId/history/medications', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
     const { medications } = req.body;
-    const updatedBy = req.user.id;
-    
-    // Check access permissions
+    const updatedBy = req.user.id;
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2242,17 +1984,11 @@ router.put('/patients/:patientId/history/medications', verifyToken, async (req, 
   }
 });
 
-/**
- * PUT /api/emr/patients/:patientId/history/social-history
- * Update social history section
- */
 router.put('/patients/:patientId/history/social-history', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
     const { socialHistory } = req.body;
-    const updatedBy = req.user.id;
-    
-    // Check access permissions
+    const updatedBy = req.user.id;
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2290,15 +2026,9 @@ router.put('/patients/:patientId/history/social-history', verifyToken, async (re
   }
 });
 
-/**
- * GET /api/emr/patients/:patientId/history/critical-summary
- * Get critical medical summary (allergies + active conditions + active medications)
- */
 router.get('/patients/:patientId/history/critical-summary', verifyToken, async (req, res) => {
   try {
-    const { patientId } = req.params;
-    
-    // Check access permissions
+    const { patientId } = req.params;
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2335,16 +2065,9 @@ router.get('/patients/:patientId/history/critical-summary', verifyToken, async (
   }
 });
 
-/**
- * GET /api/emr/patients/:patientId/history/summary
- * Get medical history summary for patient view (allergies, active conditions, active medications)
- * Requirements: 3.8, 9.4
- */
 router.get('/patients/:patientId/history/summary', verifyToken, async (req, res) => {
   try {
-    const { patientId } = req.params;
-    
-    // Check access permissions
+    const { patientId } = req.params;
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2379,18 +2102,10 @@ router.get('/patients/:patientId/history/summary', verifyToken, async (req, res)
       message: error.message || 'Failed to fetch medical history summary'
     });
   }
-});
+});
 
-// ===== WALK-IN PATIENT ROUTES =====
+const WalkInPatientService = require('../services/walkInPatientService');
 
-const WalkInPatientService = require('../services/walkInPatientService');
-
-// ===== VISIT ROUTES =====
-
-/**
- * POST /api/emr/visits
- * Create a new visit for a patient
- */
 router.post('/visits', verifyToken, async (req, res) => {
   try {
     const { patientId, clinicId, doctorId, visitType, chiefComplaint } = req.body;
@@ -2400,17 +2115,14 @@ router.post('/visits', verifyToken, async (req, res) => {
         success: false,
         message: 'patientId and clinicId are required'
       });
-    }
-
-    // Get a doctor for the clinic if not provided
+    }
     let assignedDoctorId = doctorId;
     if (!assignedDoctorId) {
       const Doctor = require('../models/Doctor');
       const clinicDoctor = await Doctor.findOne({ clinicId, isActive: true }).select('_id');
       if (clinicDoctor) {
         assignedDoctorId = clinicDoctor._id;
-      } else {
-        // Use a placeholder or the user creating the visit
+      } else {
         assignedDoctorId = req.user.id;
       }
     }
@@ -2442,28 +2154,18 @@ router.post('/visits', verifyToken, async (req, res) => {
       error: error.message
     });
   }
-});
-
-// ===== VITALS ROUTES =====
+});
 
 const { validateVitals } = require('../services/vitalsService');
 
-/**
- * POST /api/emr/visits/:visitId/vitals
- * Record vitals for a specific visit
- */
 router.post('/visits/:visitId/vitals', verifyToken, async (req, res) => {
   try {
     const { visitId } = req.params;
-    const vitalsData = req.body;
-    
-    // Validate the visit exists and user has access
+    const vitalsData = req.body;
     const visit = await EMRVisit.findById(visitId);
     if (!visit) {
       return res.status(404).json({ error: 'Visit not found' });
-    }
-    
-    // Check if user has access to this visit (doctor, clinic staff, or patient)
+    }
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2472,9 +2174,7 @@ router.post('/visits/:visitId/vitals', verifyToken, async (req, res) => {
         visit.patientId.toString() !== userId &&
         visit.createdBy?.toString() !== userId) {
       return res.status(403).json({ error: 'Access denied' });
-    }
-    
-    // Validate vitals data
+    }
     const validationResult = validateVitals(vitalsData);
     
     if (!validationResult.isValid) {
@@ -2482,9 +2182,7 @@ router.post('/visits/:visitId/vitals', verifyToken, async (req, res) => {
         error: 'Invalid vitals data',
         details: validationResult.errors
       });
-    }
-    
-    // Update visit with validated vitals
+    }
     const updatedVitals = {
       ...validationResult.validatedVitals,
       recordedAt: new Date(),
@@ -2508,10 +2206,6 @@ router.post('/visits/:visitId/vitals', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/emr/visits/:visitId/vitals
- * Get vitals for a specific visit
- */
 router.get('/visits/:visitId/vitals', verifyToken, async (req, res) => {
   try {
     const { visitId } = req.params;
@@ -2519,9 +2213,7 @@ router.get('/visits/:visitId/vitals', verifyToken, async (req, res) => {
     const visit = await EMRVisit.findById(visitId).select('vitalSigns patientId doctorId createdBy');
     if (!visit) {
       return res.status(404).json({ error: 'Visit not found' });
-    }
-    
-    // Check access permissions
+    }
     const userId = req.user.id;
     const userRole = req.user.role;
     
@@ -2543,25 +2235,18 @@ router.get('/visits/:visitId/vitals', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /api/emr/patients/:patientId/vitals/trends
- * Get vitals trends for a patient over time
- */
 router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
     const { 
-      period = '6m', // 1m, 3m, 6m, 1y, all
-      vitalType = 'all', // bloodPressure, pulse, temperature, weight, spo2, bloodSugar, all
+      period = '6m', 
+      vitalType = 'all', 
       limit = 50 
-    } = req.query;
-    
-    // Check access permissions
+    } = req.query;
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (!hasPatientAccess(userRole, userId, patientId)) {
-      // Check if user has access via EMRVisit
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         doctorId: userId
@@ -2570,9 +2255,7 @@ router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) =
       if (!hasAccess) {
         return res.status(403).json({ error: 'Access denied' });
       }
-    }
-    
-    // Calculate date range based on period
+    }
     let startDate = new Date();
     switch (period) {
       case '1m':
@@ -2588,13 +2271,11 @@ router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) =
         startDate.setFullYear(startDate.getFullYear() - 1);
         break;
       case 'all':
-        startDate = new Date('2020-01-01'); // Far back date
+        startDate = new Date('2020-01-01'); 
         break;
       default:
         startDate.setMonth(startDate.getMonth() - 6);
-    }
-    
-    // Query visits with vitals - check for any vital sign data, not just recordedAt
+    }
     const visits = await EMRVisit.find({
       patientId,
       visitDate: { $gte: startDate },
@@ -2609,9 +2290,7 @@ router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) =
     })
     .select('visitDate vitalSigns')
     .sort({ visitDate: -1 })
-    .limit(parseInt(limit));
-    
-    // Process trends data
+    .limit(parseInt(limit));
     const trends = {
       period,
       totalReadings: visits.length,
@@ -2623,9 +2302,7 @@ router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) =
       const dataPoint = {
         date: visit.visitDate,
         recordedAt: vitals.recordedAt
-      };
-      
-      // Include requested vital types
+      };
       if (vitalType === 'all' || vitalType === 'bloodPressure') {
         if (vitals.bloodPressure) {
           dataPoint.bloodPressure = {
@@ -2689,9 +2366,7 @@ router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) =
       }
       
       trends.data.push(dataPoint);
-    });
-    
-    // Calculate summary statistics
+    });
     if (trends.data.length > 0) {
       trends.summary = calculateVitalsSummary(trends.data, vitalType);
     }
@@ -2707,9 +2382,6 @@ router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) =
   }
 });
 
-/**
- * Helper function to calculate summary statistics for vitals trends
- */
 function calculateVitalsSummary(data, vitalType) {
   const summary = {};
   
@@ -2751,16 +2423,11 @@ function calculateVitalsSummary(data, vitalType) {
         max: Math.max(...pulseValues)
       };
     }
-  }
-  
-  // Add similar calculations for other vital types...
+  }
   
   return summary;
 }
 
-/**
- * Register walk-in patient
- */
 router.post('/patients/walk-in', 
   verifyToken,
   async (req, res) => {
@@ -2794,10 +2461,6 @@ router.post('/patients/walk-in',
   }
 );
 
-/**
- * Register patient (staff registration endpoint)
- * Alias for walk-in registration with additional fields
- */
 router.post('/patients/register', 
   verifyToken,
   async (req, res) => {
@@ -2833,9 +2496,6 @@ router.post('/patients/register',
   }
 );
 
-/**
- * Search patients
- */
 router.get('/patients/search', verifyToken, async (req, res) => {
   try {
     const { q, clinicId, includeAll } = req.query;
@@ -2867,9 +2527,6 @@ router.get('/patients/search', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get all patients registered at a clinic
- */
 router.get('/patients/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -2895,9 +2552,6 @@ router.get('/patients/clinic/:clinicId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get patient details
- */
 router.get('/patients/:patientId', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -2910,9 +2564,7 @@ router.get('/patients/:patientId', verifyToken, async (req, res) => {
         success: false,
         message: 'Patient not found'
       });
-    }
-    
-    // Get visit count if clinicId provided
+    }
     let visitCount = 0;
     if (clinicId) {
       visitCount = await WalkInPatientService.getPatientVisitCount(patientId, clinicId);
@@ -2932,9 +2584,6 @@ router.get('/patients/:patientId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Update patient details
- */
 router.put('/patients/:patientId', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -2960,9 +2609,6 @@ router.put('/patients/:patientId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Link patient to clinic
- */
 router.post('/patients/:patientId/link', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -2988,9 +2634,6 @@ router.post('/patients/:patientId/link', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get all clinic patients
- */
 router.get('/clinic/:clinicId/patients', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -3017,9 +2660,6 @@ router.get('/clinic/:clinicId/patients', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Verify walk-in patient (convert to full account)
- */
 router.post('/patients/:patientId/verify', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -3041,9 +2681,7 @@ router.post('/patients/:patientId/verify', verifyToken, async (req, res) => {
       message: error.message || 'Error verifying patient'
     });
   }
-});
-
-// ===== ICD-10 AND DIAGNOSIS ROUTES =====
+});
 
 const { searchICD10, getICD10Code, getPopularCodes } = require('../services/icd10Service');
 const { 
@@ -3055,11 +2693,6 @@ const {
   validateDiagnosisData
 } = require('../services/diagnosisService');
 
-/**
- * Search ICD-10 codes
- * GET /api/emr/icd10/search?q=term&limit=20
- * Requirements: 4.1, 4.2
- */
 router.get('/icd10/search', verifyToken, async (req, res) => {
   try {
     const { q, limit = 20 } = req.query;
@@ -3088,11 +2721,6 @@ router.get('/icd10/search', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get specific ICD-10 code details
- * GET /api/emr/icd10/code/:code
- * Requirements: 4.2
- */
 router.get('/icd10/code/:code', verifyToken, async (req, res) => {
   try {
     const { code } = req.params;
@@ -3126,11 +2754,6 @@ router.get('/icd10/code/:code', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get popular/common ICD-10 codes
- * GET /api/emr/icd10/popular
- * Requirements: 4.1
- */
 router.get('/icd10/popular', verifyToken, async (req, res) => {
   try {
     const codes = getPopularCodes();
@@ -3149,18 +2772,11 @@ router.get('/icd10/popular', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Add diagnosis to a visit
- * POST /api/emr/visits/:visitId/diagnoses
- * Requirements: 4.6, 4.7
- */
 router.post('/visits/:visitId/diagnoses', verifyToken, async (req, res) => {
   try {
     const { visitId } = req.params;
     const diagnosisData = req.body;
-    const userId = req.user.id;
-    
-    // Validate diagnosis data
+    const userId = req.user.id;
     const validation = validateDiagnosisData(diagnosisData);
     if (!validation.isValid) {
       return res.status(400).json({
@@ -3186,11 +2802,6 @@ router.post('/visits/:visitId/diagnoses', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get all diagnoses for a visit
- * GET /api/emr/visits/:visitId/diagnoses
- * Requirements: 4.6, 4.7
- */
 router.get('/visits/:visitId/diagnoses', verifyToken, async (req, res) => {
   try {
     const { visitId } = req.params;
@@ -3211,11 +2822,6 @@ router.get('/visits/:visitId/diagnoses', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Update a diagnosis in a visit
- * PUT /api/emr/visits/:visitId/diagnoses/:code
- * Requirements: 4.6
- */
 router.put('/visits/:visitId/diagnoses/:code', verifyToken, async (req, res) => {
   try {
     const { visitId, code } = req.params;
@@ -3238,11 +2844,6 @@ router.put('/visits/:visitId/diagnoses/:code', verifyToken, async (req, res) => 
   }
 });
 
-/**
- * Remove a diagnosis from a visit
- * DELETE /api/emr/visits/:visitId/diagnoses/:code
- * Requirements: 4.6
- */
 router.delete('/visits/:visitId/diagnoses/:code', verifyToken, async (req, res) => {
   try {
     const { visitId, code } = req.params;
@@ -3264,11 +2865,6 @@ router.delete('/visits/:visitId/diagnoses/:code', verifyToken, async (req, res) 
   }
 });
 
-/**
- * Get patient's diagnosis history
- * GET /api/emr/patients/:patientId/diagnoses
- * Requirements: 4.7
- */
 router.get('/patients/:patientId/diagnoses', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -3293,10 +2889,7 @@ router.get('/patients/:patientId/diagnoses', verifyToken, async (req, res) => {
       message: error.message || 'Error fetching diagnosis history'
     });
   }
-});
-
-// ===== DRUG INTERACTION ROUTES =====
-// Requirements: 5.1, 5.5
+});
 
 const {
   checkInteractions,
@@ -3320,11 +2913,6 @@ const {
   finalizePrescription
 } = require('../services/interactionLogService');
 
-/**
- * Check drug interactions
- * POST /api/emr/interactions/check
- * Requirements: 5.1
- */
 router.post('/interactions/check', verifyToken, async (req, res) => {
   try {
     const { drugs, currentMedications, allergies, patientId, visitId, clinicId } = req.body;
@@ -3334,13 +2922,9 @@ router.post('/interactions/check', verifyToken, async (req, res) => {
         success: false,
         message: 'drugs array is required'
       });
-    }
-    
-    // Use comprehensive safety check if allergies provided
+    }
     if (allergies && allergies.length > 0) {
-      const safetyResult = checkPrescriptionSafety(drugs, currentMedications || [], allergies);
-      
-      // Create log if patient/visit context provided
+      const safetyResult = checkPrescriptionSafety(drugs, currentMedications || [], allergies);
       let logId = null;
       if (patientId && req.user.id) {
         try {
@@ -3365,13 +2949,9 @@ router.post('/interactions/check', verifyToken, async (req, res) => {
         logId,
         ...safetyResult
       });
-    }
-    
-    // Simple interaction check without allergies
+    }
     const allDrugs = [...drugs, ...(currentMedications || [])];
-    const interactions = checkInteractions(allDrugs);
-    
-    // Filter to only interactions involving new drugs
+    const interactions = checkInteractions(allDrugs);
     const relevantInteractions = interactions.filter(interaction => {
       return drugs.some(drug => 
         drug.toLowerCase() === interaction.drug1.toLowerCase() ||
@@ -3394,11 +2974,6 @@ router.post('/interactions/check', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Check interactions for a new drug against current medications
- * POST /api/emr/interactions/check-new
- * Requirements: 5.1
- */
 router.post('/interactions/check-new', verifyToken, async (req, res) => {
   try {
     const { newDrug, currentMedications, allergies } = req.body;
@@ -3408,9 +2983,7 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
         success: false,
         message: 'newDrug is required'
       });
-    }
-    
-    // Use comprehensive safety check
+    }
     const safetyResult = checkPrescriptionSafety(
       newDrug, 
       currentMedications || [], 
@@ -3429,11 +3002,6 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Log an interaction override
- * POST /api/emr/interactions/override
- * Requirements: 5.5
- */
 router.post('/interactions/override', verifyToken, async (req, res) => {
   try {
     const { logId, type, drug1, drug2, drug, allergen, reason } = req.body;
@@ -3455,9 +3023,7 @@ router.post('/interactions/override', verifyToken, async (req, res) => {
       allergen,
       reason,
       doctorId
-    });
-    
-    // Check if all critical alerts are now overridden
+    });
     const overrideStatus = await checkOverrideStatus(logId);
     
     res.json({
@@ -3475,11 +3041,6 @@ router.post('/interactions/override', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get interaction log for a visit
- * GET /api/emr/interactions/log/:visitId
- * Requirements: 5.5
- */
 router.get('/interactions/log/:visitId', verifyToken, async (req, res) => {
   try {
     const { visitId } = req.params;
@@ -3499,10 +3060,6 @@ router.get('/interactions/log/:visitId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get interaction logs for a patient
- * GET /api/emr/interactions/patient/:patientId
- */
 router.get('/interactions/patient/:patientId', verifyToken, async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -3526,11 +3083,6 @@ router.get('/interactions/patient/:patientId', verifyToken, async (req, res) => 
   }
 });
 
-/**
- * Get override audit trail for a clinic
- * GET /api/emr/interactions/audit/:clinicId
- * Requirements: 5.8
- */
 router.get('/interactions/audit/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -3557,10 +3109,6 @@ router.get('/interactions/audit/:clinicId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Check override status for a log
- * GET /api/emr/interactions/status/:logId
- */
 router.get('/interactions/status/:logId', verifyToken, async (req, res) => {
   try {
     const { logId } = req.params;
@@ -3580,15 +3128,9 @@ router.get('/interactions/status/:logId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Finalize prescription after interaction check
- * POST /api/emr/interactions/finalize/:logId
- */
 router.post('/interactions/finalize/:logId', verifyToken, async (req, res) => {
   try {
-    const { logId } = req.params;
-    
-    // Check if all critical alerts are overridden
+    const { logId } = req.params;
     const status = await checkOverrideStatus(logId);
     
     if (!status.canFinalize) {
@@ -3615,10 +3157,6 @@ router.post('/interactions/finalize/:logId', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Search drugs in the interaction database
- * GET /api/emr/interactions/drugs/search
- */
 router.get('/interactions/drugs/search', verifyToken, async (req, res) => {
   try {
     const { q } = req.query;
@@ -3645,10 +3183,6 @@ router.get('/interactions/drugs/search', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get all drug classes
- * GET /api/emr/interactions/drug-classes
- */
 router.get('/interactions/drug-classes', verifyToken, async (req, res) => {
   try {
     const classes = getAllDrugClasses();
@@ -3666,10 +3200,6 @@ router.get('/interactions/drug-classes', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get drug classes for a specific drug
- * GET /api/emr/interactions/drugs/:drugName/classes
- */
 router.get('/interactions/drugs/:drugName/classes', verifyToken, async (req, res) => {
   try {
     const { drugName } = req.params;
@@ -3689,10 +3219,6 @@ router.get('/interactions/drugs/:drugName/classes', verifyToken, async (req, res
   }
 });
 
-/**
- * Get severity levels information
- * GET /api/emr/interactions/severity-levels
- */
 router.get('/interactions/severity-levels', verifyToken, async (req, res) => {
   try {
     const levels = getAllSeverityLevels();
@@ -3709,10 +3235,6 @@ router.get('/interactions/severity-levels', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Get interaction database statistics
- * GET /api/emr/interactions/stats
- */
 router.get('/interactions/stats', verifyToken, async (req, res) => {
   try {
     const stats = getInteractionStats();
@@ -3727,7 +3249,5 @@ router.get('/interactions/stats', verifyToken, async (req, res) => {
       message: error.message || 'Error fetching interaction stats'
     });
   }
-});
-
-// Export router at the end
+});
 module.exports = router;

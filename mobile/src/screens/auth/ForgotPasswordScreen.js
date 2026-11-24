@@ -1,6 +1,4 @@
-/**
- * Forgot Password Screen - Password Reset Flow
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -48,8 +46,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     try {
       console.log('🔐 Requesting password reset for:', email.trim().toLowerCase());
       const response = await authService.requestPasswordReset(email.trim().toLowerCase());
-      console.log('✅ Password reset response:', response);
-      // Navigate to OTP verification screen
+      console.log('✅ Password reset response:', response);
       navigation.navigate('VerifyOTP', { email: email.trim().toLowerCase() });
     } catch (err) {
       console.error('❌ Password reset error:', err);
@@ -87,7 +84,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
         
-        {/* Ambient background mesh */}
+        {}
         <View style={styles.orbContainer}>
           <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
           <View style={styles.orb1}>
@@ -174,7 +171,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
@@ -330,8 +327,7 @@ const styles = StyleSheet.create({
   backToLoginText: {
     ...typography.bodyMedium,
     fontWeight: '500',
-  },
-  // Success state styles
+  },
   successContainer: {
     flex: 1,
     alignItems: 'center',

@@ -2,13 +2,12 @@ const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const compression = require('compression'); // Production compression
-const helmet = require('helmet'); // Production security
-const rateLimit = require('express-rate-limit'); // Production rate limiting
+const compression = require('compression'); 
+const helmet = require('helmet'); 
+const rateLimit = require('express-rate-limit'); 
 const swaggerUi = require('swagger-ui-express');
 const { swaggerSpec } = require('./config/swagger');
-require('dotenv').config();
-// v2.2.0 - Enhanced Security Features
+require('dotenv').config();
 const { initializeScheduler } = require('./services/appointmentScheduler');
 const { initializeMedicineReminders } = require('./services/medicineReminderService');
 const { initializeScheduledEmails } = require('./services/adminEmailService');
@@ -18,10 +17,7 @@ const { securityMonitor, trackFailedLogin } = require('./middleware/securityMidd
 const { sanitizeInputs } = require('./middleware/validateRequest');
 const { errorMiddleware, requestLoggerMiddleware } = require('./services/errorLoggingService');
 const backupService = require('./services/backupService');
-const { initializeSocket } = require('./services/socketManager');
-
-// ===== CRITICAL SECURITY CHECKS =====
-// Fail fast if required secrets are missing — never run with fallback values
+const { initializeSocket } = require('./services/socketManager');
 if (!process.env.JWT_SECRET) {
   console.error('❌ FATAL: JWT_SECRET environment variable is not set. Server cannot start.');
   process.exit(1);
@@ -32,17 +28,11 @@ if (process.env.JWT_SECRET === 'fallback_secret') {
 }
 
 const app = express();
-const server = http.createServer(app);
-
-// ===== PRODUCTION SECURITY =====
-
-// Security headers for production
+const server = http.createServer(app);
 app.use(helmet({
   contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
   crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production'
-}));
-
-// Production compression with optimized settings
+}));
 app.use(compression({
   level: 6,
   threshold: 1024,
@@ -50,13 +40,11 @@ app.use(compression({
     if (req.headers['x-no-compression']) return false;
     return compression.filter(req, res);
   }
-}));
-
-// Production rate limiting (only in production)
+}));
 if (process.env.NODE_ENV === 'production') {
   const productionLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Limit each IP to 1000 requests per windowMs
+    windowMs: 15 * 60 * 1000, 
+    max: 1000, 
     message: {
       success: false,
       message: 'Too many requests from this IP, please try again later.',
@@ -64,24 +52,19 @@ if (process.env.NODE_ENV === 'production') {
     },
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => {
-      // Skip rate limiting for health checks and admin
+    skip: (req) => {
       return req.path === '/api/health' || req.path.startsWith('/api/admin');
     }
   });
   
   app.use(productionLimiter);
   console.log('🛡️ Production rate limiting enabled');
-}
-
-// Initialize Redis cache (falls back to in-memory if Redis not available)
+}
 cacheService.initializeRedis().then(connected => {
   if (connected) {
     console.log('🚀 Redis cache enabled for high performance');
   }
-});
-
-// Add cache helper to all requests
+});
 app.use((req, res, next) => {
   req.cache = {
     get: cacheService.get,
@@ -89,24 +72,19 @@ app.use((req, res, next) => {
     del: cacheService.del
   };
   next();
-});
-
-// Simple rate limiting (in-memory) - DISABLED FOR DEVELOPMENT/TESTING
+});
 const rateLimitMap = new Map();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_WINDOW = 60000; 
 const RATE_LIMIT_MAX = 300;
 
-app.use((req, res, next) => {
-  // Skip rate limiting in development OR if performance testing is enabled
+app.use((req, res, next) => {
   const isDev = process.env.NODE_ENV !== 'production';
   const isLocalhost = ['127.0.0.1', 'localhost', '::1'].includes(req.ip);
   
   if (isDev || isLocalhost || process.env.PERFORMANCE_TEST === 'true') {
     console.log(`[RATE-LIMIT-BYPASS] ${req.method} ${req.path} from ${req.ip} (isDev=${isDev}, localhost=${isLocalhost})`);
-    return next(); // Skip rate limiting
-  }
-  
-  // Production + non-local IP: Apply rate limiting
+    return next(); 
+  }
   const ip = req.ip || req.connection.remoteAddress;
   const now = Date.now();
   
@@ -128,17 +106,13 @@ app.use((req, res, next) => {
     }
   }
   next();
-});
-
-// Clean up rate limit map periodically
+});
 setInterval(() => {
   const now = Date.now();
   for (const [ip, record] of rateLimitMap.entries()) {
     if (now > record.resetTime) rateLimitMap.delete(ip);
   }
-}, 60000);
-
-// Middleware
+}, 60000);
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -147,37 +121,28 @@ const ALLOWED_ORIGINS = [
   process.env.FRONTEND_URL,
   process.env.CORS_ORIGIN,
   'https://healthsyncpro.in',
-  'https://www.healthsyncpro.in',
-  // Capacitor mobile app origins
+  'https://www.healthsyncpro.in',
   'capacitor://localhost',
   'ionic://localhost',
   'http://localhost',
-  'https://localhost',
-  // Android WebView
+  'https://localhost',
   'file://'
 ].filter(Boolean);
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no Origin header:
-    // — mobile apps (Capacitor/React Native)
-    // — Postman / curl / server-to-server calls
-    // — same-origin requests
+  origin: (origin, callback) => {
     if (!origin) {
       return callback(null, true);
     }
     if (ALLOWED_ORIGINS.includes(origin)) {
       return callback(null, true);
-    }
-    // Block unknown browser origins
+    }
     return callback(new Error(`CORS: origin '${origin}' not allowed`));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-}));
-
-// Security headers for production
+}));
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -192,30 +157,18 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   if (req.originalUrl === '/api/payments/webhook') {
     return next();
-  }
-  // Increase limit for profile photo uploads (base64 images can be large)
+  }
   return express.json({ limit: '10mb' })(req, res, next);
 });
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Serve uploaded files statically
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const path = require('path');
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-// Global input sanitization for XSS prevention
-app.use(sanitizeInputs);
-
-// Response compression for better performance
-app.use((req, res, next) => {
-  // Add performance headers
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(sanitizeInputs);
+app.use((req, res, next) => {
   res.set('X-Response-Time', Date.now().toString());
   next();
-});
-
-// Request logging middleware for centralized logging
-app.use(requestLoggerMiddleware());
-
-// MongoDB connection with optimized settings for high load
+});
+app.use(requestLoggerMiddleware());
 const connectDB = async (retryCount = 0) => {
   const MAX_RETRIES = 5;
   try {
@@ -230,12 +183,10 @@ const connectDB = async (retryCount = 0) => {
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     console.log(`Connection Pool: min=${10}, max=${50}`);
-  } catch (error) {
-    // Auth errors (code 8000) will never succeed on retry — log clearly and stop
+  } catch (error) {
     if (error.code === 8000 || error.codeName === 'AtlasError' || error.message?.includes('bad auth')) {
       console.error('❌ FATAL: MongoDB authentication failed. Check MONGODB_URI credentials in Render dashboard.');
-      console.error('   Error:', error.message);
-      // Don't retry auth failures — they won't fix themselves
+      console.error('   Error:', error.message);
       return;
     }
     if (retryCount >= MAX_RETRIES) {
@@ -247,33 +198,22 @@ const connectDB = async (retryCount = 0) => {
     console.log(`Retrying in ${delay / 1000}s...`);
     setTimeout(() => connectDB(retryCount + 1), delay);
   }
-};
-
-// Handle MongoDB connection events
+};
 mongoose.connection.on('disconnected', () => {
   console.warn('⚠️ MongoDB disconnected. Attempting reconnection...');
 });
 
 mongoose.connection.on('error', (err) => {
   console.error('MongoDB error:', err);
-});
-
-// Connect to MongoDB
-connectDB();
-
-// ===== SECURITY MONITORING =====
-// Apply security middleware BEFORE routes to monitor all API activity
-const { checkBlockedIP } = require('./middleware/securityMiddleware');
-
-// Check blocked IPs on all requests
-app.use('/api', checkBlockedIP);
-
-// Check for suspended users and force logout on authenticated requests
+});
+connectDB();
+const { checkBlockedIP } = require('./middleware/securityMiddleware');
+app.use('/api', checkBlockedIP);
 app.use('/api', async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next(); // No token, let the route handle it
+      return next(); 
     }
 
     const jwt = require('jsonwebtoken');
@@ -296,8 +236,7 @@ app.use('/api', async (req, res, next) => {
           userRecord = await User.findById(userId).select('isActive suspendReason forceLogoutAt').lean();
         }
         
-        if (userRecord) {
-          // Check if user is suspended
+        if (userRecord) {
           if (userRecord.isActive === false) {
             console.log(`🚫 Blocked suspended user: ${userId}`);
             return res.status(403).json({
@@ -306,9 +245,7 @@ app.use('/api', async (req, res, next) => {
               reason: userRecord.suspendReason || 'Contact admin for more information',
               suspended: true
             });
-          }
-          
-          // Check if force logout was triggered after token was issued
+          }
           if (userRecord.forceLogoutAt && tokenIssuedAt) {
             const forceLogoutTime = new Date(userRecord.forceLogoutAt);
             if (forceLogoutTime > tokenIssuedAt) {
@@ -322,47 +259,34 @@ app.use('/api', async (req, res, next) => {
           }
         }
       }
-    } catch (jwtError) {
-      // Invalid token, let the route handle it
+    } catch (jwtError) {
     }
     
     next();
   } catch (error) {
     console.error('Security check middleware error:', error);
-    next(); // Don't block on errors
+    next(); 
   }
-});
-
-// Apply security monitoring to track activities (runs after response)
-app.use('/api', securityMonitor);
-
-// Track failed login attempts specifically
+});
+app.use('/api', securityMonitor);
 app.use('/api/auth', trackFailedLogin);
 
-console.log('🛡️ AI Security monitoring enabled');
-
-// ===== SWAGGER API DOCUMENTATION =====
+console.log('🛡️ AI Security monitoring enabled');
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   explorer: true,
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'HealthSync API Documentation'
-}));
-
-// JSON endpoint for OpenAPI spec (must be before swagger-ui routes)
+}));
 app.get('/api/openapi.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.send(swaggerSpec);
 });
 
 console.log('📚 Swagger docs available at /api/docs');
-console.log('📄 OpenAPI JSON spec at /api/openapi.json');
-
-// ===== HEALTH CHECK (must be before route registrations to avoid shadowing) =====
+console.log('📄 OpenAPI JSON spec at /api/openapi.json');
 app.get('/api/health', async (req, res) => {
   const dbState = mongoose.connection.readyState;
-  const dbStates = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
-  
-  // Check cache health
+  const dbStates = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
   let cacheStatus = 'unknown';
   try {
     await cacheService.set('health_check', '1', 5);
@@ -388,11 +312,9 @@ app.get('/api/health', async (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
-});
-
-// Routes
+});
 app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/auth/token', require('./routes/authTokenRoutes')); // Token refresh & session management
+app.use('/api/auth/token', require('./routes/authTokenRoutes')); 
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/doctors', require('./routes/doctorRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
@@ -407,7 +329,7 @@ app.use('/api/whatsapp', require('./routes/whatsappRoutes'));
 app.use('/api/consultations', require('./routes/consultationRoutes'));
 app.use('/api/location', require('./routes/locationRoutes'));
 app.use('/api/family', require('./routes/familyRoutes'));
-app.use('/api/reviews', require('./routes/reviewRoutes')); // reviews: GET /:doctorId, POST /, PUT /:id, DELETE /:id
+app.use('/api/reviews', require('./routes/reviewRoutes')); 
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 app.use('/api/favorites', require('./routes/favoritesRoutes'));
 app.use('/api/health', require('./routes/healthRoutes'));
@@ -435,69 +357,55 @@ app.use('/api/export', require('./routes/exportRoutes'));
 app.use('/api/invoices', require('./routes/invoiceRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/admin/email', require('./routes/adminEmailRoutes'));
-app.use('/api/admin', require('./routes/adminBillingRoutes')); // Admin Billing & Expenses
+app.use('/api/admin', require('./routes/adminBillingRoutes')); 
 app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/security', require('./routes/securityRoutes'));
-app.use('/api/ai', require('./routes/aiRoutes')); // AI-powered features
-app.use('/api/ai-health', require('./routes/aiHealthRoutes')); // Advanced AI health features
-app.use('/api/ai-report', require('./routes/aiReportRoutes')); // AI medical report analyzer
-app.use('/api/ai/symptom-check', require('./routes/symptomRoutes')); // Symptom checker
-app.use('/api/slots', require('./routes/slotRoutes')); // Separate Online & Clinic slot management
-app.use('/api/commission', require('./routes/commissionRoutes')); // Commission, GST & Payout system
-app.use('/api/refunds', require('./routes/refundRoutes')); // Refund Policy & Processing
-app.use('/api/support', require('./routes/supportRoutes')); // Doctor-Admin Support Tickets
-app.use('/api/doctor-control', require('./routes/doctorControlRoutes')); // Doctor Override & Emergency Controls
-app.use('/api/systematic-history', require('./routes/systematicHistoryRoutes')); // Systematic History for clinical-grade consultations
-app.use('/api/emr', require('./routes/emrRoutes')); // EMR Subscription Module for Clinics
-app.use('/api/emr-advanced', require('./routes/emrAdvancedRoutes')); // Offline, Templates, Protocols, FHIR
-app.use('/api/imaging', require('./routes/imagingRoutes')); // DICOM Imaging & Telemedicine
-
-// ===== NEW DIFFERENTIATOR FEATURES =====
-app.use('/api/family-wallet', require('./routes/familyWalletRoutes')); // Family Health Wallet
-app.use('/api/health-reminders', require('./routes/healthReminderRoutes')); // Smart Health Reminders
-app.use('/api/emergency-sos', require('./routes/emergencySOSRoutes')); // Emergency SOS System
-app.use('/api/offline-queue', require('./routes/offlineQueueRoutes')); // Offline Queue Token System
-app.use('/api/doctor-referral', require('./routes/doctorReferralRoutes')); // Doctor Referral & Zero-Commission
-app.use('/api/audit', require('./routes/auditRoutes')); // Audit Log System
-app.use('/api/balance-sheet', require('./routes/balanceSheetRoutes')); // Balance Sheet
-app.use('/api/coupons', require('./routes/couponRoutes')); // Discount Coupons
-app.use('/api/medical-files', require('./routes/medicalFileRoutes')); // Medical File Upload (Cloudinary)
-app.use('/api/upload', require('./routes/uploadRoutes')); // All file uploads (profiles, docs, chat, etc.)
-app.use('/api/drugs', require('./routes/drugInteractionRoutes')); // Real-time Drug Interaction API (RxNorm)
-app.use('/api/pdf', require('./routes/pdfRoutes')); // PDF Generation (Lab Requisitions, Clinical Summaries)
-app.use('/api/smart-alerts', require('./routes/smartAlertRoutes')); // ML-based Patient Deterioration Prediction
-app.use('/api/e-prescribe', require('./routes/ePrescribingRoutes')); // E-Prescribing Integration
-app.use('/api/schedule', require('./routes/scheduleRoutes')); // Doctor Schedule Management
-
-// ===== EMR HOSPITAL SUBSCRIPTION FEATURES =====
-app.use('/api/pharmacy', require('./routes/pharmacyRoutes')); // Pharmacy/Inventory Management
-app.use('/api/clinic-billing', require('./routes/billingRoutes')); // Clinic Billing & Revenue
-app.use('/api/staff-schedule', require('./routes/staffScheduleRoutes')); // Staff Scheduling & Attendance
-app.use('/api/clinic-analytics', require('./routes/clinicAnalyticsRoutes')); // Clinic Analytics & Reports
-app.use('/api/advanced-queue', require('./routes/advancedQueueRoutes')); // Advanced Queue Management
-
-// ===== HOSPITAL EMR COMPLIANCE FEATURES =====
-app.use('/api/audit-logs', require('./routes/auditLogRoutes')); // Audit Trail & Compliance Logs
-app.use('/api/ipd', require('./routes/ipdRoutes')); // IPD Admission, Discharge, Transfer
-app.use('/api/beds', require('./routes/bedRoutes')); // Bed Management & Allocation
-// Note: /api/lab-results and /api/imaging-reports intentionally reuse existing route handlers
-// (labReportRoutes and imagingRoutes are already registered above as /api/lab-reports and /api/imaging)
-
-// ===== ENTERPRISE HOSPITAL FEATURES =====
-app.use('/api/insurance', require('./routes/insuranceRoutes')); // Insurance & TPA Integration
-app.use('/api/branches', require('./routes/multiBranchRoutes')); // Multi-Branch Management
-app.use('/api/branch-staff', require('./routes/branchStaffRoutes')); // Branch Staff Management
-app.use('/api/inventory', require('./routes/vendorRoutes')); // Vendor & Purchase Orders
-app.use('/api/compliance', require('./routes/complianceRoutes')); // NABH/JCI Compliance
-app.use('/api/staff-management', require('./routes/staffManagementRoutes')); // Attendance & Leave
-app.use('/api/feedback', require('./routes/feedbackRoutes')); // Patient Feedback & NPS
-
-// ===== ENHANCED SECURITY FEATURES =====
-app.use('/api/secure-files', require('./routes/secureFilesRoutes')); // Signed URL file access
-app.use('/api/security-admin', require('./routes/securityAdminRoutes')); // Security admin dashboard
-app.use('/api/jobs', require('./routes/jobsRoutes')); // Automation jobs management
-
-// Debug: Log all registered routes
+app.use('/api/ai', require('./routes/aiRoutes')); 
+app.use('/api/ai-health', require('./routes/aiHealthRoutes')); 
+app.use('/api/ai-report', require('./routes/aiReportRoutes')); 
+app.use('/api/ai/symptom-check', require('./routes/symptomRoutes')); 
+app.use('/api/slots', require('./routes/slotRoutes')); 
+app.use('/api/commission', require('./routes/commissionRoutes')); 
+app.use('/api/refunds', require('./routes/refundRoutes')); 
+app.use('/api/support', require('./routes/supportRoutes')); 
+app.use('/api/doctor-control', require('./routes/doctorControlRoutes')); 
+app.use('/api/systematic-history', require('./routes/systematicHistoryRoutes')); 
+app.use('/api/emr', require('./routes/emrRoutes')); 
+app.use('/api/emr-advanced', require('./routes/emrAdvancedRoutes')); 
+app.use('/api/imaging', require('./routes/imagingRoutes')); 
+app.use('/api/family-wallet', require('./routes/familyWalletRoutes')); 
+app.use('/api/health-reminders', require('./routes/healthReminderRoutes')); 
+app.use('/api/emergency-sos', require('./routes/emergencySOSRoutes')); 
+app.use('/api/offline-queue', require('./routes/offlineQueueRoutes')); 
+app.use('/api/doctor-referral', require('./routes/doctorReferralRoutes')); 
+app.use('/api/audit', require('./routes/auditRoutes')); 
+app.use('/api/balance-sheet', require('./routes/balanceSheetRoutes')); 
+app.use('/api/coupons', require('./routes/couponRoutes')); 
+app.use('/api/medical-files', require('./routes/medicalFileRoutes')); 
+app.use('/api/upload', require('./routes/uploadRoutes')); 
+app.use('/api/drugs', require('./routes/drugInteractionRoutes')); 
+app.use('/api/pdf', require('./routes/pdfRoutes')); 
+app.use('/api/smart-alerts', require('./routes/smartAlertRoutes')); 
+app.use('/api/e-prescribe', require('./routes/ePrescribingRoutes')); 
+app.use('/api/schedule', require('./routes/scheduleRoutes')); 
+app.use('/api/pharmacy', require('./routes/pharmacyRoutes')); 
+app.use('/api/clinic-billing', require('./routes/billingRoutes')); 
+app.use('/api/staff-schedule', require('./routes/staffScheduleRoutes')); 
+app.use('/api/clinic-analytics', require('./routes/clinicAnalyticsRoutes')); 
+app.use('/api/advanced-queue', require('./routes/advancedQueueRoutes')); 
+app.use('/api/audit-logs', require('./routes/auditLogRoutes')); 
+app.use('/api/ipd', require('./routes/ipdRoutes')); 
+app.use('/api/beds', require('./routes/bedRoutes')); 
+app.use('/api/insurance', require('./routes/insuranceRoutes')); 
+app.use('/api/branches', require('./routes/multiBranchRoutes')); 
+app.use('/api/branch-staff', require('./routes/branchStaffRoutes')); 
+app.use('/api/inventory', require('./routes/vendorRoutes')); 
+app.use('/api/compliance', require('./routes/complianceRoutes')); 
+app.use('/api/staff-management', require('./routes/staffManagementRoutes')); 
+app.use('/api/feedback', require('./routes/feedbackRoutes')); 
+app.use('/api/secure-files', require('./routes/secureFilesRoutes')); 
+app.use('/api/security-admin', require('./routes/securityAdminRoutes')); 
+app.use('/api/jobs', require('./routes/jobsRoutes')); 
 console.log('\n=== REGISTERED ROUTES ===');
 console.log('Auth Routes:');
 console.log('  POST /api/auth/register');
@@ -505,9 +413,7 @@ console.log('  POST /api/auth/login');
 console.log('  POST /api/auth/admin/login');
 console.log('  POST /api/auth/receptionist/register');
 console.log('  GET  /api/auth/receptionist/test');
-console.log('========================\n');
-
-// Basic route
+console.log('========================\n');
 app.get('/', (req, res) => {
   res.json({ 
     name: 'HealthSync API',
@@ -517,9 +423,7 @@ app.get('/', (req, res) => {
     health: '/api/health',
     timestamp: new Date().toISOString()
   });
-});
-
-// Version endpoint
+});
 app.get('/api/version', (req, res) => {
   res.json({
     version: '2.2.0',
@@ -529,9 +433,7 @@ app.get('/api/version', (req, res) => {
     uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString()
   });
-});
-
-// Privacy Policy page at root level (for Facebook/Meta validation)
+});
 app.get('/privacy', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -580,9 +482,7 @@ app.get('/privacy', (req, res) => {
     </body>
     </html>
   `);
-});
-
-// Terms of Service page (for Facebook/Meta validation)
+});
 app.get('/terms', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -621,9 +521,7 @@ app.get('/terms', (req, res) => {
     </body>
     </html>
   `);
-});
-
-// Privacy Policy page (required for Facebook App)
+});
 app.get('/api/privacy', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -643,9 +541,7 @@ app.get('/api/privacy', (req, res) => {
     </body>
     </html>
   `);
-});
-
-// Data Deletion page (required for Facebook App)
+});
 app.get('/api/delete-data', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -665,21 +561,15 @@ app.get('/api/delete-data', (req, res) => {
     </body>
     </html>
   `);
-});
-
-// 404 handler for undefined routes
+});
 app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: 'API endpoint not found',
     path: req.originalUrl
   });
-});
-
-// Global error handler - use centralized error logging
-app.use(errorMiddleware());
-
-// Graceful shutdown handler
+});
+app.use(errorMiddleware());
 process.on('SIGTERM', async () => {
   console.log('🛑 SIGTERM received. Shutting down gracefully...');
   await mongoose.connection.close();
@@ -692,35 +582,19 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-const PORT = process.env.PORT || 5005;
-
-// Initialize Socket.IO with HTTP server
-const io = initializeSocket(server);
-
-// Make io available to routes via app.locals
+const PORT = process.env.PORT || 5005;
+const io = initializeSocket(server);
 app.locals.io = io;
 
 server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Health check available at http://localhost:${PORT}/api/health`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔌 Socket.IO ready for real-time connections`);
-  
-  // Initialize appointment scheduler after server starts
-  await initializeScheduler();
-  
-  // Initialize medicine reminder service
-  initializeMedicineReminders();
-  
-  // Initialize admin email scheduled reports
-  initializeScheduledEmails();
-  
-  // Start scheduled database backups
+  console.log(`🔌 Socket.IO ready for real-time connections`);
+  await initializeScheduler();
+  initializeMedicineReminders();
+  initializeScheduledEmails();
   backupService.startScheduledBackups();
-  console.log('💾 Database backup scheduler initialized');
-  
-  // Initialize all automation jobs for scalability
-  initializeAllJobs();
-  
-  // Nodemon reload trigger: MongoDB connection fixed
+  console.log('💾 Database backup scheduler initialized');
+  initializeAllJobs();
 });

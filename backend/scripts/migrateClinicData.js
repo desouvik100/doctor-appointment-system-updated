@@ -1,12 +1,10 @@
-// scripts/migrateClinicData.js - Migrate clinic data from MongoDB to PostgreSQL
+
 require('dotenv').config();
 const mongoose = require('mongoose');
 const { connectDB, closePool } = require('../config/database');
 const { createTables } = require('../config/initDatabase');
 const TenantManager = require('../utils/tenantManager');
-const ClinicPostgres = require('../models/ClinicPostgres');
-
-// MongoDB Clinic model (temporary for migration)
+const ClinicPostgres = require('../models/ClinicPostgres');
 const mongoClinicSchema = new mongoose.Schema({
   name: String,
   type: { type: String, enum: ['clinic', 'hospital'], default: 'clinic' },
@@ -26,22 +24,14 @@ const migrateClinicData = async () => {
   let mongoConnection = null;
   
   try {
-    console.log('🚀 Starting clinic data migration from MongoDB to PostgreSQL...');
-    
-    // Connect to PostgreSQL
+    console.log('🚀 Starting clinic data migration from MongoDB to PostgreSQL...');
     console.log('📡 Connecting to PostgreSQL...');
-    await connectDB();
-    
-    // Ensure tables exist
+    await connectDB();
     console.log('🔧 Ensuring PostgreSQL tables exist...');
-    await createTables();
-    
-    // Connect to MongoDB
+    await createTables();
     console.log('📡 Connecting to MongoDB...');
     mongoConnection = await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ Connected to MongoDB');
-    
-    // Get default tenant (create if doesn't exist)
+    console.log('✅ Connected to MongoDB');
     let defaultTenant = await TenantManager.getDefaultTenant();
     if (!defaultTenant) {
       console.log('🏢 Creating default tenant...');
@@ -52,9 +42,7 @@ const migrateClinicData = async () => {
       });
     }
     
-    console.log(`✅ Using tenant: ${defaultTenant.name} (${defaultTenant.id})`);
-    
-    // Fetch all clinics from MongoDB
+    console.log(`✅ Using tenant: ${defaultTenant.name} (${defaultTenant.id})`);
     console.log('📥 Fetching clinics from MongoDB...');
     const mongoClinics = await MongoClinic.find({}).lean();
     console.log(`Found ${mongoClinics.length} clinics in MongoDB`);
@@ -62,9 +50,7 @@ const migrateClinicData = async () => {
     if (mongoClinics.length === 0) {
       console.log('ℹ️  No clinics found in MongoDB to migrate');
       return;
-    }
-    
-    // Check if clinics already exist in PostgreSQL
+    }
     const existingClinics = await ClinicPostgres.findAll(defaultTenant.id);
     console.log(`Found ${existingClinics.length} existing clinics in PostgreSQL`);
     
@@ -74,16 +60,13 @@ const migrateClinicData = async () => {
         console.log('⚠️  Clinics already exist in PostgreSQL. Use --force to migrate anyway');
         return;
       }
-    }
-    
-    // Migrate each clinic
+    }
     let migratedCount = 0;
     let skippedCount = 0;
     let errorCount = 0;
     
     for (const mongoClinic of mongoClinics) {
-      try {
-        // Check if clinic already exists in PostgreSQL (by name)
+      try {
         const existingClinics = await ClinicPostgres.findAll(defaultTenant.id, { 
           search: mongoClinic.name 
         });
@@ -96,9 +79,7 @@ const migrateClinicData = async () => {
           console.log(`⏭️  Clinic '${mongoClinic.name}' already exists, skipping...`);
           skippedCount++;
           continue;
-        }
-        
-        // Convert MongoDB format to PostgreSQL format
+        }
         const clinicData = {
           name: mongoClinic.name,
           type: mongoClinic.type || 'clinic',
@@ -147,8 +128,7 @@ const migrateClinicData = async () => {
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
     process.exit(1);
-  } finally {
-    // Close connections
+  } finally {
     if (mongoConnection) {
       await mongoose.disconnect();
       console.log('✅ Disconnected from MongoDB');
@@ -157,9 +137,7 @@ const migrateClinicData = async () => {
     console.log('✅ Disconnected from PostgreSQL');
     process.exit(0);
   }
-};
-
-// Create sample clinics helper
+};
 const createSampleClinics = async () => {
   try {
     console.log('🏥 Creating sample clinics...');
@@ -242,8 +220,7 @@ const createSampleClinics = async () => {
     let createdCount = 0;
     
     for (const clinicData of sampleClinics) {
-      try {
-        // Check if clinic already exists
+      try {
         const existing = await ClinicPostgres.findAll(defaultTenant.id, { 
           search: clinicData.name 
         });
@@ -270,9 +247,7 @@ const createSampleClinics = async () => {
     await closePool();
     process.exit(0);
   }
-};
-
-// Run based on command line argument
+};
 if (require.main === module) {
   const command = process.argv[2];
   

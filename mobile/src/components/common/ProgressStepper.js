@@ -1,6 +1,4 @@
-/**
- * ProgressStepper Component - Multi-step progress indicator
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';

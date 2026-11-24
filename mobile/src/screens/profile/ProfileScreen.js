@@ -1,6 +1,4 @@
-/**
- * ProfileScreen — Personal Health Dashboard
- */
+
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
@@ -167,12 +165,11 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -194,7 +191,7 @@ const ProfileScreen = ({ navigation }) => {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}>
 
-        {/* ── Hero Gradient Header ── */}
+        {}
         <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.heroGradient}>
           <View style={styles.heroTopBar}>
             <Text style={styles.heroScreenTitle}>My Health Space</Text>
@@ -208,7 +205,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Profile row */}
+          {}
           <View style={styles.profileRow}>
             <View style={styles.avatarWrapper}>
               <Avatar
@@ -231,7 +228,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Stats */}
+          {}
           <View style={[styles.statsRow, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0, 0, 0, 0.05)' }]}>
             <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.8}>
               <Text style={styles.statIcon}>🩸</Text>
@@ -253,7 +250,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </LinearGradient>
 
-        {/* ── Upcoming Appointment Banner ── */}
+        {}
         {nextAppointment ? (
           <TouchableOpacity style={styles.nextApptCard} onPress={() => navigation.navigate('Appointments')} activeOpacity={0.85}>
             <View style={[
@@ -280,7 +277,7 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         ) : null}
 
-        {/* ── Quick Actions ── */}
+        {}
         <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.lg }}>
           <QuickActionsGrid
             actions={PROFILE_ACTIONS}
@@ -290,7 +287,7 @@ const ProfileScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* ── Emergency Info Card (Clean Red Alert) ── */}
+        {}
         <TouchableOpacity style={[
           styles.emergencyCard,
           {
@@ -311,7 +308,7 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={[styles.emergencyArrow, { color: colors.error }]}>{'›'}</Text>
         </TouchableOpacity>
 
-        {/* ── Menu Sections ── */}
+        {}
         {menuSections.map((section, idx) => (
           <View key={idx} style={styles.menuSection}>
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
@@ -336,7 +333,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         ))}
 
-        {/* ── Logout ── */}
+        {}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
           <Text style={styles.logoutIcon}>🚪</Text>
           <Text style={styles.logoutText}>Log Out</Text>
@@ -376,9 +373,7 @@ const styles = StyleSheet.create({
     borderRadius: 150,
     top: 250,
     right: -100,
-  },
-
-  // Hero
+  },
   heroGradient: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
   heroTopBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl },
   heroScreenTitle: { fontSize: 20, fontWeight: '800', color: '#fff', letterSpacing: 0.3 },
@@ -414,9 +409,7 @@ const styles = StyleSheet.create({
   statIcon: { fontSize: 18, marginBottom: 2 },
   statValue: { fontSize: 16, fontWeight: '800', color: '#fff' },
   statLabel: { fontSize: 10, color: 'rgba(255,255,255,0.75)', marginTop: 1 },
-  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.3)' },
-
-  // Next appointment
+  statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.3)' },
   nextApptCard: {
     marginHorizontal: spacing.xl,
     marginTop: spacing.lg,
@@ -429,9 +422,7 @@ const styles = StyleSheet.create({
   nextApptIcon: { fontSize: 24 },
   nextApptTitle: { fontSize: 13, fontWeight: '700' },
   nextApptSub: { fontSize: 12, marginTop: 2 },
-  nextApptArrow: { fontSize: 22, fontWeight: '300' },
-
-  // Quick actions
+  nextApptArrow: { fontSize: 22, fontWeight: '300' },
   quickActionsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: spacing.xl, marginTop: spacing.xl, marginBottom: spacing.lg },
   quickAction: { alignItems: 'center' },
   quickActionIcon: {
@@ -444,9 +435,7 @@ const styles = StyleSheet.create({
     ...shadows.sm,
   },
   quickActionEmoji: { fontSize: 26 },
-  quickActionLabel: { fontSize: 11, textAlign: 'center', lineHeight: 15 },
-
-  // Emergency
+  quickActionLabel: { fontSize: 11, textAlign: 'center', lineHeight: 15 },
   emergencyCard: {
     marginHorizontal: spacing.xl,
     marginBottom: spacing.lg,
@@ -461,9 +450,7 @@ const styles = StyleSheet.create({
   emergencyEmoji: { fontSize: 24 },
   emergencyTitle: { fontSize: 14, fontWeight: '700' },
   emergencySub: { fontSize: 12, marginTop: 2 },
-  emergencyArrow: { fontSize: 22, fontWeight: '300' },
-
-  // Menu
+  emergencyArrow: { fontSize: 22, fontWeight: '300' },
   menuSection: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
   sectionTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.sm, marginLeft: 4 },
   menuCard: {
@@ -479,9 +466,7 @@ const styles = StyleSheet.create({
   menuDesc: { fontSize: 12, marginTop: 1 },
   menuItemRight: { marginLeft: spacing.sm },
   menuArrow: { fontSize: 22, fontWeight: '300' },
-  menuDivider: { height: 1, marginLeft: 64 },
-
-  // Logout
+  menuDivider: { height: 1, marginLeft: 64 },
   logoutBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     marginHorizontal: spacing.xxl, marginTop: spacing.sm,

@@ -1,7 +1,4 @@
-/**
- * Staff Doctor Form Screen - Add/Edit Doctor
- * Allows staff to add new doctors or edit existing ones
- */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -46,8 +43,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
 
   const qualifications = ['MBBS', 'MD', 'MS', 'BDS', 'MDS', 'BAMS', 'BHMS', 'Other'];
 
-  const handleSubmit = async () => {
-    // Validation
+  const handleSubmit = async () => {
     if (!form.name.trim()) {
       Alert.alert('Error', 'Please enter doctor name');
       return;
@@ -142,7 +138,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
@@ -153,7 +149,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
           <View style={{ width: 40 }} />
         </View>
 
-        {/* Form */}
+        {}
         <Card style={[styles.formCard, { backgroundColor: colors.surface }]}>
           <InputField
             label="Full Name *"
@@ -215,7 +211,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
             </View>
           </View>
 
-          {/* Submit Button */}
+          {}
           <TouchableOpacity
             style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
             onPress={handleSubmit}

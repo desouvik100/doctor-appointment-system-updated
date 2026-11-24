@@ -4,13 +4,9 @@ require('dotenv').config();
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/healthsync';
 
 mongoose.connect(MONGO_URI).then(async () => {
-  const db = mongoose.connection.db;
-  
-  // Get the clinic ID from the clinic user
+  const db = mongoose.connection.db;
   const clinicUser = await db.collection('users').findOne({ email: 'desouvik0007@gmail.com' });
-  const clinicId = clinicUser ? clinicUser.clinicId : null;
-  
-  // Update desouvik2018@gmail.com to be a clinic user with advanced plan
+  const clinicId = clinicUser ? clinicUser.clinicId : null;
   await db.collection('users').updateOne(
     { email: 'desouvik2018@gmail.com' },
     { 
@@ -25,9 +21,7 @@ mongoose.connect(MONGO_URI).then(async () => {
     }
   );
   
-  console.log('Updated desouvik2018@gmail.com to clinic role with advanced plan');
-  
-  // Verify
+  console.log('Updated desouvik2018@gmail.com to clinic role with advanced plan');
   const user = await db.collection('users').findOne({ email: 'desouvik2018@gmail.com' });
   console.log('User:', user.name, '|', user.role, '|', user.emrPlan, '|', user.clinicName);
   

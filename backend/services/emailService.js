@@ -1,19 +1,15 @@
-// backend/services/emailService.js
+
 const nodemailer = require('nodemailer');
 
-// In-memory OTP store: { "email|type" : { otp, expiresAt } }
 const otpStore = new Map();
 
-// Track email service status
 let emailServiceReady = false;
 let useResend = false;
 
-// Generate a 6-digit OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ---- Nodemailer transporter with better config for cloud platforms ----
 let transporter = null;
 
 function initializeTransporter() {
@@ -28,22 +24,20 @@ function initializeTransporter() {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     },
-    // Better settings for cloud platforms
+
     pool: true,
     maxConnections: 1,
     rateDelta: 20000,
     rateLimit: 5,
-    // Timeout settings
+
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000
   });
 }
 
-// Initialize transporter
 transporter = initializeTransporter();
 
-// Test transporter connection (non-blocking)
 if (transporter) {
   transporter.verify()
     .then(() => {
@@ -54,8 +48,7 @@ if (transporter) {
       console.warn('⚠️ Gmail SMTP unavailable:', error.message);
       console.log('📧 Will use Resend API as fallback if configured');
       emailServiceReady = false;
-      
-      // Check if Resend is available
+
       if (process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('your_')) {
         useResend = true;
         console.log('✅ Resend API configured as email fallback');
@@ -65,7 +58,6 @@ if (transporter) {
   console.warn('⚠️ Email transporter not initialized');
 }
 
-// Send email via Resend API
 async function sendViaResend({ to, subject, html, text }) {
   if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('your_')) {
     throw new Error('Resend API not configured');
@@ -91,7 +83,6 @@ async function sendViaResend({ to, subject, html, text }) {
   return { success: true, messageId: data.id, provider: 'resend' };
 }
 
-// List of fake/test domains that should not receive real emails
 const FAKE_EMAIL_DOMAINS = [
   'healthsync.com',
   'example.com',
@@ -103,23 +94,20 @@ const FAKE_EMAIL_DOMAINS = [
   'mailinator.com'
 ];
 
-// Check if email is a fake/test email
 function isFakeEmail(email) {
   if (!email) return true;
   const domain = email.split('@')[1]?.toLowerCase();
   return FAKE_EMAIL_DOMAINS.some(fakeDomain => domain === fakeDomain || domain?.endsWith('.' + fakeDomain));
 }
 
-// Small helper to send any email via Nodemailer or Resend
 async function sendEmail({ to, subject, html, text }) {
-  // Skip sending to fake/test email addresses
+
   if (isFakeEmail(to)) {
     console.log('📧 Skipping email to fake/test address:', to);
     console.log('📧 Subject:', subject);
     return { success: true, message: 'Skipped - fake/test email address', skipped: true };
   }
 
-  // Check if any email service is configured
   const hasGmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
   const hasResend = process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('your_');
 
@@ -130,7 +118,6 @@ async function sendEmail({ to, subject, html, text }) {
     return { success: true, message: 'Email service not configured (development mode)' };
   }
 
-  // Try Resend FIRST (more reliable for transactional emails)
   if (hasResend) {
     try {
       console.log('📧 Attempting to send via Resend...');
@@ -140,11 +127,10 @@ async function sendEmail({ to, subject, html, text }) {
       return result;
     } catch (resendError) {
       console.error('❌ Resend error:', resendError.message);
-      // Fall through to try Gmail
+
     }
   }
 
-  // Try Gmail/Nodemailer as fallback
   if (hasGmail && transporter) {
     try {
       console.log('📧 Attempting to send via Gmail...');
@@ -167,29 +153,24 @@ async function sendEmail({ to, subject, html, text }) {
     }
   }
 
-  // If we get here, no email was sent
   console.warn('⚠️ Could not send email - no working email service');
-  // Don't throw error - just return a warning
+
   return { success: false, message: 'No email service available', warning: true };
 }
 
-// ---- PUBLIC: send OTP ----
 async function sendOTP(email, type = 'register') {
   if (!email) {
     throw new Error('Email is required for OTP');
   }
 
-  // Normalize email for consistent storage
   const normalizedEmail = email.toLowerCase().trim();
   
   console.log('🔔 sendOTP called for:', normalizedEmail, 'type:', type);
 
-  // Generate OTP FIRST before sending email
   const otp = generateOTP();
   const key = `${normalizedEmail}|${type}`;
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+  const expiresAt = Date.now() + 10 * 60 * 1000; 
 
-  // Store OTP immediately with normalized email
   otpStore.set(key, { otp, expiresAt });
 
   const isPhone = /^\+?[0-9]{10,15}$/.test(normalizedEmail);
@@ -213,7 +194,7 @@ async function sendOTP(email, type = 'register') {
     return {
       success: true,
       message: 'OTP generated successfully. Check your SMS or console logs.',
-      otp: otp, // Return OTP for development/testing
+      otp: otp, 
     };
   }
 
@@ -226,7 +207,6 @@ async function sendOTP(email, type = 'register') {
   console.log('Valid for: 10 minutes');
   console.log('═══════════════════════════════════════');
 
-  // Determine subject and message based on type
   let subject, purpose, actionText;
   
   if (type === 'register' || type === 'registration') {
@@ -257,46 +237,36 @@ async function sendOTP(email, type = 'register') {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
       <title>${subject}</title>
-      <!--[if mso]>
-      <style type="text/css">
-        body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
-      </style>
-      <![endif]-->
+      
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f0f2f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         .email-wrapper { width: 100%; background-color: #f0f2f5; padding: 20px 0; }
         .email-container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-        
-        /* Top Bar */
+
         .top-bar { background: #ffffff; padding: 12px 30px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
         .top-bar-text { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        /* Header with Logo */
+
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; position: relative; }
         .logo-container { margin-bottom: 15px; }
         .logo { width: 80px; height: 80px; background: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .company-name { color: white; font-size: 32px; font-weight: 700; margin: 10px 0 5px 0; letter-spacing: -0.5px; }
         .tagline { color: rgba(255,255,255,0.95); font-size: 15px; font-weight: 400; margin: 0; }
-        
-        /* Profile Section */
+
         .profile-section { background: linear-gradient(to bottom, #667eea 0%, transparent 100%); padding: 0 30px 30px 30px; text-align: center; }
         .profile-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-top: -20px; }
         .greeting { font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 10px; }
         .greeting-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 20px; }
-        
-        /* Content */
+
         .content { padding: 30px; }
         .content-header { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; line-height: 1.5; }
         .content-text { font-size: 14px; color: #4b5563; margin-bottom: 15px; line-height: 1.7; }
-        
-        /* OTP Box */
+
         .otp-container { margin: 30px 0; }
         .otp-label { font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
         .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3); }
         .otp-code { font-size: 42px; font-weight: 800; letter-spacing: 12px; color: white; font-family: 'Courier New', Consolas, monospace; text-shadow: 0 2px 4px rgba(0,0,0,0.2); user-select: all; }
-        
-        /* Info Boxes */
+
         .info-box { background: #f9fafb; border-left: 4px solid #667eea; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
         .info-box-title { font-weight: 600; color: #667eea; font-size: 14px; margin-bottom: 5px; display: flex; align-items: center; }
         .info-box-text { font-size: 13px; color: #4b5563; line-height: 1.6; margin: 0; }
@@ -304,16 +274,14 @@ async function sendOTP(email, type = 'register') {
         .warning-box { background: #fffbeb; border: 1px solid #fbbf24; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
         .warning-box-title { font-weight: 600; color: #92400e; font-size: 14px; margin-bottom: 5px; display: flex; align-items: center; }
         .warning-box-text { font-size: 13px; color: #78350f; line-height: 1.6; margin: 0; }
-        
-        /* Features Section */
+
         .features { background: #f9fafb; padding: 25px 30px; margin: 20px 0; border-radius: 8px; }
         .features-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; text-align: center; }
         .feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .feature-item { text-align: center; padding: 15px; background: white; border-radius: 8px; }
         .feature-icon { font-size: 28px; margin-bottom: 8px; }
         .feature-text { font-size: 12px; color: #4b5563; font-weight: 500; }
-        
-        /* Support Section */
+
         .support-section { background: #f9fafb; padding: 25px 30px; text-align: center; }
         .support-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
         .support-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
@@ -321,15 +289,13 @@ async function sendOTP(email, type = 'register') {
         .support-icon { font-size: 24px; margin-bottom: 5px; }
         .support-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
         .support-value { font-size: 13px; color: #1f2937; font-weight: 500; word-break: break-all; }
-        
-        /* Social Media */
+
         .social-section { padding: 25px 30px; text-align: center; background: white; }
         .social-title { font-size: 14px; color: #6b7280; margin-bottom: 15px; }
         .social-links { display: flex; justify-content: center; gap: 15px; }
         .social-link { display: inline-block; width: 40px; height: 40px; border-radius: 50%; background: #f3f4f6; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: all 0.3s; }
         .social-link:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        
-        /* Footer */
+
         .footer { background: #1f2937; color: #9ca3af; padding: 30px; text-align: center; }
         .footer-logo { font-size: 24px; font-weight: 700; color: white; margin-bottom: 10px; }
         .footer-text { font-size: 13px; margin: 8px 0; line-height: 1.6; }
@@ -338,8 +304,7 @@ async function sendOTP(email, type = 'register') {
         .footer-link:hover { color: #667eea; }
         .footer-divider { height: 1px; background: #374151; margin: 20px 0; }
         .footer-bottom { font-size: 11px; color: #6b7280; }
-        
-        /* Responsive */
+
         @media only screen and (max-width: 600px) {
           .email-container { border-radius: 0; }
           .content, .header, .profile-section, .support-section, .social-section { padding: 20px !important; }
@@ -355,14 +320,12 @@ async function sendOTP(email, type = 'register') {
           <tr>
             <td align="center">
               <div class="email-container">
-                
-                <!-- Top Bar -->
+
                 <div class="top-bar">
                   <div class="top-bar-text">Secure Email</div>
                   <div class="top-bar-text">${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                 </div>
-                
-                <!-- Header -->
+
                 <div class="header">
                   <div class="logo-container">
                     <div class="logo">🏥</div>
@@ -370,42 +333,36 @@ async function sendOTP(email, type = 'register') {
                   <h1 class="company-name">HealthSync</h1>
                   <p class="tagline">Your Healthcare Management Platform</p>
                 </div>
-                
-                <!-- Profile Section -->
+
                 <div class="profile-section">
                   <div class="profile-card">
                     <div class="greeting">Hello! 👋</div>
                     <div class="greeting-subtitle">We received a request for verification</div>
                   </div>
                 </div>
-                
-                <!-- Content -->
+
                 <div class="content">
                   <div class="content-header">${actionText}</div>
                   <div class="content-text">${purpose}</div>
-                  
-                  <!-- OTP Box -->
+
                   <div class="otp-container">
                     <div class="otp-label">Your Verification Code</div>
                     <div class="otp-box">
                       <div class="otp-code">${otp}</div>
                     </div>
                   </div>
-                  
-                  <!-- Validity Info -->
+
                   <div class="info-box">
                     <div class="info-box-title">⏱️ Valid for 10 Minutes</div>
                     <div class="info-box-text">This verification code will expire after 10 minutes for your security. Please use it promptly to complete your ${type === 'register' || type === 'registration' ? 'registration' : 'password reset'}.</div>
                   </div>
-                  
-                  <!-- Security Warning -->
+
                   <div class="warning-box">
                     <div class="warning-box-title">🔒 Security Notice</div>
                     <div class="warning-box-text">If you did not request this verification code, please ignore this email. Your account remains secure. Never share this code with anyone, including HealthSync staff. If you have concerns, please contact our support team immediately.</div>
                   </div>
                 </div>
-                
-                <!-- Features Section -->
+
                 <div class="features">
                   <div class="features-title">Why Choose HealthSync?</div>
                   <div class="feature-grid">
@@ -427,8 +384,7 @@ async function sendOTP(email, type = 'register') {
                     </div>
                   </div>
                 </div>
-                
-                <!-- Support Section -->
+
                 <div class="support-section">
                   <div class="support-title">Need Help? We're Here for You</div>
                   <div class="support-grid">
@@ -449,8 +405,7 @@ async function sendOTP(email, type = 'register') {
                     </div>
                   </div>
                 </div>
-                
-                <!-- Social Media -->
+
                 <div class="social-section">
                   <div class="social-title">Connect With Us</div>
                   <div class="social-links">
@@ -460,8 +415,7 @@ async function sendOTP(email, type = 'register') {
                     <a href="https://linkedin.com/company/healthsync" class="social-link" style="background: #0077b5; color: white;">💼</a>
                   </div>
                 </div>
-                
-                <!-- Footer -->
+
                 <div class="footer">
                   <div class="footer-logo">HealthSync</div>
                   <div class="footer-text">Your trusted healthcare management platform</div>
@@ -492,7 +446,6 @@ async function sendOTP(email, type = 'register') {
     </html>
   `;
 
-  // Try to send email, but don't fail if it doesn't work
   try {
     const emailResult = await sendEmail({ to: normalizedEmail, subject, html, text });
     if (emailResult.warning) {
@@ -502,22 +455,19 @@ async function sendOTP(email, type = 'register') {
     console.warn('⚠️  Email sending failed, but OTP is still valid:', emailError.message);
   }
 
-  // Always return success with OTP - the OTP is stored and valid regardless of email status
   return {
     success: true,
     message: 'OTP generated successfully. Check your email or use the OTP shown below.',
-    otp: otp,  // Return OTP for development/testing
+    otp: otp,  
   };
 }
 
-// ---- PUBLIC: verify OTP ----
 function verifyOTP(email, otp, type = 'register') {
-  // Normalize email and OTP
+
   const normalizedEmail = email?.toLowerCase().trim();
   const normalizedOtp = otp?.toString().trim();
   const key = `${normalizedEmail}|${type}`;
-  
-  // Debug logging
+
   console.log('═══════════════════════════════════════');
   console.log('🔍 OTP VERIFICATION ATTEMPT');
   console.log('Email (raw):', email);
@@ -550,7 +500,6 @@ function verifyOTP(email, otp, type = 'register') {
     };
   }
 
-  // Compare normalized OTPs
   if (record.otp !== normalizedOtp) {
     console.log('❌ OTP mismatch - stored:', record.otp, 'received:', normalizedOtp);
     return {
@@ -559,7 +508,6 @@ function verifyOTP(email, otp, type = 'register') {
     };
   }
 
-  // OTP is valid; remove it so it cannot be reused
   otpStore.delete(key);
   console.log('✅ OTP verified successfully');
 
@@ -569,7 +517,6 @@ function verifyOTP(email, otp, type = 'register') {
   };
 }
 
-// ---- Optional: test email helper ----
 async function sendTestEmail(to) {
   const subject = 'HealthSync - Email Service Test';
   const text = 'If you see this, the HealthSync email service is working correctly! 👍';
@@ -601,7 +548,6 @@ async function sendTestEmail(to) {
   return { success: true };
 }
 
-// ---- Send Appointment Confirmation Email with Meet Link ----
 async function sendAppointmentEmail(appointment, recipientType = 'patient') {
   try {
     const recipient = recipientType === 'patient' ? appointment.userId : appointment.doctorId;
@@ -611,7 +557,6 @@ async function sendAppointmentEmail(appointment, recipientType = 'patient') {
       throw new Error(`${recipientType} email not found`);
     }
 
-    // Format date in IST timezone
     const appointmentDate = new Date(appointment.date);
     const formattedDate = appointmentDate.toLocaleDateString('en-IN', {
       weekday: 'long',
@@ -621,10 +566,8 @@ async function sendAppointmentEmail(appointment, recipientType = 'patient') {
       timeZone: 'Asia/Kolkata'
     });
 
-    // Use the stored time directly (it's already in IST format like "10:00" or "14:30")
     const appointmentTime = appointment.time || 'Time not set';
-    
-    // Format time for display (convert 24h to 12h format)
+
     let displayTime = appointmentTime;
     if (appointmentTime && appointmentTime.includes(':')) {
       const [hours, minutes] = appointmentTime.split(':');
@@ -636,8 +579,7 @@ async function sendAppointmentEmail(appointment, recipientType = 'patient') {
 
     const meetLink = appointment.googleMeetLink || appointment.meetingLink;
     const clinicName = appointment.clinicId?.name || 'HealthSync Clinic';
-    
-    // Debug logging
+
     console.log('📧 Preparing appointment email:');
     console.log(`   Recipient: ${recipient.email} (${recipientType})`);
     console.log(`   Date: ${formattedDate}`);
@@ -810,15 +752,13 @@ Thank you for choosing HealthSync!
   }
 }
 
-// Send queue position notification email
 async function sendQueueNotificationEmail(patientEmail, patientName, doctorName, queuePosition, estimatedTime, appointmentTime) {
-  // Dynamic subject based on position
+
   const isUrgent = queuePosition <= 2;
   const subject = isUrgent 
     ? `🚨 URGENT: Only ${queuePosition} patient(s) before you! - Dr. ${doctorName}`
     : `🔔 Your Turn is Coming Soon - Dr. ${doctorName}`;
-  
-  // Urgent styling for position 1-2
+
   const headerBg = isUrgent 
     ? 'linear-gradient(135deg, #ef4444, #dc2626)' 
     : 'linear-gradient(135deg, #6366f1, #8b5cf6)';
@@ -893,7 +833,6 @@ async function sendQueueNotificationEmail(patientEmail, patientName, doctorName,
   }
 }
 
-// Send queue booking confirmation email with estimated arrival time
 async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, specialization, clinicName, date, queueNumber, estimatedTime, consultationType, tokenNumber }) {
   const subject = `✅ Appointment Confirmed - Queue #${queueNumber} | Dr. ${doctorName}`;
   
@@ -913,22 +852,19 @@ async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, sp
         
         <div style="background: white; padding: 30px; border-radius: 0 0 20px 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
           <p style="color: #334155; font-size: 16px; margin-bottom: 25px;">Dear <strong>${patientName}</strong>,</p>
-          
-          <!-- Queue Token Display -->
+
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 25px; text-align: center; margin-bottom: 25px;">
             <p style="color: rgba(255,255,255,0.8); margin: 0 0 5px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Your Queue Token</p>
             <p style="color: white; margin: 0; font-size: 48px; font-weight: 800;">#${queueNumber}</p>
             ${tokenNumber ? `<p style="color: rgba(255,255,255,0.7); margin: 10px 0 0; font-size: 12px;">Token: ${tokenNumber}</p>` : ''}
           </div>
-          
-          <!-- Estimated Time -->
+
           <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 25px;">
             <p style="color: #059669; margin: 0 0 5px; font-size: 14px; font-weight: 600;">⏰ ESTIMATED ARRIVAL TIME</p>
             <p style="color: #047857; margin: 0; font-size: 32px; font-weight: 700;">${estimatedTime}</p>
             <p style="color: #6b7280; margin: 10px 0 0; font-size: 13px;">Please arrive 15 minutes before this time</p>
           </div>
-          
-          <!-- Appointment Details -->
+
           <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
             <h3 style="color: #1e293b; margin: 0 0 15px; font-size: 16px;">📋 Appointment Details</h3>
             <table style="width: 100%; border-collapse: collapse;">
@@ -954,8 +890,7 @@ async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, sp
               </tr>
             </table>
           </div>
-          
-          <!-- Important Notes -->
+
           <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
             <h4 style="color: #92400e; margin: 0 0 10px; font-size: 14px;">⚠️ Important Notes</h4>
             <ul style="color: #78350f; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8;">
@@ -990,7 +925,6 @@ async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, sp
   }
 }
 
-// ---- Send Cancellation Email ----
 async function sendCancellationEmail({
   recipientEmail,
   recipientName,
@@ -1007,7 +941,6 @@ async function sendCancellationEmail({
       throw new Error('Recipient email is required');
     }
 
-    // Format date
     const formattedDate = new Date(appointmentDate).toLocaleDateString('en-IN', {
       weekday: 'long',
       year: 'numeric',
@@ -1016,7 +949,6 @@ async function sendCancellationEmail({
       timeZone: 'Asia/Kolkata'
     });
 
-    // Format time
     let displayTime = appointmentTime || 'Time not set';
     if (appointmentTime && appointmentTime.includes(':')) {
       const [hours, minutes] = appointmentTime.split(':');

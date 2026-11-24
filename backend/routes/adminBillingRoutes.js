@@ -1,14 +1,9 @@
-/**
- * Admin Billing & Expenses Routes
- * API endpoints for admin financial management
- */
+
 
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// Expense Schema (inline for simplicity)
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const expenseSchema = new mongoose.Schema({
   category: { type: String, required: true, enum: ['salary', 'rent', 'utilities', 'marketing', 'software', 'maintenance', 'supplies', 'legal', 'insurance', 'other'] },
   description: { type: String },
@@ -19,9 +14,7 @@ const expenseSchema = new mongoose.Schema({
   notes: { type: String }
 }, { timestamps: true });
 
-const Expense = mongoose.models.Expense || mongoose.model('Expense', expenseSchema);
-
-// Get all bills (admin view)
+const Expense = mongoose.models.Expense || mongoose.model('Expense', expenseSchema);
 router.get('/billing/all', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { startDate, endDate, status, limit = 100 } = req.query;
@@ -32,9 +25,7 @@ router.get('/billing/all', verifyTokenWithRole(['admin']), async (req, res) => {
       if (startDate) query.createdAt.$gte = new Date(startDate);
       if (endDate) query.createdAt.$lte = new Date(endDate);
     }
-    if (status) query.status = status;
-
-    // Try to get bills from ClinicBilling model
+    if (status) query.status = status;
     let bills = [];
     try {
       const ClinicBilling = require('../models/ClinicBilling');
@@ -43,20 +34,15 @@ router.get('/billing/all', verifyTokenWithRole(['admin']), async (req, res) => {
         .populate('doctorId', 'name')
         .sort({ createdAt: -1 })
         .limit(parseInt(limit));
-    } catch (e) {
-      // Model might not exist, return empty
-    }
-
-    // Also get from Payment model
+    } catch (e) {
+    }
     try {
       const Payment = require('../models/Payment');
       const payments = await Payment.find(query)
         .populate('userId', 'name email')
         .populate('doctorId', 'name')
         .sort({ createdAt: -1 })
-        .limit(parseInt(limit));
-      
-      // Merge payments as bills
+        .limit(parseInt(limit));
       const paymentBills = payments.map(p => ({
         _id: p._id,
         billNumber: p.transactionId || p._id.toString().slice(-6),
@@ -67,8 +53,7 @@ router.get('/billing/all', verifyTokenWithRole(['admin']), async (req, res) => {
       }));
       
       bills = [...bills, ...paymentBills];
-    } catch (e) {
-      // Model might not exist
+    } catch (e) {
     }
 
     res.json({ success: true, bills });
@@ -76,9 +61,7 @@ router.get('/billing/all', verifyTokenWithRole(['admin']), async (req, res) => {
     console.error('Error fetching bills:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all expenses
+});
 router.get('/expenses', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { startDate, endDate, category } = req.query;
@@ -100,9 +83,7 @@ router.get('/expenses', verifyTokenWithRole(['admin']), async (req, res) => {
     console.error('Error fetching expenses:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Add new expense
+});
 router.post('/expenses', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { category, description, amount, date, notes } = req.body;
@@ -123,9 +104,7 @@ router.post('/expenses', verifyTokenWithRole(['admin']), async (req, res) => {
     console.error('Error adding expense:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update expense
+});
 router.put('/expenses/:id', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const expense = await Expense.findByIdAndUpdate(
@@ -143,9 +122,7 @@ router.put('/expenses/:id', verifyTokenWithRole(['admin']), async (req, res) => 
     console.error('Error updating expense:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Delete expense
+});
 router.delete('/expenses/:id', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const expense = await Expense.findByIdAndDelete(req.params.id);
@@ -159,17 +136,13 @@ router.delete('/expenses/:id', verifyTokenWithRole(['admin']), async (req, res) 
     console.error('Error deleting expense:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get financial summary
+});
 router.get('/financial-summary', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     
     const start = startDate ? new Date(startDate) : new Date(new Date().setMonth(new Date().getMonth() - 1));
-    const end = endDate ? new Date(endDate) : new Date();
-
-    // Get total revenue from payments
+    const end = endDate ? new Date(endDate) : new Date();
     let totalRevenue = 0;
     let pendingPayments = 0;
     
@@ -186,11 +159,8 @@ router.get('/financial-summary', verifyTokenWithRole(['admin']), async (req, res
         { $group: { _id: null, total: { $sum: '$amount' } } }
       ]);
       pendingPayments = pendingAgg[0]?.total || 0;
-    } catch (e) {
-      // Payment model might not exist
-    }
-
-    // Also check ClinicBilling
+    } catch (e) {
+    }
     try {
       const ClinicBilling = require('../models/ClinicBilling');
       const billingAgg = await ClinicBilling.aggregate([
@@ -198,11 +168,8 @@ router.get('/financial-summary', verifyTokenWithRole(['admin']), async (req, res
         { $group: { _id: null, total: { $sum: '$grandTotal' } } }
       ]);
       totalRevenue += billingAgg[0]?.total || 0;
-    } catch (e) {
-      // Model might not exist
-    }
-
-    // Get total expenses
+    } catch (e) {
+    }
     const expenseAgg = await Expense.aggregate([
       { $match: { date: { $gte: start, $lte: end } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -221,9 +188,7 @@ router.get('/financial-summary', verifyTokenWithRole(['admin']), async (req, res
     console.error('Error fetching financial summary:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get expense breakdown by category
+});
 router.get('/expenses/breakdown', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { startDate, endDate } = req.query;

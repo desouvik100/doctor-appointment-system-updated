@@ -1,109 +1,76 @@
 const mongoose = require('mongoose');
 
-const imagingReportSchema = new mongoose.Schema({
-  // Report Identification
-  reportNumber: { type: String, unique: true, sparse: true },
-  
-  // Patient Info
+const imagingReportSchema = new mongoose.Schema({
+  reportNumber: { type: String, unique: true, sparse: true },
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  patientIdString: { type: String }, // For non-ObjectId patient references
+  patientIdString: { type: String }, 
   patientName: { type: String, default: 'Patient' },
   patientAge: { type: Number },
-  patientGender: { type: String },
-  
-  // Ordering Info
+  patientGender: { type: String },
   orderedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
   orderedByName: { type: String },
   orderDate: { type: Date, default: Date.now },
   clinicalHistory: { type: String },
-  indication: { type: String },
-  
-  // Imaging Details
+  indication: { type: String },
   imagingType: { 
     type: String, 
     enum: ['xray', 'ct', 'mri', 'usg', 'mammography', 'pet', 'dexa', 'fluoroscopy', 'angiography', 'ecg', 'echo', 'eeg', 'other', 'X-Ray', 'CT', 'MRI', 'Ultrasound', 'PET', 'Mammography', 'DICOM Upload'],
     default: 'other'
   },
   bodyPart: { type: String, default: 'Unknown' },
-  views: [{ type: String }], // e.g., ['AP', 'Lateral'] for X-ray
+  views: [{ type: String }], 
   contrastUsed: { type: Boolean, default: false },
-  contrastType: { type: String },
-  
-  // Procedure Info
+  contrastType: { type: String },
   procedureDate: { type: Date },
   procedureTime: { type: String },
   performedBy: { type: String },
   technician: { type: String },
-  equipment: { type: String },
-  
-  // Findings & Report
+  equipment: { type: String },
   findings: { type: String, default: 'Pending review' },
   impression: { type: String, default: 'Pending review' },
   recommendations: { type: String },
-  comparisonWithPrevious: { type: String },
-  
-  // Images
+  comparisonWithPrevious: { type: String },
   images: [{
     fileName: { type: String },
     fileUrl: { type: String },
     fileType: { type: String },
     thumbnailUrl: { type: String },
-    dicomId: { type: String }, // For DICOM images
+    dicomId: { type: String }, 
     uploadedAt: { type: Date, default: Date.now },
     description: { type: String }
-  }],
-  
-  // Reporting Radiologist
+  }],
   reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
   reportedByName: { type: String },
-  reportedAt: { type: Date },
-  
-  // Verification
+  reportedAt: { type: Date },
   verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   verifiedByName: { type: String },
-  verifiedAt: { type: Date },
-  
-  // Status
+  verifiedAt: { type: Date },
   status: { 
     type: String, 
     enum: ['ordered', 'scheduled', 'in_progress', 'pending_report', 'reported', 'verified', 'delivered', 'cancelled'],
     default: 'ordered'
   },
-  priority: { type: String, enum: ['routine', 'urgent', 'stat'], default: 'routine' },
-  
-  // Linked Records
+  priority: { type: String, enum: ['routine', 'urgent', 'stat'], default: 'routine' },
   admissionId: { type: mongoose.Schema.Types.ObjectId, ref: 'IPDAdmission' },
-  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
-  
-  // Compliance
+  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
   isLocked: { type: Boolean, default: false },
   lockedAt: { type: Date },
-  lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  
-  // Digital Signature
+  lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   digitalSignature: {
     signedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     signedAt: { type: Date },
     signatureData: { type: String }
-  },
-  
-  // Clinic
-  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic' },
-  
-  // Billing
+  },
+  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic' },
   cost: { type: Number },
   billId: { type: mongoose.Schema.Types.ObjectId, ref: 'ClinicBilling' }
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 imagingReportSchema.index({ clinicId: 1, status: 1 });
 imagingReportSchema.index({ patientId: 1, createdAt: -1 });
 imagingReportSchema.index({ reportNumber: 1 });
-imagingReportSchema.index({ admissionId: 1 });
-
-// Generate report number
+imagingReportSchema.index({ admissionId: 1 });
 imagingReportSchema.pre('save', async function(next) {
   if (!this.reportNumber) {
     const date = new Date();

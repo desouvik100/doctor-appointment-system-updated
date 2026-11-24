@@ -1,4 +1,4 @@
-// backend/routes/analyticsRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const Appointment = require('../models/Appointment');
@@ -7,9 +7,7 @@ const Doctor = require('../models/Doctor');
 const Payment = require('../models/Payment');
 const Clinic = require('../models/Clinic');
 const Review = require('../models/Review');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// GET /api/analytics/revenue — revenue analytics for admin
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 router.get('/revenue', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { period = 'month' } = req.query;
@@ -66,9 +64,7 @@ router.get('/revenue', verifyTokenWithRole(['admin']), async (req, res) => {
     console.error('Revenue analytics error:', error);
     res.status(500).json({ message: 'Failed to fetch revenue analytics', error: error.message });
   }
-});
-
-// Get dashboard overview stats
+});
 router.get('/overview', async (req, res) => {
   try {
     const today = new Date();
@@ -76,10 +72,7 @@ router.get('/overview', async (req, res) => {
     
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
-
-
-    // Total counts
+    const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
     const [
       totalPatients,
       totalDoctors,
@@ -100,9 +93,7 @@ router.get('/overview', async (req, res) => {
       Appointment.countDocuments({ createdAt: { $gte: lastMonth, $lt: thisMonth } }),
       Appointment.countDocuments({ status: 'pending' }),
       Appointment.countDocuments({ status: 'completed' })
-    ]);
-
-    // Revenue stats
+    ]);
     const revenueThisMonth = await Payment.aggregate([
       { $match: { status: { $in: ['completed', 'success'] }, createdAt: { $gte: thisMonth } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
@@ -111,9 +102,7 @@ router.get('/overview', async (req, res) => {
     const revenueLastMonth = await Payment.aggregate([
       { $match: { status: { $in: ['completed', 'success'] }, createdAt: { $gte: lastMonth, $lt: thisMonth } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
-
-    // Calculate growth percentages
+    ]);
     const appointmentGrowth = lastMonthAppointments > 0 
       ? ((thisMonthAppointments - lastMonthAppointments) / lastMonthAppointments * 100).toFixed(1)
       : 100;
@@ -149,9 +138,7 @@ router.get('/overview', async (req, res) => {
     console.error('Analytics overview error:', error);
     res.status(500).json({ message: 'Failed to fetch analytics', error: error.message });
   }
-});
-
-// Get appointment trends (last 30 days)
+});
 router.get('/appointment-trends', async (req, res) => {
   try {
     const { days = 30 } = req.query;
@@ -179,9 +166,7 @@ router.get('/appointment-trends', async (req, res) => {
     console.error('Appointment trends error:', error);
     res.status(500).json({ message: 'Failed to fetch trends', error: error.message });
   }
-});
-
-// Get revenue trends
+});
 router.get('/revenue-trends', async (req, res) => {
   try {
     const { days = 30 } = req.query;
@@ -206,9 +191,7 @@ router.get('/revenue-trends', async (req, res) => {
     console.error('Revenue trends error:', error);
     res.status(500).json({ message: 'Failed to fetch revenue trends', error: error.message });
   }
-});
-
-// Get top doctors by appointments
+});
 router.get('/top-doctors', async (req, res) => {
   try {
     const { limit = 10 } = req.query;
@@ -253,9 +236,7 @@ router.get('/top-doctors', async (req, res) => {
     console.error('Top doctors error:', error);
     res.status(500).json({ message: 'Failed to fetch top doctors', error: error.message });
   }
-});
-
-// Get specialization distribution
+});
 router.get('/specialization-stats', async (req, res) => {
   try {
     const stats = await Doctor.aggregate([
@@ -268,9 +249,7 @@ router.get('/specialization-stats', async (req, res) => {
         }
       },
       { $sort: { count: -1 } }
-    ]);
-
-    // Get appointment count per specialization
+    ]);
     const appointmentStats = await Appointment.aggregate([
       {
         $lookup: {
@@ -304,12 +283,9 @@ router.get('/specialization-stats', async (req, res) => {
     console.error('Specialization stats error:', error);
     res.status(500).json({ message: 'Failed to fetch specialization stats', error: error.message });
   }
-});
-
-// Get patient demographics
+});
 router.get('/patient-demographics', async (req, res) => {
-  try {
-    // Location distribution
+  try {
     const locationStats = await User.aggregate([
       { $match: { role: 'patient', 'loginLocation.city': { $exists: true, $ne: null } } },
       {
@@ -320,9 +296,7 @@ router.get('/patient-demographics', async (req, res) => {
       },
       { $sort: { count: -1 } },
       { $limit: 10 }
-    ]);
-
-    // Registration trends
+    ]);
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -345,9 +319,7 @@ router.get('/patient-demographics', async (req, res) => {
     console.error('Patient demographics error:', error);
     res.status(500).json({ message: 'Failed to fetch demographics', error: error.message });
   }
-});
-
-// Get hourly appointment distribution
+});
 router.get('/hourly-distribution', async (req, res) => {
   try {
     const distribution = await Appointment.aggregate([
@@ -365,9 +337,7 @@ router.get('/hourly-distribution', async (req, res) => {
         }
       },
       { $sort: { _id: 1 } }
-    ]);
-
-    // Fill in missing hours
+    ]);
     const hourlyData = [];
     for (let i = 0; i < 24; i++) {
       const found = distribution.find(d => d._id === i);
@@ -383,9 +353,7 @@ router.get('/hourly-distribution', async (req, res) => {
     console.error('Hourly distribution error:', error);
     res.status(500).json({ message: 'Failed to fetch hourly distribution', error: error.message });
   }
-});
-
-// Get review statistics
+});
 router.get('/review-stats', async (req, res) => {
   try {
     const stats = await Review.aggregate([
@@ -416,9 +384,7 @@ router.get('/review-stats', async (req, res) => {
     console.error('Review stats error:', error);
     res.status(500).json({ message: 'Failed to fetch review stats', error: error.message });
   }
-});
-
-// Export analytics data
+});
 router.get('/export', async (req, res) => {
   try {
     const { type = 'appointments', startDate, endDate, format = 'json' } = req.query;
@@ -457,8 +423,7 @@ router.get('/export', async (req, res) => {
         return res.status(400).json({ message: 'Invalid export type' });
     }
 
-    if (format === 'csv') {
-      // Convert to CSV
+    if (format === 'csv') {
       if (data.length === 0) {
         return res.status(404).json({ message: 'No data found for export' });
       }

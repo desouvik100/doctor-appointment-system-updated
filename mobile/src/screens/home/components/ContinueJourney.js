@@ -1,6 +1,4 @@
-/**
- * ContinueJourney - Premium unified booking progress indicator card (V4 Refined)
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -24,11 +22,9 @@ const ContinueJourney = ({ items = [] }) => {
     return null;
   }
 
-  // Focus on the highest-priority pending task (the first item)
   const activeTask = items[0];
   const scale = useSharedValue(1);
 
-  // Fallback values for layout details
   const doctorName = activeTask.description?.split(' - ')[0] || 'Dr. Sarah Wilson';
   const specialty = activeTask.description?.split(' - ')[1] || 'Cardiologist';
   const selectedDate = 'Friday, June 5';
@@ -86,7 +82,7 @@ const ContinueJourney = ({ items = [] }) => {
           </View>
         </View>
 
-        {/* Selected Slot Information */}
+        {}
         <View style={[styles.slotDetailsCard, { backgroundColor: isDarkMode ? '#171E2D' : '#F8FAFC' }]}>
           <View style={styles.detailItem}>
             <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Selected Date</Text>
@@ -99,7 +95,7 @@ const ContinueJourney = ({ items = [] }) => {
           </View>
         </View>
 
-        {/* Action Prompt */}
+        {}
         <View style={styles.footerRow}>
           <Text style={[styles.pendingStepText, { color: colors.textPrimary }]}>
             {pendingStepAction}

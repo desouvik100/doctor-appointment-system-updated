@@ -1,22 +1,13 @@
-/**
- * Lab Order Service
- * Handles lab test ordering, status management, and result processing
- */
+
 
 const LabOrder = require('../models/LabOrder');
 const labTestCatalog = require('../data/labTestCatalog.json');
 const mongoose = require('mongoose');
 
-/**
- * Get lab test catalog
- */
 function getTestCatalog() {
   return labTestCatalog;
 }
 
-/**
- * Search tests by name or code
- */
 function searchTests(query) {
   const searchTerm = query.toLowerCase();
   
@@ -39,21 +30,13 @@ function searchTests(query) {
   };
 }
 
-/**
- * Get test details by code
- */
 function getTestByCode(code) {
   return labTestCatalog.tests.find(test => test.code === code);
 }
 
-/**
- * Get panel details by ID
- */
 function getPanelById(panelId) {
   const panel = labTestCatalog.panels.find(p => p.id === panelId);
-  if (!panel) return null;
-  
-  // Expand panel with test details
+  if (!panel) return null;
   const expandedPanel = {
     ...panel,
     testDetails: panel.tests.map(testCode => getTestByCode(testCode)).filter(Boolean)
@@ -62,9 +45,6 @@ function getPanelById(panelId) {
   return expandedPanel;
 }
 
-/**
- * Create lab order
- */
 async function createOrder(orderData, orderedBy) {
   try {
     const {
@@ -76,20 +56,14 @@ async function createOrder(orderData, orderedBy) {
       urgency = 'routine',
       clinicalNotes,
       patientInstructions
-    } = orderData;
-    
-    // Validate required fields
+    } = orderData;
     if (!patientId || !clinicId || !visitId || (!tests?.length && !panels?.length)) {
       throw new Error('Patient ID, clinic ID, visit ID, and at least one test or panel are required');
-    }
-    
-    // Validate urgency
+    }
     const validUrgencies = ['routine', 'urgent', 'stat'];
     if (!validUrgencies.includes(urgency)) {
       throw new Error(`Invalid urgency level: ${urgency}`);
-    }
-    
-    // Process individual tests
+    }
     const processedTests = [];
     if (tests?.length > 0) {
       for (const testCode of tests) {
@@ -106,21 +80,16 @@ async function createOrder(orderData, orderedBy) {
           status: 'ordered'
         });
       }
-    }
-    
-    // Process panels
+    }
     if (panels?.length > 0) {
       for (const panelId of panels) {
         const panelDetails = getPanelById(panelId);
         if (!panelDetails) {
           throw new Error(`Invalid panel ID: ${panelId}`);
-        }
-        
-        // Add all tests from the panel
+        }
         for (const testCode of panelDetails.tests) {
           const testDetails = getTestByCode(testCode);
-          if (testDetails) {
-            // Check if test already added individually
+          if (testDetails) {
             const existingTest = processedTests.find(t => t.testCode === testCode);
             if (!existingTest) {
               processedTests.push({
@@ -139,18 +108,14 @@ async function createOrder(orderData, orderedBy) {
     
     if (processedTests.length === 0) {
       throw new Error('No valid tests found to order');
-    }
-    
-    // Calculate expected completion time
+    }
     const maxTurnaround = Math.max(...processedTests.map(t => {
       const testDetails = getTestByCode(t.testCode);
       return testDetails.turnaroundUnit === 'hours' ? testDetails.turnaroundTime : testDetails.turnaroundTime * 24;
     }));
     
     const expectedCompletion = new Date();
-    expectedCompletion.setHours(expectedCompletion.getHours() + maxTurnaround);
-    
-    // Create the order
+    expectedCompletion.setHours(expectedCompletion.getHours() + maxTurnaround);
     const order = new LabOrder({
       patientId,
       clinicId,
@@ -172,9 +137,6 @@ async function createOrder(orderData, orderedBy) {
   }
 }
 
-/**
- * Update order status
- */
 async function updateStatus(orderId, newStatus, updatedBy, notes = null) {
   try {
     const validStatuses = ['pending', 'partial', 'completed', 'cancelled'];
@@ -186,13 +148,9 @@ async function updateStatus(orderId, newStatus, updatedBy, notes = null) {
     const order = await LabOrder.findById(orderId);
     if (!order) {
       throw new Error('Lab order not found');
-    }
-    
-    // Update order status
+    }
     order.orderStatus = newStatus;
-    order.updatedBy = updatedBy;
-    
-    // Set completion timestamp if completed
+    order.updatedBy = updatedBy;
     if (newStatus === 'completed') {
       order.completedAt = new Date();
     } else if (newStatus === 'cancelled') {
@@ -208,9 +166,6 @@ async function updateStatus(orderId, newStatus, updatedBy, notes = null) {
   }
 }
 
-/**
- * Update individual test status
- */
 async function updateTestStatus(orderId, testCode, newStatus, updatedBy, notes = null) {
   try {
     const validStatuses = ['ordered', 'sample_collected', 'processing', 'completed', 'cancelled'];
@@ -227,26 +182,20 @@ async function updateTestStatus(orderId, testCode, newStatus, updatedBy, notes =
     const test = order.tests.find(t => t.testCode === testCode);
     if (!test) {
       throw new Error(`Test ${testCode} not found in order`);
-    }
-    
-    // Update test status
+    }
     test.status = newStatus;
     
     if (newStatus === 'completed') {
       test.completedAt = new Date();
     } else if (newStatus === 'sample_collected') {
       test.sampleCollectedAt = new Date();
-    }
-    
-    // Add to test status history
+    }
     test.statusHistory.push({
       status: newStatus,
       changedAt: new Date(),
       changedBy: updatedBy,
       notes
-    });
-    
-    // Update overall order status
+    });
     order.updateOrderStatus();
     order.updatedBy = updatedBy;
     
@@ -258,9 +207,6 @@ async function updateTestStatus(orderId, testCode, newStatus, updatedBy, notes =
   }
 }
 
-/**
- * Add test results
- */
 async function addResults(orderId, testCode, results, addedBy) {
   try {
     const order = await LabOrder.findById(orderId);
@@ -271,14 +217,10 @@ async function addResults(orderId, testCode, results, addedBy) {
     const test = order.tests.find(t => t.testCode === testCode);
     if (!test) {
       throw new Error(`Test ${testCode} not found in order`);
-    }
-    
-    // Validate results structure
+    }
     if (!results.values || !Array.isArray(results.values)) {
       throw new Error('Results must contain a values array');
-    }
-    
-    // Process result values and flag abnormal results
+    }
     const processedValues = results.values.map(value => {
       const processedValue = {
         parameter: value.parameter,
@@ -287,13 +229,10 @@ async function addResults(orderId, testCode, results, addedBy) {
         referenceRange: value.referenceRange,
         isAbnormal: false,
         abnormalFlag: null
-      };
-      
-      // Flag abnormal results based on reference ranges
+      };
       if (value.referenceRange && value.value) {
         const numericValue = parseFloat(value.value);
-        if (!isNaN(numericValue)) {
-          // Simple range checking (can be enhanced)
+        if (!isNaN(numericValue)) {
           if (value.referenceRange.includes('-')) {
             const [min, max] = value.referenceRange.split('-').map(v => parseFloat(v.trim()));
             if (!isNaN(min) && !isNaN(max)) {
@@ -310,31 +249,23 @@ async function addResults(orderId, testCode, results, addedBy) {
       }
       
       return processedValue;
-    });
-    
-    // Update test with results - store in a custom results field for testing
+    });
     test.results = {
       values: processedValues,
       reportDate: new Date(),
       addedBy,
       comments: results.comments
-    };
-    
-    // Mark test as completed if not already
+    };
     if (test.status !== 'completed') {
       test.status = 'completed';
       test.completedAt = new Date();
-    }
-    
-    // Add to test status history
+    }
     test.statusHistory.push({
       status: 'results added',
       changedAt: new Date(),
       changedBy: addedBy,
       notes: 'Test results added'
-    });
-    
-    // Update overall order status
+    });
     order.updateOrderStatus();
     order.updatedBy = addedBy;
     
@@ -346,9 +277,6 @@ async function addResults(orderId, testCode, results, addedBy) {
   }
 }
 
-/**
- * Get order by ID
- */
 async function getOrder(orderId) {
   try {
     const order = await LabOrder.findById(orderId);
@@ -358,9 +286,6 @@ async function getOrder(orderId) {
   }
 }
 
-/**
- * Get orders for patient
- */
 async function getPatientOrders(patientId, options = {}) {
   try {
     const {
@@ -405,9 +330,6 @@ async function getPatientOrders(patientId, options = {}) {
   }
 }
 
-/**
- * Get orders for clinic
- */
 async function getClinicOrders(clinicId, options = {}) {
   try {
     const {
@@ -450,9 +372,6 @@ async function getClinicOrders(clinicId, options = {}) {
   }
 }
 
-/**
- * Cancel order
- */
 async function cancelOrder(orderId, cancelledBy, reason) {
   try {
     const order = await LabOrder.findById(orderId);
@@ -471,9 +390,7 @@ async function cancelOrder(orderId, cancelledBy, reason) {
     order.orderStatus = 'cancelled';
     order.cancelledAt = new Date();
     order.cancelReason = reason;
-    order.updatedBy = cancelledBy;
-    
-    // Cancel all individual tests
+    order.updatedBy = cancelledBy;
     order.tests.forEach(test => {
       if (test.status !== 'completed') {
         test.status = 'cancelled';
@@ -494,9 +411,6 @@ async function cancelOrder(orderId, cancelledBy, reason) {
   }
 }
 
-/**
- * Get order statistics for clinic
- */
 async function getOrderStats(clinicId, startDate, endDate) {
   try {
     const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

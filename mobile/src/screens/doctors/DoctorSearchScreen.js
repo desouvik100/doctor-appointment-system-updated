@@ -1,6 +1,4 @@
-/**
- * DoctorSearchScreen - Advanced doctor search with filters
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -38,9 +36,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
     maxFee: null,
     availability: null,
     rating: null,
-  });
-
-  // Debounced search function
+  });
   const debouncedSearch = useCallback(
     debounce((query, currentFilters) => {
       performSearch(query, currentFilters);
@@ -73,7 +69,6 @@ const DoctorSearchScreen = ({ navigation, route }) => {
       const response = await doctorService.searchDoctors(params);
       let results = Array.isArray(response) ? response : (response?.data || response?.doctors || []);
 
-      // These filters are not supported by the current API contract.
       if (currentFilters.experience) {
         results = results.filter(doc => Number(doc.experience || 0) >= Number(currentFilters.experience));
       }
@@ -197,7 +192,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -209,7 +204,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         <View style={styles.headerRight} />
       </View>
 
-      {/* Search Bar */}
+      {}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -244,7 +239,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Results */}
+      {}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -265,7 +260,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         />
       )}
 
-      {/* Filter Panel Modal */}
+      {}
       <FilterPanel
         visible={showFilters}
         filters={filters}

@@ -1,7 +1,4 @@
-/**
- * EMR Access Control Middleware
- * Controls access to EMR screens based on subscription and role
- */
+
 
 const EMRSubscription = require('../models/EMRSubscription');
 const ClinicStaff = require('../models/ClinicStaff');
@@ -12,10 +9,6 @@ const {
   getScreensForRole 
 } = require('../config/emrConfig');
 
-/**
- * Check if clinic has active EMR subscription
- * Attaches subscription to req.emrSubscription
- */
 const checkEMRSubscription = async (req, res, next) => {
   try {
     const clinicId = req.params.clinicId || req.body.clinicId || req.query.clinicId;
@@ -26,9 +19,7 @@ const checkEMRSubscription = async (req, res, next) => {
         message: 'Clinic ID is required',
         code: 'CLINIC_ID_REQUIRED'
       });
-    }
-    
-    // Get active subscription for clinic
+    }
     const subscription = await EMRSubscription.getActiveForClinic(clinicId);
     
     if (!subscription) {
@@ -41,11 +32,8 @@ const checkEMRSubscription = async (req, res, next) => {
           url: '/emr/subscribe'
         }
       });
-    }
-    
-    // Check if subscription is expired
-    if (subscription.isExpired) {
-      // Update status if not already expired
+    }
+    if (subscription.isExpired) {
       if (subscription.status !== 'expired') {
         subscription.status = 'expired';
         await subscription.save();
@@ -61,9 +49,7 @@ const checkEMRSubscription = async (req, res, next) => {
           url: '/emr/renew'
         }
       });
-    }
-    
-    // Attach subscription to request
+    }
     req.emrSubscription = subscription;
     req.clinicId = clinicId;
     
@@ -78,10 +64,6 @@ const checkEMRSubscription = async (req, res, next) => {
   }
 };
 
-/**
- * Check if user has access to specific EMR screen
- * Requires checkEMRSubscription to run first
- */
 const checkEMRScreenAccess = (screenId) => {
   return async (req, res, next) => {
     try {
@@ -93,9 +75,7 @@ const checkEMRScreenAccess = (screenId) => {
           message: 'EMR subscription not found',
           code: 'NO_SUBSCRIPTION'
         });
-      }
-      
-      // Find the screen configuration
+      }
       const screen = Object.values(EMR_SCREENS).find(s => s.id === screenId);
       
       if (!screen) {
@@ -104,9 +84,7 @@ const checkEMRScreenAccess = (screenId) => {
           message: 'EMR screen not found',
           code: 'SCREEN_NOT_FOUND'
         });
-      }
-      
-      // Check plan level
+      }
       const userPlanLevel = PLAN_HIERARCHY[subscription.plan] || 0;
       const requiredPlanLevel = PLAN_HIERARCHY[screen.plan] || 0;
       
@@ -127,9 +105,7 @@ const checkEMRScreenAccess = (screenId) => {
             url: `/emr/upgrade?plan=${screen.plan}`
           }
         });
-      }
-      
-      // Attach screen info to request
+      }
       req.emrScreen = screen;
       
       next();
@@ -144,10 +120,6 @@ const checkEMRScreenAccess = (screenId) => {
   };
 };
 
-/**
- * Check user's EMR role within clinic
- * Requires checkEMRSubscription to run first
- */
 const checkEMRRole = (allowedRoles) => {
   return async (req, res, next) => {
     try {
@@ -160,22 +132,17 @@ const checkEMRRole = (allowedRoles) => {
           message: 'Authentication required',
           code: 'AUTH_REQUIRED'
         });
-      }
-      
-      // Check if user is clinic staff
+      }
       let staffRecord = await ClinicStaff.findOne({
         clinicId,
         userId,
         isActive: true
-      });
-      
-      // If no staff record, check if user is the clinic owner (admin by default)
+      });
       if (!staffRecord) {
         const Clinic = require('../models/Clinic');
         const clinic = await Clinic.findById(clinicId);
         
-        if (clinic && clinic.ownerId?.toString() === userId.toString()) {
-          // Clinic owner is admin
+        if (clinic && clinic.ownerId?.toString() === userId.toString()) {
           req.emrRole = 'admin';
         } else {
           return res.status(403).json({
@@ -186,9 +153,7 @@ const checkEMRRole = (allowedRoles) => {
         }
       } else {
         req.emrRole = staffRecord.role;
-      }
-      
-      // Check if role is allowed
+      }
       if (allowedRoles && !allowedRoles.includes(req.emrRole)) {
         return res.status(403).json({
           success: false,
@@ -211,9 +176,6 @@ const checkEMRRole = (allowedRoles) => {
   };
 };
 
-/**
- * Combined middleware: Check subscription + screen + role
- */
 const checkEMRAccess = (screenId) => {
   return async (req, res, next) => {
     try {
@@ -234,9 +196,7 @@ const checkEMRAccess = (screenId) => {
           message: 'Authentication required',
           code: 'AUTH_REQUIRED'
         });
-      }
-      
-      // Get subscription
+      }
       const subscription = await EMRSubscription.getActiveForClinic(clinicId);
       
       if (!subscription) {
@@ -257,9 +217,7 @@ const checkEMRAccess = (screenId) => {
           locked: true,
           upgrade: { url: '/emr/renew' }
         });
-      }
-      
-      // Get user role
+      }
       let userRole = null;
       const staffRecord = await ClinicStaff.findOne({ clinicId, userId, isActive: true });
       
@@ -279,9 +237,7 @@ const checkEMRAccess = (screenId) => {
           message: 'Not a clinic member',
           code: 'NOT_CLINIC_MEMBER'
         });
-      }
-      
-      // Check screen access
+      }
       const screen = Object.values(EMR_SCREENS).find(s => s.id === screenId);
       
       if (!screen) {
@@ -290,9 +246,7 @@ const checkEMRAccess = (screenId) => {
           message: 'Screen not found',
           code: 'SCREEN_NOT_FOUND'
         });
-      }
-      
-      // Check plan level
+      }
       const userPlanLevel = PLAN_HIERARCHY[subscription.plan] || 0;
       const requiredPlanLevel = PLAN_HIERARCHY[screen.plan] || 0;
       
@@ -307,9 +261,7 @@ const checkEMRAccess = (screenId) => {
           requiredPlan: screen.plan,
           upgrade: { url: `/emr/upgrade?plan=${screen.plan}` }
         });
-      }
-      
-      // Check role access
+      }
       if (!screen.roles.includes(userRole)) {
         return res.status(403).json({
           success: false,
@@ -318,9 +270,7 @@ const checkEMRAccess = (screenId) => {
           currentRole: userRole,
           requiredRoles: screen.roles
         });
-      }
-      
-      // Attach to request
+      }
       req.emrSubscription = subscription;
       req.emrRole = userRole;
       req.emrScreen = screen;
@@ -338,18 +288,13 @@ const checkEMRAccess = (screenId) => {
   };
 };
 
-/**
- * Get available screens for user
- */
 const getAvailableScreens = async (clinicId, userId) => {
   try {
     const subscription = await EMRSubscription.getActiveForClinic(clinicId);
     
     if (!subscription || subscription.isExpired) {
       return { screens: [], subscription: null };
-    }
-    
-    // Get user role
+    }
     let userRole = null;
     const staffRecord = await ClinicStaff.findOne({ clinicId, userId, isActive: true });
     
@@ -367,9 +312,7 @@ const getAvailableScreens = async (clinicId, userId) => {
       return { screens: [], subscription: null, error: 'Not a clinic member' };
     }
     
-    const screens = getScreensForRole(userRole, subscription.plan);
-    
-    // Also get locked screens (for upgrade prompts)
+    const screens = getScreensForRole(userRole, subscription.plan);
     const allScreens = Object.values(EMR_SCREENS);
     const lockedScreens = allScreens.filter(screen => {
       const planLevel = PLAN_HIERARCHY[subscription.plan] || 0;

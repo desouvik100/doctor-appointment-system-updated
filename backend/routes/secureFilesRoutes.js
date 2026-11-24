@@ -1,9 +1,4 @@
-/**
- * Secure Files Routes - Signed URL Access
- * ========================================
- * Handles secure access to sensitive files using signed URLs.
- * All file access is logged for audit compliance.
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -11,9 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const signedUrlService = require('../services/signedUrlService');
 const ImmutableAuditLog = require('../models/ImmutableAuditLog');
-const { verifyAccessToken } = require('../middleware/enhancedAuth');
-
-// Base paths for different file types
+const { verifyAccessToken } = require('../middleware/enhancedAuth');
 const FILE_PATHS = {
   lab: path.join(__dirname, '../uploads/lab-reports'),
   prescription: path.join(__dirname, '../uploads/prescriptions'),
@@ -21,9 +14,6 @@ const FILE_PATHS = {
   imaging: path.join(__dirname, '../uploads/imaging')
 };
 
-/**
- * Middleware to verify signed URL
- */
 const verifySignedUrl = (req, res, next) => {
   const verification = signedUrlService.verifySignedUrl(req);
 
@@ -39,19 +29,11 @@ const verifySignedUrl = (req, res, next) => {
   next();
 };
 
-/**
- * GET /api/secure-files/reports/lab/:reportId
- * Access lab report with signed URL
- */
 router.get('/reports/lab/:reportId', verifySignedUrl, async (req, res) => {
   try {
     const { reportId } = req.params;
-    const { userId, clinicId } = req.signedPayload;
-
-    // Log access
-    await logFileAccess('lab_report', reportId, userId, clinicId, req);
-
-    // Find and serve file
+    const { userId, clinicId } = req.signedPayload;
+    await logFileAccess('lab_report', reportId, userId, clinicId, req);
     const filePath = await findFile(FILE_PATHS.lab, reportId);
     
     if (!filePath) {
@@ -59,9 +41,7 @@ router.get('/reports/lab/:reportId', verifySignedUrl, async (req, res) => {
         success: false,
         message: 'Lab report not found'
       });
-    }
-
-    // Set appropriate headers
+    }
     const ext = path.extname(filePath).toLowerCase();
     const contentType = getContentType(ext);
     
@@ -69,9 +49,7 @@ router.get('/reports/lab/:reportId', verifySignedUrl, async (req, res) => {
     res.setHeader('Content-Disposition', req.query.download === '1' 
       ? `attachment; filename="${req.query.filename || path.basename(filePath)}"` 
       : 'inline');
-    res.setHeader('Cache-Control', 'private, no-cache');
-
-    // Stream file
+    res.setHeader('Cache-Control', 'private, no-cache');
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
 
@@ -84,10 +62,6 @@ router.get('/reports/lab/:reportId', verifySignedUrl, async (req, res) => {
   }
 });
 
-/**
- * GET /api/secure-files/reports/prescription/:prescriptionId
- * Access prescription with signed URL
- */
 router.get('/reports/prescription/:prescriptionId', verifySignedUrl, async (req, res) => {
   try {
     const { prescriptionId } = req.params;
@@ -122,10 +96,6 @@ router.get('/reports/prescription/:prescriptionId', verifySignedUrl, async (req,
   }
 });
 
-/**
- * GET /api/secure-files/files/medical/:fileId
- * Access medical file with signed URL
- */
 router.get('/files/medical/:fileId', verifySignedUrl, async (req, res) => {
   try {
     const { fileId } = req.params;
@@ -160,10 +130,6 @@ router.get('/files/medical/:fileId', verifySignedUrl, async (req, res) => {
   }
 });
 
-/**
- * GET /api/secure-files/reports/imaging/:imagingId
- * Access imaging report with signed URL
- */
 router.get('/reports/imaging/:imagingId', verifySignedUrl, async (req, res) => {
   try {
     const { imagingId } = req.params;
@@ -196,16 +162,8 @@ router.get('/reports/imaging/:imagingId', verifySignedUrl, async (req, res) => {
       message: 'Failed to access imaging report'
     });
   }
-});
+});
 
-// ============================================
-// SIGNED URL GENERATION ENDPOINTS
-// ============================================
-
-/**
- * POST /api/secure-files/generate-url
- * Generate a signed URL for a file (requires authentication)
- */
 router.post('/generate-url', verifyAccessToken, async (req, res) => {
   try {
     const { resourceType, resourceId, expiresIn } = req.body;
@@ -255,10 +213,6 @@ router.post('/generate-url', verifyAccessToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/secure-files/generate-download-url
- * Generate a signed download URL
- */
 router.post('/generate-download-url', verifyAccessToken, async (req, res) => {
   try {
     const { resourceType, resourceId, filename, expiresIn } = req.body;
@@ -292,21 +246,12 @@ router.post('/generate-download-url', verifyAccessToken, async (req, res) => {
       message: 'Failed to generate download URL'
     });
   }
-});
+});
 
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-/**
- * Find file by ID in directory
- */
 async function findFile(basePath, fileId) {
   if (!fs.existsSync(basePath)) {
     return null;
-  }
-
-  // Try common extensions
+  }
   const extensions = ['.pdf', '.jpg', '.jpeg', '.png', '.dcm', ''];
   
   for (const ext of extensions) {
@@ -314,9 +259,7 @@ async function findFile(basePath, fileId) {
     if (fs.existsSync(filePath)) {
       return filePath;
     }
-  }
-
-  // Search in subdirectories
+  }
   const files = fs.readdirSync(basePath, { withFileTypes: true });
   for (const file of files) {
     if (file.isDirectory()) {
@@ -331,9 +274,6 @@ async function findFile(basePath, fileId) {
   return null;
 }
 
-/**
- * Get content type from extension
- */
 function getContentType(ext) {
   const types = {
     '.pdf': 'application/pdf',
@@ -348,9 +288,6 @@ function getContentType(ext) {
   return types[ext] || 'application/octet-stream';
 }
 
-/**
- * Log file access to immutable audit log
- */
 async function logFileAccess(fileType, fileId, userId, clinicId, req) {
   try {
     await ImmutableAuditLog.log({

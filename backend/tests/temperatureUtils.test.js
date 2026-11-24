@@ -1,9 +1,4 @@
-/**
- * Property-Based Tests for Temperature Conversion Utilities
- * Feature: emr-clinical-features
- * 
- * Tests temperature unit conversion round-trip properties
- */
+
 
 const fc = require('fast-check');
 const {
@@ -15,14 +10,7 @@ const {
 } = require('../utils/temperatureUtils');
 
 describe('Temperature Conversion Utilities', () => {
-  
-  /**
-   * Property 2: Temperature Unit Conversion Round-Trip
-   * For any valid temperature value in Fahrenheit, converting to Celsius and back
-   * to Fahrenheit SHALL produce a value within 0.1°F of the original.
-   * 
-   * Validates: Requirements 1.4
-   */
+
   describe('Property 2: Temperature Unit Conversion Round-Trip', () => {
     
     test('F to C to F round-trip preserves value within precision', () => {
@@ -31,9 +19,7 @@ describe('Temperature Conversion Utilities', () => {
           fc.float({ min: 95, max: 108, noNaN: true }),
           (tempF) => {
             const tempC = convertTemperature(tempF, 'F', 'C');
-            const tempFBack = convertTemperature(tempC, 'C', 'F');
-            
-            // Should be within 0.2°F due to rounding (allowing for floating point precision)
+            const tempFBack = convertTemperature(tempC, 'C', 'F');
             expect(Math.abs(tempFBack - tempF)).toBeLessThanOrEqual(0.2);
           }
         ),
@@ -47,9 +33,7 @@ describe('Temperature Conversion Utilities', () => {
           fc.float({ min: 35, max: 42, noNaN: true }),
           (tempC) => {
             const tempF = convertTemperature(tempC, 'C', 'F');
-            const tempCBack = convertTemperature(tempF, 'F', 'C');
-            
-            // Should be within 0.2°C due to rounding
+            const tempCBack = convertTemperature(tempF, 'F', 'C');
             expect(Math.abs(tempCBack - tempC)).toBeLessThanOrEqual(0.2);
           }
         ),
@@ -99,18 +83,13 @@ describe('Temperature Conversion Utilities', () => {
     });
     
     test('unit string normalization works correctly', () => {
-      const temp = 98.6;
-      
-      // Test various unit string formats
+      const temp = 98.6;
       expect(convertTemperature(temp, 'f', 'c')).toBe(convertTemperature(temp, 'F', 'C'));
       expect(convertTemperature(temp, '°F', '°C')).toBe(convertTemperature(temp, 'F', 'C'));
       expect(convertTemperature(temp, 'fahrenheit', 'celsius')).toBe(convertTemperature(temp, 'F', 'C'));
     });
   });
-  
-  /**
-   * Additional tests for temperature utilities
-   */
+
   describe('Temperature Utility Functions', () => {
     
     test('getTemperatureInBothUnits provides correct conversions', () => {
@@ -129,38 +108,27 @@ describe('Temperature Conversion Utilities', () => {
       expect(resultC.unit).toBe('C');
     });
     
-    test('validateTemperature correctly identifies normal and abnormal temperatures', () => {
-      // Normal temperature in Fahrenheit
+    test('validateTemperature correctly identifies normal and abnormal temperatures', () => {
       const normalF = validateTemperature(98.6, 'F');
       expect(normalF.isValid).toBe(true);
       expect(normalF.isNormal).toBe(true);
-      expect(normalF.isFever).toBe(false);
-      
-      // Fever in Fahrenheit
+      expect(normalF.isFever).toBe(false);
       const feverF = validateTemperature(101, 'F');
       expect(feverF.isValid).toBe(true);
       expect(feverF.isNormal).toBe(false);
-      expect(feverF.isFever).toBe(true);
-      
-      // Normal temperature in Celsius
+      expect(feverF.isFever).toBe(true);
       const normalC = validateTemperature(37, 'C');
       expect(normalC.isValid).toBe(true);
-      expect(normalC.isNormal).toBe(true);
-      
-      // Invalid temperature
+      expect(normalC.isNormal).toBe(true);
       const invalid = validateTemperature(50, 'C');
       expect(invalid.isValid).toBe(false);
       expect(invalid.error).toBeDefined();
     });
   });
-  
-  /**
-   * Edge cases and error handling
-   */
+
   describe('Edge Cases', () => {
     
-    test('handles boundary values correctly', () => {
-      // Test exact boundary values
+    test('handles boundary values correctly', () => {
       expect(convertTemperature(32, 'F', 'C')).toBe(0);
       expect(convertTemperature(0, 'C', 'F')).toBe(32);
       expect(convertTemperature(212, 'F', 'C')).toBe(100);
@@ -168,7 +136,7 @@ describe('Temperature Conversion Utilities', () => {
     });
     
     test('handles negative temperatures', () => {
-      expect(convertTemperature(-40, 'F', 'C')).toBe(-40); // -40°F = -40°C
+      expect(convertTemperature(-40, 'F', 'C')).toBe(-40); 
       expect(convertTemperature(-40, 'C', 'F')).toBe(-40);
     });
     
@@ -178,9 +146,7 @@ describe('Temperature Conversion Utilities', () => {
           fc.float({ min: -50, max: 150, noNaN: true }),
           (temp) => {
             const converted = convertTemperature(temp, 'F', 'C');
-            const backConverted = convertTemperature(converted, 'C', 'F');
-            
-            // Allow for small floating point errors
+            const backConverted = convertTemperature(converted, 'C', 'F');
             expect(Math.abs(backConverted - temp)).toBeLessThanOrEqual(0.15);
           }
         ),

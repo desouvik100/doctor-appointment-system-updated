@@ -42,14 +42,11 @@ const blogPostSchema = new mongoose.Schema({
   },
   relatedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'BlogPost' }],
   readTime: Number
-}, { timestamps: true });
-
-// Generate slug from title
+}, { timestamps: true });
 blogPostSchema.pre('save', function(next) {
   if (this.isModified('title') && !this.slug) {
     this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  }
-  // Calculate read time (avg 200 words per minute)
+  }
   if (this.content) {
     const wordCount = this.content.split(/\s+/).length;
     this.readTime = Math.ceil(wordCount / 200);

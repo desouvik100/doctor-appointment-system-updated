@@ -20,9 +20,7 @@ const createRazorpayDemoAccounts = async () => {
     console.log('✅ Connected to MongoDB\n');
     
     const password = 'Razorpay@123';
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // 1. Create Demo Patient Account
+    const hashedPassword = await bcrypt.hash(password, 10);
     const patientResult = await User.findOneAndUpdate(
       { email: 'demo@razorpay.com' },
       {
@@ -49,9 +47,7 @@ const createRazorpayDemoAccounts = async () => {
     console.log('✅ Demo Patient Account Created');
     console.log('   📧 Email: demo@razorpay.com');
     console.log('   🔑 Password:', password);
-    console.log('   👤 ID:', patientResult._id);
-    
-    // 2. Create Demo Admin Account
+    console.log('   👤 ID:', patientResult._id);
     const adminResult = await User.findOneAndUpdate(
       { email: 'admin-demo@razorpay.com' },
       {
@@ -68,9 +64,7 @@ const createRazorpayDemoAccounts = async () => {
     console.log('\n✅ Demo Admin Account Created');
     console.log('   📧 Email: admin-demo@razorpay.com');
     console.log('   🔑 Password:', password);
-    console.log('   👤 ID:', adminResult._id);
-    
-    // 3. Find or create a clinic for the doctor
+    console.log('   👤 ID:', adminResult._id);
     let clinic = await Clinic.findOne({});
     if (!clinic) {
       clinic = await Clinic.create({
@@ -79,9 +73,7 @@ const createRazorpayDemoAccounts = async () => {
         phone: '9876543213',
         email: 'clinic@healthsync.com'
       });
-    }
-    
-    // 4. Create Demo Doctor Account
+    }
     const doctorResult = await Doctor.findOneAndUpdate(
       { email: 'doctor-demo@razorpay.com' },
       {

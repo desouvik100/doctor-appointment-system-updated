@@ -1,7 +1,4 @@
-/**
- * Clinic Analytics Routes
- * API endpoints for analytics and reporting
- */
+
 
 const express = require('express');
 const router = express.Router();
@@ -10,16 +7,12 @@ const ClinicBilling = require('../models/ClinicBilling');
 const StaffSchedule = require('../models/StaffSchedule');
 const PharmacyInventory = require('../models/PharmacyInventory');
 const { verifyToken } = require('../middleware/auth');
-const mongoose = require('mongoose');
-
-// Get dashboard summary
+const mongoose = require('mongoose');
 router.get('/clinic/:clinicId/dashboard', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    
-    // Get real-time stats from various collections
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     const [revenueToday, revenueMonth, inventorySummary, attendanceToday] = await Promise.all([
       ClinicBilling.aggregate([
         { $match: { clinicId: new mongoose.Types.ObjectId(clinicId), billDate: { $gte: today }, status: 'finalized' } },
@@ -52,9 +45,7 @@ router.get('/clinic/:clinicId/dashboard', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get revenue analytics
+});
 router.get('/clinic/:clinicId/revenue', verifyToken, async (req, res) => {
   try {
     const { days = 30 } = req.query;
@@ -63,9 +54,7 @@ router.get('/clinic/:clinicId/revenue', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get revenue by category
+});
 router.get('/clinic/:clinicId/revenue-by-category', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -82,9 +71,7 @@ router.get('/clinic/:clinicId/revenue-by-category', verifyToken, async (req, res
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get payment method breakdown
+});
 router.get('/clinic/:clinicId/payment-methods', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -101,9 +88,7 @@ router.get('/clinic/:clinicId/payment-methods', verifyToken, async (req, res) =>
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get top selling medicines
+});
 router.get('/clinic/:clinicId/top-medicines', verifyToken, async (req, res) => {
   try {
     const { limit = 10 } = req.query;
@@ -119,9 +104,7 @@ router.get('/clinic/:clinicId/top-medicines', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get staff attendance analytics
+});
 router.get('/clinic/:clinicId/staff-attendance', verifyToken, async (req, res) => {
   try {
     const { month, year } = req.query;
@@ -143,9 +126,7 @@ router.get('/clinic/:clinicId/staff-attendance', verifyToken, async (req, res) =
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Generate/refresh analytics
+});
 router.post('/clinic/:clinicId/generate', verifyToken, async (req, res) => {
   try {
     const { date } = req.body;
@@ -155,9 +136,7 @@ router.post('/clinic/:clinicId/generate', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get stored analytics
+});
 router.get('/clinic/:clinicId/stored', verifyToken, async (req, res) => {
   try {
     const { periodType = 'daily', startDate, endDate } = req.query;

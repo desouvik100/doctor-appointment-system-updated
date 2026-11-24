@@ -1,7 +1,4 @@
-/**
- * Admin Tab Navigator - Dashboard for System Administrators
- * With Stack Navigation for all admin screens - 100% Web Parity
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -10,9 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
 import { shadows } from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
-import { useTheme } from '../context/ThemeContext';
-
-// Import all admin screens directly
+import { useTheme } from '../context/ThemeContext';
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import AdminDoctorsScreen from '../screens/admin/AdminDoctorsScreen';
 import AdminStaffScreen from '../screens/admin/AdminStaffScreen';
@@ -36,13 +31,11 @@ import AdminAuditLogsScreen from '../screens/admin/AdminAuditLogsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
-
-// Admin Dashboard Stack - contains all admin screens
+const Stack = createStackNavigator();
 const AdminDashboardStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* Main Screens */}
+      {}
       <Stack.Screen name="AdminDashboardMain" component={AdminDashboardScreen} />
       <Stack.Screen name="AdminDoctors" component={AdminDoctorsScreen} />
       <Stack.Screen name="AdminStaff" component={AdminStaffScreen} />
@@ -56,13 +49,13 @@ const AdminDashboardStack = () => {
       <Stack.Screen name="AdminSupportTickets" component={AdminSupportTicketsScreen} />
       <Stack.Screen name="AdminAuditLogs" component={AdminAuditLogsScreen} />
       
-      {/* Detail Screens */}
+      {}
       <Stack.Screen name="AdminDoctorDetail" component={AdminDoctorDetailScreen} />
       <Stack.Screen name="AdminUserDetail" component={AdminUserDetailScreen} />
       <Stack.Screen name="AdminClinicDetail" component={AdminClinicDetailScreen} />
       <Stack.Screen name="AdminAppointmentDetail" component={AdminAppointmentDetailScreen} />
       
-      {/* CRUD Screens */}
+      {}
       <Stack.Screen name="AdminAddDoctor" component={AdminAddDoctorScreen} />
       <Stack.Screen name="AdminEditDoctor" component={AdminEditDoctorScreen} />
       <Stack.Screen name="AdminAddClinic" component={AdminAddClinicScreen} />

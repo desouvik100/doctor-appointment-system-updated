@@ -24,9 +24,7 @@ const featuredListingSchema = new mongoose.Schema({
   bookings: { type: Number, default: 0 },
   specialBadge: String,
   highlightColor: String
-}, { timestamps: true });
-
-// Check if listing is currently active
+}, { timestamps: true });
 featuredListingSchema.methods.isCurrentlyActive = function() {
   const now = new Date();
   return this.isActive && this.paymentStatus === 'paid' && 

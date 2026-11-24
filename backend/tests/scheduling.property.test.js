@@ -1,12 +1,6 @@
-/**
- * Property-Based Tests for Scheduling and Notifications
- * Feature: advanced-imaging
- * Properties 21, 22, 23, 25
- */
 
-const fc = require('fast-check');
 
-// Mock notification service functions
+const fc = require('fast-check');
 const NOTIFICATION_TYPES = {
   APPOINTMENT_CONFIRMATION: 'appointment_confirmation',
   REMINDER_24H: 'reminder_24h',
@@ -16,16 +10,12 @@ const NOTIFICATION_TYPES = {
 function scheduleNotifications(appointment) {
   const notifications = [];
   const appointmentTime = new Date(appointment.dateTime);
-  const now = new Date();
-  
-  // Immediate confirmation
+  const now = new Date();
   notifications.push({
     type: NOTIFICATION_TYPES.APPOINTMENT_CONFIRMATION,
     scheduledFor: now,
     appointmentId: appointment._id
-  });
-  
-  // 24-hour reminder
+  });
   const reminder24h = new Date(appointmentTime);
   reminder24h.setHours(reminder24h.getHours() - 24);
   if (reminder24h > now) {
@@ -34,9 +24,7 @@ function scheduleNotifications(appointment) {
       scheduledFor: reminder24h,
       appointmentId: appointment._id
     });
-  }
-  
-  // 15-minute reminder
+  }
   const reminder15min = new Date(appointmentTime);
   reminder15min.setMinutes(reminder15min.getMinutes() - 15);
   if (reminder15min > now) {
@@ -72,9 +60,7 @@ function verifyPatientIdentity(verificationData) {
     passedChecks,
     requiredChecks: 2
   };
-}
-
-// Mock recording service
+}
 class RecordingService {
   constructor() {
     this.recordings = new Map();
@@ -104,9 +90,7 @@ class RecordingService {
   }
 }
 
-describe('Scheduling and Notifications - Property Tests', () => {
-
-  // Property 21: Appointment Type Marking
+describe('Scheduling and Notifications - Property Tests', () => {
   describe('Property 21: Appointment Type Marking', () => {
     
     test('telemedicine appointments are marked correctly', () => {
@@ -123,9 +107,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
             
             expect(marked.type).toBe('telemedicine');
             expect(marked.isVideoConsultation).toBe(true);
-            expect(marked.requiresIdentityVerification).toBe(true);
-            
-            // Original data preserved
+            expect(marked.requiresIdentityVerification).toBe(true);
             expect(marked._id).toBe(appointment._id);
             expect(marked.patientId).toBe(appointment.patientId);
             expect(marked.doctorId).toBe(appointment.doctorId);
@@ -141,15 +123,11 @@ describe('Scheduling and Notifications - Property Tests', () => {
         type: 'in-person',
         patientId: 'pat_1',
         doctorId: 'doc_1'
-      };
-      
-      // Regular appointment should not have telemedicine fields
+      };
       expect(regularAppointment.isVideoConsultation).toBeUndefined();
       expect(regularAppointment.requiresIdentityVerification).toBeUndefined();
     });
-  });
-
-  // Property 22: Notification Scheduling
+  });
   describe('Property 22: Notification Scheduling', () => {
     
     test('confirmation notification is always scheduled', () => {
@@ -175,8 +153,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
       );
     });
 
-    test('24h reminder is scheduled if appointment is more than 24h away', () => {
-      // Appointment 48 hours from now
+    test('24h reminder is scheduled if appointment is more than 24h away', () => {
       const futureDate = new Date();
       futureDate.setHours(futureDate.getHours() + 48);
       
@@ -195,8 +172,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
       expect(reminder24h.scheduledFor < futureDate).toBe(true);
     });
 
-    test('15min reminder is scheduled if appointment is more than 15min away', () => {
-      // Appointment 1 hour from now
+    test('15min reminder is scheduled if appointment is more than 15min away', () => {
       const futureDate = new Date();
       futureDate.setHours(futureDate.getHours() + 1);
       
@@ -214,8 +190,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
       expect(reminder15min).toBeDefined();
     });
 
-    test('reminders are not scheduled for past appointments', () => {
-      // Appointment 1 hour ago
+    test('reminders are not scheduled for past appointments', () => {
       const pastDate = new Date();
       pastDate.setHours(pastDate.getHours() - 1);
       
@@ -224,9 +199,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
         dateTime: pastDate
       };
       
-      const notifications = scheduleNotifications(appointment);
-      
-      // Only confirmation should be present
+      const notifications = scheduleNotifications(appointment);
       const reminders = notifications.filter(
         n => n.type !== NOTIFICATION_TYPES.APPOINTMENT_CONFIRMATION
       );
@@ -257,20 +230,15 @@ describe('Scheduling and Notifications - Property Tests', () => {
         { numRuns: 30 }
       );
     });
-  });
-
-  // Property 23: Identity Verification Requirement
+  });
   describe('Property 23: Identity Verification Requirement', () => {
     
-    test('verification requires at least 2 checks', () => {
-      // Only 1 check - should fail
+    test('verification requires at least 2 checks', () => {
       const oneCheck = verifyPatientIdentity({
         dateOfBirth: '1990-01-01'
       });
       expect(oneCheck.isVerified).toBe(false);
-      expect(oneCheck.passedChecks).toBe(1);
-      
-      // 2 checks - should pass
+      expect(oneCheck.passedChecks).toBe(1);
       const twoChecks = verifyPatientIdentity({
         dateOfBirth: '1990-01-01',
         phoneVerified: true
@@ -318,9 +286,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
       expect(result.isVerified).toBe(false);
       expect(result.passedChecks).toBe(0);
     });
-  });
-
-  // Property 25: Recording-Visit Linking
+  });
   describe('Property 25: Recording-Visit Linking', () => {
     
     test('recording is linked to visit on creation', () => {

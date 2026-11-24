@@ -1,7 +1,4 @@
-/**
- * WhatsApp Automation Service
- * Handles WhatsApp messaging for appointments, reminders, and support
- */
+
 
 import { Linking, Alert } from 'react-native';
 import apiClient from './api/apiClient';
@@ -9,9 +6,7 @@ import apiClient from './api/apiClient';
 const SUPPORT_PHONE = '+919749027881';
 
 class WhatsAppService {
-  /**
-   * Open WhatsApp with a pre-filled message
-   */
+  
   async openWhatsApp(phoneNumber, message) {
     const formattedPhone = phoneNumber.replace(/[^0-9]/g, '');
     const url = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
@@ -32,17 +27,11 @@ class WhatsAppService {
     }
   }
 
-  /**
-   * Contact support via WhatsApp
-   */
   async contactSupport(userMessage = '') {
     const message = userMessage || 'Hi! I need help with HealthSync app.';
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
-  /**
-   * Share appointment details via WhatsApp
-   */
   async shareAppointment(appointment) {
     const message = `🏥 *HealthSync Appointment*\n\n` +
       `👨‍⚕️ Doctor: ${appointment.doctorName}\n` +
@@ -55,9 +44,6 @@ class WhatsAppService {
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
-  /**
-   * Send appointment reminder via backend WhatsApp API
-   */
   async sendAppointmentReminder(appointmentId) {
     try {
       const response = await apiClient.post('/whatsapp/appointment-reminder', {
@@ -70,9 +56,6 @@ class WhatsAppService {
     }
   }
 
-  /**
-   * Send prescription via WhatsApp
-   */
   async sharePrescription(prescription) {
     const medicines = prescription.medicines
       .map(m => `  • ${m.name} - ${m.dosage}`)
@@ -88,9 +71,6 @@ class WhatsAppService {
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
-  /**
-   * Request callback from support
-   */
   async requestCallback(name, phone, issue) {
     const message = `📞 *Callback Request*\n\n` +
       `Name: ${name}\n` +
@@ -101,9 +81,6 @@ class WhatsAppService {
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
-  /**
-   * Send lab report via WhatsApp
-   */
   async shareLabReport(report) {
     const message = `🔬 *Lab Report - HealthSync*\n\n` +
       `📋 Test: ${report.testName}\n` +
@@ -115,9 +92,6 @@ class WhatsAppService {
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
-  /**
-   * Emergency SOS via WhatsApp
-   */
   async sendEmergencySOS(location, userInfo) {
     const message = `🚨 *EMERGENCY SOS - HealthSync*\n\n` +
       `⚠️ User needs immediate assistance!\n\n` +
@@ -130,9 +104,6 @@ class WhatsAppService {
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
-  /**
-   * Book appointment via WhatsApp
-   */
   async bookViaWhatsApp(doctorName, preferredDate, symptoms) {
     const message = `📅 *Appointment Booking Request*\n\n` +
       `👨‍⚕️ Doctor: ${doctorName}\n` +
@@ -143,9 +114,6 @@ class WhatsAppService {
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
-  /**
-   * Send feedback via WhatsApp
-   */
   async sendFeedback(rating, feedback, appointmentId) {
     const stars = '⭐'.repeat(rating);
     const message = `📝 *Feedback - HealthSync*\n\n` +
@@ -156,9 +124,6 @@ class WhatsAppService {
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
-  /**
-   * Medicine refill request
-   */
   async requestMedicineRefill(medicines, deliveryAddress) {
     const medicineList = medicines
       .map(m => `  • ${m.name} - ${m.quantity}`)

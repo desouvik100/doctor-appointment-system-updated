@@ -40,7 +40,7 @@ const clinicSlotSchema = new mongoose.Schema({
   },
   duration: {
     type: Number,
-    default: 30, // In-clinic typically longer
+    default: 30, 
     min: 15,
     max: 120
   },
@@ -71,14 +71,12 @@ const clinicSlotSchema = new mongoose.Schema({
     type: String,
     enum: ['clinic'],
     default: 'clinic',
-    immutable: true // Cannot be changed after creation
-  },
-  // Room/cabin assignment
+    immutable: true 
+  },
   roomNumber: {
     type: String,
     trim: true
-  },
-  // For recurring slots
+  },
   isRecurring: {
     type: Boolean,
     default: false
@@ -87,8 +85,7 @@ const clinicSlotSchema = new mongoose.Schema({
     type: String,
     enum: ['daily', 'weekly', 'monthly', null],
     default: null
-  },
-  // Walk-in support
+  },
   isWalkInSlot: {
     type: Boolean,
     default: false
@@ -99,25 +96,17 @@ const clinicSlotSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
-});
-
-// Compound index to prevent duplicate slots
-clinicSlotSchema.index({ doctorId: 1, clinicId: 1, date: 1, startTime: 1 }, { unique: true });
-
-// Index for efficient queries
+});
+clinicSlotSchema.index({ doctorId: 1, clinicId: 1, date: 1, startTime: 1 }, { unique: true });
 clinicSlotSchema.index({ doctorId: 1, date: 1, isBooked: 1 });
 clinicSlotSchema.index({ clinicId: 1, date: 1, isBooked: 1 });
-clinicSlotSchema.index({ doctorId: 1, isBooked: 1, date: 1 });
-
-// Virtual to check if slot is in the past
+clinicSlotSchema.index({ doctorId: 1, isBooked: 1, date: 1 });
 clinicSlotSchema.virtual('isPast').get(function() {
   const slotDateTime = new Date(this.date);
   const [hours, minutes] = this.startTime.split(':');
   slotDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
   return slotDateTime < new Date();
-});
-
-// Method to book the slot atomically
+});
 clinicSlotSchema.methods.bookSlot = async function(userId, appointmentId) {
   if (this.isBooked) {
     throw new Error('Slot is already booked');
@@ -135,9 +124,7 @@ clinicSlotSchema.methods.bookSlot = async function(userId, appointmentId) {
   this.bookedAt = new Date();
   
   return this.save();
-};
-
-// Method to release the slot
+};
 clinicSlotSchema.methods.releaseSlot = async function() {
   this.isBooked = false;
   this.bookedBy = null;
@@ -145,9 +132,7 @@ clinicSlotSchema.methods.releaseSlot = async function() {
   this.bookedAt = null;
   
   return this.save();
-};
-
-// Static method to get available slots for a doctor on a date
+};
 clinicSlotSchema.statics.getAvailableSlots = async function(doctorId, date, clinicId = null) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
@@ -167,9 +152,7 @@ clinicSlotSchema.statics.getAvailableSlots = async function(doctorId, date, clin
   }
   
   return this.find(query).sort({ startTime: 1 });
-};
-
-// Static method for atomic booking with transaction
+};
 clinicSlotSchema.statics.atomicBook = async function(slotId, userId, appointmentId) {
   const result = await this.findOneAndUpdate(
     {

@@ -4,15 +4,9 @@ const CommissionConfig = require('../models/CommissionConfig');
 const FinancialLedger = require('../models/FinancialLedger');
 const Payout = require('../models/Payout');
 const commissionService = require('../services/commissionService');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// Middleware aliases
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const protect = verifyToken;
-const adminOnly = verifyTokenWithRole(['admin']);
-
-// ===== COMMISSION CONFIG ROUTES =====
-
-// Get global commission config
+const adminOnly = verifyTokenWithRole(['admin']);
 router.get('/config', adminOnly, async (req, res) => {
   try {
     const config = await CommissionConfig.getConfigForClinic(null);
@@ -20,9 +14,7 @@ router.get('/config', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get config for specific clinic
+});
 router.get('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   try {
     const config = await CommissionConfig.getConfigForClinic(req.params.clinicId);
@@ -30,9 +22,7 @@ router.get('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update global commission config
+});
 router.put('/config', adminOnly, async (req, res) => {
   try {
     const { onlineCommission, inClinicCommission, gstRate, paymentGateway, payoutConfig } = req.body;
@@ -55,9 +45,7 @@ router.put('/config', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Create/Update clinic-specific config
+});
 router.put('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   try {
     const { onlineCommission, inClinicCommission, gstRate, paymentGateway, payoutConfig } = req.body;
@@ -87,9 +75,7 @@ router.put('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Delete clinic-specific config (revert to global)
+});
 router.delete('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   try {
     await CommissionConfig.deleteOne({ 
@@ -100,11 +86,7 @@ router.delete('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== CALCULATION PREVIEW =====
-
-// Preview commission calculation
+});
 router.post('/calculate', protect, async (req, res) => {
   try {
     const { consultationFee, consultationType, clinicId } = req.body;
@@ -126,11 +108,7 @@ router.post('/calculate', protect, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== LEDGER ROUTES =====
-
-// Get ledger entries for a doctor
+});
 router.get('/ledger/doctor/:doctorId', protect, async (req, res) => {
   try {
     const { startDate, endDate, status, payoutStatus } = req.query;
@@ -151,9 +129,7 @@ router.get('/ledger/doctor/:doctorId', protect, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get single ledger entry
+});
 router.get('/ledger/:id', protect, async (req, res) => {
   try {
     const entry = await FinancialLedger.findById(req.params.id)
@@ -170,11 +146,7 @@ router.get('/ledger/:id', protect, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== PAYOUT ROUTES =====
-
-// Get all payouts (admin)
+});
 router.get('/payouts', adminOnly, async (req, res) => {
   try {
     const { status, doctorId, startDate, endDate } = req.query;
@@ -194,9 +166,7 @@ router.get('/payouts', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get payouts for a doctor
+});
 router.get('/payouts/doctor/:doctorId', protect, async (req, res) => {
   try {
     const payouts = await Payout.find({ doctorId: req.params.doctorId })
@@ -206,9 +176,7 @@ router.get('/payouts/doctor/:doctorId', protect, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get single payout details
+});
 router.get('/payouts/:id', protect, async (req, res) => {
   try {
     const payout = await Payout.findById(req.params.id)
@@ -223,9 +191,7 @@ router.get('/payouts/:id', protect, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Create payout for doctor
+});
 router.post('/payouts/create', adminOnly, async (req, res) => {
   try {
     const { doctorId, cycle, periodStart, periodEnd } = req.body;
@@ -248,9 +214,7 @@ router.post('/payouts/create', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Approve payout
+});
 router.put('/payouts/:id/approve', adminOnly, async (req, res) => {
   try {
     const payout = await Payout.findById(req.params.id);
@@ -264,9 +228,7 @@ router.put('/payouts/:id/approve', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Process payout (mark as completed)
+});
 router.put('/payouts/:id/process', adminOnly, async (req, res) => {
   try {
     const { transactionReference } = req.body;
@@ -288,9 +250,7 @@ router.put('/payouts/:id/process', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Mark payout as failed
+});
 router.put('/payouts/:id/fail', adminOnly, async (req, res) => {
   try {
     const { reason } = req.body;
@@ -300,9 +260,7 @@ router.put('/payouts/:id/fail', adminOnly, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Payout not found' });
     }
     
-    await payout.markFailed(reason || 'Unknown error');
-    
-    // Revert ledger entries to pending
+    await payout.markFailed(reason || 'Unknown error');
     await FinancialLedger.updateMany(
       { payoutId: payout._id },
       { payoutStatus: 'pending', payoutId: null }
@@ -312,11 +270,7 @@ router.put('/payouts/:id/fail', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// ===== REPORTS =====
-
-// Doctor earnings report
+});
 router.get('/reports/doctor/:doctorId', protect, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -334,9 +288,7 @@ router.get('/reports/doctor/:doctorId', protect, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Admin revenue report
+});
 router.get('/reports/admin/revenue', adminOnly, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -350,9 +302,7 @@ router.get('/reports/admin/revenue', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Export doctor report as CSV
+});
 router.get('/reports/doctor/:doctorId/export', protect, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -374,9 +324,7 @@ router.get('/reports/doctor/:doctorId/export', protect, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Export admin report as CSV
+});
 router.get('/reports/admin/export', adminOnly, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -397,9 +345,7 @@ router.get('/reports/admin/export', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get pending payout summary for doctor
+});
 router.get('/pending/:doctorId', protect, async (req, res) => {
   try {
     const pending = await commissionService.getPendingPayouts(req.params.doctorId);

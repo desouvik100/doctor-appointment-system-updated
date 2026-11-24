@@ -1,16 +1,12 @@
-// scripts/migrate.js - Database migration utility
+
 require('dotenv').config();
 const { connectDB, closePool } = require('../config/database');
 const { createTables, dropTables } = require('../config/initDatabase');
 
 const runMigration = async () => {
   try {
-    console.log('🚀 Starting database migration...');
-    
-    // Connect to PostgreSQL
-    await connectDB();
-    
-    // Get command line argument
+    console.log('🚀 Starting database migration...');
+    await connectDB();
     const command = process.argv[2];
     
     switch (command) {
@@ -47,9 +43,7 @@ const runMigration = async () => {
     await closePool();
     process.exit(0);
   }
-};
-
-// Run migration if this file is executed directly
+};
 if (require.main === module) {
   runMigration();
 }

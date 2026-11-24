@@ -1,6 +1,4 @@
-/**
- * Doctor Dashboard Screen - Main dashboard for doctors
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -69,9 +67,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
     }
 
     try {
-      console.log('🔵 [DoctorDashboard] Fetching data for doctor:', user.id);
-      
-      // Fetch real data from APIs
+      console.log('🔵 [DoctorDashboard] Fetching data for doctor:', user.id);
       const [todayAppts, allAppts, patients] = await Promise.all([
         getTodayAppointments(user.id).catch(err => {
           console.log('Today appointments error:', err.message);
@@ -85,9 +81,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
           console.log('Patients error:', err.message);
           return [];
         }),
-      ]);
-
-      // Calculate stats from real data
+      ]);
       const todayList = Array.isArray(todayAppts) ? todayAppts : (todayAppts.appointments || []);
       const allList = Array.isArray(allAppts) ? allAppts : (allAppts.appointments || []);
       const patientList = Array.isArray(patients) ? patients : (patients.patients || []);
@@ -157,7 +151,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
           />
         }
       >
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()} 👨‍⚕️</Text>
@@ -173,7 +167,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Stats Grid */}
+        {}
         <View style={styles.statsGrid}>
           <StatCard 
             icon="📅" 
@@ -205,7 +199,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Quick Actions */}
+        {}
         <QuickActionsGrid
           actions={DOCTOR_ACTIONS}
           variant="grid"
@@ -214,7 +208,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
           showBadge={false}
         />
 
-        {/* Today's Schedule */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Today's Schedule</Text>

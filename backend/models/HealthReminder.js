@@ -1,85 +1,58 @@
 const mongoose = require('mongoose');
 
-/**
- * Smart Health Reminders - Preventive Care System
- * Requirement 6: Smart Health Reminders
- */
-
 const healthReminderSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  
-  // Reminder type
+  },
   type: {
     type: String,
     enum: [
-      'checkup',           // Regular health checkup
-      'vaccination',       // Vaccination schedule
-      'lab_test',          // Lab test reminder (HbA1c, etc.)
-      'medicine_refill',   // Medicine running low
-      'follow_up',         // Doctor follow-up
-      'screening',         // Cancer/disease screening
-      'dental',            // Dental checkup
-      'eye',               // Eye checkup
-      'custom'             // User-defined
+      'checkup',           
+      'vaccination',       
+      'lab_test',          
+      'medicine_refill',   
+      'follow_up',         
+      'screening',         
+      'dental',            
+      'eye',               
+      'custom'             
     ],
     required: true
-  },
-  
-  // Reminder details
+  },
   title: {
     type: String,
     required: true
   },
-  description: String,
-  
-  // For condition-based reminders
+  description: String,
   condition: {
     type: String,
     enum: ['diabetes', 'hypertension', 'thyroid', 'cholesterol', 'general', 'pregnancy', 'child', 'senior'],
     default: 'general'
-  },
-  
-  // Frequency
+  },
   frequency: {
     type: String,
     enum: ['once', 'daily', 'weekly', 'monthly', 'quarterly', 'half_yearly', 'yearly', 'custom'],
     default: 'once'
-  },
-  
-  // Custom frequency in days
-  customFrequencyDays: Number,
-  
-  // Schedule
+  },
+  customFrequencyDays: Number,
   scheduledDate: {
     type: Date,
     required: true
-  },
-  
-  // Last completed date
-  lastCompletedDate: Date,
-  
-  // Next due date (auto-calculated)
-  nextDueDate: Date,
-  
-  // Reminder timing (days before due date)
+  },
+  lastCompletedDate: Date,
+  nextDueDate: Date,
   reminderDaysBefore: {
     type: [Number],
-    default: [7, 3, 1, 0] // 7 days, 3 days, 1 day, and on the day
-  },
-  
-  // Notification channels
+    default: [7, 3, 1, 0] 
+  },
   notificationChannels: {
     app: { type: Boolean, default: true },
     email: { type: Boolean, default: true },
     sms: { type: Boolean, default: false },
     whatsapp: { type: Boolean, default: true }
-  },
-  
-  // Related entities
+  },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
@@ -91,47 +64,35 @@ const healthReminderSchema = new mongoose.Schema({
   prescriptionId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prescription'
-  },
-  
-  // For medicine refill
+  },
   medicineDetails: {
     name: String,
     dosage: String,
     remainingDays: Number,
     pharmacyId: mongoose.Schema.Types.ObjectId
-  },
-  
-  // For lab tests
+  },
   labTestDetails: {
     testName: String,
     lastValue: String,
     normalRange: String,
     lastTestDate: Date
-  },
-  
-  // For vaccinations
+  },
   vaccinationDetails: {
     vaccineName: String,
     doseNumber: Number,
     totalDoses: Number,
     ageGroup: String
-  },
-  
-  // Status
+  },
   status: {
     type: String,
     enum: ['active', 'completed', 'snoozed', 'cancelled', 'overdue'],
     default: 'active'
-  },
-  
-  // Snooze details
+  },
   snoozedUntil: Date,
   snoozeCount: {
     type: Number,
     default: 0
-  },
-  
-  // Completion details
+  },
   completedAt: Date,
   completedAction: {
     type: String,
@@ -140,17 +101,13 @@ const healthReminderSchema = new mongoose.Schema({
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment'
-  },
-  
-  // AI-generated insights
+  },
   aiInsight: String,
   priority: {
     type: String,
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
-  },
-  
-  // Notification history
+  },
   notificationsSent: [{
     channel: String,
     sentAt: Date,
@@ -161,15 +118,11 @@ const healthReminderSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
-
-// Indexes
+}, { timestamps: true });
 healthReminderSchema.index({ userId: 1, status: 1 });
 healthReminderSchema.index({ scheduledDate: 1 });
 healthReminderSchema.index({ nextDueDate: 1 });
-healthReminderSchema.index({ type: 1, condition: 1 });
-
-// Calculate next due date based on frequency
+healthReminderSchema.index({ type: 1, condition: 1 });
 healthReminderSchema.methods.calculateNextDueDate = function() {
   const baseDate = this.lastCompletedDate || this.scheduledDate;
   let nextDate = new Date(baseDate);
@@ -197,14 +150,12 @@ healthReminderSchema.methods.calculateNextDueDate = function() {
       nextDate.setDate(nextDate.getDate() + (this.customFrequencyDays || 30));
       break;
     default:
-      return null; // One-time reminder
+      return null; 
   }
   
   this.nextDueDate = nextDate;
   return nextDate;
-};
-
-// Mark as completed
+};
 healthReminderSchema.methods.markCompleted = function(action, appointmentId = null) {
   this.status = 'completed';
   this.completedAt = new Date();
@@ -213,16 +164,12 @@ healthReminderSchema.methods.markCompleted = function(action, appointmentId = nu
   
   if (appointmentId) {
     this.appointmentId = appointmentId;
-  }
-  
-  // Calculate next due date for recurring reminders
+  }
   if (this.frequency !== 'once') {
     this.calculateNextDueDate();
-    this.status = 'active'; // Reactivate for next occurrence
+    this.status = 'active'; 
   }
-};
-
-// Snooze reminder
+};
 healthReminderSchema.methods.snooze = function(days = 3) {
   const snoozeDate = new Date();
   snoozeDate.setDate(snoozeDate.getDate() + days);
@@ -230,25 +177,19 @@ healthReminderSchema.methods.snooze = function(days = 3) {
   this.status = 'snoozed';
   this.snoozedUntil = snoozeDate;
   this.snoozeCount += 1;
-};
-
-// Check if reminder is due
+};
 healthReminderSchema.methods.isDue = function() {
   const now = new Date();
   const dueDate = this.nextDueDate || this.scheduledDate;
   return now >= dueDate;
-};
-
-// Check if notification should be sent
+};
 healthReminderSchema.methods.shouldNotify = function() {
   const now = new Date();
   const dueDate = this.nextDueDate || this.scheduledDate;
   const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
   
   return this.reminderDaysBefore.includes(daysUntilDue);
-};
-
-// Static: Create diabetes reminders
+};
 healthReminderSchema.statics.createDiabetesReminders = async function(userId) {
   const reminders = [
     {
@@ -302,9 +243,7 @@ healthReminderSchema.statics.createDiabetesReminders = async function(userId) {
   ];
   
   return await this.insertMany(reminders);
-};
-
-// Static: Create hypertension reminders
+};
 healthReminderSchema.statics.createHypertensionReminders = async function(userId) {
   const reminders = [
     {
@@ -334,9 +273,7 @@ healthReminderSchema.statics.createHypertensionReminders = async function(userId
   ];
   
   return await this.insertMany(reminders);
-};
-
-// Static: Create child vaccination reminders
+};
 healthReminderSchema.statics.createChildVaccinationReminders = async function(userId, childDOB) {
   const vaccinations = [
     { name: 'BCG', weeks: 0 },
@@ -356,8 +293,8 @@ healthReminderSchema.statics.createChildVaccinationReminders = async function(us
     { name: 'IPV-3', weeks: 14 },
     { name: 'Rotavirus-3', weeks: 14 },
     { name: 'PCV-3', weeks: 14 },
-    { name: 'Measles-1', weeks: 39 }, // 9 months
-    { name: 'MMR-1', weeks: 52 }, // 12 months
+    { name: 'Measles-1', weeks: 39 }, 
+    { name: 'MMR-1', weeks: 52 }, 
     { name: 'Hepatitis A-1', weeks: 52 }
   ];
   
@@ -383,13 +320,11 @@ healthReminderSchema.statics.createChildVaccinationReminders = async function(us
   });
   
   return await this.insertMany(reminders);
-};
-
-// Static: Get due reminders for notification
+};
 healthReminderSchema.statics.getDueReminders = async function() {
   const now = new Date();
   const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 7); // Get reminders due in next 7 days
+  tomorrow.setDate(tomorrow.getDate() + 7); 
   
   return await this.find({
     status: 'active',

@@ -1,6 +1,4 @@
-/**
- * Verify OTP Screen - For password reset
- */
+
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -57,10 +55,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
     if (otpCode.length !== 6) {
       Alert.alert('Error', 'Please enter the complete 6-digit OTP');
       return;
-    }
-
-    // Navigate directly to reset password screen with OTP
-    // Backend will verify OTP when resetting password
+    }
     navigation.navigate('ResetPassword', { email, otp: otpCode });
   };
 
@@ -90,7 +85,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
-      {/* Ambient background mesh */}
+      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>

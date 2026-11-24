@@ -1,14 +1,4 @@
-/**
- * QueueTracker — Live queue position with real-time socket updates
- *
- * Uses existing backend infrastructure:
- *   API:    GET /api/appointments/my-queue/:appointmentId
- *   Socket: queue:position_changed  (personal update)
- *           queue:your_turn         (turn alert)
- *           queue:updated           (room-level update)
- *
- * NO polling. NO fake simulation. Pure socket + one initial fetch.
- */
+
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -31,7 +21,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
     estimatedTime:  null,
     isYourTurn:     false,
     isAlmostTurn:   false,
-    doctorStatus:   null,   // 'in_progress' | 'waiting' | null
+    doctorStatus:   null,   
     currentToken:   null,
     totalInQueue:   null,
     recommendation: null,
@@ -39,9 +29,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
   });
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
-  const mountedRef = useRef(true);
-
-  // ── Initial fetch ──────────────────────────────────────────────────────────
+  const mountedRef = useRef(true);
   const fetchQueueStatus = useCallback(async () => {
     if (!appointmentId) return;
     try {
@@ -72,9 +60,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
       serverTime:     data.serverTime          ?? null,
     });
     setError(null);
-  };
-
-  // ── Socket subscriptions ───────────────────────────────────────────────────
+  };
   useEffect(() => {
     mountedRef.current = true;
     fetchQueueStatus();
@@ -83,21 +69,14 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
   }, [fetchQueueStatus]);
 
   useEffect(() => {
-    if (!isConnected) return;
-
-    // Join the queue room so we receive room-level updates
+    if (!isConnected) return;
     const queueRoom = clinicId && doctorId ? `queue:${clinicId}:${doctorId}` : null;
-    if (queueRoom) joinRoom(queueRoom);
-
-    // Personal position update — most precise
+    if (queueRoom) joinRoom(queueRoom);
     const unsubPosition = subscribe(SOCKET_EVENTS.QUEUE_POSITION_CHANGED, (data) => {
-      if (!mountedRef.current) return;
-      // Only apply if this event is for our appointment
+      if (!mountedRef.current) return;
       if (data.appointmentId && data.appointmentId !== appointmentId) return;
       applyQueueData(data);
-    });
-
-    // "Your turn" alert
+    });
     const unsubTurn = subscribe(SOCKET_EVENTS.QUEUE_YOUR_TURN, (data) => {
       if (!mountedRef.current) return;
       if (data.appointmentId && data.appointmentId !== appointmentId) return;
@@ -109,9 +88,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
         position:      1,
         patientsAhead: 0,
       }));
-    });
-
-    // Room-level queue update — re-fetch our position
+    });
     const unsubUpdated = subscribe(SOCKET_EVENTS.QUEUE_UPDATED, () => {
       if (!mountedRef.current) return;
       fetchQueueStatus();
@@ -123,9 +100,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
       unsubUpdated();
       if (queueRoom) leaveRoom(queueRoom);
     };
-  }, [isConnected, appointmentId, clinicId, doctorId, subscribe, joinRoom, leaveRoom, fetchQueueStatus]);
-
-  // ── Derived display values ─────────────────────────────────────────────────
+  }, [isConnected, appointmentId, clinicId, doctorId, subscribe, joinRoom, leaveRoom, fetchQueueStatus]);
   const getGradient = () => {
     if (queueData.isYourTurn)   return ['#10B981', '#059669'];
     if (queueData.isAlmostTurn) return ['#F59E0B', '#D97706'];
@@ -162,7 +137,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Live Queue Status</Text>
         <View style={styles.liveBadge}>
@@ -173,9 +148,9 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
         </View>
       </View>
 
-      {/* Main content */}
+      {}
       <View style={styles.content}>
-        {/* Position circle */}
+        {}
         <LinearGradient colors={getGradient()} style={styles.positionCircle}>
           <Text style={styles.positionNumber}>
             {queueData.isYourTurn ? '🎉' : (queueData.position ?? '—')}
@@ -185,7 +160,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
           </Text>
         </LinearGradient>
 
-        {/* Stats */}
+        {}
         <View style={styles.stats}>
           <View style={styles.statRow}>
             <Text style={styles.statIcon}>⏱️</Text>
@@ -231,7 +206,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
         </View>
       </View>
 
-      {/* Your turn alert */}
+      {}
       {queueData.isYourTurn && (
         <View style={[styles.alertBanner, { backgroundColor: `${colors.success}18` }]}>
           <Text style={styles.alertIcon}>🔔</Text>
@@ -241,7 +216,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
         </View>
       )}
 
-      {/* Almost turn alert */}
+      {}
       {!queueData.isYourTurn && queueData.isAlmostTurn && (
         <View style={[styles.alertBanner, { backgroundColor: `${colors.warning}18` }]}>
           <Text style={styles.alertIcon}>⚡</Text>
@@ -251,14 +226,14 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
         </View>
       )}
 
-      {/* Recommendation */}
+      {}
       {queueData.recommendation?.message && !queueData.isYourTurn && !queueData.isAlmostTurn && (
         <Text style={[styles.recommendation, { color: colors.textSecondary }]}>
           {queueData.recommendation.message}
         </Text>
       )}
 
-      {/* Error state */}
+      {}
       {error && (
         <TouchableOpacity onPress={fetchQueueStatus} style={styles.retryRow}>
           <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>

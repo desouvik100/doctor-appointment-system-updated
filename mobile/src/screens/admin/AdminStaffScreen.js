@@ -1,7 +1,4 @@
-/**
- * Admin Staff Screen - Staff/Receptionist Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -27,7 +24,7 @@ const AdminStaffScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filter, setFilter] = useState('pending'); // pending, all
+  const [filter, setFilter] = useState('pending'); 
 
   const fetchStaff = useCallback(async () => {
     try {
@@ -104,8 +101,7 @@ const AdminStaffScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  const renderStaff = ({ item }) => {
-    // Check approval status - backend uses approvalStatus field
+  const renderStaff = ({ item }) => {
     const isApproved = item.approvalStatus === 'approved' || item.isApproved === true || item.approved === true;
     
     return (
@@ -165,7 +161,7 @@ const AdminStaffScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -174,7 +170,7 @@ const AdminStaffScreen = ({ navigation }) => {
         <View style={styles.headerRight} />
       </View>
 
-      {/* Search */}
+      {}
       <View style={styles.searchContainer}>
         <TextInput
           style={[styles.searchInput, { backgroundColor: colors.surface, color: colors.textPrimary }]}
@@ -185,13 +181,13 @@ const AdminStaffScreen = ({ navigation }) => {
         />
       </View>
 
-      {/* Filters */}
+      {}
       <View style={styles.filterContainer}>
         <FilterButton label="Pending" value="pending" count={pendingStaff.length} />
         <FilterButton label="All Staff" value="all" count={staff.length} />
       </View>
 
-      {/* List */}
+      {}
       <FlatList
         data={filteredStaff}
         renderItem={renderStaff}
@@ -210,7 +206,6 @@ const AdminStaffScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

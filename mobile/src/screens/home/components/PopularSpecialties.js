@@ -1,6 +1,4 @@
-/**
- * PopularSpecialties - Material 3 visual specialty filters
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';

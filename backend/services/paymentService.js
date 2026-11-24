@@ -11,17 +11,13 @@ const {
   PAYU_BASE_URL,
   FRONTEND_URL,
   BACKEND_URL
-} = require('../config/paymentConfig');
-
-// Import commission service for financial calculations
+} = require('../config/paymentConfig');
 let commissionService;
 try {
   commissionService = require('./commissionService');
 } catch (e) {
   console.log('⚠️ Commission service not available, using basic calculations');
-}
-
-// PayU configuration check
+}
 const isPayUEnabled = USE_PAYU_PAYMENTS && PAYU_MERCHANT_KEY && PAYU_MERCHANT_SALT;
 
 if (isPayUEnabled) {
@@ -37,9 +33,7 @@ class PaymentService {
     this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 18;
     this.usePayUPayments = isPayUEnabled;
     this.payuBaseUrl = PAYU_BASE_URL;
-  }
-
-  // Calculate payment breakdown
+  }
   calculatePaymentBreakdown(consultationFee) {
     const baseAmount = parseFloat(consultationFee);
     const gstAmount = Math.round((baseAmount * this.gstPercentage) / 100);
@@ -53,26 +47,17 @@ class PaymentService {
       total: totalAmount,
       currency: this.currency.toUpperCase()
     };
-  }
-
-  // Generate PayU hash
-  generateHash(params) {
-    // PayU hash formula: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||salt)
+  }
+  generateHash(params) {
     const hashString = `${PAYU_MERCHANT_KEY}|${params.txnid}|${params.amount}|${params.productinfo}|${params.firstname}|${params.email}|${params.udf1 || ''}|${params.udf2 || ''}|${params.udf3 || ''}|${params.udf4 || ''}|${params.udf5 || ''}||||||${PAYU_MERCHANT_SALT}`;
     return crypto.createHash('sha512').update(hashString).digest('hex');
-  }
-
-  // Verify PayU response hash
-  verifyHash(params) {
-    // Reverse hash formula: sha512(salt|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
+  }
+  verifyHash(params) {
     const hashString = `${PAYU_MERCHANT_SALT}|${params.status}||||||${params.udf5 || ''}|${params.udf4 || ''}|${params.udf3 || ''}|${params.udf2 || ''}|${params.udf1 || ''}|${params.email}|${params.firstname}|${params.productinfo}|${params.amount}|${params.txnid}|${PAYU_MERCHANT_KEY}`;
     const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
     return calculatedHash === params.hash;
-  }
-
-  // Create PayU Order/Transaction
-  async createOrder(appointmentId, userId) {
-    // If PayU is disabled, return test mode response
+  }
+  async createOrder(appointmentId, userId) {
     if (!this.usePayUPayments) {
       return {
         testMode: true,
@@ -94,12 +79,8 @@ class PaymentService {
         throw new Error('Unauthorized access to appointment');
       }
 
-      const paymentBreakdown = this.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
-      
-      // Generate unique transaction ID
-      const txnid = `TXN${Date.now()}${appointmentId.slice(-6)}`;
-
-      // PayU payment parameters
+      const paymentBreakdown = this.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
+      const txnid = `TXN${Date.now()}${appointmentId.slice(-6)}`;
       const payuParams = {
         key: PAYU_MERCHANT_KEY,
         txnid: txnid,
@@ -115,12 +96,8 @@ class PaymentService {
         udf3: appointment.doctorId._id.toString(),
         udf4: paymentBreakdown.consultationFee.toString(),
         udf5: ''
-      };
-
-      // Generate hash
-      payuParams.hash = this.generateHash(payuParams);
-
-      // Update appointment with transaction ID
+      };
+      payuParams.hash = this.generateHash(payuParams);
       appointment.payuTxnId = txnid;
       appointment.paymentStatus = 'pending';
       await appointment.save();
@@ -137,11 +114,8 @@ class PaymentService {
       console.error('Error creating PayU order:', error);
       throw error;
     }
-  }
-
-  // Verify PayU Payment (called from success/failure callback)
-  async verifyPayment(payuResponse) {
-    // If PayU is disabled, return test mode response
+  }
+  async verifyPayment(payuResponse) {
     if (!this.usePayUPayments) {
       return {
         success: true,
@@ -150,8 +124,7 @@ class PaymentService {
       };
     }
 
-    try {
-      // Verify hash
+    try {
       const isValidHash = this.verifyHash(payuResponse);
       
       if (!isValidHash) {
@@ -164,11 +137,8 @@ class PaymentService {
       
       if (!appointment) {
         throw new Error('Appointment not found for this transaction');
-      }
-
-      // Check payment status
-      if (payuResponse.status === 'success') {
-        // Update appointment with payment details
+      }
+      if (payuResponse.status === 'success') {
         appointment.paymentStatus = 'completed';
         appointment.status = 'confirmed';
         appointment.payuPaymentId = payuResponse.mihpayid;
@@ -182,9 +152,7 @@ class PaymentService {
           status: payuResponse.status,
           paidAt: new Date()
         };
-        await appointment.save();
-
-        // Create financial ledger entry for commission tracking
+        await appointment.save();
         if (commissionService) {
           try {
             await commissionService.createLedgerEntry({
@@ -213,8 +181,7 @@ class PaymentService {
             method: payuResponse.mode
           }
         };
-      } else {
-        // Payment failed
+      } else {
         appointment.paymentStatus = 'failed';
         appointment.status = 'pending';
         await appointment.save();
@@ -232,11 +199,8 @@ class PaymentService {
       console.error('Error verifying PayU payment:', error);
       throw error;
     }
-  }
-
-  // Process refund (PayU refund API)
-  async processRefund(appointmentId, reason = 'Appointment cancelled') {
-    // If PayU is disabled, just cancel the appointment
+  }
+  async processRefund(appointmentId, reason = 'Appointment cancelled') {
     if (!this.usePayUPayments) {
       const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
@@ -261,11 +225,7 @@ class PaymentService {
 
       if (appointment.paymentStatus !== 'completed') {
         throw new Error('Cannot refund incomplete payment');
-      }
-
-      // PayU refund requires API call
-      // Note: PayU refund API requires merchant dashboard or API integration
-      // For now, mark as refund requested
+      }
       appointment.paymentStatus = 'refund_requested';
       appointment.status = 'cancelled';
       appointment.refundDetails = {
@@ -287,9 +247,7 @@ class PaymentService {
       console.error('Error processing refund:', error);
       throw error;
     }
-  }
-
-  // Get payment history for user
+  }
   async getPaymentHistory(userId) {
     try {
       const appointments = await Appointment.find({ 
@@ -319,9 +277,7 @@ class PaymentService {
       console.error('Error fetching payment history:', error);
       throw error;
     }
-  }
-
-  // Get payment config for frontend
+  }
   getConfig() {
     return {
       paymentsEnabled: this.usePayUPayments,

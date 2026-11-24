@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const LoyaltyPoints = require('../models/LoyaltyPoints');
-
-// Points configuration
+const LoyaltyPoints = require('../models/LoyaltyPoints');
 const POINTS_CONFIG = {
   appointment: 50,
   referral: 200,
@@ -15,9 +13,7 @@ const POINTS_CONFIG = {
     gold: 1.5,
     platinum: 2
   }
-};
-
-// Get user's loyalty points
+};
 router.get('/:userId', async (req, res) => {
   try {
     let loyalty = await LoyaltyPoints.findOne({ userId: req.params.userId });
@@ -37,9 +33,7 @@ router.get('/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Award points for an action
+});
 router.post('/award', async (req, res) => {
   try {
     const { userId, action, referenceId, customPoints, description } = req.body;
@@ -67,9 +61,7 @@ router.post('/award', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Redeem points
+});
 router.post('/redeem', async (req, res) => {
   try {
     const { userId, points, rewardType, rewardDescription } = req.body;
@@ -91,9 +83,7 @@ router.post('/redeem', async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-});
-
-// Get available rewards
+});
 router.get('/rewards/available', async (req, res) => {
   const rewards = [
     { id: 1, name: '₹50 Off Consultation', points: 500, type: 'discount', value: 50 },
@@ -104,9 +94,7 @@ router.get('/rewards/available', async (req, res) => {
     { id: 6, name: 'Free Video Consultation', points: 2500, type: 'service', value: 'video_consult' }
   ];
   res.json(rewards);
-});
-
-// Get leaderboard
+});
 router.get('/leaderboard/top', async (req, res) => {
   try {
     const topUsers = await LoyaltyPoints.find()
@@ -123,9 +111,7 @@ router.get('/leaderboard/top', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-
-// Helper functions
+});
 function getNextTier(currentTier, points) {
   const tiers = {
     bronze: { next: 'silver', required: 2000 },

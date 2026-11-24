@@ -1,56 +1,36 @@
-// backend/services/aiPredictionService.js
-// AI-Powered Prediction Service for HealthSync
+
 
 const Appointment = require('../models/Appointment');
-const Doctor = require('../models/Doctor');
-
-/**
- * ============================================
- * 1. SMART WAIT TIME PREDICTION
- * Uses historical data to predict accurate wait times
- * ============================================
- */
-
-// Cache for doctor's average consultation times
+const Doctor = require('../models/Doctor');
 const doctorAvgTimes = new Map();
 
-/**
- * Calculate doctor's average consultation duration from historical data
- */
-async function getDoctorAverageConsultationTime(doctorId) {
-  // Check cache first (valid for 1 hour)
+async function getDoctorAverageConsultationTime(doctorId) {
   const cached = doctorAvgTimes.get(doctorId.toString());
   if (cached && Date.now() - cached.timestamp < 3600000) {
     return cached.avgTime;
   }
 
-  try {
-    // Get completed appointments from last 30 days
+  try {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     
     const completedAppointments = await Appointment.find({
       doctorId,
       status: 'completed',
-      createdAt: { $gte: thirtyDaysAgo },
-      // Only consider appointments with timing data
+      createdAt: { $gte: thirtyDaysAgo },
       meetingStartTime: { $exists: true },
       meetingEndTime: { $exists: true }
     }).select('meetingStartTime meetingEndTime consultationType');
 
-    if (completedAppointments.length < 5) {
-      // Not enough data, use doctor's set duration or default
+    if (completedAppointments.length < 5) {
       const doctor = await Doctor.findById(doctorId).select('consultationDuration');
       return doctor?.consultationDuration || 15;
-    }
-
-    // Calculate average duration
+    }
     let totalMinutes = 0;
     let validCount = 0;
 
     completedAppointments.forEach(apt => {
       if (apt.meetingStartTime && apt.meetingEndTime) {
-        const duration = (new Date(apt.meetingEndTime) - new Date(apt.meetingStartTime)) / 60000;
-        // Filter outliers (between 5 and 60 minutes)
+        const duration = (new Date(apt.meetingEndTime) - new Date(apt.meetingStartTime)) / 60000;
         if (duration >= 5 && duration <= 60) {
           totalMinutes += duration;
           validCount++;
@@ -58,9 +38,7 @@ async function getDoctorAverageConsultationTime(doctorId) {
       }
     });
 
-    const avgTime = validCount > 0 ? Math.round(totalMinutes / validCount) : 15;
-    
-    // Cache the result
+    const avgTime = validCount > 0 ? Math.round(totalMinutes / validCount) : 15;
     doctorAvgTimes.set(doctorId.toString(), {
       avgTime,
       timestamp: Date.now(),
@@ -70,70 +48,44 @@ async function getDoctorAverageConsultationTime(doctorId) {
     return avgTime;
   } catch (error) {
     console.error('Error calculating average consultation time:', error);
-    return 15; // Default fallback
+    return 15; 
   }
 }
 
-/**
- * Get time-of-day factor (doctors may be slower/faster at different times)
- */
-function getTimeOfDayFactor(hour) {
-  // Morning (9-11): Normal pace
-  if (hour >= 9 && hour < 11) return 1.0;
-  // Late morning (11-13): Slightly rushed before lunch
-  if (hour >= 11 && hour < 13) return 0.95;
-  // After lunch (14-16): Slower, post-lunch fatigue
-  if (hour >= 14 && hour < 16) return 1.1;
-  // Evening (16-19): Normal to slightly rushed
-  if (hour >= 16 && hour < 19) return 1.0;
-  // Default
+function getTimeOfDayFactor(hour) {
+  if (hour >= 9 && hour < 11) return 1.0;
+  if (hour >= 11 && hour < 13) return 0.95;
+  if (hour >= 14 && hour < 16) return 1.1;
+  if (hour >= 16 && hour < 19) return 1.0;
   return 1.0;
 }
 
-/**
- * Get day-of-week factor (Mondays are busier, etc.)
- */
 function getDayOfWeekFactor(dayOfWeek) {
   const factors = {
-    0: 0.9,  // Sunday - lighter
-    1: 1.15, // Monday - busiest
-    2: 1.05, // Tuesday
-    3: 1.0,  // Wednesday
-    4: 1.0,  // Thursday
-    5: 1.1,  // Friday - slightly busy
-    6: 0.95  // Saturday
+    0: 0.9,  
+    1: 1.15, 
+    2: 1.05, 
+    3: 1.0,  
+    4: 1.0,  
+    5: 1.1,  
+    6: 0.95  
   };
   return factors[dayOfWeek] || 1.0;
 }
 
-/**
- * SMART WAIT TIME PREDICTION
- * Predicts wait time using multiple factors
- */
 async function predictWaitTime(doctorId, queuePosition, appointmentTime) {
-  try {
-    // Get doctor's historical average
-    const avgConsultationTime = await getDoctorAverageConsultationTime(doctorId);
-    
-    // Get current time factors
+  try {
+    const avgConsultationTime = await getDoctorAverageConsultationTime(doctorId);
     const now = new Date();
     const timeOfDayFactor = getTimeOfDayFactor(now.getHours());
-    const dayOfWeekFactor = getDayOfWeekFactor(now.getDay());
-    
-    // Base wait time calculation
-    const baseWaitMinutes = (queuePosition - 1) * avgConsultationTime;
-    
-    // Apply factors
+    const dayOfWeekFactor = getDayOfWeekFactor(now.getDay());
+    const baseWaitMinutes = (queuePosition - 1) * avgConsultationTime;
     const adjustedWaitMinutes = Math.round(
       baseWaitMinutes * timeOfDayFactor * dayOfWeekFactor
-    );
-    
-    // Add buffer for transitions between patients (2-3 min)
+    );
     const bufferTime = (queuePosition - 1) * 2;
     
-    const totalPredictedWait = adjustedWaitMinutes + bufferTime;
-    
-    // Calculate confidence based on data availability
+    const totalPredictedWait = adjustedWaitMinutes + bufferTime;
     const cached = doctorAvgTimes.get(doctorId.toString());
     const confidence = cached?.sampleSize >= 20 ? 'high' : 
                        cached?.sampleSize >= 10 ? 'medium' : 'low';
@@ -158,27 +110,14 @@ async function predictWaitTime(doctorId, queuePosition, appointmentTime) {
   }
 }
 
-/**
- * ============================================
- * 4. NO-SHOW PREDICTION
- * Predicts likelihood of patient not showing up
- * ============================================
- */
-
-/**
- * Calculate no-show risk score for a patient
- * Returns score 0-100 (higher = more likely to no-show)
- */
 async function predictNoShowRisk(userId, appointmentDetails) {
-  try {
-    // Get patient's appointment history
+  try {
     const pastAppointments = await Appointment.find({
       userId,
       date: { $lt: new Date() }
     }).select('status date time').sort({ date: -1 }).limit(20);
 
-    if (pastAppointments.length === 0) {
-      // New patient - moderate risk
+    if (pastAppointments.length === 0) {
       return {
         riskScore: 30,
         riskLevel: 'medium',
@@ -188,53 +127,38 @@ async function predictNoShowRisk(userId, appointmentDetails) {
     }
 
     let riskScore = 0;
-    const factors = [];
-
-    // Factor 1: Historical no-show rate (weight: 40%)
+    const factors = [];
     const noShows = pastAppointments.filter(a => a.status === 'cancelled' || a.status === 'no_show').length;
     const noShowRate = noShows / pastAppointments.length;
     riskScore += noShowRate * 40;
-    if (noShowRate > 0.3) factors.push('high_cancellation_history');
-
-    // Factor 2: Recent no-shows (weight: 20%)
+    if (noShowRate > 0.3) factors.push('high_cancellation_history');
     const recentAppointments = pastAppointments.slice(0, 5);
     const recentNoShows = recentAppointments.filter(a => a.status === 'cancelled' || a.status === 'no_show').length;
     riskScore += (recentNoShows / 5) * 20;
-    if (recentNoShows >= 2) factors.push('recent_cancellations');
-
-    // Factor 3: Appointment time (weight: 15%)
+    if (recentNoShows >= 2) factors.push('recent_cancellations');
     if (appointmentDetails?.time) {
-      const hour = parseInt(appointmentDetails.time.split(':')[0]);
-      // Early morning and late evening have higher no-show rates
+      const hour = parseInt(appointmentDetails.time.split(':')[0]);
       if (hour < 10 || hour >= 18) {
         riskScore += 10;
         factors.push('off_peak_time');
       }
-    }
-
-    // Factor 4: Day of week (weight: 10%)
+    }
     if (appointmentDetails?.date) {
-      const dayOfWeek = new Date(appointmentDetails.date).getDay();
-      // Mondays and Fridays have higher no-show rates
+      const dayOfWeek = new Date(appointmentDetails.date).getDay();
       if (dayOfWeek === 1 || dayOfWeek === 5) {
         riskScore += 8;
         factors.push('high_noshow_day');
       }
-    }
-
-    // Factor 5: Advance booking (weight: 15%)
+    }
     if (appointmentDetails?.date) {
       const daysInAdvance = Math.floor(
         (new Date(appointmentDetails.date) - new Date()) / (1000 * 60 * 60 * 24)
-      );
-      // Appointments booked far in advance have higher no-show rates
+      );
       if (daysInAdvance > 7) {
         riskScore += 12;
         factors.push('far_advance_booking');
       }
-    }
-
-    // Determine risk level
+    }
     let riskLevel, recommendation;
     if (riskScore >= 60) {
       riskLevel = 'high';
@@ -265,16 +189,6 @@ async function predictNoShowRisk(userId, appointmentDetails) {
   }
 }
 
-/**
- * ============================================
- * 6. SMART SCHEDULING OPTIMIZATION
- * Suggests optimal appointment times
- * ============================================
- */
-
-/**
- * Get optimal appointment slots for a doctor
- */
 async function getOptimalSlots(doctorId, date) {
   try {
     const doctor = await Doctor.findById(doctorId)
@@ -287,9 +201,7 @@ async function getOptimalSlots(doctorId, date) {
 
     if (!daySchedule?.isWorking) {
       return { slots: [], message: 'Doctor not available on this day' };
-    }
-
-    // Get existing appointments for the day
+    }
     const existingAppointments = await Appointment.find({
       doctorId,
       date: {
@@ -299,33 +211,22 @@ async function getOptimalSlots(doctorId, date) {
       status: { $in: ['pending', 'confirmed', 'in_progress'] }
     }).select('time queueNumber');
 
-    const bookedTimes = existingAppointments.map(a => a.time);
-    
-    // Generate all possible slots
+    const bookedTimes = existingAppointments.map(a => a.time);
     const slots = [];
     const startHour = parseInt(daySchedule.startTime?.split(':')[0]) || 9;
     const endHour = parseInt(daySchedule.endTime?.split(':')[0]) || 19;
     
-    for (let hour = startHour; hour < endHour; hour++) {
-      // Skip lunch hour
+    for (let hour = startHour; hour < endHour; hour++) {
       if (hour === 13) continue;
       
       for (let min = 0; min < 60; min += consultationDuration) {
         const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-        const isBooked = bookedTimes.includes(timeStr);
-        
-        // Calculate slot score (higher = better)
-        let score = 50; // Base score
-        
-        // Prefer mid-morning and mid-afternoon
+        const isBooked = bookedTimes.includes(timeStr);
+        let score = 50; 
         if (hour >= 10 && hour <= 12) score += 20;
-        if (hour >= 15 && hour <= 17) score += 15;
-        
-        // Penalize early morning and late evening
+        if (hour >= 15 && hour <= 17) score += 15;
         if (hour < 10) score -= 10;
-        if (hour >= 18) score -= 15;
-        
-        // Penalize slots right after lunch
+        if (hour >= 18) score -= 15;
         if (hour === 14 && min === 0) score -= 10;
         
         slots.push({
@@ -335,9 +236,7 @@ async function getOptimalSlots(doctorId, date) {
           recommendation: score >= 60 ? 'optimal' : score >= 40 ? 'good' : 'available'
         });
       }
-    }
-
-    // Sort by score (best slots first) for available slots
+    }
     const availableSlots = slots
       .filter(s => s.isAvailable)
       .sort((a, b) => b.score - a.score);
@@ -355,27 +254,17 @@ async function getOptimalSlots(doctorId, date) {
   }
 }
 
-/**
- * Suggest best time for appointment based on multiple factors
- */
 async function suggestBestAppointmentTime(doctorId, patientId, preferredDate) {
-  try {
-    // Get optimal slots
-    const { optimalSlots, availableCount } = await getOptimalSlots(doctorId, preferredDate);
-    
-    // Get patient's no-show risk
-    const noShowRisk = await predictNoShowRisk(patientId, { date: preferredDate });
-    
-    // Get doctor's average consultation time
+  try {
+    const { optimalSlots, availableCount } = await getOptimalSlots(doctorId, preferredDate);
+    const noShowRisk = await predictNoShowRisk(patientId, { date: preferredDate });
     const avgTime = await getDoctorAverageConsultationTime(doctorId);
     
     let suggestion = {
       recommendedSlots: optimalSlots,
       availableCount,
       avgConsultationTime: avgTime
-    };
-
-    // If high no-show risk, suggest earlier slots (easier to fill if cancelled)
+    };
     if (noShowRisk.riskLevel === 'high') {
       suggestion.note = 'Earlier slots recommended for this patient (easier to fill if rescheduled)';
       suggestion.recommendedSlots = optimalSlots.filter(s => {
@@ -391,15 +280,10 @@ async function suggestBestAppointmentTime(doctorId, patientId, preferredDate) {
   }
 }
 
-module.exports = {
-  // Smart Wait Time Prediction
+module.exports = {
   predictWaitTime,
-  getDoctorAverageConsultationTime,
-  
-  // No-Show Prediction
-  predictNoShowRisk,
-  
-  // Smart Scheduling
+  getDoctorAverageConsultationTime,
+  predictNoShowRisk,
   getOptimalSlots,
   suggestBestAppointmentTime
 };

@@ -1,25 +1,10 @@
-/**
- * Cleanup Jobs - Automated Data Cleanup for Scalability
- * ======================================================
- * Removes old/expired data to keep database lean and performant
- * 
- * Jobs:
- * 1. Delete old completed appointments (>90 days)
- * 2. Delete old read notifications (>30 days)
- * 3. Delete expired tokens (>24 hours)
- * 4. Clean up expired QR codes and queue entries
- * 5. Archive old audit logs (>180 days)
- */
+
 
 const cron = require('node-cron');
 const Appointment = require('../models/Appointment');
 const Notification = require('../models/Notification');
 const AuditLog = require('../models/AuditLog');
 
-/**
- * Delete old completed appointments (>90 days)
- * Keeps database lean while retaining recent history
- */
 async function cleanupOldAppointments() {
   try {
     console.log('🧹 Starting cleanup: Old completed appointments...');
@@ -40,10 +25,6 @@ async function cleanupOldAppointments() {
   }
 }
 
-/**
- * Delete old cancelled appointments (>60 days)
- * Cancelled appointments can be removed sooner than completed ones
- */
 async function cleanupCancelledAppointments() {
   try {
     console.log('🧹 Starting cleanup: Old cancelled appointments...');
@@ -64,10 +45,6 @@ async function cleanupCancelledAppointments() {
   }
 }
 
-/**
- * Delete old read notifications (>30 days)
- * Unread notifications are kept longer for user visibility
- */
 async function cleanupOldNotifications() {
   try {
     console.log('🧹 Starting cleanup: Old read notifications...');
@@ -88,10 +65,6 @@ async function cleanupOldNotifications() {
   }
 }
 
-/**
- * Delete very old unread notifications (>90 days)
- * Even unread notifications should be cleaned up eventually
- */
 async function cleanupVeryOldNotifications() {
   try {
     console.log('🧹 Starting cleanup: Very old unread notifications...');
@@ -111,17 +84,11 @@ async function cleanupVeryOldNotifications() {
   }
 }
 
-/**
- * Clean up expired tokens and queue entries
- * Removes expired appointment tokens and queue data
- */
 async function cleanupExpiredTokens() {
   try {
     console.log('🧹 Starting cleanup: Expired tokens and queue entries...');
     
-    const now = new Date();
-
-    // Clear expired tokens
+    const now = new Date();
     const result = await Appointment.updateMany(
       {
         tokenExpiredAt: { $lt: now },
@@ -144,18 +111,12 @@ async function cleanupExpiredTokens() {
   }
 }
 
-/**
- * Archive old audit logs (>180 days)
- * Moves old audit logs to archive collection or deletes them
- */
 async function archiveOldAuditLogs() {
   try {
     console.log('🧹 Starting cleanup: Old audit logs...');
     
     const oneEightyDaysAgo = new Date();
-    oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180);
-
-    // Check if AuditLog model exists
+    oneEightyDaysAgo.setDate(oneEightyDaysAgo.getDate() - 180);
     if (!AuditLog) {
       console.log('⚠️ AuditLog model not found, skipping...');
       return { success: true, deletedCount: 0 };
@@ -173,10 +134,6 @@ async function archiveOldAuditLogs() {
   }
 }
 
-/**
- * Clean up old no-show appointments (>30 days)
- * Remove no-show records after 30 days
- */
 async function cleanupNoShowAppointments() {
   try {
     console.log('🧹 Starting cleanup: Old no-show appointments...');
@@ -197,9 +154,6 @@ async function cleanupNoShowAppointments() {
   }
 }
 
-/**
- * Run all cleanup jobs
- */
 async function runAllCleanupJobs() {
   console.log('\n' + '='.repeat(60));
   console.log('🧹 RUNNING ALL CLEANUP JOBS');
@@ -209,9 +163,7 @@ async function runAllCleanupJobs() {
   const results = {
     timestamp: new Date(),
     jobs: {}
-  };
-
-  // Run all cleanup jobs
+  };
   results.jobs.oldAppointments = await cleanupOldAppointments();
   results.jobs.cancelledAppointments = await cleanupCancelledAppointments();
   results.jobs.oldNotifications = await cleanupOldNotifications();
@@ -227,20 +179,12 @@ async function runAllCleanupJobs() {
   return results;
 }
 
-/**
- * Initialize cleanup job scheduler
- * Runs daily at 3 AM
- */
 function initializeCleanupJobs() {
-  console.log('🧹 Initializing cleanup job scheduler...');
-
-  // Run daily at 3 AM
+  console.log('🧹 Initializing cleanup job scheduler...');
   cron.schedule('0 3 * * *', async () => {
     console.log('⏰ Scheduled cleanup job triggered');
     await runAllCleanupJobs();
-  });
-
-  // Also run weekly deep cleanup on Sundays at 4 AM
+  });
   cron.schedule('0 4 * * 0', async () => {
     console.log('⏰ Weekly deep cleanup triggered');
     await runAllCleanupJobs();

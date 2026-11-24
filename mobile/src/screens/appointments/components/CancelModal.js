@@ -1,6 +1,4 @@
-/**
- * CancelModal - Appointment cancellation with reason selection
- */
+
 
 import React, { useState } from 'react';
 import {

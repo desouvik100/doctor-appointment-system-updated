@@ -7,7 +7,7 @@ const followUpSchema = new mongoose.Schema({
   scheduledDate: { type: Date, required: true },
   reason: String,
   instructions: String,
-  discountPercent: { type: Number, default: 20 }, // 20% discount for follow-ups
+  discountPercent: { type: Number, default: 20 }, 
   status: { type: String, enum: ['scheduled', 'booked', 'completed', 'missed', 'cancelled'], default: 'scheduled' },
   reminderSent: { type: Boolean, default: false },
   bookedAppointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },

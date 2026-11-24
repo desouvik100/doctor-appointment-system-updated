@@ -1,7 +1,4 @@
-/**
- * Doctor Tab Navigator - Dashboard for Doctors
- * With Stack Navigation for all doctor screens - 100% Web Parity
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -10,9 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
 import { shadows } from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
-import { useTheme } from '../context/ThemeContext';
-
-// Import all doctor screens directly
+import { useTheme } from '../context/ThemeContext';
 import DoctorDashboardScreen from '../screens/doctor/DoctorDashboardScreen';
 import DoctorAppointmentsScreen from '../screens/doctor/DoctorAppointmentsScreen';
 import DoctorPatientsScreen from '../screens/doctor/DoctorPatientsScreen';
@@ -30,9 +25,7 @@ import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import NotificationSettingsScreen from '../screens/profile/NotificationSettingsScreen';
 
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
-
-// Doctor Dashboard Stack - contains all doctor screens
+const Stack = createStackNavigator();
 const DoctorDashboardStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -48,9 +41,7 @@ const DoctorDashboardStack = () => {
       <Stack.Screen name="DoctorQueue" component={DoctorQueueScreen} />
     </Stack.Navigator>
   );
-};
-
-// Appointments Stack
+};
 const AppointmentsStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -59,9 +50,7 @@ const AppointmentsStack = () => {
       <Stack.Screen name="DoctorCreatePrescription" component={DoctorCreatePrescriptionScreen} />
     </Stack.Navigator>
   );
-};
-
-// Patients Stack
+};
 const PatientsStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -70,9 +59,7 @@ const PatientsStack = () => {
       <Stack.Screen name="DoctorCreatePrescription" component={DoctorCreatePrescriptionScreen} />
     </Stack.Navigator>
   );
-};
-
-// Profile Stack - includes notifications
+};
 const ProfileStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

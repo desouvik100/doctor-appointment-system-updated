@@ -1,7 +1,4 @@
-/**
- * Doctor Support Screen - Contact Admin Support
- * Allows doctors to create and view support tickets
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -60,8 +57,7 @@ const DoctorSupportScreen = ({ navigation }) => {
         setTickets(response.data.tickets || []);
       }
     } catch (error) {
-      console.log('Error fetching tickets:', error.message);
-      // Use empty array if API fails
+      console.log('Error fetching tickets:', error.message);
       setTickets([]);
     } finally {
       setLoading(false);
@@ -148,7 +144,7 @@ const DoctorSupportScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
@@ -162,7 +158,7 @@ const DoctorSupportScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Support Banner */}
+        {}
         <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.banner}>
           <View style={styles.bannerContent}>
             <Text style={styles.bannerIcon}>🎧</Text>
@@ -177,12 +173,12 @@ const DoctorSupportScreen = ({ navigation }) => {
           </View>
         </LinearGradient>
 
-        {/* New Ticket Form */}
+        {}
         {showNewTicket && (
           <Card style={[styles.newTicketCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.formTitle, { color: colors.textPrimary }]}>New Support Ticket</Text>
             
-            {/* Subject */}
+            {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Subject</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary }]}
@@ -192,7 +188,7 @@ const DoctorSupportScreen = ({ navigation }) => {
               onChangeText={(text) => setNewTicket({ ...newTicket, subject: text })}
             />
 
-            {/* Category */}
+            {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Category</Text>
             <View style={styles.categoryGrid}>
               {categories.map((cat) => (
@@ -214,7 +210,7 @@ const DoctorSupportScreen = ({ navigation }) => {
               ))}
             </View>
 
-            {/* Priority */}
+            {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Priority</Text>
             <View style={styles.priorityRow}>
               {priorities.map((p) => (
@@ -232,7 +228,7 @@ const DoctorSupportScreen = ({ navigation }) => {
               ))}
             </View>
 
-            {/* Message */}
+            {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Message</Text>
             <TextInput
               style={[styles.textArea, { backgroundColor: colors.background, color: colors.textPrimary }]}
@@ -245,7 +241,7 @@ const DoctorSupportScreen = ({ navigation }) => {
               textAlignVertical="top"
             />
 
-            {/* Submit Button */}
+            {}
             <TouchableOpacity
               style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
               onPress={handleSubmitTicket}
@@ -262,7 +258,7 @@ const DoctorSupportScreen = ({ navigation }) => {
           </Card>
         )}
 
-        {/* Tickets List */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
             Your Tickets ({tickets.length})
@@ -318,17 +314,13 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: spacing.md, ...typography.bodyMedium },
-  scrollContent: { paddingBottom: 100 },
-  
-  // Header
+  scrollContent: { paddingBottom: 100 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 20 },
   headerTitle: { ...typography.headlineSmall, fontWeight: '700' },
   addBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  addIcon: { color: '#fff', fontSize: 20, fontWeight: '700' },
-
-  // Banner
+  addIcon: { color: '#fff', fontSize: 20, fontWeight: '700' },
   banner: { marginHorizontal: spacing.xl, padding: spacing.lg, borderRadius: borderRadius.xl, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   bannerContent: { flexDirection: 'row', alignItems: 'center' },
   bannerIcon: { fontSize: 32, marginRight: spacing.md },
@@ -337,9 +329,7 @@ const styles = StyleSheet.create({
   bannerSubtitle: { color: 'rgba(255,255,255,0.8)', ...typography.bodySmall },
   liveIndicator: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10B981', marginRight: spacing.xs },
-  liveText: { color: '#fff', ...typography.labelSmall, fontWeight: '600' },
-
-  // New Ticket Form
+  liveText: { color: '#fff', ...typography.labelSmall, fontWeight: '600' },
   newTicketCard: { margin: spacing.xl, padding: spacing.lg, borderRadius: borderRadius.xl },
   formTitle: { ...typography.headlineSmall, fontWeight: '700', marginBottom: spacing.lg },
   inputLabel: { ...typography.labelMedium, marginBottom: spacing.xs, marginTop: spacing.md },
@@ -356,19 +346,13 @@ const styles = StyleSheet.create({
   submitBtn: { marginTop: spacing.lg, borderRadius: borderRadius.md, overflow: 'hidden' },
   submitBtnDisabled: { opacity: 0.7 },
   submitBtnGradient: { paddingVertical: spacing.md, alignItems: 'center' },
-  submitBtnText: { color: '#fff', ...typography.labelLarge, fontWeight: '700' },
-
-  // Section
+  submitBtnText: { color: '#fff', ...typography.labelLarge, fontWeight: '700' },
   section: { marginTop: spacing.xl, paddingHorizontal: spacing.xl },
-  sectionTitle: { ...typography.headlineSmall, fontWeight: '600', marginBottom: spacing.md },
-
-  // Empty state
+  sectionTitle: { ...typography.headlineSmall, fontWeight: '600', marginBottom: spacing.md },
   emptyCard: { padding: spacing.xxl, borderRadius: borderRadius.lg, alignItems: 'center' },
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
   emptyText: { ...typography.bodyMedium, marginBottom: spacing.xs },
-  emptySubtext: { ...typography.bodySmall },
-
-  // Ticket card
+  emptySubtext: { ...typography.bodySmall },
   ticketCard: { padding: spacing.md, borderRadius: borderRadius.lg, marginBottom: spacing.md },
   ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
   ticketTitleRow: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: spacing.sm },

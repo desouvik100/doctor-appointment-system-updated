@@ -1,19 +1,16 @@
 const mongoose = require('mongoose');
 
-const commissionConfigSchema = new mongoose.Schema({
-  // Config type: 'global' for default, 'clinic' for clinic-specific override
+const commissionConfigSchema = new mongoose.Schema({
   configType: {
     type: String,
     enum: ['global', 'clinic'],
     required: true
-  },
-  // Clinic ID (only for clinic-specific configs)
+  },
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
     default: null
-  },
-  // Online consultation commission (Tier-2/3 friendly: 10-12%)
+  },
   onlineCommission: {
     type: {
       type: String,
@@ -22,10 +19,9 @@ const commissionConfigSchema = new mongoose.Schema({
     },
     value: {
       type: Number,
-      default: 10 // 10% for online (doctor-friendly for Tier-2/3)
+      default: 10 
     }
-  },
-  // In-clinic appointment commission (Flat fee preferred in Tier-2/3)
+  },
   inClinicCommission: {
     type: {
       type: String,
@@ -34,10 +30,9 @@ const commissionConfigSchema = new mongoose.Schema({
     },
     value: {
       type: Number,
-      default: 25 // ₹25 flat fee (doctor-friendly)
+      default: 25 
     }
-  },
-  // Introductory offer settings
+  },
   introductoryOffer: {
     enabled: {
       type: Boolean,
@@ -45,38 +40,35 @@ const commissionConfigSchema = new mongoose.Schema({
     },
     freeAppointments: {
       type: Number,
-      default: 50 // First 50 appointments free
+      default: 50 
     },
     reducedFeeAppointments: {
       type: Number,
-      default: 100 // Next 100 at reduced rate
+      default: 100 
     },
     reducedFeeValue: {
       type: Number,
-      default: 20 // ₹20 flat during intro period
+      default: 20 
     }
-  },
-  // GST rate on platform commission (18% in India)
+  },
   gstRate: {
     type: Number,
     default: 18
-  },
-  // Payment gateway fee configuration
+  },
   paymentGateway: {
     feePercentage: {
       type: Number,
-      default: 2 // 2%
+      default: 2 
     },
     gstOnFee: {
       type: Number,
-      default: 18 // 18% GST on gateway fee
+      default: 18 
     },
     fixedFee: {
       type: Number,
-      default: 0 // Optional fixed fee per transaction
+      default: 0 
     }
-  },
-  // Payout configuration
+  },
   payoutConfig: {
     defaultCycle: {
       type: String,
@@ -85,19 +77,17 @@ const commissionConfigSchema = new mongoose.Schema({
     },
     minimumPayoutAmount: {
       type: Number,
-      default: 500 // Minimum ₹500 for payout
+      default: 500 
     },
     payoutDay: {
       type: Number,
-      default: 1 // Day of week (1=Monday) or day of month
+      default: 1 
     }
-  },
-  // Active status
+  },
   isActive: {
     type: Boolean,
     default: true
-  },
-  // Audit fields
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -106,20 +96,13 @@ const commissionConfigSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
-}, { timestamps: true });
-
-// Ensure only one global config exists
+}, { timestamps: true });
 commissionConfigSchema.index(
   { configType: 1, clinicId: 1 },
   { unique: true, partialFilterExpression: { configType: 'global' } }
-);
-
-// Index for clinic-specific lookups
-commissionConfigSchema.index({ clinicId: 1, isActive: 1 });
-
-// Static method to get config for a clinic (falls back to global)
-commissionConfigSchema.statics.getConfigForClinic = async function(clinicId) {
-  // Try clinic-specific config first
+);
+commissionConfigSchema.index({ clinicId: 1, isActive: 1 });
+commissionConfigSchema.statics.getConfigForClinic = async function(clinicId) {
   if (clinicId) {
     const clinicConfig = await this.findOne({ 
       configType: 'clinic', 
@@ -127,12 +110,8 @@ commissionConfigSchema.statics.getConfigForClinic = async function(clinicId) {
       isActive: true 
     });
     if (clinicConfig) return clinicConfig;
-  }
-  
-  // Fall back to global config
-  let globalConfig = await this.findOne({ configType: 'global', isActive: true });
-  
-  // Create default global config if none exists
+  }
+  let globalConfig = await this.findOne({ configType: 'global', isActive: true });
   if (!globalConfig) {
     globalConfig = await this.create({
       configType: 'global',

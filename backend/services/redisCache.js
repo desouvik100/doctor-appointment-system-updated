@@ -1,7 +1,4 @@
-/**
- * Redis Caching Service for Performance Optimization
- * Caches frequently accessed data to reduce database load
- */
+
 
 const redis = require('ioredis');
 
@@ -13,16 +10,16 @@ class RedisCacheService {
   }
 
   async initialize() {
-    // Skip Redis connection in development/staging
+
     if (process.env.REDIS_URL && process.env.NODE_ENV === 'production') {
       try {
         this.client = new redis(process.env.REDIS_URL, {
           retryDelayOnFailover: 100,
-          maxRetriesPerRequest: 1, // Reduced retries
+          maxRetriesPerRequest: 1, 
           lazyConnect: true,
           keepAlive: 30000,
           connectTimeout: 5000,
-          commandTimeout: 2000, // Reduced timeout
+          commandTimeout: 2000, 
         });
 
         await this.client.ping();
@@ -45,11 +42,10 @@ class RedisCacheService {
   }
 
   setupMemoryFallback() {
-    // In-memory cache fallback
+
     this.memoryCache = new Map();
     this.isEnabled = true;
-    
-    // Clean up every 5 minutes
+
     setInterval(() => {
       if (this.memoryCache.size > 1000) {
         this.memoryCache.clear();
@@ -84,7 +80,7 @@ class RedisCacheService {
         await this.client.setex(key, ttlSeconds, serialized);
       } else {
         this.memoryCache.set(key, value);
-        // Auto-expire from memory cache
+
         setTimeout(() => this.memoryCache.delete(key), ttlSeconds * 1000);
       }
       return true;
@@ -110,7 +106,6 @@ class RedisCacheService {
     }
   }
 
-  // High-level caching methods
   async cacheUser(userId, userData, ttl = 600) {
     return this.set(`user:${userId}`, userData, ttl);
   }
@@ -142,7 +137,6 @@ class RedisCacheService {
     await this.del(`appointments:${userId}`);
   }
 
-  // Batch operations
   async mget(keys) {
     if (!this.isEnabled || !this.client) return {};
 

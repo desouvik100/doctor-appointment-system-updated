@@ -1,7 +1,4 @@
-/**
- * Doctor Queue Screen - Real-time patient queue management
- * Features: Current patient, waiting queue, consultation timer, walk-in support
- */
+
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
@@ -35,9 +32,7 @@ const DoctorQueueScreen = ({ navigation }) => {
   const [queue, setQueue] = useState([]);
   const [consultationTime, setConsultationTime] = useState(0);
   const [queueFilter, setQueueFilter] = useState('all');
-  const timerRef = useRef(null);
-  
-  // Walk-in modal state
+  const timerRef = useRef(null);
   const [showWalkInModal, setShowWalkInModal] = useState(false);
   const [walkInLoading, setWalkInLoading] = useState(false);
   const [searchPhone, setSearchPhone] = useState('');
@@ -59,9 +54,7 @@ const DoctorQueueScreen = ({ navigation }) => {
     try {
       const today = new Date().toISOString().split('T')[0];
       const response = await apiClient.get(`/appointments/doctor/${doctorId}/queue?date=${today}`);
-      const queueData = response.data || [];
-      
-      // Separate current patient from waiting queue
+      const queueData = response.data || [];
       const inProgress = queueData.find(a => a.status === 'in_progress');
       const waiting = queueData.filter(a => 
         a.status === 'confirmed' || a.status === 'pending'
@@ -80,13 +73,10 @@ const DoctorQueueScreen = ({ navigation }) => {
   }, [doctorId]);
 
   useEffect(() => {
-    fetchQueue();
-    // Auto-refresh every 30 seconds
+    fetchQueue();
     const interval = setInterval(fetchQueue, 30000);
     return () => clearInterval(interval);
-  }, [fetchQueue]);
-
-  // Consultation timer
+  }, [fetchQueue]);
   useEffect(() => {
     if (currentPatient?.consultationStartTime || currentPatient?.consultationStartedAt) {
       const startTime = new Date(currentPatient.consultationStartTime || currentPatient.consultationStartedAt).getTime();
@@ -163,9 +153,7 @@ const DoctorQueueScreen = ({ navigation }) => {
     } catch (error) {
       Alert.alert('Error', 'Failed to send notification');
     }
-  }, []);
-
-  // Walk-in patient functions
+  }, []);
   const resetWalkInForm = () => {
     setWalkInForm({
       patientName: '',
@@ -280,7 +268,7 @@ const DoctorQueueScreen = ({ navigation }) => {
 
   const renderListHeader = useCallback(() => (
     <View>
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -296,7 +284,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Daily Summary */}
+      {}
       <Card style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
         <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>📊 Today at a Glance</Text>
         <View style={styles.summaryStats}>
@@ -315,7 +303,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         </View>
       </Card>
 
-      {/* Queue Filter */}
+      {}
       <View style={styles.filterRow}>
         {[
           { id: 'all', label: `All (${queue.length})`, icon: '📋' },
@@ -340,7 +328,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         ))}
       </View>
 
-      {/* Current Patient */}
+      {}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Current Patient</Text>
         <Card style={[styles.currentPatientCard, { backgroundColor: colors.surface }]}>
@@ -368,7 +356,7 @@ const DoctorQueueScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Consultation Timer */}
+              {}
               <View style={styles.timerContainer}>
                 <Text style={styles.timerIcon}>⏱️</Text>
                 <Text style={[styles.timerText, { color: colors.textPrimary }]}>{formatTime(consultationTime)}</Text>
@@ -389,7 +377,7 @@ const DoctorQueueScreen = ({ navigation }) => {
                 )}
               </View>
 
-              {/* Action Buttons */}
+              {}
               <View style={styles.actionButtons}>
                 {currentPatient.consultationType === 'online' && currentPatient.googleMeetLink && (
                   <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#1A73E8' }]}>
@@ -446,7 +434,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         </Card>
       </View>
 
-      {/* Waiting Queue Header */}
+      {}
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           Waiting Queue ({filteredQueue.length})
@@ -488,7 +476,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       />
 
-      {/* Walk-In Patient Modal */}
+      {}
       <Modal visible={showWalkInModal} animationType="slide" transparent>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
@@ -500,7 +488,7 @@ const DoctorQueueScreen = ({ navigation }) => {
             </View>
 
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-              {/* Search by Phone */}
+              {}
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Search by Phone</Text>
                 <View style={styles.searchRow}>
@@ -519,7 +507,7 @@ const DoctorQueueScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Existing Patient Found */}
+              {}
               {existingPatient && (
                 <View style={[styles.existingPatientCard, { backgroundColor: '#10B98120', borderColor: '#10B981' }]}>
                   <Text style={styles.existingPatientIcon}>✅</Text>
@@ -530,7 +518,7 @@ const DoctorQueueScreen = ({ navigation }) => {
                 </View>
               )}
 
-              {/* New Patient Form */}
+              {}
               {!existingPatient && (
                 <>
                   <View style={styles.formDivider}>
@@ -583,7 +571,7 @@ const DoctorQueueScreen = ({ navigation }) => {
                 </>
               )}
 
-              {/* Common Fields */}
+              {}
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Reason for Visit</Text>
                 <TextInput
@@ -597,7 +585,7 @@ const DoctorQueueScreen = ({ navigation }) => {
                 />
               </View>
 
-              {/* Consultation Type */}
+              {}
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Consultation Type</Text>
                 <View style={styles.typeRow}>
@@ -619,7 +607,7 @@ const DoctorQueueScreen = ({ navigation }) => {
               </View>
             </ScrollView>
 
-            {/* Modal Footer */}
+            {}
             <View style={styles.modalFooter}>
               <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.surfaceBorder }]} onPress={() => { setShowWalkInModal(false); resetWalkInForm(); }}>
                 <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
@@ -790,9 +778,7 @@ const styles = StyleSheet.create({
   typeBadgeSmall: { paddingHorizontal: spacing.xs, paddingVertical: 2, borderRadius: borderRadius.sm },
   queueActions: { flexDirection: 'column', gap: spacing.xs },
   queueActionBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  queueActionIcon: { color: '#fff', fontSize: 14 },
-
-  // Walk-In Modal Styles
+  queueActionIcon: { color: '#fff', fontSize: 14 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: borderRadius.xxl, borderTopRightRadius: borderRadius.xxl, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.1)' },

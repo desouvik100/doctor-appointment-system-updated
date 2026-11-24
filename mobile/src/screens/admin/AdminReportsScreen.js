@@ -1,7 +1,4 @@
-/**
- * Admin Reports Screen - Analytics & Reports
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -57,7 +54,6 @@ const AdminReportsScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchData]);
 
-
   const StatCard = ({ icon, value, label, color }) => (
     <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
       <View style={[styles.statIconBg, { backgroundColor: color + '20' }]}>
@@ -91,7 +87,7 @@ const AdminReportsScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
       >
-        {/* Overview Stats */}
+        {}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
         <View style={styles.statsGrid}>
           <StatCard icon="👥" value={overview.totalPatients || 0} label="Patients" color="#3498DB" />
@@ -100,7 +96,7 @@ const AdminReportsScreen = ({ navigation }) => {
           <StatCard icon="📅" value={overview.totalAppointments || 0} label="Appointments" color="#E74C3C" />
         </View>
 
-        {/* Specialization Stats */}
+        {}
         {specStats.length > 0 && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>By Specialization</Text>
@@ -115,7 +111,7 @@ const AdminReportsScreen = ({ navigation }) => {
           </>
         )}
 
-        {/* Demographics */}
+        {}
         {demographics.ageGroups && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient Demographics</Text>
@@ -134,7 +130,7 @@ const AdminReportsScreen = ({ navigation }) => {
           </>
         )}
 
-        {/* Quick Actions */}
+        {}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Export Data</Text>
         <View style={styles.exportButtons}>
           <TouchableOpacity style={[styles.exportBtn, { backgroundColor: colors.surface }]}>

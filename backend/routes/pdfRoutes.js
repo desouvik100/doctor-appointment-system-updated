@@ -1,26 +1,17 @@
-/**
- * PDF Generation Routes
- * Generate PDFs for lab requisitions, clinical summaries, and more
- */
+
 
 const express = require('express');
 const router = express.Router();
-const { verifyToken } = require('../middleware/auth');
-
-// Import PDF services
+const { verifyToken } = require('../middleware/auth');
 const { generatePrescriptionHTML, generateInvoiceHTML } = require('../services/pdfService');
 const { 
   generateLabRequisitionHTML, 
   generateClinicalSummaryHTML,
   generateDischargeSummaryHTML,
   generateReferralLetterHTML 
-} = require('../services/labPdfService');
-
-// Models
+} = require('../services/labPdfService');
 const User = require('../models/User');
-const Clinic = require('../models/Clinic');
-
-// Try to load puppeteer, fallback to HTML response if not available
+const Clinic = require('../models/Clinic');
 let puppeteer = null;
 try {
   puppeteer = require('puppeteer');
@@ -28,12 +19,8 @@ try {
   console.warn('Puppeteer not available, PDF generation will return HTML for client-side rendering');
 }
 
-/**
- * Helper: Generate PDF from HTML
- */
 async function generatePDFFromHTML(html, options = {}) {
-  if (!puppeteer) {
-    // Return null to indicate PDF generation not available
+  if (!puppeteer) {
     return null;
   }
   
@@ -66,9 +53,6 @@ async function generatePDFFromHTML(html, options = {}) {
   }
 }
 
-/**
- * Helper: Get user and clinic info
- */
 async function getContextData(patientId, doctorId, clinicId) {
   const [patient, doctor, clinic] = await Promise.all([
     patientId ? User.findById(patientId).lean() : null,
@@ -78,10 +62,6 @@ async function getContextData(patientId, doctorId, clinicId) {
   return { patient, doctor, clinic };
 }
 
-/**
- * Generate Lab Requisition PDF
- * POST /api/pdf/lab-requisition
- */
 router.post('/lab-requisition', verifyToken, async (req, res) => {
   try {
     const { 
@@ -100,9 +80,7 @@ router.post('/lab-requisition', verifyToken, async (req, res) => {
         success: false,
         message: 'Lab order with tests is required'
       });
-    }
-    
-    // Get context data from DB or use provided data
+    }
     let patient = patientData;
     let doctor = doctorData;
     let clinic = clinicData;
@@ -112,9 +90,7 @@ router.post('/lab-requisition', verifyToken, async (req, res) => {
       patient = patient || context.patient;
       doctor = doctor || context.doctor;
       clinic = clinic || context.clinic;
-    }
-    
-    // Generate HTML
+    }
     const html = generateLabRequisitionHTML(labOrder, patient, doctor, clinic);
     
     if (returnHtml || !puppeteer) {
@@ -124,9 +100,7 @@ router.post('/lab-requisition', verifyToken, async (req, res) => {
         requisitionNumber: labOrder.requisitionNumber || `LAB-${Date.now().toString().slice(-8)}`,
         pdfAvailable: !!puppeteer
       });
-    }
-    
-    // Generate PDF
+    }
     const pdfBuffer = await generatePDFFromHTML(html);
     
     res.setHeader('Content-Type', 'application/pdf');
@@ -141,10 +115,6 @@ router.post('/lab-requisition', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Generate Clinical Summary PDF
- * POST /api/pdf/clinical-summary
- */
 router.post('/clinical-summary', verifyToken, async (req, res) => {
   try {
     const { 
@@ -164,9 +134,7 @@ router.post('/clinical-summary', verifyToken, async (req, res) => {
         success: false,
         message: 'Visit data is required'
       });
-    }
-    
-    // Get context data
+    }
     let patient = patientData;
     let doctor = doctorData;
     let clinic = clinicData;
@@ -176,9 +144,7 @@ router.post('/clinical-summary', verifyToken, async (req, res) => {
       patient = patient || context.patient;
       doctor = doctor || context.doctor;
       clinic = clinic || context.clinic;
-    }
-    
-    // Generate HTML
+    }
     const html = generateClinicalSummaryHTML(visit, patient, doctor, clinic, options);
     
     if (returnHtml || !puppeteer) {
@@ -188,9 +154,7 @@ router.post('/clinical-summary', verifyToken, async (req, res) => {
         summaryNumber: visit.summaryNumber || `CS-${Date.now().toString().slice(-8)}`,
         pdfAvailable: !!puppeteer
       });
-    }
-    
-    // Generate PDF
+    }
     const pdfBuffer = await generatePDFFromHTML(html);
     
     res.setHeader('Content-Type', 'application/pdf');
@@ -205,10 +169,6 @@ router.post('/clinical-summary', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Generate Discharge Summary PDF
- * POST /api/pdf/discharge-summary
- */
 router.post('/discharge-summary', verifyToken, async (req, res) => {
   try {
     const { 
@@ -227,9 +187,7 @@ router.post('/discharge-summary', verifyToken, async (req, res) => {
         success: false,
         message: 'Admission data is required'
       });
-    }
-    
-    // Get context data
+    }
     let patient = patientData;
     let doctor = doctorData;
     let clinic = clinicData;
@@ -239,9 +197,7 @@ router.post('/discharge-summary', verifyToken, async (req, res) => {
       patient = patient || context.patient;
       doctor = doctor || context.doctor;
       clinic = clinic || context.clinic;
-    }
-    
-    // Generate HTML
+    }
     const html = generateDischargeSummaryHTML(admission, patient, doctor, clinic);
     
     if (returnHtml) {
@@ -250,9 +206,7 @@ router.post('/discharge-summary', verifyToken, async (req, res) => {
         html,
         summaryNumber: admission.summaryNumber || `DS-${Date.now().toString().slice(-8)}`
       });
-    }
-    
-    // Generate PDF
+    }
     const pdfBuffer = await generatePDFFromHTML(html);
     
     res.setHeader('Content-Type', 'application/pdf');
@@ -267,10 +221,6 @@ router.post('/discharge-summary', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Generate Referral Letter PDF
- * POST /api/pdf/referral-letter
- */
 router.post('/referral-letter', verifyToken, async (req, res) => {
   try {
     const { 
@@ -289,9 +239,7 @@ router.post('/referral-letter', verifyToken, async (req, res) => {
         success: false,
         message: 'Referral data is required'
       });
-    }
-    
-    // Get context data
+    }
     let patient = patientData;
     let doctor = doctorData;
     let clinic = clinicData;
@@ -301,9 +249,7 @@ router.post('/referral-letter', verifyToken, async (req, res) => {
       patient = patient || context.patient;
       doctor = doctor || context.doctor;
       clinic = clinic || context.clinic;
-    }
-    
-    // Generate HTML
+    }
     const html = generateReferralLetterHTML(referral, patient, doctor, clinic);
     
     if (returnHtml) {
@@ -312,9 +258,7 @@ router.post('/referral-letter', verifyToken, async (req, res) => {
         html,
         referralNumber: referral.referralNumber || `REF-${Date.now().toString().slice(-8)}`
       });
-    }
-    
-    // Generate PDF
+    }
     const pdfBuffer = await generatePDFFromHTML(html);
     
     res.setHeader('Content-Type', 'application/pdf');
@@ -329,10 +273,6 @@ router.post('/referral-letter', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Generate Prescription PDF (using existing service)
- * POST /api/pdf/prescription
- */
 router.post('/prescription', verifyToken, async (req, res) => {
   try {
     const { 
@@ -353,9 +293,7 @@ router.post('/prescription', verifyToken, async (req, res) => {
         success: false,
         message: 'Prescription data is required'
       });
-    }
-    
-    // Get context data
+    }
     let patient = patientData;
     let doctor = doctorData;
     let clinic = clinicData;
@@ -365,9 +303,7 @@ router.post('/prescription', verifyToken, async (req, res) => {
       patient = patient || context.patient;
       doctor = doctor || context.doctor;
       clinic = clinic || context.clinic;
-    }
-    
-    // Generate HTML
+    }
     const html = generatePrescriptionHTML(prescription, patient, doctor, clinic, appointmentData);
     
     if (returnHtml) {
@@ -376,9 +312,7 @@ router.post('/prescription', verifyToken, async (req, res) => {
         html,
         prescriptionNumber: prescription.prescriptionNumber || `RX-${Date.now().toString().slice(-8)}`
       });
-    }
-    
-    // Generate PDF
+    }
     const pdfBuffer = await generatePDFFromHTML(html);
     
     res.setHeader('Content-Type', 'application/pdf');
@@ -393,10 +327,6 @@ router.post('/prescription', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Generate Invoice PDF (using existing service)
- * POST /api/pdf/invoice
- */
 router.post('/invoice', verifyToken, async (req, res) => {
   try {
     const { 
@@ -416,9 +346,7 @@ router.post('/invoice', verifyToken, async (req, res) => {
         success: false,
         message: 'Payment data is required'
       });
-    }
-    
-    // Get context data
+    }
     let patient = patientData;
     let doctor = doctorData;
     let clinic = clinicData;
@@ -428,9 +356,7 @@ router.post('/invoice', verifyToken, async (req, res) => {
       patient = patient || context.patient;
       doctor = doctor || context.doctor;
       clinic = clinic || context.clinic;
-    }
-    
-    // Generate HTML
+    }
     const html = generateInvoiceHTML(payment, appointmentData, patient, doctor, clinic);
     
     if (returnHtml) {
@@ -439,9 +365,7 @@ router.post('/invoice', verifyToken, async (req, res) => {
         html,
         invoiceNumber: payment.invoiceNumber || `INV-${Date.now().toString().slice(-8)}`
       });
-    }
-    
-    // Generate PDF
+    }
     const pdfBuffer = await generatePDFFromHTML(html);
     
     res.setHeader('Content-Type', 'application/pdf');
@@ -456,10 +380,6 @@ router.post('/invoice', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Preview PDF as HTML (for any document type)
- * POST /api/pdf/preview
- */
 router.post('/preview', verifyToken, async (req, res) => {
   try {
     const { type, data, patientId, doctorId, clinicId } = req.body;

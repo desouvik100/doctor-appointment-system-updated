@@ -1,21 +1,14 @@
 const mongoose = require('mongoose');
 
-const labReportSchema = new mongoose.Schema({
-  // Report Identification
-  reportNumber: { type: String, unique: true, required: true },
-  
-  // Patient Info
+const labReportSchema = new mongoose.Schema({
+  reportNumber: { type: String, unique: true, required: true },
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   patientName: { type: String, required: true },
   patientAge: { type: Number },
-  patientGender: { type: String },
-  
-  // Ordering Info
+  patientGender: { type: String },
   orderedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
   orderedByName: { type: String },
-  orderDate: { type: Date, default: Date.now },
-  
-  // Sample Info
+  orderDate: { type: Date, default: Date.now },
   sampleType: { 
     type: String, 
     enum: ['blood', 'urine', 'stool', 'sputum', 'csf', 'swab', 'tissue', 'fluid', 'other'],
@@ -23,18 +16,14 @@ const labReportSchema = new mongoose.Schema({
   },
   sampleCollectedAt: { type: Date },
   sampleCollectedBy: { type: String },
-  sampleId: { type: String },
-  
-  // Test Details
+  sampleId: { type: String },
   testCategory: { 
     type: String, 
     enum: ['hematology', 'biochemistry', 'microbiology', 'serology', 'pathology', 'immunology', 'hormones', 'urine_analysis', 'other'],
     required: true
   },
   testName: { type: String, required: true },
-  testCode: { type: String },
-  
-  // Results
+  testCode: { type: String },
   results: [{
     parameter: { type: String, required: true },
     value: { type: String, required: true },
@@ -42,67 +31,45 @@ const labReportSchema = new mongoose.Schema({
     normalRange: { type: String },
     flag: { type: String, enum: ['normal', 'low', 'high', 'critical_low', 'critical_high', 'abnormal'] },
     interpretation: { type: String }
-  }],
-  
-  // Overall Interpretation
+  }],
   interpretation: { type: String },
-  comments: { type: String },
-  
-  // Verification
+  comments: { type: String },
   performedBy: { type: String },
   verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   verifiedByName: { type: String },
-  verifiedAt: { type: Date },
-  
-  // Report Status
+  verifiedAt: { type: Date },
   status: { 
     type: String, 
     enum: ['ordered', 'sample_collected', 'processing', 'pending_verification', 'verified', 'delivered', 'cancelled'],
     default: 'ordered'
   },
-  priority: { type: String, enum: ['routine', 'urgent', 'stat'], default: 'routine' },
-  
-  // Attachments
+  priority: { type: String, enum: ['routine', 'urgent', 'stat'], default: 'routine' },
   attachments: [{
     fileName: { type: String },
     fileUrl: { type: String },
     fileType: { type: String },
     uploadedAt: { type: Date, default: Date.now }
-  }],
-  
-  // Linked Records
+  }],
   admissionId: { type: mongoose.Schema.Types.ObjectId, ref: 'IPDAdmission' },
-  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
-  
-  // Compliance
+  appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
   isLocked: { type: Boolean, default: false },
   lockedAt: { type: Date },
-  lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  
-  // Digital Signature
+  lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   digitalSignature: {
     signedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     signedAt: { type: Date },
     signatureData: { type: String }
-  },
-  
-  // Clinic
-  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
-  
-  // Billing
+  },
+  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
   cost: { type: Number },
   billId: { type: mongoose.Schema.Types.ObjectId, ref: 'ClinicBilling' }
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 labReportSchema.index({ clinicId: 1, status: 1 });
 labReportSchema.index({ patientId: 1, createdAt: -1 });
 labReportSchema.index({ reportNumber: 1 });
-labReportSchema.index({ admissionId: 1 });
-
-// Generate report number
+labReportSchema.index({ admissionId: 1 });
 labReportSchema.pre('save', async function(next) {
   if (!this.reportNumber) {
     const date = new Date();

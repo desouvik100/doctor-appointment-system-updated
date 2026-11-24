@@ -1,21 +1,15 @@
 const Appointment = require('../models/Appointment');
 
 class TokenService {
-  /**
-   * Generate and save token for appointment
-   */
+  
   static async generateTokenForAppointment(appointmentId, doctorCode = 'GEN') {
     try {
       const appointment = await Appointment.findById(appointmentId).populate('doctorId');
       
       if (!appointment) {
         throw new Error('Appointment not found');
-      }
-
-      // Use doctor's specialty code if available
-      const code = doctorCode || appointment.doctorId?.specialization?.substring(0, 5) || 'GEN';
-      
-      // Generate token
+      }
+      const code = doctorCode || appointment.doctorId?.specialization?.substring(0, 5) || 'GEN';
       appointment.generateToken(code);
       appointment.queueStatus = 'waiting';
       
@@ -35,9 +29,6 @@ class TokenService {
     }
   }
 
-  /**
-   * Verify token and update queue status
-   */
   static async verifyToken(token) {
     try {
       const appointment = await Appointment.findOne({ token: token.toUpperCase() })
@@ -51,9 +42,7 @@ class TokenService {
           error: 'Token not found',
           status: 404
         };
-      }
-
-      // Check if token is expired
+      }
       if (new Date() > appointment.tokenExpiredAt) {
         appointment.queueStatus = 'expired';
         await appointment.save();
@@ -62,18 +51,14 @@ class TokenService {
           error: 'Token has expired',
           status: 'expired'
         };
-      }
-
-      // Check if already verified
+      }
       if (appointment.queueStatus === 'completed' || appointment.queueStatus === 'no_show') {
         return {
           success: false,
           error: `Appointment already ${appointment.queueStatus}`,
           status: appointment.queueStatus
         };
-      }
-
-      // Update status to verified
+      }
       appointment.queueStatus = 'verified';
       appointment.verifiedAt = new Date();
       await appointment.save();
@@ -102,9 +87,6 @@ class TokenService {
     }
   }
 
-  /**
-   * Add appointment to queue
-   */
   static async addToQueue(appointmentId) {
     try {
       const appointment = await Appointment.findById(appointmentId);
@@ -115,9 +97,7 @@ class TokenService {
 
       if (appointment.queueStatus !== 'verified') {
         throw new Error('Appointment must be verified before adding to queue');
-      }
-
-      // Get queue position
+      }
       const queueCount = await Appointment.countDocuments({
         doctorId: appointment.doctorId,
         date: {
@@ -129,7 +109,7 @@ class TokenService {
 
       appointment.queuePosition = queueCount + 1;
       appointment.queueStatus = 'in_queue';
-      appointment.estimatedWaitTime = queueCount * 15; // Assume 15 min per patient
+      appointment.estimatedWaitTime = queueCount * 15; 
 
       await appointment.save();
 
@@ -147,9 +127,6 @@ class TokenService {
     }
   }
 
-  /**
-   * Get queue list for a doctor on a specific date
-   */
   static async getQueueList(doctorId, date) {
     try {
       const startDate = new Date(date);
@@ -191,9 +168,6 @@ class TokenService {
     }
   }
 
-  /**
-   * Get patient's token
-   */
   static async getPatientToken(userId) {
     try {
       const appointment = await Appointment.findOne({
@@ -227,9 +201,6 @@ class TokenService {
     }
   }
 
-  /**
-   * Mark appointment as completed
-   */
   static async markAsCompleted(appointmentId) {
     try {
       const appointment = await Appointment.findByIdAndUpdate(
@@ -253,9 +224,6 @@ class TokenService {
     }
   }
 
-  /**
-   * Mark appointment as no-show
-   */
   static async markAsNoShow(appointmentId) {
     try {
       const appointment = await Appointment.findByIdAndUpdate(
@@ -279,9 +247,6 @@ class TokenService {
     }
   }
 
-  /**
-   * Expire old tokens
-   */
   static async expireOldTokens() {
     try {
       const result = await Appointment.updateMany(

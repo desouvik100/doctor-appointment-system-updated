@@ -1,7 +1,4 @@
-/**
- * Doctor EMR Screen - Electronic Medical Records for Doctors
- * Shows EMR subscription status, patients, prescriptions, and analytics
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -34,9 +31,7 @@ const DoctorEMRScreen = ({ navigation }) => {
     prescriptions: 0,
     visitsToday: 0,
     daysRemaining: 0,
-  });
-
-  // Get clinic ID from user
+  });
   const getClinicId = () => {
     if (!user?.clinicId) return null;
     if (typeof user.clinicId === 'object' && user.clinicId._id) {
@@ -52,20 +47,15 @@ const DoctorEMRScreen = ({ navigation }) => {
       return;
     }
 
-    try {
-      // Fetch subscription status
+    try {
       const subResponse = await apiClient.get(`/emr/subscription/${clinicId}`);
       if (subResponse.data.success && subResponse.data.subscription) {
-        setSubscription(subResponse.data.subscription);
-        
-        // Calculate days remaining
+        setSubscription(subResponse.data.subscription);
         const expiryDate = new Date(subResponse.data.subscription.expiryDate);
         const today = new Date();
         const daysRemaining = Math.max(0, Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24)));
         
-        setStats(prev => ({ ...prev, daysRemaining }));
-        
-        // Fetch EMR patients
+        setStats(prev => ({ ...prev, daysRemaining }));
         try {
           const patientsResponse = await apiClient.get(`/emr/patients/clinic/${clinicId}`);
           if (patientsResponse.data.success) {
@@ -74,9 +64,7 @@ const DoctorEMRScreen = ({ navigation }) => {
           }
         } catch (e) {
           console.log('EMR patients fetch error:', e.message);
-        }
-
-        // Fetch prescriptions
+        }
         try {
           const rxResponse = await apiClient.get(`/prescriptions/clinic/${clinicId}`);
           if (rxResponse.data.success) {
@@ -140,14 +128,12 @@ const DoctorEMRScreen = ({ navigation }) => {
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading EMR...</Text>
       </View>
     );
-  }
-
-  // No subscription view
+  }
   if (!subscription) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Header */}
+          {}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
               <Text style={styles.backIcon}>←</Text>
@@ -156,7 +142,7 @@ const DoctorEMRScreen = ({ navigation }) => {
             <View style={{ width: 40 }} />
           </View>
 
-          {/* No Subscription Card */}
+          {}
           <Card style={[styles.noSubCard, { backgroundColor: colors.surface }]}>
             <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.lockIcon}>
               <Text style={styles.lockEmoji}>🔒</Text>
@@ -188,7 +174,7 @@ const DoctorEMRScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
@@ -197,7 +183,7 @@ const DoctorEMRScreen = ({ navigation }) => {
           <View style={{ width: 40 }} />
         </View>
 
-        {/* Subscription Banner */}
+        {}
         <LinearGradient colors={['#10B981', '#059669']} style={styles.subBanner}>
           <View style={styles.subBannerLeft}>
             <Text style={styles.subBannerIcon}>👑</Text>
@@ -216,7 +202,7 @@ const DoctorEMRScreen = ({ navigation }) => {
           </View>
         </LinearGradient>
 
-        {/* Stats Grid */}
+        {}
         <View style={styles.statsGrid}>
           <StatCard icon="👥" value={stats.patients} label="Patients" gradient={['#3B82F6', '#1D4ED8']} />
           <StatCard icon="💊" value={stats.prescriptions} label="Prescriptions" gradient={['#F59E0B', '#D97706']} />
@@ -224,7 +210,7 @@ const DoctorEMRScreen = ({ navigation }) => {
           <StatCard icon="📄" value={stats.daysRemaining} label="Days Left" gradient={['#8B5CF6', '#6D28D9']} />
         </View>
 
-        {/* Recent Patients */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Patients</Text>
@@ -259,7 +245,7 @@ const DoctorEMRScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* Recent Prescriptions */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Prescriptions</Text>
@@ -299,7 +285,7 @@ const DoctorEMRScreen = ({ navigation }) => {
           )}
         </View>
 
-        {/* EMR Features */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Available EMR Features</Text>
           <View style={styles.featuresGrid}>
@@ -356,9 +342,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 20 },
-  headerTitle: { ...typography.headlineSmall, fontWeight: '700' },
-  
-  // No subscription
+  headerTitle: { ...typography.headlineSmall, fontWeight: '700' },
   noSubCard: { margin: spacing.xl, padding: spacing.xxl, borderRadius: borderRadius.xl, alignItems: 'center' },
   lockIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },
   lockEmoji: { fontSize: 36 },
@@ -366,9 +350,7 @@ const styles = StyleSheet.create({
   noSubDesc: { ...typography.bodyMedium, textAlign: 'center', marginBottom: spacing.lg },
   infoBox: { flexDirection: 'row', padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center' },
   infoIcon: { fontSize: 16, marginRight: spacing.sm },
-  infoText: { ...typography.bodySmall, flex: 1 },
-
-  // Subscription banner
+  infoText: { ...typography.bodySmall, flex: 1 },
   subBanner: { marginHorizontal: spacing.xl, padding: spacing.lg, borderRadius: borderRadius.xl, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   subBannerLeft: { flexDirection: 'row', alignItems: 'center' },
   subBannerIcon: { fontSize: 24, marginRight: spacing.md },
@@ -377,28 +359,20 @@ const styles = StyleSheet.create({
   subBannerRight: { alignItems: 'flex-end' },
   activeBadge: { backgroundColor: '#fff', paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   activeBadgeText: { color: '#10B981', ...typography.labelSmall, fontWeight: '700' },
-  expiryText: { color: 'rgba(255,255,255,0.8)', ...typography.labelSmall, marginTop: spacing.xs },
-
-  // Stats
+  expiryText: { color: 'rgba(255,255,255,0.8)', ...typography.labelSmall, marginTop: spacing.xs },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.xl, marginTop: spacing.lg, gap: spacing.md },
   statCard: { width: '47%', backgroundColor: '#fff', padding: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center' },
   statGradient: { width: 50, height: 50, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   statIcon: { fontSize: 24 },
   statValue: { ...typography.headlineMedium, fontWeight: '700' },
-  statLabel: { ...typography.labelSmall },
-
-  // Sections
+  statLabel: { ...typography.labelSmall },
   section: { marginTop: spacing.xxl, paddingHorizontal: spacing.xl },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   sectionTitle: { ...typography.headlineSmall, fontWeight: '600' },
-  seeAll: { color: '#6C5CE7', ...typography.labelMedium },
-
-  // Empty state
+  seeAll: { color: '#6C5CE7', ...typography.labelMedium },
   emptyCard: { padding: spacing.xxl, borderRadius: borderRadius.lg, alignItems: 'center' },
   emptyIcon: { fontSize: 40, marginBottom: spacing.md },
-  emptyText: { ...typography.bodyMedium },
-
-  // Patient item
+  emptyText: { ...typography.bodyMedium },
   patientItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: borderRadius.lg, marginBottom: spacing.sm },
   patientAvatar: { width: 40, height: 40, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
   patientInitial: { color: '#fff', ...typography.bodyLarge, fontWeight: '700' },
@@ -406,9 +380,7 @@ const styles = StyleSheet.create({
   patientName: { ...typography.bodyMedium, fontWeight: '600' },
   patientPhone: { ...typography.labelSmall },
   genderBadge: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
-  genderText: { ...typography.labelSmall },
-
-  // Prescription card
+  genderText: { ...typography.labelSmall },
   rxCard: { padding: spacing.md, borderRadius: borderRadius.lg, marginBottom: spacing.sm },
   rxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
   rxPatient: { ...typography.bodyMedium, fontWeight: '600' },
@@ -416,9 +388,7 @@ const styles = StyleSheet.create({
   rxDiagnosis: { ...typography.bodySmall, marginBottom: spacing.sm },
   rxBadges: { flexDirection: 'row', gap: spacing.sm },
   rxBadge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.sm },
-  rxBadgeText: { ...typography.labelSmall, fontWeight: '600' },
-
-  // Features
+  rxBadgeText: { ...typography.labelSmall, fontWeight: '600' },
   featuresGrid: { gap: spacing.sm },
   featureItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: borderRadius.lg },
   featureIcon: { fontSize: 24, marginRight: spacing.md },

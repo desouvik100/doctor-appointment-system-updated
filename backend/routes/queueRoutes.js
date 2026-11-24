@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const QueuePosition = require('../models/QueuePosition');
-const Appointment = require('../models/Appointment');
-
-// Get queue for a doctor on a date
+const Appointment = require('../models/Appointment');
 router.get('/doctor/:doctorId/:date', async (req, res) => {
   try {
     const date = new Date(req.params.date);
@@ -11,15 +9,12 @@ router.get('/doctor/:doctorId/:date', async (req, res) => {
     
     let queue = await QueuePosition.findOne({ doctorId: req.params.doctorId, date });
     
-    if (!queue) {
-      // Create queue from today's appointments
+    if (!queue) {
       const appointments = await Appointment.find({
         doctorId: req.params.doctorId,
         date: { $gte: date, $lt: new Date(date.getTime() + 24*60*60*1000) },
         status: { $in: ['confirmed', 'scheduled', 'pending'] }
-      }).populate('userId', 'name').sort({ time: 1 });
-      
-      // Get clinic ID from doctor or first appointment
+      }).populate('userId', 'name').sort({ time: 1 });
       const Doctor = require('../models/Doctor');
       const doctor = await Doctor.findById(req.params.doctorId);
       const clinicId = appointments[0]?.clinicId || doctor?.clinicId;
@@ -51,9 +46,7 @@ router.get('/doctor/:doctorId/:date', async (req, res) => {
     console.error('Error fetching queue:', error);
     res.status(500).json({ message: error.message });
   }
-});
-
-// Patient check-in
+});
 router.post('/checkin/:appointmentId', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId);
@@ -66,8 +59,7 @@ router.post('/checkin/:appointmentId', async (req, res) => {
     
     let queue = await QueuePosition.findOne({ doctorId: appointment.doctorId, date });
     
-    if (!queue) {
-      // Create queue if it doesn't exist
+    if (!queue) {
       const Doctor = require('../models/Doctor');
       const doctor = await Doctor.findById(appointment.doctorId);
       
@@ -87,12 +79,10 @@ router.post('/checkin/:appointmentId', async (req, res) => {
         averageConsultationTime: doctor?.consultationDuration || 15
       });
       await queue.save();
-    } else {
-      // Find or add entry in existing queue
+    } else {
       let entry = queue.queue.find(q => q.appointmentId?.toString() === req.params.appointmentId);
       
-      if (!entry) {
-        // Add to queue if not present
+      if (!entry) {
         const tokenNumber = appointment.tokenNumber || appointment.queueNumber || queue.queue.length + 1;
         entry = {
           appointmentId: appointment._id,
@@ -107,9 +97,7 @@ router.post('/checkin/:appointmentId', async (req, res) => {
       } else {
         entry.checkInTime = new Date();
         entry.status = 'waiting';
-      }
-      
-      // Calculate estimated wait
+      }
       const waitingAhead = queue.queue.filter(q => 
         q.status === 'waiting' && 
         (q.tokenNumber || 0) < (entry.tokenNumber || 0)
@@ -117,9 +105,7 @@ router.post('/checkin/:appointmentId', async (req, res) => {
       entry.estimatedWaitMinutes = waitingAhead * queue.averageConsultationTime;
       
       await queue.save();
-    }
-    
-    // Update appointment status
+    }
     await Appointment.findByIdAndUpdate(req.params.appointmentId, {
       checkedIn: true,
       checkInTime: new Date()
@@ -130,9 +116,7 @@ router.post('/checkin/:appointmentId', async (req, res) => {
     console.error('Error during check-in:', error);
     res.status(500).json({ message: error.message });
   }
-});
-
-// Update queue status (doctor calls next patient)
+});
 router.put('/next/:doctorId', async (req, res) => {
   try {
     const date = new Date();
@@ -142,24 +126,18 @@ router.put('/next/:doctorId', async (req, res) => {
     
     if (!queue) {
       return res.status(404).json({ message: 'No queue found for today' });
-    }
-    
-    // Mark current as completed
+    }
     const current = queue.queue.find(q => q.status === 'in-consultation');
     if (current) {
       current.status = 'completed';
-      current.endTime = new Date();
-      
-      // Update appointment status
+      current.endTime = new Date();
       if (current.appointmentId) {
         await Appointment.findByIdAndUpdate(current.appointmentId, {
           status: 'completed',
           consultationEndTime: new Date()
         });
       }
-    }
-    
-    // Call next waiting patient (sorted by token number)
+    }
     const waitingPatients = queue.queue
       .filter(q => q.status === 'waiting')
       .sort((a, b) => (a.tokenNumber || 0) - (b.tokenNumber || 0));
@@ -168,17 +146,13 @@ router.put('/next/:doctorId', async (req, res) => {
     if (next) {
       next.status = 'in-consultation';
       next.startTime = new Date();
-      queue.currentToken = next.tokenNumber;
-      
-      // Update appointment status
+      queue.currentToken = next.tokenNumber;
       if (next.appointmentId) {
         await Appointment.findByIdAndUpdate(next.appointmentId, {
           status: 'in_progress',
           consultationStartTime: new Date()
         });
-      }
-      
-      // Recalculate wait times for remaining patients
+      }
       const remainingWaiting = queue.queue.filter(q => q.status === 'waiting');
       remainingWaiting.forEach((patient, index) => {
         patient.estimatedWaitMinutes = (index + 1) * queue.averageConsultationTime;
@@ -199,9 +173,7 @@ router.put('/next/:doctorId', async (req, res) => {
     console.error('Error calling next patient:', error);
     res.status(500).json({ message: error.message });
   }
-});
-
-// Get patient's position in queue
+});
 router.get('/position/:appointmentId', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId)
@@ -221,18 +193,12 @@ router.get('/position/:appointmentId', async (req, res) => {
       const entry = queue.queue.find(q => 
         q.appointmentId?.toString() === req.params.appointmentId ||
         q.tokenNumber === userToken
-      );
-      
-      // Count waiting patients ahead
+      );
       const waitingAhead = queue.queue.filter(q => 
         q.status === 'waiting' && 
         (q.tokenNumber || 0) < (entry?.tokenNumber || userToken || 999)
-      ).length;
-      
-      // Check if someone is currently being seen
-      const currentlySeeing = queue.queue.find(q => q.status === 'in-consultation');
-      
-      // Calculate position (1 = next, 2 = one person ahead, etc.)
+      ).length;
+      const currentlySeeing = queue.queue.find(q => q.status === 'in-consultation');
       const position = currentlySeeing ? waitingAhead + 1 : waitingAhead + 1;
       
       res.json({
@@ -252,8 +218,7 @@ router.get('/position/:appointmentId', async (req, res) => {
         avgConsultationTime: queue.averageConsultationTime,
         doctorName: appointment.doctorId?.name
       });
-    } else {
-      // No queue exists yet - return estimated position based on appointment
+    } else {
       const userToken = appointment.tokenNumber || appointment.queueNumber || 1;
       const avgTime = appointment.doctorId?.consultationDuration || 15;
       

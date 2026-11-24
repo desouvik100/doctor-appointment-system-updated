@@ -1,33 +1,23 @@
-/**
- * Request Validation Middleware
- * Production-ready input validation and sanitization
- */
+
 
 const mongoose = require('mongoose');
 
-/**
- * Sanitize string input - remove potential XSS and injection attacks
- */
 const sanitizeString = (str) => {
   if (typeof str !== 'string') return str;
   return str
-    .replace(/[<>]/g, '') // Remove HTML tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/[<>]/g, '') 
+    .replace(/javascript:/gi, '') 
+    .replace(/on\w+=/gi, '') 
     .trim();
 };
 
-/**
- * Sanitize object recursively
- */
 const sanitizeObject = (obj) => {
   if (obj === null || obj === undefined) return obj;
   if (typeof obj === 'string') return sanitizeString(obj);
   if (Array.isArray(obj)) return obj.map(sanitizeObject);
   if (typeof obj === 'object') {
     const sanitized = {};
-    for (const [key, value] of Object.entries(obj)) {
-      // Skip MongoDB operators
+    for (const [key, value] of Object.entries(obj)) {
       if (key.startsWith('$')) continue;
       sanitized[sanitizeString(key)] = sanitizeObject(value);
     }
@@ -36,33 +26,21 @@ const sanitizeObject = (obj) => {
   return obj;
 };
 
-/**
- * Validate MongoDB ObjectId
- */
 const isValidObjectId = (id) => {
   return mongoose.Types.ObjectId.isValid(id) && 
          new mongoose.Types.ObjectId(id).toString() === id;
 };
 
-/**
- * Validate email format
- */
 const isValidEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-/**
- * Validate phone number (Indian format)
- */
 const isValidPhone = (phone) => {
   const phoneRegex = /^[6-9]\d{9}$/;
   return phoneRegex.test(phone?.replace(/\D/g, ''));
 };
 
-/**
- * Middleware to sanitize all request inputs
- */
 const sanitizeInputs = (req, res, next) => {
   if (req.body) req.body = sanitizeObject(req.body);
   if (req.query) req.query = sanitizeObject(req.query);
@@ -70,14 +48,9 @@ const sanitizeInputs = (req, res, next) => {
   next();
 };
 
-/**
- * Validate appointment booking request
- */
 const validateAppointmentBooking = (req, res, next) => {
   const { userId, doctorId, clinicId, date, time, consultationType } = req.body;
-  const errors = [];
-
-  // Required fields
+  const errors = [];
   if (!userId || !isValidObjectId(userId)) {
     errors.push({ field: 'userId', message: 'Valid userId is required' });
   }
@@ -116,9 +89,6 @@ const validateAppointmentBooking = (req, res, next) => {
   next();
 };
 
-/**
- * Validate user registration request
- */
 const validateUserRegistration = (req, res, next) => {
   const { name, email, phone, password } = req.body;
   const errors = [];
@@ -148,9 +118,6 @@ const validateUserRegistration = (req, res, next) => {
   next();
 };
 
-/**
- * Validate ObjectId parameter
- */
 const validateObjectIdParam = (paramName) => {
   return (req, res, next) => {
     const id = req.params[paramName];
@@ -166,17 +133,12 @@ const validateObjectIdParam = (paramName) => {
   };
 };
 
-/**
- * Validate data ownership - ensure user can only access their own data
- */
 const validateDataOwnership = (model, userIdField = 'userId') => {
   return async (req, res, next) => {
     try {
       const resourceId = req.params.id;
       const userId = req.user?.id || req.user?.userId;
-      const userRole = req.user?.role;
-
-      // Admins can access all data
+      const userRole = req.user?.role;
       if (userRole === 'admin') {
         return next();
       }
@@ -196,16 +158,12 @@ const validateDataOwnership = (model, userIdField = 'userId') => {
           success: false,
           message: 'Resource not found'
         });
-      }
-
-      // Check ownership
+      }
       const resourceUserId = resource[userIdField]?.toString();
-      if (resourceUserId !== userId?.toString()) {
-        // For doctors, check if they own the resource via doctorId
+      if (resourceUserId !== userId?.toString()) {
         if (userRole === 'doctor' && resource.doctorId?.toString() === userId?.toString()) {
           return next();
-        }
-        // For clinic staff, check clinic isolation
+        }
         if (['receptionist', 'clinic_staff'].includes(userRole)) {
           const userClinicId = req.user?.clinicId?.toString();
           if (resource.clinicId?.toString() === userClinicId) {

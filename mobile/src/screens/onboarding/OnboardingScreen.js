@@ -1,4 +1,4 @@
-// OnboardingScreen - Premium startup-grade onboarding walkthrough with pre-auth permissions
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -26,9 +26,7 @@ const OnboardingScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const slidesRef = useRef(null);
-
-  // Permissions state
+  const slidesRef = useRef(null);
   const [locGranted, setLocGranted] = useState(false);
   const [notifGranted, setNotifGranted] = useState(false);
   const [camGranted, setCamGranted] = useState(false);
@@ -116,8 +114,7 @@ const OnboardingScreen = ({ navigation }) => {
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
         );
         setNotifGranted(granted === PermissionsAndroid.RESULTS.GRANTED);
-      } else {
-        // Mock / simulate notifications request for ios / older android
+      } else {
         setNotifGranted(true);
         Alert.alert('Notifications Enabled', 'You will now receive appointment updates.');
       }
@@ -280,7 +277,7 @@ const OnboardingScreen = ({ navigation }) => {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
-      {/* Top Header Row */}
+      {}
       <View style={styles.header}>
         <View style={styles.logoRow}>
           <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.logoGradient}>
@@ -296,7 +293,7 @@ const OnboardingScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Paginated Slide List */}
+      {}
       <FlatList
         data={slides}
         renderItem={renderItem}
@@ -315,9 +312,9 @@ const OnboardingScreen = ({ navigation }) => {
         style={styles.flatList}
       />
 
-      {/* Footer controls */}
+      {}
       <View style={styles.footer}>
-        {/* Animated Page Indicator Dots */}
+        {}
         <View style={styles.indicatorContainer}>
           {slides.map((_, i) => {
             const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
@@ -352,7 +349,7 @@ const OnboardingScreen = ({ navigation }) => {
           })}
         </View>
 
-        {/* Navigation Action CTA */}
+        {}
         <TouchableOpacity
           onPress={handleNext}
           activeOpacity={0.88}

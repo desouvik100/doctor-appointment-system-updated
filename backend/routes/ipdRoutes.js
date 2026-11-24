@@ -3,9 +3,7 @@ const router = express.Router();
 const IPDAdmission = require('../models/IPDAdmission');
 const Bed = require('../models/Bed');
 const AuditLog = require('../models/AuditLog');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-
-// Helper to log audit
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const logAudit = async (req, action, entityId, entityName, changes = {}, severity = 'low') => {
   try {
     await AuditLog.log({
@@ -26,9 +24,7 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
   } catch (e) {
     console.error('Audit log error:', e);
   }
-};
-
-// Create new admission
+};
 router.post('/admit', verifyTokenWithRole(['admin', 'doctor', 'receptionist', 'nurse', 'clinic']), async (req, res) => {
   try {
     const {
@@ -36,17 +32,13 @@ router.post('/admit', verifyTokenWithRole(['admin', 'doctor', 'receptionist', 'n
       chiefComplaint, provisionalDiagnosis, attendingDoctorId, attendingDoctorName,
       bedId, wardType, admissionType, treatmentPlan, estimatedCost,
       insuranceDetails, clinicId
-    } = req.body;
-
-    // Validate bed availability
+    } = req.body;
     if (bedId && bedId.trim()) {
       const bed = await Bed.findById(bedId);
       if (!bed || bed.status !== 'available') {
         return res.status(400).json({ success: false, message: 'Selected bed is not available' });
       }
-    }
-
-    // Build admission object, only include valid ObjectIds
+    }
     const admissionData = {
       patientName,
       patientPhone,
@@ -63,24 +55,18 @@ router.post('/admit', verifyTokenWithRole(['admin', 'doctor', 'receptionist', 'n
       clinicId,
       status: 'admitted',
       createdBy: req.user?.id
-    };
-
-    // Only add ObjectId fields if they have valid values
+    };
     if (patientId && patientId.trim()) admissionData.patientId = patientId;
     if (attendingDoctorId && attendingDoctorId.trim()) admissionData.attendingDoctorId = attendingDoctorId;
     if (bedId && bedId.trim()) admissionData.bedId = bedId;
 
-    const admission = new IPDAdmission(admissionData);
-
-    // Get bed details if bed is assigned
+    const admission = new IPDAdmission(admissionData);
     if (bedId && bedId.trim()) {
       const bed = await Bed.findById(bedId);
       if (bed) {
         admission.bedNumber = bed.bedNumber;
         admission.roomNumber = bed.roomNumber;
-        admission.floorNumber = bed.floorNumber;
-
-        // Update bed status
+        admission.floorNumber = bed.floorNumber;
         bed.status = 'occupied';
         if (patientId && patientId.trim()) bed.currentPatientId = patientId;
         bed.currentAdmissionId = admission._id;
@@ -89,9 +75,7 @@ router.post('/admit', verifyTokenWithRole(['admin', 'doctor', 'receptionist', 'n
       }
     }
 
-    await admission.save();
-
-    // Log audit
+    await admission.save();
     await logAudit(req, 'admit', admission._id, patientName, { after: { admissionNumber: admission.admissionNumber } }, 'high');
 
     res.status(201).json({
@@ -103,9 +87,7 @@ router.post('/admit', verifyTokenWithRole(['admin', 'doctor', 'receptionist', 'n
     console.error('Error creating admission:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get all admissions for clinic
+});
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -135,9 +117,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
     console.error('Error fetching admissions:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get single admission
+});
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const admission = await IPDAdmission.findById(req.params.id)
@@ -157,9 +137,7 @@ router.get('/:id', verifyToken, async (req, res) => {
     console.error('Error fetching admission:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Add progress note
+});
 router.post('/:id/progress-note', verifyTokenWithRole(['admin', 'doctor', 'nurse', 'clinic']), async (req, res) => {
   try {
     const { note } = req.body;
@@ -189,9 +167,7 @@ router.post('/:id/progress-note', verifyTokenWithRole(['admin', 'doctor', 'nurse
     console.error('Error adding progress note:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Transfer bed
+});
 router.post('/:id/transfer-bed', verifyTokenWithRole(['admin', 'receptionist', 'nurse', 'clinic']), async (req, res) => {
   try {
     const { newBedId, reason } = req.body;
@@ -208,18 +184,14 @@ router.post('/:id/transfer-bed', verifyTokenWithRole(['admin', 'receptionist', '
     const newBed = await Bed.findById(newBedId);
     if (!newBed || newBed.status !== 'available') {
       return res.status(400).json({ success: false, message: 'New bed is not available' });
-    }
-
-    // Free old bed
+    }
     if (admission.bedId) {
       await Bed.findByIdAndUpdate(admission.bedId, {
         status: 'cleaning',
         currentPatientId: null,
         currentAdmissionId: null
       });
-    }
-
-    // Record transfer history
+    }
     admission.bedHistory.push({
       bedId: admission.bedId,
       bedNumber: admission.bedNumber,
@@ -230,18 +202,14 @@ router.post('/:id/transfer-bed', verifyTokenWithRole(['admin', 'receptionist', '
       toDate: new Date(),
       reason,
       transferredBy: req.user?.id
-    });
-
-    // Update to new bed
+    });
     admission.bedId = newBedId;
     admission.bedNumber = newBed.bedNumber;
     admission.wardType = newBed.wardType;
     admission.roomNumber = newBed.roomNumber;
     admission.floorNumber = newBed.floorNumber;
     admission.lastModifiedBy = req.user?.id;
-    await admission.save();
-
-    // Occupy new bed
+    await admission.save();
     newBed.status = 'occupied';
     newBed.currentPatientId = admission.patientId;
     newBed.currentAdmissionId = admission._id;
@@ -256,9 +224,7 @@ router.post('/:id/transfer-bed', verifyTokenWithRole(['admin', 'receptionist', '
     console.error('Error transferring bed:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Discharge patient
+});
 router.post('/:id/discharge', verifyTokenWithRole(['admin', 'doctor', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const {
@@ -273,9 +239,7 @@ router.post('/:id/discharge', verifyTokenWithRole(['admin', 'doctor', 'clinic', 
 
     if (admission.status === 'discharged') {
       return res.status(400).json({ success: false, message: 'Patient already discharged' });
-    }
-
-    // Update admission
+    }
     admission.status = 'discharged';
     admission.dischargeDate = new Date();
     admission.dischargeTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -286,9 +250,7 @@ router.post('/:id/discharge', verifyTokenWithRole(['admin', 'doctor', 'clinic', 
     admission.dischargedBy = req.user?.id;
     admission.lastModifiedBy = req.user?.id;
 
-    await admission.save();
-
-    // Free bed
+    await admission.save();
     if (admission.bedId) {
       await Bed.findByIdAndUpdate(admission.bedId, {
         status: 'cleaning',
@@ -306,9 +268,7 @@ router.post('/:id/discharge', verifyTokenWithRole(['admin', 'doctor', 'clinic', 
     console.error('Error discharging patient:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Lock record (for compliance)
+});
 router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor', 'clinic']), async (req, res) => {
   try {
     const admission = await IPDAdmission.findById(req.params.id);
@@ -333,12 +293,10 @@ router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor', 'clinic']), asy
     console.error('Error locking record:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Sign record (digital signature)
+});
 router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const { signatureType, signatureData } = req.body; // 'admission' or 'discharge'
+    const { signatureType, signatureData } = req.body; 
     const admission = await IPDAdmission.findById(req.params.id);
 
     if (!admission) {
@@ -367,9 +325,7 @@ router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor', 'clinic', 'rece
     console.error('Error signing record:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get IPD statistics
+});
 router.get('/stats/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -397,9 +353,7 @@ router.get('/stats/:clinicId', verifyToken, async (req, res) => {
           count: { $sum: 1 }
         }
       }
-    ]);
-
-    // Today's admissions and discharges
+    ]);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 

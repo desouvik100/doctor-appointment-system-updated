@@ -1,14 +1,9 @@
-/**
- * Clinic Billing Routes
- * API endpoints for billing and revenue management
- */
+
 
 const express = require('express');
 const router = express.Router();
 const ClinicBilling = require('../models/ClinicBilling');
-const { verifyToken } = require('../middleware/auth');
-
-// Get all bills for a clinic
+const { verifyToken } = require('../middleware/auth');
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -42,9 +37,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get single bill
+});
 router.get('/bill/:billId', verifyToken, async (req, res) => {
   try {
     const bill = await ClinicBilling.findById(req.params.billId)
@@ -57,9 +50,7 @@ router.get('/bill/:billId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Create new bill
+});
 router.post('/create', verifyToken, async (req, res) => {
   try {
     const bill = new ClinicBilling({ ...req.body, createdBy: req.user?.id });
@@ -68,9 +59,7 @@ router.post('/create', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update bill
+});
 router.put('/bill/:billId', verifyToken, async (req, res) => {
   try {
     const bill = await ClinicBilling.findById(req.params.billId);
@@ -85,9 +74,7 @@ router.put('/bill/:billId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Finalize bill
+});
 router.post('/bill/:billId/finalize', verifyToken, async (req, res) => {
   try {
     const bill = await ClinicBilling.findById(req.params.billId);
@@ -100,9 +87,7 @@ router.post('/bill/:billId/finalize', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Add payment to bill
+});
 router.post('/bill/:billId/payment', verifyToken, async (req, res) => {
   try {
     const bill = await ClinicBilling.findById(req.params.billId);
@@ -113,9 +98,7 @@ router.post('/bill/:billId/payment', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Cancel bill
+});
 router.post('/bill/:billId/cancel', verifyToken, async (req, res) => {
   try {
     const bill = await ClinicBilling.findById(req.params.billId);
@@ -131,9 +114,7 @@ router.post('/bill/:billId/cancel', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Process refund
+});
 router.post('/bill/:billId/refund', verifyToken, async (req, res) => {
   try {
     const bill = await ClinicBilling.findById(req.params.billId);
@@ -153,9 +134,7 @@ router.post('/bill/:billId/refund', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get revenue summary
+});
 router.get('/clinic/:clinicId/revenue-summary', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
@@ -167,9 +146,7 @@ router.get('/clinic/:clinicId/revenue-summary', verifyToken, async (req, res) =>
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get daily revenue
+});
 router.get('/clinic/:clinicId/daily-revenue', verifyToken, async (req, res) => {
   try {
     const { days = 30 } = req.query;
@@ -178,9 +155,7 @@ router.get('/clinic/:clinicId/daily-revenue', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get pending payments
+});
 router.get('/clinic/:clinicId/pending', verifyToken, async (req, res) => {
   try {
     const bills = await ClinicBilling.find({
@@ -196,9 +171,7 @@ router.get('/clinic/:clinicId/pending', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Update insurance claim
+});
 router.put('/bill/:billId/insurance', verifyToken, async (req, res) => {
   try {
     const bill = await ClinicBilling.findById(req.params.billId);
@@ -211,9 +184,7 @@ router.put('/bill/:billId/insurance', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
-
-// Get patient billing history
+});
 router.get('/patient/:patientId', verifyToken, async (req, res) => {
   try {
     const bills = await ClinicBilling.find({ patientId: req.params.patientId, status: 'finalized' })

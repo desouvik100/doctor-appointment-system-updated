@@ -1,7 +1,4 @@
-/**
- * Enterprise Card Component
- * Flexible, accessible card container with consistent styling
- */
+
 
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
@@ -13,8 +10,8 @@ import { shadows } from '../../theme/shadows';
 const Card = ({
   children,
   onPress,
-  variant = 'elevated', // elevated, outlined, flat, default, gradient, glass
-  padding = 'medium', // none, small, medium, large
+  variant = 'elevated', 
+  padding = 'medium', 
   style,
   ...props
 }) => {

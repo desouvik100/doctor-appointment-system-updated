@@ -1,7 +1,4 @@
-/**
- * Staff Patients Screen - Clinic Patient Management
- * 100% Parity with Web Staff Dashboard
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -148,7 +145,6 @@ const StaffPatientsScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

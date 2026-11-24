@@ -1,33 +1,18 @@
-/**
- * Property-Based Tests for Pattern Detection and CSV Export
- * Feature: staff-presence-analytics
- * Property 15: Overtime Threshold Highlighting
- * Property 16: Pattern Detection for Late Arrivals
- * Property 17: CSV Export Completeness
- * Validates: Requirements 8.3, 8.4, 8.6
- */
+
 
 const fc = require('fast-check');
 const mongoose = require('mongoose');
-const attendanceAnalytics = require('../services/attendanceAnalytics');
-
-// Helper to generate valid ObjectIds
+const attendanceAnalytics = require('../services/attendanceAnalytics');
 const objectIdArbitrary = fc.string({ 
   minLength: 24, 
   maxLength: 24 
 }).map(() => new mongoose.Types.ObjectId());
 
-/**
- * Generate a date string in YYYY-MM-DD format
- */
 const dateStringArbitrary = fc.date({ 
   min: new Date('2024-01-01'), 
   max: new Date('2024-12-31') 
 }).map(d => d.toISOString().split('T')[0]);
 
-/**
- * Generate consecutive dates starting from a base date
- */
 function generateConsecutiveDates(startDate, count) {
   const dates = [];
   const start = new Date(startDate);
@@ -39,9 +24,6 @@ function generateConsecutiveDates(startDate, count) {
   return dates;
 }
 
-/**
- * Generate non-consecutive dates (with gaps)
- */
 function generateNonConsecutiveDates(startDate, count, minGap = 2) {
   const dates = [];
   const start = new Date(startDate);
@@ -53,10 +35,7 @@ function generateNonConsecutiveDates(startDate, count, minGap = 2) {
   return dates;
 }
 
-describe('Pattern Detection - Property Tests', () => {
-
-  // Property 15: Overtime Threshold Highlighting
-  // Validates: Requirements 8.3
+describe('Pattern Detection - Property Tests', () => {
   describe('Property 15: Overtime Threshold Highlighting', () => {
 
     test('*For any* staff member whose overtime exceeds threshold, they SHALL be flagged', () => {
@@ -130,10 +109,7 @@ describe('Pattern Detection - Property Tests', () => {
         { numRuns: 50 }
       );
     });
-  });
-
-  // Property 16: Pattern Detection for Late Arrivals
-  // Validates: Requirements 8.4
+  });
   describe('Property 16: Pattern Detection for Late Arrivals', () => {
 
     test('*For any* N consecutive dates, detectConsecutivePattern SHALL return N', () => {
@@ -159,9 +135,7 @@ describe('Pattern Detection - Property Tests', () => {
           dateStringArbitrary,
           (count, startDate) => {
             const dates = generateNonConsecutiveDates(startDate, count, 3);
-            const result = attendanceAnalytics.detectConsecutivePattern(dates);
-            
-            // With gaps of 3+ days, max consecutive should be 1
+            const result = attendanceAnalytics.detectConsecutivePattern(dates);
             expect(result).toBe(1);
           }
         ),
@@ -187,11 +161,10 @@ describe('Pattern Detection - Property Tests', () => {
       );
     });
 
-    test('mixed consecutive and non-consecutive returns max consecutive run', () => {
-      // Test: 3 consecutive, gap, 5 consecutive -> should return 5
+    test('mixed consecutive and non-consecutive returns max consecutive run', () => {
       const dates = [
-        '2024-01-01', '2024-01-02', '2024-01-03', // 3 consecutive
-        '2024-01-10', '2024-01-11', '2024-01-12', '2024-01-13', '2024-01-14' // 5 consecutive
+        '2024-01-01', '2024-01-02', '2024-01-03', 
+        '2024-01-10', '2024-01-11', '2024-01-12', '2024-01-13', '2024-01-14' 
       ];
       const result = attendanceAnalytics.detectConsecutivePattern(dates);
       expect(result).toBe(5);
@@ -201,7 +174,7 @@ describe('Pattern Detection - Property Tests', () => {
       fc.assert(
         fc.property(
           fc.integer({ min: 2, max: 10 }),
-          fc.integer({ min: 1, max: 300 }), // Day of year offset
+          fc.integer({ min: 1, max: 300 }), 
           (count, dayOffset) => {
             const startDate = new Date('2024-01-01');
             startDate.setDate(startDate.getDate() + dayOffset);
@@ -210,9 +183,7 @@ describe('Pattern Detection - Property Tests', () => {
             const sortedDates = generateConsecutiveDates(startDateStr, count);
             const shuffledDates = [...sortedDates].sort(() => Math.random() - 0.5);
             
-            const result = attendanceAnalytics.detectConsecutivePattern(shuffledDates);
-            
-            // Should still detect the consecutive pattern regardless of input order
+            const result = attendanceAnalytics.detectConsecutivePattern(shuffledDates);
             expect(result).toBe(count);
           }
         ),
@@ -223,18 +194,11 @@ describe('Pattern Detection - Property Tests', () => {
     test('duplicate dates do not increase consecutive count', () => {
       const dates = ['2024-01-01', '2024-01-01', '2024-01-02', '2024-01-02', '2024-01-03'];
       const result = attendanceAnalytics.detectConsecutivePattern(dates);
-      expect(result).toBe(3); // Only 3 unique consecutive days
+      expect(result).toBe(3); 
     });
-  });
-
-
-  // Property 17: CSV Export Completeness
-  // Validates: Requirements 8.6
+  });
   describe('Property 17: CSV Export Completeness', () => {
 
-    /**
-     * Generate mock attendance records for CSV testing
-     */
     const mockRecordArbitrary = fc.record({
       _id: objectIdArbitrary,
       staffId: fc.record({
@@ -249,8 +213,7 @@ describe('Pattern Detection - Property Tests', () => {
       customStatus: fc.option(fc.constantFrom('available', 'with_patient', 'on_break'), { nil: null })
     });
 
-    test('*For any* attendance records, CSV output SHALL contain required columns', () => {
-      // Use fixed records to test column structure
+    test('*For any* attendance records, CSV output SHALL contain required columns', () => {
       const records = [
         {
           _id: new mongoose.Types.ObjectId(),
@@ -270,17 +233,14 @@ describe('Pattern Detection - Property Tests', () => {
         }
       ];
       
-      const rows = attendanceAnalytics.buildCSVRows(records, new Set(), new Set(), new Set());
-      
-      // Each row should have 9 columns (matching header)
+      const rows = attendanceAnalytics.buildCSVRows(records, new Set(), new Set(), new Set());
       for (const row of rows) {
         const columns = row.split(',');
         expect(columns.length).toBe(9);
       }
     });
 
-    test('CSV rows contain staff name from records', () => {
-      // Use fixed records to test staff name inclusion
+    test('CSV rows contain staff name from records', () => {
       const records = [
         {
           _id: new mongoose.Types.ObjectId(),
@@ -300,19 +260,14 @@ describe('Pattern Detection - Property Tests', () => {
         }
       ];
       
-      const rows = attendanceAnalytics.buildCSVRows(records, new Set(), new Set(), new Set());
-      
-      // Should have rows for each unique staff+date combination
-      expect(rows.length).toBeGreaterThan(0);
-      
-      // Each row should contain a staff name
+      const rows = attendanceAnalytics.buildCSVRows(records, new Set(), new Set(), new Set());
+      expect(rows.length).toBeGreaterThan(0);
       for (const row of rows) {
         expect(row.length).toBeGreaterThan(0);
       }
     });
 
-    test('CSV rows contain date in YYYY-MM-DD format', () => {
-      // Use a simple fixed record to test date format
+    test('CSV rows contain date in YYYY-MM-DD format', () => {
       const records = [{
         _id: new mongoose.Types.ObjectId(),
         staffId: { _id: new mongoose.Types.ObjectId(), name: 'TestStaff' },
@@ -328,7 +283,7 @@ describe('Pattern Detection - Property Tests', () => {
       
       expect(rows.length).toBe(1);
       const columns = rows[0].split(',');
-      const dateColumn = columns[1]; // Second column is date
+      const dateColumn = columns[1]; 
       expect(dateColumn).toMatch(dateRegex);
     });
 
@@ -347,7 +302,7 @@ describe('Pattern Detection - Property Tests', () => {
       const rows = attendanceAnalytics.buildCSVRows(records, lateRecordIds, new Set(), new Set());
       
       expect(rows.length).toBe(1);
-      expect(rows[0]).toContain('Yes'); // isLate should be Yes
+      expect(rows[0]).toContain('Yes'); 
     });
 
     test('early flag is Yes when record ID is in earlyRecordIds set', () => {
@@ -364,10 +319,9 @@ describe('Pattern Detection - Property Tests', () => {
       const earlyRecordIds = new Set([recordId.toString()]);
       const rows = attendanceAnalytics.buildCSVRows(records, new Set(), earlyRecordIds, new Set());
       
-      expect(rows.length).toBe(1);
-      // The row should contain 'Yes' for isEarly
+      expect(rows.length).toBe(1);
       const columns = rows[0].split(',');
-      expect(columns[7]).toBe('Yes'); // isEarly column
+      expect(columns[7]).toBe('Yes'); 
     });
 
     test('overtime flag is Yes when staff ID is in overtimeStaffIds set', () => {
@@ -386,7 +340,7 @@ describe('Pattern Detection - Property Tests', () => {
       
       expect(rows.length).toBe(1);
       const columns = rows[0].split(',');
-      expect(columns[8]).toBe('Yes'); // hasOvertime column
+      expect(columns[8]).toBe('Yes'); 
     });
 
     test('all flags are No when no matching IDs in sets', () => {
@@ -403,9 +357,9 @@ describe('Pattern Detection - Property Tests', () => {
       
       expect(rows.length).toBe(1);
       const columns = rows[0].split(',');
-      expect(columns[6]).toBe('No'); // isLate
-      expect(columns[7]).toBe('No'); // isEarly
-      expect(columns[8]).toBe('No'); // hasOvertime
+      expect(columns[6]).toBe('No'); 
+      expect(columns[7]).toBe('No'); 
+      expect(columns[8]).toBe('No'); 
     });
 
     test('CSV escapes values with commas', () => {
@@ -420,8 +374,7 @@ describe('Pattern Detection - Property Tests', () => {
       
       const rows = attendanceAnalytics.buildCSVRows(records, new Set(), new Set(), new Set());
       
-      expect(rows.length).toBe(1);
-      // Name with comma should be quoted
+      expect(rows.length).toBe(1);
       expect(rows[0]).toContain('"Smith, John"');
     });
 
@@ -429,9 +382,7 @@ describe('Pattern Detection - Property Tests', () => {
       const rows = attendanceAnalytics.buildCSVRows([], new Set(), new Set(), new Set());
       expect(rows).toEqual([]);
     });
-  });
-
-  // Edge cases
+  });
   describe('Edge Cases', () => {
     
     test('handles null/undefined in overtime check', () => {

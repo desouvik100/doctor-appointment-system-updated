@@ -47,27 +47,23 @@ const referralSchema = new mongoose.Schema({
   withdrawnEarnings: {
     type: Number,
     default: 0
-  },
-  // Referral tiers
+  },
   tier: {
     type: String,
     enum: ['bronze', 'silver', 'gold', 'platinum'],
     default: 'bronze'
-  },
-  // Reward settings
+  },
   rewardPerReferral: {
     type: Number,
-    default: 100 // ₹100 per successful referral
+    default: 100 
   },
   refereeDiscount: {
     type: Number,
-    default: 50 // ₹50 discount for new user
+    default: 50 
   }
 }, {
   timestamps: true
-});
-
-// Generate unique referral code
+});
 referralSchema.statics.generateCode = async function(userId) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code;
@@ -83,9 +79,7 @@ referralSchema.statics.generateCode = async function(userId) {
   }
   
   return code;
-};
-
-// Update tier based on successful referrals
+};
 referralSchema.methods.updateTier = function() {
   if (this.successfulReferrals >= 50) {
     this.tier = 'platinum';

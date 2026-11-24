@@ -1,7 +1,4 @@
-/**
- * Lab Order Model
- * Manages lab test orders, status tracking, and result attachments
- */
+
 
 const mongoose = require('mongoose');
 
@@ -86,9 +83,7 @@ const testSchema = new mongoose.Schema({
   completedAt: Date
 });
 
-
-const labOrderSchema = new mongoose.Schema({
-  // References
+const labOrderSchema = new mongoose.Schema({
   visitId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'EMRVisit',
@@ -111,9 +106,7 @@ const labOrderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true
-  },
-  
-  // Order details
+  },
   orderNumber: {
     type: String,
     unique: true,
@@ -122,19 +115,13 @@ const labOrderSchema = new mongoose.Schema({
   orderDate: {
     type: Date,
     default: Date.now
-  },
-  
-  // Tests in this order
-  tests: [testSchema],
-  
-  // Overall order status
+  },
+  tests: [testSchema],
   orderStatus: {
     type: String,
     enum: ['pending', 'partial', 'completed', 'cancelled'],
     default: 'pending'
-  },
-  
-  // Lab information
+  },
   labName: {
     type: String,
     trim: true
@@ -146,9 +133,7 @@ const labOrderSchema = new mongoose.Schema({
   labAddress: {
     type: String,
     trim: true
-  },
-  
-  // Billing
+  },
   estimatedCost: Number,
   actualCost: Number,
   paymentStatus: {
@@ -157,9 +142,7 @@ const labOrderSchema = new mongoose.Schema({
     default: 'pending'
   },
   paymentMethod: String,
-  paidAt: Date,
-  
-  // Notes
+  paidAt: Date,
   clinicalNotes: {
     type: String,
     trim: true
@@ -167,18 +150,14 @@ const labOrderSchema = new mongoose.Schema({
   patientInstructions: {
     type: String,
     trim: true
-  },
-  
-  // Timing
+  },
   expectedCompletionDate: Date,
   completedAt: Date,
   cancelledAt: Date,
   cancelReason: {
     type: String,
     trim: true
-  },
-  
-  // Audit
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -186,23 +165,17 @@ const labOrderSchema = new mongoose.Schema({
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  },
-  
-  // Soft delete
+  },
   isDeleted: {
     type: Boolean,
     default: false
   }
 }, {
   timestamps: true
-});
-
-// Indexes
+});
 labOrderSchema.index({ clinicId: 1, orderDate: -1 });
 labOrderSchema.index({ patientId: 1, orderDate: -1 });
-labOrderSchema.index({ orderStatus: 1, clinicId: 1 });
-
-// Generate order number before save
+labOrderSchema.index({ orderStatus: 1, clinicId: 1 });
 labOrderSchema.pre('save', async function(next) {
   if (!this.orderNumber) {
     const date = new Date();
@@ -213,24 +186,16 @@ labOrderSchema.pre('save', async function(next) {
     this.orderNumber = `LAB${year}${month}${day}${random}`;
   }
   next();
-});
-
-// Virtual for total tests count
+});
 labOrderSchema.virtual('totalTests').get(function() {
   return this.tests ? this.tests.length : 0;
-});
-
-// Virtual for completed tests count
+});
 labOrderSchema.virtual('completedTests').get(function() {
   return this.tests ? this.tests.filter(t => t.status === 'completed').length : 0;
-});
-
-// Virtual for abnormal results count
+});
 labOrderSchema.virtual('abnormalResultsCount').get(function() {
   return this.tests ? this.tests.filter(t => t.result?.isAbnormal).length : 0;
-});
-
-// Method to update overall order status based on test statuses
+});
 labOrderSchema.methods.updateOrderStatus = function() {
   if (!this.tests || this.tests.length === 0) {
     this.orderStatus = 'pending';
@@ -251,9 +216,7 @@ labOrderSchema.methods.updateOrderStatus = function() {
   } else {
     this.orderStatus = 'pending';
   }
-};
-
-// Static method to get patient's lab history
+};
 labOrderSchema.statics.getPatientHistory = async function(patientId, options = {}) {
   const { clinicId, limit = 20, skip = 0 } = options;
   
@@ -266,9 +229,7 @@ labOrderSchema.statics.getPatientHistory = async function(patientId, options = {
     .sort({ orderDate: -1 })
     .skip(skip)
     .limit(limit);
-};
-
-// Static method to get pending orders for clinic
+};
 labOrderSchema.statics.getPendingOrders = async function(clinicId) {
   return this.find({
     clinicId,
@@ -278,9 +239,7 @@ labOrderSchema.statics.getPendingOrders = async function(clinicId) {
     .populate('patientId', 'name phone')
     .populate('orderedBy', 'name')
     .sort({ orderDate: 1 });
-};
-
-// Include virtuals in JSON
+};
 labOrderSchema.set('toJSON', { virtuals: true });
 labOrderSchema.set('toObject', { virtuals: true });
 

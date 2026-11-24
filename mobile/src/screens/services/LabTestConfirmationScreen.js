@@ -1,6 +1,4 @@
-/**
- * Lab Test Booking Confirmation Screen
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';

@@ -1,6 +1,4 @@
-/**
- * Medicine Screen - Order Medicines
- */
+
 
 import React, { useState } from 'react';
 import {
@@ -23,16 +21,14 @@ const MedicineScreen = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { prescription } = route.params || {};
   const [searchQuery, setSearchQuery] = useState('');
-  const [cart, setCart] = useState([]);
-
-  // If coming from prescription, pre-populate cart with prescribed medicines
+  const [cart, setCart] = useState([]);
   React.useEffect(() => {
     if (prescription?.medicines?.length > 0) {
       const prescribedItems = prescription.medicines.map((med, index) => ({
         id: `rx-${index}`,
         name: med.name,
         brand: 'Prescribed',
-        price: 0, // Price to be determined
+        price: 0, 
         originalPrice: 0,
         quantity: med.dosage || 'As prescribed',
         icon: '💊',
@@ -84,7 +80,7 @@ const MedicineScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
@@ -100,7 +96,7 @@ const MedicineScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Search */}
+      {}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -115,7 +111,7 @@ const MedicineScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Upload Prescription Banner */}
+        {}
         <TouchableOpacity>
           <LinearGradient
             colors={colors.gradientPrimary}
@@ -134,7 +130,7 @@ const MedicineScreen = ({ navigation, route }) => {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Categories */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categories</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -149,7 +145,7 @@ const MedicineScreen = ({ navigation, route }) => {
           </ScrollView>
         </View>
 
-        {/* Quick Reorder */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Quick Reorder</Text>
@@ -170,7 +166,7 @@ const MedicineScreen = ({ navigation, route }) => {
           </Card>
         </View>
 
-        {/* Featured Medicines */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Popular Medicines</Text>
           <View style={styles.medicinesGrid}>
@@ -223,7 +219,7 @@ const MedicineScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Health Tips */}
+        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Health Tips</Text>
           <Card variant="gradient" style={styles.tipCard}>
@@ -236,7 +232,7 @@ const MedicineScreen = ({ navigation, route }) => {
         </View>
       </ScrollView>
 
-      {/* Cart Footer */}
+      {}
       {cartCount > 0 && (
         <View style={styles.cartFooter}>
           <View style={styles.cartInfo}>

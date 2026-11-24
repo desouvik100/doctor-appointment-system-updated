@@ -1,5 +1,4 @@
-// backend/routes/exportRoutes.js
-// Export health data for patients
+
 
 const express = require('express');
 const router = express.Router();
@@ -8,15 +7,11 @@ const Appointment = require('../models/Appointment');
 const Prescription = require('../models/Prescription');
 const LabReport = require('../models/LabReport');
 const MedicalRecord = require('../models/MedicalRecord');
-const { generatePrescriptionHTML } = require('../services/pdfService');
-
-// Export all health data for a patient
+const { generatePrescriptionHTML } = require('../services/pdfService');
 router.get('/health-data/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { format = 'json' } = req.query;
-
-    // Fetch all patient data
+    const { format = 'json' } = req.query;
     const [user, appointments, prescriptions, labReports] = await Promise.all([
       User.findById(userId).select('-password'),
       Appointment.find({ userId })
@@ -75,8 +70,7 @@ router.get('/health-data/:userId', async (req, res) => {
       }
     };
 
-    if (format === 'html') {
-      // Generate HTML report
+    if (format === 'html') {
       const html = generateHealthReportHTML(exportData);
       res.setHeader('Content-Type', 'text/html');
       res.setHeader('Content-Disposition', `attachment; filename=health-data-${userId}-${Date.now()}.html`);
@@ -88,9 +82,7 @@ router.get('/health-data/:userId', async (req, res) => {
     console.error('Export health data error:', error);
     res.status(500).json({ message: 'Failed to export health data', error: error.message });
   }
-});
-
-// Export prescriptions for a patient
+});
 router.get('/prescriptions/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -109,9 +101,7 @@ router.get('/prescriptions/:userId', async (req, res) => {
     console.error('Export prescriptions error:', error);
     res.status(500).json({ message: 'Failed to export prescriptions', error: error.message });
   }
-});
-
-// Export appointment history
+});
 router.get('/appointments/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -135,14 +125,10 @@ router.get('/appointments/:userId', async (req, res) => {
     console.error('Export appointments error:', error);
     res.status(500).json({ message: 'Failed to export appointments', error: error.message });
   }
-});
-
-// Generate medical history timeline
+});
 router.get('/timeline/:userId', async (req, res) => {
   try {
-    const { userId } = req.params;
-
-    // Fetch all events
+    const { userId } = req.params;
     const [appointments, prescriptions, labReports] = await Promise.all([
       Appointment.find({ userId, status: 'completed' })
         .populate('doctorId', 'name specialization')
@@ -151,9 +137,7 @@ router.get('/timeline/:userId', async (req, res) => {
         .populate('doctorId', 'name')
         .lean(),
       LabReport.find({ patientId: userId }).lean()
-    ]);
-
-    // Create timeline events
+    ]);
     const timeline = [];
 
     appointments.forEach(apt => {
@@ -190,9 +174,7 @@ router.get('/timeline/:userId', async (req, res) => {
         icon: '🔬',
         data: report
       });
-    });
-
-    // Sort by date descending
+    });
     timeline.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     res.json({
@@ -203,9 +185,7 @@ router.get('/timeline/:userId', async (req, res) => {
     console.error('Timeline error:', error);
     res.status(500).json({ message: 'Failed to generate timeline', error: error.message });
   }
-});
-
-// Helper function to generate HTML health report
+});
 function generateHealthReportHTML(data) {
   return `
 <!DOCTYPE html>

@@ -1,6 +1,4 @@
-/**
- * Rating Component - Interactive star rating
- */
+
 
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';

@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const LoyaltyPoints = require('../models/LoyaltyPoints');
-const { verifyToken } = require('../middleware/auth');
-
-// Get current user's loyalty points (authenticated)
+const { verifyToken } = require('../middleware/auth');
 router.get('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -29,9 +27,7 @@ router.get('/', verifyToken, async (req, res) => {
     console.error('Get loyalty points error:', error);
     res.status(500).json({ message: 'Failed to get loyalty points', error: error.message });
   }
-});
-
-// Get user's loyalty points
+});
 router.get('/user/:userId', async (req, res) => {
   try {
     let loyalty = await LoyaltyPoints.findOne({ userId: req.params.userId });
@@ -56,9 +52,7 @@ router.get('/user/:userId', async (req, res) => {
     console.error('Get loyalty points error:', error);
     res.status(500).json({ message: 'Failed to get loyalty points', error: error.message });
   }
-});
-
-// Add points (internal use - called after actions)
+});
 router.post('/add', async (req, res) => {
   try {
     const { userId, points, type, description, appointmentId } = req.body;
@@ -80,9 +74,7 @@ router.post('/add', async (req, res) => {
     console.error('Add points error:', error);
     res.status(500).json({ message: 'Failed to add points', error: error.message });
   }
-});
-
-// Redeem points
+});
 router.post('/redeem', async (req, res) => {
   try {
     const { userId, points, description } = req.body;
@@ -103,7 +95,7 @@ router.post('/redeem', async (req, res) => {
     loyalty.redeemPoints(points, description || 'Points redeemed');
     await loyalty.save();
 
-    const discountAmount = Math.floor(points / 10); // 100 points = ₹10
+    const discountAmount = Math.floor(points / 10); 
 
     res.json({
       message: 'Points redeemed successfully',
@@ -115,9 +107,7 @@ router.post('/redeem', async (req, res) => {
     console.error('Redeem points error:', error);
     res.status(500).json({ message: 'Failed to redeem points', error: error.message });
   }
-});
-
-// Get transaction history
+});
 router.get('/history/:userId', async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
@@ -141,9 +131,7 @@ router.get('/history/:userId', async (req, res) => {
     console.error('Get history error:', error);
     res.status(500).json({ message: 'Failed to get history', error: error.message });
   }
-});
-
-// Get achievements
+});
 router.get('/achievements/:userId', async (req, res) => {
   try {
     const loyalty = await LoyaltyPoints.findOne({ userId: req.params.userId });
@@ -167,9 +155,7 @@ router.get('/achievements/:userId', async (req, res) => {
     console.error('Get achievements error:', error);
     res.status(500).json({ message: 'Failed to get achievements', error: error.message });
   }
-});
-
-// Get tier benefits
+});
 router.get('/tiers', async (req, res) => {
   try {
     const tiers = [
@@ -208,9 +194,7 @@ router.get('/tiers', async (req, res) => {
     console.error('Get tiers error:', error);
     res.status(500).json({ message: 'Failed to get tiers', error: error.message });
   }
-});
-
-// Calculate points for appointment
+});
 router.get('/calculate/:amount', async (req, res) => {
   try {
     const amount = parseInt(req.params.amount);
@@ -226,9 +210,7 @@ router.get('/calculate/:amount', async (req, res) => {
           case 'platinum': multiplier = 3; break;
         }
       }
-    }
-
-    // Base: 1 point per ₹10 spent
+    }
     const basePoints = Math.floor(amount / 10);
     const earnedPoints = Math.floor(basePoints * multiplier);
 
@@ -242,9 +224,7 @@ router.get('/calculate/:amount', async (req, res) => {
     console.error('Calculate points error:', error);
     res.status(500).json({ message: 'Failed to calculate points', error: error.message });
   }
-});
-
-// Leaderboard
+});
 router.get('/leaderboard', async (req, res) => {
   try {
     const leaderboard = await LoyaltyPoints.find({ totalPoints: { $gt: 0 } })

@@ -41,13 +41,11 @@
       const ctx = canvas.getContext('2d');
       canvas.width = size;
       canvas.height = size;
-      
-      // Background gradient
+
       const gradient = ctx.createLinearGradient(0, 0, size, size);
       gradient.addColorStop(0, '#0ea5e9');
       gradient.addColorStop(1, '#14b8a6');
-      
-      // Rounded rectangle background
+
       const radius = size * 0.2;
       ctx.beginPath();
       ctx.moveTo(radius, 0);
@@ -62,8 +60,7 @@
       ctx.closePath();
       ctx.fillStyle = gradient;
       ctx.fill();
-      
-      // ECG line
+
       ctx.strokeStyle = 'white';
       ctx.lineWidth = size * 0.05;
       ctx.lineCap = 'round';
@@ -83,8 +80,7 @@
       ctx.lineTo(size * 0.7, centerY);
       ctx.lineTo(endX, centerY);
       ctx.stroke();
-      
-      // Small heart
+
       if (size >= 96) {
         ctx.fillStyle = 'rgba(255,255,255,0.3)';
         const heartSize = size * 0.15;
@@ -134,15 +130,14 @@
     }
     
     async function downloadAllIcons() {
-      // Download each icon with a small delay
+
       for (const size of sizes) {
         downloadIcon(size);
         await new Promise(r => setTimeout(r, 200));
       }
       alert('All icons downloaded! Move them to frontend/public/icons/');
     }
-    
-    // Generate all icons
+
     const grid = document.getElementById('iconGrid');
     sizes.forEach(size => {
       grid.appendChild(createIconItem(size));

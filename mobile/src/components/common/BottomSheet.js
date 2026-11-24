@@ -1,6 +1,4 @@
-/**
- * BottomSheet Component - Smooth bottom sheet modal
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import {

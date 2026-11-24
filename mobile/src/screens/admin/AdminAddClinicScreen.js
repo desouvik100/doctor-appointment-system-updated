@@ -1,7 +1,4 @@
-/**
- * Admin Add Clinic Screen - Create New Clinic
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState } from 'react';
 import {

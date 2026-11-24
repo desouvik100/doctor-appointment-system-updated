@@ -1,7 +1,4 @@
-/**
- * Staff Tab Navigator - Dashboard for Clinic Staff/Receptionists
- * With Stack Navigation for all staff screens - 100% Web Parity
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -10,9 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
 import { shadows } from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
-import { useTheme } from '../context/ThemeContext';
-
-// Import all staff screens directly
+import { useTheme } from '../context/ThemeContext';
 import StaffDashboardScreen from '../screens/staff/StaffDashboardScreen';
 import StaffAppointmentsScreen from '../screens/staff/StaffAppointmentsScreen';
 import StaffQueueScreen from '../screens/staff/StaffQueueScreen';
@@ -29,9 +24,7 @@ import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import NotificationSettingsScreen from '../screens/profile/NotificationSettingsScreen';
 
 const Tab = createBottomTabNavigator();
-const Stack = createStackNavigator();
-
-// Staff Dashboard Stack - contains all staff screens
+const Stack = createStackNavigator();
 const StaffDashboardStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -47,9 +40,7 @@ const StaffDashboardStack = () => {
       <Stack.Screen name="StaffRegisterPatient" component={StaffRegisterPatientScreen} />
     </Stack.Navigator>
   );
-};
-
-// Appointments Stack
+};
 const AppointmentsStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -59,9 +50,7 @@ const AppointmentsStack = () => {
       <Stack.Screen name="StaffPatientDetail" component={StaffPatientDetailScreen} />
     </Stack.Navigator>
   );
-};
-
-// Profile Stack - includes notifications
+};
 const ProfileStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

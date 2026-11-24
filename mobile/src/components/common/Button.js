@@ -1,7 +1,4 @@
-/**
- * Enterprise Button Component
- * Accessible, consistent, and flexible button system
- */
+
 
 import React from 'react';
 import {
@@ -19,8 +16,8 @@ import { shadows } from '../../theme/shadows';
 const Button = ({
   children,
   onPress,
-  variant = 'primary', // primary, secondary, outline, ghost, danger
-  size = 'medium', // small, medium, large
+  variant = 'primary', 
+  size = 'medium', 
   fullWidth = false,
   disabled = false,
   loading = false,
@@ -37,9 +34,7 @@ const Button = ({
     styles.base,
     styles[size],
     fullWidth && styles.fullWidth,
-    disabled && styles.disabled,
-    
-    // Dynamic styling
+    disabled && styles.disabled,
     variant === 'primary' && !gradient && { backgroundColor: colors.primary, ...shadows.sm },
     variant === 'secondary' && { backgroundColor: colors.secondary, ...shadows.sm },
     variant === 'outline' && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
@@ -52,9 +47,7 @@ const Button = ({
   const textStyles = [
     styles.text,
     styles[`text_${size}`],
-    disabled && styles.textDisabled,
-    
-    // Dynamic text colors
+    disabled && styles.textDisabled,
     variant === 'primary' && { color: colors.textInverse || '#fff' },
     variant === 'secondary' && { color: '#fff' },
     variant === 'outline' && { color: colors.primary },
@@ -121,9 +114,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-  },
-
-  // Sizes
+  },
   small: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
@@ -147,9 +138,7 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.5,
     ...shadows.none,
-  },
-
-  // Text styles
+  },
   text: {
     ...typography.button,
     textAlign: 'center',
@@ -166,9 +155,7 @@ const styles = StyleSheet.create({
   },
   textDisabled: {
     opacity: 1,
-  },
-
-  // Content
+  },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -179,9 +166,7 @@ const styles = StyleSheet.create({
   },
   iconRight: {
     marginLeft: spacing.sm,
-  },
-
-  // Gradient
+  },
   gradient: {
     width: '100%',
     height: '100%',

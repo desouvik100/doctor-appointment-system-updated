@@ -1,10 +1,5 @@
 const mongoose = require('mongoose');
 
-/**
- * Family Health Wallet - Shared healthcare budget for families
- * Requirement 5: Family Health Wallet
- */
-
 const transactionSchema = new mongoose.Schema({
   type: {
     type: String,
@@ -20,19 +15,16 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     enum: ['consultation', 'medicine', 'lab_test', 'health_package', 'ambulance', 'other'],
     default: 'other'
-  },
-  // Who made this transaction
+  },
   memberId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'FamilyMember'
   },
-  memberName: String,
-  // Related booking/appointment
+  memberName: String,
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment'
-  },
-  // Payment details
+  },
   paymentMethod: {
     type: String,
     enum: ['wallet', 'upi', 'card', 'netbanking', 'cash'],
@@ -69,72 +61,55 @@ const budgetAlertSchema = new mongoose.Schema({
   }
 });
 
-const familyWalletSchema = new mongoose.Schema({
-  // Primary account holder (family head)
+const familyWalletSchema = new mongoose.Schema({
   primaryUserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
     unique: true
-  },
-  
-  // Wallet balance
+  },
   balance: {
     type: Number,
     default: 0,
     min: 0
-  },
-  
-  // Monthly budget settings
+  },
   monthlyBudget: {
     type: Number,
-    default: 10000 // ₹10,000 default
-  },
-  
-  // Current month spending
+    default: 10000 
+  },
   currentMonthSpending: {
     type: Number,
     default: 0
-  },
-  
-  // Budget reset date (1-28)
+  },
   budgetResetDay: {
     type: Number,
     default: 1,
     min: 1,
     max: 28
-  },
-  
-  // Low balance alert threshold
+  },
   lowBalanceThreshold: {
     type: Number,
     default: 500
-  },
-  
-  // Family members with wallet access
+  },
   members: [{
     memberId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'FamilyMember'
     },
     name: String,
-    relationship: String,
-    // Spending limit per transaction
+    relationship: String,
     spendingLimit: {
       type: Number,
       default: 2000
-    },
-    // Monthly spending limit
+    },
     monthlyLimit: {
       type: Number,
       default: 5000
-    },
-    // Current month spending
+    },
     currentMonthSpending: {
       type: Number,
       default: 0
-    },
-    // Can add money to wallet
+    },
     canAddMoney: {
       type: Boolean,
       default: false
@@ -147,17 +122,11 @@ const familyWalletSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }],
-  
-  // Transaction history
-  transactions: [transactionSchema],
-  
-  // Budget alerts
-  alerts: [budgetAlertSchema],
-  
-  // Yearly spending for tax purposes (80D)
+  }],
+  transactions: [transactionSchema],
+  alerts: [budgetAlertSchema],
   yearlySpending: {
-    financialYear: String, // "2024-25"
+    financialYear: String, 
     totalMedicalExpenses: {
       type: Number,
       default: 0
@@ -182,9 +151,7 @@ const familyWalletSchema = new mongoose.Schema({
       type: Number,
       default: 0
     }
-  },
-  
-  // Notification preferences
+  },
   notifications: {
     lowBalance: {
       type: Boolean,
@@ -212,14 +179,10 @@ const familyWalletSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
-
-// Indexes
+}, { timestamps: true });
 familyWalletSchema.index({ primaryUserId: 1 });
 familyWalletSchema.index({ 'members.memberId': 1 });
-familyWalletSchema.index({ 'transactions.createdAt': -1 });
-
-// Add money to wallet
+familyWalletSchema.index({ 'transactions.createdAt': -1 });
 familyWalletSchema.methods.addMoney = function(amount, paymentMethod, paymentId, description = 'Wallet top-up') {
   this.balance += amount;
   this.transactions.push({
@@ -231,15 +194,11 @@ familyWalletSchema.methods.addMoney = function(amount, paymentMethod, paymentId,
     status: 'completed'
   });
   return this.balance;
-};
-
-// Deduct money for booking
+};
 familyWalletSchema.methods.deductForBooking = function(amount, memberId, memberName, category, appointmentId, description) {
   if (amount > this.balance) {
     throw new Error('Insufficient wallet balance');
-  }
-  
-  // Check member spending limit
+  }
   const member = this.members.find(m => m.memberId?.toString() === memberId?.toString());
   if (member) {
     if (amount > member.spendingLimit) {
@@ -252,9 +211,7 @@ familyWalletSchema.methods.deductForBooking = function(amount, memberId, memberN
   }
   
   this.balance -= amount;
-  this.currentMonthSpending += amount;
-  
-  // Update yearly spending
+  this.currentMonthSpending += amount;
   this.updateYearlySpending(amount, category);
   
   this.transactions.push({
@@ -266,22 +223,17 @@ familyWalletSchema.methods.deductForBooking = function(amount, memberId, memberN
     memberName,
     appointmentId,
     status: 'completed'
-  });
-  
-  // Check for alerts
+  });
   this.checkAlerts();
   
   return this.balance;
-};
-
-// Update yearly spending for 80D
+};
 familyWalletSchema.methods.updateYearlySpending = function(amount, category) {
   const now = new Date();
   const year = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
   const fy = `${year}-${(year + 1).toString().slice(-2)}`;
   
-  if (this.yearlySpending.financialYear !== fy) {
-    // Reset for new financial year
+  if (this.yearlySpending.financialYear !== fy) {
     this.yearlySpending = {
       financialYear: fy,
       totalMedicalExpenses: 0,
@@ -309,11 +261,8 @@ familyWalletSchema.methods.updateYearlySpending = function(amount, category) {
       this.yearlySpending.healthPackages += amount;
       break;
   }
-};
-
-// Check and create alerts
-familyWalletSchema.methods.checkAlerts = function() {
-  // Low balance alert
+};
+familyWalletSchema.methods.checkAlerts = function() {
   if (this.balance < this.lowBalanceThreshold && this.notifications.lowBalance) {
     const existingAlert = this.alerts.find(a => 
       a.type === 'low_balance' && !a.isRead && 
@@ -327,9 +276,7 @@ familyWalletSchema.methods.checkAlerts = function() {
         currentAmount: this.balance
       });
     }
-  }
-  
-  // Budget exceeded alert
+  }
   if (this.currentMonthSpending > this.monthlyBudget && this.notifications.budgetExceeded) {
     const existingAlert = this.alerts.find(a => 
       a.type === 'budget_exceeded' && !a.isRead &&
@@ -344,12 +291,10 @@ familyWalletSchema.methods.checkAlerts = function() {
       });
     }
   }
-};
-
-// Generate 80D tax report
+};
 familyWalletSchema.methods.generate80DReport = function() {
   const fy = this.yearlySpending.financialYear;
-  const maxDeduction = 25000; // Standard 80D limit
+  const maxDeduction = 25000; 
   const seniorCitizenLimit = 50000;
   
   return {
@@ -366,17 +311,13 @@ familyWalletSchema.methods.generate80DReport = function() {
     seniorCitizenEligible: Math.min(this.yearlySpending.totalMedicalExpenses, seniorCitizenLimit),
     note: 'Please consult a tax professional for accurate deduction calculation.'
   };
-};
-
-// Reset monthly spending (called by cron job)
+};
 familyWalletSchema.methods.resetMonthlySpending = function() {
   this.currentMonthSpending = 0;
   this.members.forEach(m => {
     m.currentMonthSpending = 0;
   });
-};
-
-// Static: Get or create wallet
+};
 familyWalletSchema.statics.getOrCreateWallet = async function(userId) {
   let wallet = await this.findOne({ primaryUserId: userId });
   if (!wallet) {

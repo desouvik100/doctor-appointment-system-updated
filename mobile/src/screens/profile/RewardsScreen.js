@@ -1,6 +1,4 @@
-/**
- * Rewards Screen - Loyalty Points & Offers with points animation, timeline transaction history and card carousel
- */
+
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -48,21 +46,17 @@ const RewardsScreen = ({ navigation }) => {
   
   const [availableRewards, setAvailableRewards] = useState([]);
 
-  // Animated points state (for count-up)
   const [displayedPoints, setDisplayedPoints] = useState(0);
 
-  // Pulse animation for the main points card
   const pointsPulseScale = useRef(new Animated.Value(1)).current;
 
   const fetchRewards = useCallback(async () => {
     try {
-      // Fetch loyalty points
+
       const loyaltyResponse = await apiClient.get('/wallet/loyalty-points').catch(() => ({ data: {} }));
-      
-      // Fetch available rewards/coupons
+
       const rewardsResponse = await apiClient.get('/coupons/available').catch(() => ({ data: { coupons: [] } }));
-      
-      // Fetch points history via the correct endpoint (userId-based)
+
       const userId = user?._id || user?.id;
       const historyResponse = userId
         ? await apiClient.get(`/loyalty/${userId}`).catch(() => ({ data: {} }))
@@ -80,7 +74,6 @@ const RewardsScreen = ({ navigation }) => {
         history: transactions,
       });
 
-      // Map coupons to rewards format or use defaults
       const rewards = rewardsResponse.data?.coupons?.length > 0 
         ? rewardsResponse.data.coupons.map(c => ({
             id: c._id,
@@ -113,7 +106,6 @@ const RewardsScreen = ({ navigation }) => {
     fetchRewards();
   }, [fetchRewards]);
 
-  // Points count-up loop
   useEffect(() => {
     if (!loading) {
       let start = 0;
@@ -142,7 +134,6 @@ const RewardsScreen = ({ navigation }) => {
     }
   }, [loading, loyaltyData.points]);
 
-  // Start pulse animation on load
   useEffect(() => {
     if (!loading) {
       pulse(pointsPulseScale, 0.98, 1.02).start();
@@ -179,7 +170,7 @@ const RewardsScreen = ({ navigation }) => {
 
               if (response.data?.success) {
                 Alert.alert('Success! 🎉', `You've redeemed "${reward.title}"! Check your wallet for the coupon.`);
-                fetchRewards(); // Refresh data
+                fetchRewards(); 
               } else {
                 Alert.alert('Error', response.data?.message || 'Failed to redeem reward');
               }
@@ -238,7 +229,7 @@ const RewardsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
@@ -254,7 +245,7 @@ const RewardsScreen = ({ navigation }) => {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {/* Pulsing points balance card */}
+        {}
         <Animated.View style={{ transform: [{ scale: pointsPulseScale }] }}>
           <LinearGradient
             colors={isDarkMode ? ['#4F46E5', '#6366F1'] : ['#6366F1', '#8B5CF6']}
@@ -273,7 +264,7 @@ const RewardsScreen = ({ navigation }) => {
             <Text style={styles.pointsValue}>{displayedPoints.toLocaleString()}</Text>
             <Text style={styles.pointsWorth}>Cash Equivalent: ₹{loyaltyData.pointsValue}</Text>
 
-            {/* Progress to next tier */}
+            {}
             {nextTier && (
               <View style={styles.progressSection}>
                 <View style={styles.progressBar}>
@@ -287,7 +278,7 @@ const RewardsScreen = ({ navigation }) => {
           </LinearGradient>
         </Animated.View>
 
-        {/* Stats Summary Cards */}
+        {}
         <View style={styles.statsRow}>
           <Card variant="default" style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.statIcon}>📈</Text>
@@ -301,7 +292,7 @@ const RewardsScreen = ({ navigation }) => {
           </Card>
         </View>
 
-        {/* Horizontal Swipeable Redeem Carousel */}
+        {}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Redeem Coupons</Text>
@@ -339,7 +330,7 @@ const RewardsScreen = ({ navigation }) => {
                     </Text>
                   </View>
 
-                  {/* Dotted separator block */}
+                  {}
                   <View style={styles.couponDivider}>
                     <View style={[styles.stubNotchTop, { backgroundColor: colors.background }]} />
                     <View style={[styles.stubDottedLine, { borderColor: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]} />
@@ -379,7 +370,7 @@ const RewardsScreen = ({ navigation }) => {
           </ScrollView>
         </View>
 
-        {/* How to Earn list */}
+        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>How to Earn Points</Text>
           <Card variant="default" style={[styles.earnListCard, { backgroundColor: colors.surface }]}>
@@ -401,7 +392,7 @@ const RewardsScreen = ({ navigation }) => {
           </Card>
         </View>
 
-        {/* Points Transaction Timeline */}
+        {}
         {loyaltyData.history?.length > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Points History</Text>
@@ -411,7 +402,7 @@ const RewardsScreen = ({ navigation }) => {
                 return (
                   <View key={index} style={styles.timelineItem}>
                     
-                    {/* Left node circles */}
+                    {}
                     <View style={styles.timelineLeftNode}>
                       <View style={[
                         styles.timelineCircle,
@@ -431,7 +422,7 @@ const RewardsScreen = ({ navigation }) => {
                       )}
                     </View>
 
-                    {/* Right transaction block */}
+                    {}
                     <View style={styles.timelineContentRight}>
                       <Card variant="default" style={[styles.historyCard, { backgroundColor: colors.surface }]}>
                         <View style={styles.historyHeader}>
@@ -530,7 +521,6 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   sectionTitle: { ...typography.headlineSmall, fontWeight: '850' },
   carouselHint: { ...typography.labelSmall, fontWeight: '700' },
 
-  // Rewards Horizontal Carousel
   carouselContainer: { paddingLeft: 2, paddingRight: spacing.xl, paddingVertical: 4 },
   rewardCarouselCard: {
     width: width * 0.72,
@@ -594,7 +584,6 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   },
   redeemText: { fontSize: 11, fontWeight: '800' },
 
-  // How to earn card
   earnListCard: { borderRadius: borderRadius.xl, borderWidth: 1, borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', ...shadows.sm },
   earnItem: {
     flexDirection: 'row',
@@ -608,7 +597,6 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   earnDesc: { ...typography.bodySmall, fontSize: 12, marginTop: 2 },
   earnPoints: { ...typography.labelMedium, fontWeight: '800' },
 
-  // Timeline points history
   timelineContainer: { marginTop: spacing.sm, paddingLeft: 4 },
   timelineItem: { flexDirection: 'row', minHeight: 75 },
   timelineLeftNode: { width: 40, alignItems: 'center' },

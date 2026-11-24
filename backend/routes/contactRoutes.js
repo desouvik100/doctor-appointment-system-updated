@@ -1,11 +1,9 @@
-// Contact/Support Routes - Handle user support messages
+
 const express = require('express');
 const router = express.Router();
 const { sendEmail } = require('../services/emailService');
 
-const SUPPORT_EMAIL = process.env.ADMIN_EMAIL || 'support@healthsyncpro.in';
-
-// Submit contact form / support message
+const SUPPORT_EMAIL = process.env.ADMIN_EMAIL || 'support@healthsyncpro.in';
 router.post('/submit', async (req, res) => {
   try {
     const { name, email, phone, subject, message } = req.body;
@@ -17,9 +15,7 @@ router.post('/submit', async (req, res) => {
       });
     }
 
-    const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-
-    // Send email to admin/support
+    const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     const adminHtml = `
       <!DOCTYPE html>
       <html>
@@ -97,9 +93,7 @@ router.post('/submit', async (req, res) => {
       subject: `📬 [Support] ${subject} - from ${name}`,
       html: adminHtml,
       text: `New Support Message\n\nFrom: ${name}\nEmail: ${email}\nPhone: ${phone || 'Not provided'}\nSubject: ${subject}\nTime: ${timestamp}\n\nMessage:\n${message}`
-    });
-
-    // Send confirmation email to user
+    });
     const userHtml = `
       <!DOCTYPE html>
       <html>
@@ -171,9 +165,7 @@ router.post('/submit', async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Get support contact info
+});
 router.get('/info', (req, res) => {
   res.json({
     success: true,

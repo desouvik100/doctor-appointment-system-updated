@@ -1,5 +1,4 @@
-// Script to unsuspend a specific user
-// Run with: node backend/scripts/fix-unsuspend.js
+
 
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
@@ -12,9 +11,7 @@ async function unsuspendUser() {
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
 
-    const email = 'desouvik2018@gmail.com';
-    
-    // Check in User collection
+    const email = 'desouvik2018@gmail.com';
     let user = await User.findOne({ email: email.toLowerCase() });
     if (user) {
       console.log(`Found in User collection: ${user.name}, isActive: ${user.isActive}`);
@@ -24,9 +21,7 @@ async function unsuspendUser() {
         { new: true }
       );
       console.log(`✅ User updated: isActive = ${result.isActive}`);
-    }
-
-    // Check in Doctor collection
+    }
     let doctor = await Doctor.findOne({ email: email.toLowerCase() });
     if (doctor) {
       console.log(`Found in Doctor collection: ${doctor.name}, isActive: ${doctor.isActive}`);
@@ -40,9 +35,7 @@ async function unsuspendUser() {
 
     if (!user && !doctor) {
       console.log('❌ User not found in either collection');
-    }
-
-    // Show all suspended users
+    }
     console.log('\n--- All Suspended Users ---');
     const suspendedUsers = await User.find({ isActive: false }).select('name email role isActive');
     const suspendedDoctors = await Doctor.find({ isActive: false }).select('name email isActive');

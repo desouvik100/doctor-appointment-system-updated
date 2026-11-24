@@ -1,6 +1,4 @@
-/**
- * User Context - Manage user authentication state
- */
+
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -54,19 +52,12 @@ export const UserProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    try {
-      // Clear user state
-      setUser(null);
-      
-      // Clear auth tokens from secure storage
-      await clearAuthTokens();
-      
-      // Clear user data
+    try {
+      setUser(null);
+      await clearAuthTokens();
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('userData');
-      
-      // Clear all cached data
+      await AsyncStorage.removeItem('userData');
       const keys = await AsyncStorage.getAllKeys();
       const keysToRemove = keys.filter(key => 
         key.startsWith('cache_') || 
@@ -80,10 +71,7 @@ export const UserProvider = ({ children }) => {
       
       if (keysToRemove.length > 0) {
         await AsyncStorage.multiRemove(keysToRemove);
-      }
-      
-      // Note: We don't clear biometric credentials on logout
-      // User can still use biometrics to log back in
+      }
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -91,8 +79,7 @@ export const UserProvider = ({ children }) => {
 
   const logoutAndClearBiometrics = async () => {
     try {
-      await logout();
-      // Also clear biometric credentials
+      await logout();
       await biometricService.disableBiometricLogin();
     } catch (error) {
       console.error('Error clearing biometrics:', error);

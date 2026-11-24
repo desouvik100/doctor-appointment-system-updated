@@ -1,6 +1,4 @@
-/**
- * HealthScoreCard - Material 3 Health metrics tracker
- */
+
 
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
@@ -28,12 +26,11 @@ const HealthScoreCard = ({
 }) => {
   const { colors, isDarkMode } = useTheme();
 
-  // Reanimated 3 Shared Values
   const progressVal = useSharedValue(0);
   const scaleVal = useSharedValue(0.9);
 
   useEffect(() => {
-    // Animate wellness score progress ring and scaling on mount
+
     progressVal.value = withTiming(wellnessScore / 100, {
       duration: 1000,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
@@ -41,7 +38,6 @@ const HealthScoreCard = ({
     scaleVal.value = withSpring(1, { damping: 15 });
   }, [wellnessScore]);
 
-  // Animated styles
   const animatedScoreStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scaleVal.value }],
@@ -71,7 +67,7 @@ const HealthScoreCard = ({
       </View>
 
       <View style={styles.contentRow}>
-        {/* Animated Wellness Score Gauge */}
+        {}
         <View style={styles.scoreContainer}>
           <View style={[styles.circlePlaceholder, { borderColor: isDarkMode ? '#2A3142' : '#F1F5F9' }]}>
             <View style={styles.scoreTextWrapper}>
@@ -81,9 +77,9 @@ const HealthScoreCard = ({
           </View>
         </View>
 
-        {/* Detailed Stats Column */}
+        {}
         <View style={styles.statsColumn}>
-          {/* Hydration */}
+          {}
           <View style={styles.statItem}>
             <View style={[styles.iconWrapper, { backgroundColor: '#E0F7FA' }]}>
               <Text style={styles.emoji}>💧</Text>
@@ -96,7 +92,7 @@ const HealthScoreCard = ({
             </View>
           </View>
 
-          {/* Sleep */}
+          {}
           <View style={styles.statItem}>
             <View style={[styles.iconWrapper, { backgroundColor: '#ECEFF1' }]}>
               <Text style={styles.emoji}>😴</Text>
@@ -109,7 +105,7 @@ const HealthScoreCard = ({
             </View>
           </View>
 
-          {/* Steps */}
+          {}
           <View style={styles.statItem}>
             <View style={[styles.iconWrapper, { backgroundColor: '#E8F5E9' }]}>
               <Text style={styles.emoji}>🚶</Text>

@@ -5,20 +5,16 @@ const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const admin = require('firebase-admin');
 const path = require('path');
-const { verifyToken } = require('../middleware/auth');
-
-// Initialize Firebase Admin if not already done
+const { verifyToken } = require('../middleware/auth');
 let firebaseInitialized = false;
 try {
-  if (!admin.apps.length) {
-    // Try to load service account from file first, then env variable
+  if (!admin.apps.length) {
     let serviceAccount = null;
     
     try {
       serviceAccount = require('../firebase-service-account.json');
       console.log('✅ Firebase service account loaded from file');
-    } catch (e) {
-      // Try environment variable
+    } catch (e) {
       if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
         console.log('✅ Firebase service account loaded from env');
@@ -41,9 +37,6 @@ try {
   console.log('⚠️ Firebase Admin init error:', error.message);
 }
 
-/**
- * GET /notifications — Get current user's notifications (authenticated)
- */
 router.get('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -77,9 +70,6 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * GET /notifications/unread-count — Get unread count for current user
- */
 router.get('/unread-count', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -90,9 +80,6 @@ router.get('/unread-count', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * PUT /notifications/read-all — Mark all notifications as read
- */
 router.put('/read-all', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -103,9 +90,6 @@ router.put('/read-all', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * PUT /notifications/preferences — Update notification preferences
- */
 router.put('/preferences', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -126,9 +110,6 @@ router.put('/preferences', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * PUT /notifications/:id/read — Mark single notification as read
- */
 router.put('/:id/read', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
@@ -142,9 +123,6 @@ router.put('/:id/read', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Register device for push notifications
- */
 router.post('/register-device', verifyToken, async (req, res) => {
   try {
     const { fcmToken, platform, deviceInfo, userId: bodyUserId } = req.body;
@@ -156,21 +134,16 @@ router.post('/register-device', verifyToken, async (req, res) => {
 
     if (!userId) {
       return res.status(400).json({ success: false, message: 'User ID is required' });
-    }
-
-    // Find user and update/add device
+    }
     const user = await User.findById(userId);
-    if (!user) {
-      // User might be a doctor
+    if (!user) {
       const Doctor = require('../models/Doctor');
       const doctor = await Doctor.findById(userId);
       
       if (!doctor) {
         console.log(`Device registration failed: User/Doctor ${userId} not found`);
         return res.status(404).json({ success: false, message: 'User not found' });
-      }
-      
-      // Update doctor's FCM token
+      }
       doctor.fcmToken = fcmToken;
       if (!doctor.devices) doctor.devices = [];
       
@@ -190,17 +163,13 @@ router.post('/register-device', verifyToken, async (req, res) => {
       await doctor.save();
       console.log(`📱 Device registered for doctor ${userId}`);
       return res.json({ success: true, message: 'Device registered for notifications' });
-    }
-
-    // Check if device already exists
+    }
     const existingDeviceIndex = user.devices?.findIndex(d => d.fcmToken === fcmToken);
     
-    if (existingDeviceIndex >= 0) {
-      // Update existing device
+    if (existingDeviceIndex >= 0) {
       user.devices[existingDeviceIndex].lastActive = new Date();
       user.devices[existingDeviceIndex].platform = platform;
-    } else {
-      // Add new device
+    } else {
       if (!user.devices) user.devices = [];
       user.devices.push({
         fcmToken,
@@ -208,9 +177,7 @@ router.post('/register-device', verifyToken, async (req, res) => {
         deviceId: deviceInfo?.deviceId || `${platform}-${Date.now()}`,
         lastActive: new Date()
       });
-    }
-    
-    // Also store the latest token directly for quick access
+    }
     user.fcmToken = fcmToken;
     await user.save();
 
@@ -222,9 +189,6 @@ router.post('/register-device', verifyToken, async (req, res) => {
   }
 });
 
-/**
- * Update notification settings
- */
 router.put('/settings', async (req, res) => {
   try {
     const userId = req.user?.id || req.body.userId;
@@ -240,9 +204,6 @@ router.put('/settings', async (req, res) => {
   }
 });
 
-/**
- * Send push notification to a user
- */
 router.post('/send', async (req, res) => {
   try {
     const { userId, title, body, data } = req.body;
@@ -252,9 +213,7 @@ router.post('/send', async (req, res) => {
       return res.status(400).json({ message: 'User has no registered device' });
     }
 
-    const result = await sendPushNotification(user.fcmToken, title, body, data);
-    
-    // Also save to database
+    const result = await sendPushNotification(user.fcmToken, title, body, data);
     await new Notification({
       userId,
       title,
@@ -269,9 +228,6 @@ router.post('/send', async (req, res) => {
   }
 });
 
-/**
- * Send push notification to multiple users
- */
 router.post('/send-bulk', async (req, res) => {
   try {
     const { userIds, title, body, data } = req.body;
@@ -283,9 +239,7 @@ router.post('/send-bulk', async (req, res) => {
       return res.status(400).json({ message: 'No registered devices found' });
     }
 
-    const result = await sendBulkPushNotification(tokens, title, body, data);
-    
-    // Save notifications to database
+    const result = await sendBulkPushNotification(tokens, title, body, data);
     const notifications = userIds.map(userId => ({
       userId,
       title,
@@ -299,9 +253,7 @@ router.post('/send-bulk', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Helper function to send push notification
+});
 async function sendPushNotification(token, title, body, data = {}) {
   if (!firebaseInitialized) {
     console.log('📱 [Mock] Push notification:', { token: token?.substring(0, 20), title, body });
@@ -338,9 +290,7 @@ async function sendPushNotification(token, title, body, data = {}) {
     console.error('Push notification error:', error);
     return { success: false, error: error.message };
   }
-}
-
-// Helper function to send bulk push notifications
+}
 async function sendBulkPushNotification(tokens, title, body, data = {}) {
   if (!firebaseInitialized) {
     console.log('📱 [Mock] Bulk push notification:', { count: tokens.length, title, body });
@@ -376,84 +326,10 @@ async function sendBulkPushNotification(tokens, title, body, data = {}) {
     console.error('Bulk push error:', error);
     return { success: false, error: error.message };
   }
-}
-
-// Export helper for use in other modules
+}
 module.exports.sendPushNotification = sendPushNotification;
 module.exports.sendBulkPushNotification = sendBulkPushNotification;
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     Notification:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         userId:
- *           type: string
- *         title:
- *           type: string
- *         message:
- *           type: string
- *         type:
- *           type: string
- *           enum: [appointment, reminder, system, promotion]
- *         isRead:
- *           type: boolean
- *         readAt:
- *           type: string
- *           format: date-time
- *         createdAt:
- *           type: string
- *           format: date-time
- */
-
-/**
- * @swagger
- * /notifications/{userId}:
- *   get:
- *     summary: Get notifications for a user
- *     description: Retrieves paginated notifications for a specific user
- *     tags: [Notifications]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 20
- *       - in: query
- *         name: unreadOnly
- *         schema:
- *           type: boolean
- *     responses:
- *       200:
- *         description: List of notifications
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 notifications:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Notification'
- *                 total:
- *                   type: number
- *                 unreadCount:
- *                   type: number
- */
 router.get('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -476,22 +352,6 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /notifications/{id}/read:
- *   put:
- *     summary: Mark notification as read
- *     tags: [Notifications]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Notification marked as read
- */
 router.put('/:id/read', async (req, res) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { isRead: true, readAt: new Date() });
@@ -501,22 +361,6 @@ router.put('/:id/read', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /notifications/read-all/{userId}:
- *   put:
- *     summary: Mark all notifications as read
- *     tags: [Notifications]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: All notifications marked as read
- */
 router.put('/read-all/:userId', async (req, res) => {
   try {
     await Notification.updateMany(
@@ -529,37 +373,6 @@ router.put('/read-all/:userId', async (req, res) => {
   }
 });
 
-/**
- * @swagger
- * /notifications:
- *   post:
- *     summary: Create a notification
- *     tags: [Notifications]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - userId
- *               - title
- *               - message
- *             properties:
- *               userId:
- *                 type: string
- *               title:
- *                 type: string
- *               message:
- *                 type: string
- *               type:
- *                 type: string
- *     responses:
- *       201:
- *         description: Notification created
- */
 router.post('/', async (req, res) => {
   try {
     const notification = new Notification(req.body);
@@ -568,9 +381,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Delete notification
+});
 router.delete('/:id', async (req, res) => {
   try {
     await Notification.findByIdAndDelete(req.params.id);
@@ -578,9 +389,7 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Clear all notifications for user
+});
 router.delete('/clear/:userId', async (req, res) => {
   try {
     await Notification.deleteMany({ userId: req.params.userId });
@@ -588,9 +397,7 @@ router.delete('/clear/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Get unread count
+});
 router.get('/unread-count/:userId', async (req, res) => {
   try {
     const count = await Notification.countDocuments({ userId: req.params.userId, isRead: false });
@@ -598,9 +405,7 @@ router.get('/unread-count/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
-
-// Schedule appointment reminders (called by cron job or manually)
+});
 router.post('/schedule-reminders', async (req, res) => {
   try {
     const tomorrow = new Date();
@@ -608,17 +413,14 @@ router.post('/schedule-reminders', async (req, res) => {
     tomorrow.setHours(0, 0, 0, 0);
     
     const dayAfter = new Date(tomorrow);
-    dayAfter.setDate(dayAfter.getDate() + 1);
-
-    // Find appointments for tomorrow
+    dayAfter.setDate(dayAfter.getDate() + 1);
     const appointments = await Appointment.find({
       date: { $gte: tomorrow, $lt: dayAfter },
       status: 'approved'
     }).populate('doctor', 'name').populate('user', 'name');
 
     const notifications = [];
-    for (const apt of appointments) {
-      // Check if reminder already exists
+    for (const apt of appointments) {
       const exists = await Notification.findOne({
         'data.appointmentId': apt._id,
         type: 'appointment_reminder'
@@ -647,10 +449,6 @@ router.post('/schedule-reminders', async (req, res) => {
   }
 });
 
-/**
- * Test push notification - sends a test notification to a user
- * GET /notifications/test/:userId
- */
 router.get('/test/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -667,16 +465,12 @@ router.get('/test/:userId', async (req, res) => {
         message: 'No FCM token registered for this user',
         hint: 'User needs to open the mobile app first to register their device'
       });
-    }
-
-    // Send test push notification
+    }
     const title = '🔔 Test Notification';
     const body = `Hello ${user.name}! This is a test push notification from HealthSync.`;
     const data = { type: 'test', timestamp: Date.now().toString() };
 
-    const result = await sendPushNotification(fcmToken, title, body, data);
-
-    // Also save to database
+    const result = await sendPushNotification(fcmToken, title, body, data);
     const notification = new Notification({
       userId,
       title,
@@ -698,15 +492,9 @@ router.get('/test/:userId', async (req, res) => {
   }
 });
 
-/**
- * Test local notification trigger (for mobile app testing)
- * POST /notifications/test-local
- */
 router.post('/test-local', async (req, res) => {
   try {
-    const { userId, title, body } = req.body;
-    
-    // Just save to database - mobile app will fetch and display
+    const { userId, title, body } = req.body;
     const notification = new Notification({
       userId,
       title: title || '🧪 Test Notification',

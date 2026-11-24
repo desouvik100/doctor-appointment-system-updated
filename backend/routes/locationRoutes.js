@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User');
-
-// Update user location
+const User = require('../models/User');
 router.post('/update-location', async (req, res) => {
   try {
     const { userId, latitude, longitude, address, city, state, country, pincode } = req.body;
@@ -17,9 +15,7 @@ router.post('/update-location', async (req, res) => {
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Update location with full address details
+    }
     user.loginLocation = {
       latitude,
       longitude,
@@ -29,9 +25,7 @@ router.post('/update-location', async (req, res) => {
       country: country || null,
       pincode: pincode || null,
       lastUpdated: new Date()
-    };
-    
-    // Mark location as captured
+    };
     user.locationCaptured = true;
 
     await user.save();
@@ -50,9 +44,7 @@ router.post('/update-location', async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Get user location
+});
 router.get('/get-location/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -74,9 +66,7 @@ router.get('/get-location/:userId', async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Check if user needs location setup (first-time login)
+});
 router.get('/check-location-status/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -99,15 +89,11 @@ router.get('/check-location-status/:userId', async (req, res) => {
       error: error.message 
     });
   }
-});
-
-// Get nearby doctors based on user location
+});
 const Doctor = require('../models/Doctor');
-const Clinic = require('../models/Clinic');
-
-// Calculate distance between two coordinates (Haversine formula)
+const Clinic = require('../models/Clinic');
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth's radius in km
+  const R = 6371; 
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
@@ -116,13 +102,11 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
-}
-
-// Get nearby doctors
+}
 router.get('/nearby-doctors/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { maxDistance = 50, specialization } = req.query; // Default 50km radius
+    const { maxDistance = 50, specialization } = req.query; 
 
     console.log('📍 Nearby doctors request:', { userId, maxDistance, specialization });
 
@@ -144,17 +128,13 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
 
     const userLat = user.loginLocation.latitude;
     const userLng = user.loginLocation.longitude;
-    console.log('📍 User location:', { userLat, userLng });
-
-    // Get all clinics with coordinates (removed isActive filter for debugging)
+    console.log('📍 User location:', { userLat, userLng });
     const clinics = await Clinic.find({ 
       latitude: { $exists: true, $ne: null, $ne: 0 },
       longitude: { $exists: true, $ne: null, $ne: 0 }
     });
     
-    console.log('🏥 Found clinics with coordinates:', clinics.length);
-
-    // Calculate distance for each clinic
+    console.log('🏥 Found clinics with coordinates:', clinics.length);
     const nearbyClinics = clinics
       .map(clinic => ({
         ...clinic.toObject(),
@@ -165,9 +145,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
 
     console.log('🏥 Nearby clinics within', maxDistance, 'km:', nearbyClinics.length);
 
-    const nearbyClinicIds = nearbyClinics.map(c => c._id);
-
-    // Get doctors from nearby clinics (removed isActive filter for debugging)
+    const nearbyClinicIds = nearbyClinics.map(c => c._id);
     const doctorQuery = { 
       clinicId: { $in: nearbyClinicIds }
     };
@@ -179,9 +157,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
     }
 
     const doctors = await Doctor.find(doctorQuery)
-      .populate('clinicId', 'name address city latitude longitude');
-
-    // Add distance to each doctor
+      .populate('clinicId', 'name address city latitude longitude');
     const doctorsWithDistance = doctors.map(doctor => {
       const clinic = nearbyClinics.find(c => c._id.toString() === doctor.clinicId?._id?.toString());
       return {
@@ -204,9 +180,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
     console.error('Error fetching nearby doctors:', error);
     res.status(500).json({ message: 'Error fetching nearby doctors', error: error.message });
   }
-});
-
-// Get nearby clinics
+});
 router.get('/nearby-clinics/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -251,9 +225,7 @@ router.get('/nearby-clinics/:userId', async (req, res) => {
     console.error('Error fetching nearby clinics:', error);
     res.status(500).json({ message: 'Error fetching nearby clinics', error: error.message });
   }
-});
-
-// Search doctors by coordinates (for location search feature)
+});
 router.get('/doctors-by-coordinates', async (req, res) => {
   try {
     const { lat, lng, maxDistance = 50, specialization } = req.query;
@@ -267,17 +239,13 @@ router.get('/doctors-by-coordinates', async (req, res) => {
     const searchLat = parseFloat(lat);
     const searchLng = parseFloat(lng);
 
-    console.log('📍 Searching doctors by coordinates:', { searchLat, searchLng, maxDistance, specialization });
-
-    // Get all clinics with coordinates
+    console.log('📍 Searching doctors by coordinates:', { searchLat, searchLng, maxDistance, specialization });
     const clinics = await Clinic.find({ 
       latitude: { $exists: true, $ne: null, $ne: 0 },
       longitude: { $exists: true, $ne: null, $ne: 0 }
     });
     
-    console.log('🏥 Found clinics with coordinates:', clinics.length);
-
-    // Calculate distance for each clinic
+    console.log('🏥 Found clinics with coordinates:', clinics.length);
     const nearbyClinics = clinics
       .map(clinic => ({
         ...clinic.toObject(),
@@ -297,9 +265,7 @@ router.get('/doctors-by-coordinates', async (req, res) => {
       });
     }
 
-    const nearbyClinicIds = nearbyClinics.map(c => c._id);
-
-    // Get doctors from nearby clinics
+    const nearbyClinicIds = nearbyClinics.map(c => c._id);
     const doctorQuery = { 
       clinicId: { $in: nearbyClinicIds }
     };
@@ -309,9 +275,7 @@ router.get('/doctors-by-coordinates', async (req, res) => {
     }
 
     const doctors = await Doctor.find(doctorQuery)
-      .populate('clinicId', 'name address city latitude longitude');
-
-    // Add distance to each doctor
+      .populate('clinicId', 'name address city latitude longitude');
     const doctorsWithDistance = doctors.map(doctor => {
       const clinic = nearbyClinics.find(c => c._id.toString() === doctor.clinicId?._id?.toString());
       return {

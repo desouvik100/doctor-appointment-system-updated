@@ -1,18 +1,4 @@
-/**
- * Integration Tests for End-to-End Clinical Workflow
- * Feature: emr-clinical-features
- * Task: 17.3
- * 
- * Tests complete visit flow with all clinical features:
- * - Vitals recording with validation
- * - Lab test catalog and ordering logic
- * - Medical history validation
- * - ICD-10 diagnosis search
- * - Drug interaction checking with prescriptions
- * - Critical alerts generation
- * 
- * Note: These tests focus on service logic without database dependencies
- */
+
 
 const { validateVitals, calculateBMI, convertTemperature, validateVitalValue, VITAL_RANGES } = require('../services/vitalsService');
 const { checkInteractions, checkPrescriptionSafety, checkDrugAllergies, checkNewDrugInteractions, getDrugClasses } = require('../services/drugInteractionService');
@@ -37,24 +23,17 @@ describe('Clinical Workflow Integration Tests', () => {
         height: { value: 175, unit: 'cm' }
       };
       
-      const result = validateVitals(vitals);
-      
-      // Vitals should be valid
-      expect(result.isValid).toBe(true);
-      
-      // Should flag abnormal values (high BP, high fasting blood sugar)
+      const result = validateVitals(vitals);
+      expect(result.isValid).toBe(true);
       expect(result.abnormalFlags.length).toBeGreaterThan(0);
       expect(result.abnormalFlags).toContain('BP Systolic high');
       expect(result.abnormalFlags).toContain('BP Diastolic high');
-      expect(result.abnormalFlags).toContain('Blood Sugar high');
-      
-      // BMI should be calculated
+      expect(result.abnormalFlags).toContain('Blood Sugar high');
       expect(result.validatedVitals.bmi).toBeDefined();
       expect(result.validatedVitals.bmi).toBeCloseTo(26.8, 1);
     });
     
-    test('Step 2: Check for critical vitals and generate alerts', () => {
-      // Critical vitals scenario
+    test('Step 2: Check for critical vitals and generate alerts', () => {
       const criticalVitals = {
         bloodPressure: { systolic: 185, diastolic: 125 },
         pulse: { value: 130 },
@@ -62,13 +41,9 @@ describe('Clinical Workflow Integration Tests', () => {
         temperature: { value: 103.5, unit: '°F' }
       };
       
-      const alerts = generateVitalAlerts(criticalVitals);
-      
-      // Should generate critical alerts
+      const alerts = generateVitalAlerts(criticalVitals);
       expect(alerts.length).toBeGreaterThan(0);
-      expect(alerts.some(a => a.severity === 'critical')).toBe(true);
-      
-      // Check specific critical conditions
+      expect(alerts.some(a => a.severity === 'critical')).toBe(true);
       const bpAlert = alerts.find(a => a.vital === 'bloodPressure');
       expect(bpAlert).toBeDefined();
       expect(bpAlert.severity).toBe('critical');
@@ -100,49 +75,34 @@ describe('Clinical Workflow Integration Tests', () => {
         ]
       };
       
-      const validation = validateMedicalHistoryData(historyData);
-      
-      // Should be valid
+      const validation = validateMedicalHistoryData(historyData);
       expect(validation.isValid).toBe(true);
       expect(validation.errors).toHaveLength(0);
     });
     
     test('Step 4: Search lab test catalog for ordering', () => {
-      const catalog = getTestCatalog();
-      
-      // Catalog should have tests and panels
+      const catalog = getTestCatalog();
       expect(catalog.tests).toBeDefined();
       expect(catalog.panels).toBeDefined();
-      expect(catalog.tests.length).toBeGreaterThan(0);
-      
-      // Search for specific tests
+      expect(catalog.tests.length).toBeGreaterThan(0);
       const hba1cSearch = searchTests('hba1c');
-      expect(hba1cSearch.tests.length).toBeGreaterThan(0);
-      
-      // Get test by code
+      expect(hba1cSearch.tests.length).toBeGreaterThan(0);
       const cbcTest = getTestByCode('CBC');
       expect(cbcTest).toBeDefined();
-      expect(cbcTest.name).toContain('Blood Count');
-      
-      // Get panel details
+      expect(cbcTest.name).toContain('Blood Count');
       const diabeticPanel = getPanelById('diabetic_panel');
       expect(diabeticPanel).toBeDefined();
       expect(diabeticPanel.tests.length).toBeGreaterThan(0);
     });
     
-    test('Step 5: Search ICD-10 codes for diagnosis', () => {
-      // Get popular codes
+    test('Step 5: Search ICD-10 codes for diagnosis', () => {
       const popularCodes = getPopularCodes();
       expect(popularCodes.length).toBeGreaterThan(0);
       expect(popularCodes[0]).toHaveProperty('code');
-      expect(popularCodes[0]).toHaveProperty('description');
-      
-      // Search fallback results (doesn't require API)
+      expect(popularCodes[0]).toHaveProperty('description');
       const diabetesResults = getFallbackResults('diabetes');
       expect(diabetesResults.length).toBeGreaterThan(0);
-      expect(diabetesResults.some(r => r.code.includes('E11'))).toBe(true);
-      
-      // Validate diagnosis data structure
+      expect(diabetesResults.some(r => r.code.includes('E11'))).toBe(true);
       const diagnosisData = {
         code: 'E11.9',
         description: 'Type 2 diabetes mellitus without complications',
@@ -155,15 +115,9 @@ describe('Clinical Workflow Integration Tests', () => {
     
     test('Step 6: Check drug interactions before prescribing', () => {
       const currentMedications = ['Metformin', 'Lisinopril'];
-      const newDrug = 'Glipizide';
-      
-      // Check interactions with current medications
-      const interactions = checkInteractions([...currentMedications, newDrug]);
-      
-      // Should return an array (may or may not have interactions)
-      expect(Array.isArray(interactions)).toBe(true);
-      
-      // Check new drug against current meds
+      const newDrug = 'Glipizide';
+      const interactions = checkInteractions([...currentMedications, newDrug]);
+      expect(Array.isArray(interactions)).toBe(true);
       const newDrugInteractions = checkNewDrugInteractions(newDrug, currentMedications);
       expect(Array.isArray(newDrugInteractions)).toBe(true);
     });
@@ -172,13 +126,9 @@ describe('Clinical Workflow Integration Tests', () => {
       const allergies = [
         { allergen: 'penicillin', severity: 'severe', reaction: 'Anaphylaxis' },
         { allergen: 'nsaid', severity: 'moderate', reaction: 'Hives' }
-      ];
-      
-      // Try to prescribe Ibuprofen (NSAID) - should detect class allergy
+      ];
       const ibuprofenAlerts = checkDrugAllergies('ibuprofen', allergies);
-      expect(ibuprofenAlerts.length).toBeGreaterThan(0);
-      
-      // Try to prescribe Aspirin (also NSAID)
+      expect(ibuprofenAlerts.length).toBeGreaterThan(0);
       const aspirinAlerts = checkDrugAllergies('aspirin', allergies);
       expect(aspirinAlerts.length).toBeGreaterThan(0);
     });
@@ -187,13 +137,9 @@ describe('Clinical Workflow Integration Tests', () => {
       const allergies = [
         { allergen: 'nsaid', severity: 'severe', reaction: 'Anaphylaxis' }
       ];
-      const currentMeds = ['Metformin', 'Lisinopril'];
-      
-      // Safe prescription
+      const currentMeds = ['Metformin', 'Lisinopril'];
       const safeResult = checkPrescriptionSafety('Glipizide', currentMeds, allergies);
-      expect(safeResult.status).not.toBe('contraindicated');
-      
-      // Unsafe prescription (NSAID allergy)
+      expect(safeResult.status).not.toBe('contraindicated');
       const unsafeResult = checkPrescriptionSafety('ibuprofen', currentMeds, allergies);
       expect(unsafeResult.allergyAlerts.length).toBeGreaterThan(0);
       expect(unsafeResult.requiresOverride).toBe(true);
@@ -205,8 +151,7 @@ describe('Clinical Workflow Integration Tests', () => {
     test('Handles missing optional fields gracefully', () => {
       const partialVitals = {
         bloodPressure: { systolic: 120, diastolic: 80 },
-        pulse: { value: 72 }
-        // Missing temperature, spo2, weight, height
+        pulse: { value: 72 }
       };
       
       const result = validateVitals(partialVitals);
@@ -216,43 +161,31 @@ describe('Clinical Workflow Integration Tests', () => {
     
     test('Flags all abnormal vital types correctly', () => {
       const abnormalVitals = {
-        bloodPressure: { systolic: 160, diastolic: 100 }, // High but not critical
-        pulse: { value: 110 }, // High
-        spo2: { value: 92 }, // Low
-        temperature: { value: 101, unit: '°F' }, // Elevated
-        bloodSugar: { value: 200, type: 'fasting' } // High
+        bloodPressure: { systolic: 160, diastolic: 100 }, 
+        pulse: { value: 110 }, 
+        spo2: { value: 92 }, 
+        temperature: { value: 101, unit: '°F' }, 
+        bloodSugar: { value: 200, type: 'fasting' } 
       };
       
-      const result = validateVitals(abnormalVitals);
-      
-      // Check that abnormal flags are present (exact wording may vary)
+      const result = validateVitals(abnormalVitals);
       expect(result.abnormalFlags.length).toBeGreaterThan(0);
       expect(result.abnormalFlags.some(f => f.includes('Systolic'))).toBe(true);
       expect(result.abnormalFlags.some(f => f.includes('Diastolic'))).toBe(true);
       expect(result.abnormalFlags.some(f => f.includes('Pulse'))).toBe(true);
     });
     
-    test('Temperature conversion is accurate', () => {
-      // Normal body temp
-      expect(convertTemperature(98.6, 'F', 'C')).toBeCloseTo(37, 1);
-      
-      // Fever
-      expect(convertTemperature(102, 'F', 'C')).toBeCloseTo(38.9, 1);
-      
-      // Hypothermia
+    test('Temperature conversion is accurate', () => {
+      expect(convertTemperature(98.6, 'F', 'C')).toBeCloseTo(37, 1);
+      expect(convertTemperature(102, 'F', 'C')).toBeCloseTo(38.9, 1);
       expect(convertTemperature(95, 'F', 'C')).toBeCloseTo(35, 1);
     });
     
-    test('BMI calculation handles different unit combinations', () => {
-      // kg/cm - normal weight
+    test('BMI calculation handles different unit combinations', () => {
       const bmi1 = calculateBMI(70, 'kg', 175, 'cm');
-      expect(bmi1).toBeCloseTo(22.9, 1);
-      
-      // lbs/cm - same person
+      expect(bmi1).toBeCloseTo(22.9, 1);
       const bmi2 = calculateBMI(154, 'lbs', 175, 'cm');
-      expect(bmi2).toBeCloseTo(22.8, 1);
-      
-      // Obese BMI
+      expect(bmi2).toBeCloseTo(22.8, 1);
       const bmi3 = calculateBMI(100, 'kg', 170, 'cm');
       expect(bmi3).toBeCloseTo(34.6, 1);
     });
@@ -260,16 +193,14 @@ describe('Clinical Workflow Integration Tests', () => {
   
   describe('Drug Interaction Detection', () => {
     
-    test('Detects contraindicated interactions', () => {
-      // SSRI + MAOI is contraindicated
+    test('Detects contraindicated interactions', () => {
       const interactions = checkInteractions(['fluoxetine', 'phenelzine']);
       
       expect(interactions.length).toBeGreaterThan(0);
       expect(interactions[0].severity).toBe('contraindicated');
     });
     
-    test('Detects major interactions', () => {
-      // Warfarin + NSAID is major
+    test('Detects major interactions', () => {
       const interactions = checkInteractions(['warfarin', 'ibuprofen']);
       
       expect(interactions.length).toBeGreaterThan(0);
@@ -425,7 +356,7 @@ describe('Clinical Workflow Integration Tests', () => {
     test('Detects missing required fields in allergies', () => {
       const invalidHistory = {
         allergies: [
-          { allergen: 'Penicillin' } // Missing type and severity
+          { allergen: 'Penicillin' } 
         ]
       };
       
@@ -462,8 +393,7 @@ describe('Clinical Workflow Integration Tests', () => {
     
     test('Detects missing required fields', () => {
       const incompleteDiagnosis = {
-        code: 'E11.9'
-        // Missing description
+        code: 'E11.9'
       };
       
       const result = validateDiagnosisData(incompleteDiagnosis);
@@ -499,8 +429,7 @@ describe('Clinical Workflow Integration Tests', () => {
   
   describe('End-to-End Workflow Simulation', () => {
     
-    test('Complete patient visit workflow', () => {
-      // Step 1: Record vitals
+    test('Complete patient visit workflow', () => {
       const vitals = {
         bloodPressure: { systolic: 150, diastolic: 95 },
         pulse: { value: 85 },
@@ -513,44 +442,30 @@ describe('Clinical Workflow Integration Tests', () => {
       
       const vitalsResult = validateVitals(vitals);
       expect(vitalsResult.isValid).toBe(true);
-      expect(vitalsResult.abnormalFlags.length).toBeGreaterThan(0); // High BP
-      
-      // Step 2: Check for critical alerts
+      expect(vitalsResult.abnormalFlags.length).toBeGreaterThan(0); 
       const alerts = generateVitalAlerts(vitals);
       const hasCritical = alerts.some(a => a.severity === 'critical');
-      expect(hasCritical).toBe(false); // Not critical, just elevated
-      
-      // Step 3: Review patient allergies
+      expect(hasCritical).toBe(false); 
       const patientAllergies = [
         { allergen: 'Sulfa', severity: 'moderate', reaction: 'Rash' }
-      ];
-      
-      // Step 4: Search for diagnosis
+      ];
       const diagnosisResults = getFallbackResults('hypertension');
-      expect(diagnosisResults.length).toBeGreaterThan(0);
-      
-      // Step 5: Validate diagnosis entry
+      expect(diagnosisResults.length).toBeGreaterThan(0);
       const diagnosis = {
         code: 'I10',
         description: 'Essential (primary) hypertension',
         type: 'primary'
       };
       const diagValidation = validateDiagnosisData(diagnosis);
-      expect(diagValidation.isValid).toBe(true);
-      
-      // Step 6: Order labs
+      expect(diagValidation.isValid).toBe(true);
       const labCatalog = getTestCatalog();
-      expect(labCatalog.tests.length).toBeGreaterThan(0);
-      
-      // Step 7: Check drug safety before prescribing
+      expect(labCatalog.tests.length).toBeGreaterThan(0);
       const currentMeds = ['Metformin'];
       const newDrug = 'Lisinopril';
       
       const safetyCheck = checkPrescriptionSafety(newDrug, currentMeds, patientAllergies);
       expect(safetyCheck.status).not.toBe('contraindicated');
-      expect(safetyCheck.allergyAlerts).toHaveLength(0);
-      
-      // Workflow complete - all checks passed
+      expect(safetyCheck.allergyAlerts).toHaveLength(0);
     });
   });
 });

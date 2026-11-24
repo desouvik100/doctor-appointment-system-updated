@@ -1,6 +1,4 @@
-/**
- * UpiAppIcon - Uses local image assets for accurate brand logos
- */
+
 
 import React from 'react';
 import { Image, View } from 'react-native';

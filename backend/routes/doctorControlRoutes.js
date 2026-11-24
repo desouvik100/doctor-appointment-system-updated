@@ -3,9 +3,7 @@ const router = express.Router();
 const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-const { sendEmail } = require('../services/emailService');
-
-// Get doctor's current control settings
+const { sendEmail } = require('../services/emailService');
 router.get('/settings/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -35,9 +33,7 @@ router.get('/settings/:doctorId', verifyToken, async (req, res) => {
     console.error('Error fetching doctor settings:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
-});
-
-// Pause/Resume online bookings
+});
 router.post('/pause-online/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -46,9 +42,7 @@ router.post('/pause-online/:doctorId', verifyToken, async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
-    }
-
-    // Initialize bookingControls if not exists
+    }
     if (!doctor.bookingControls) {
       doctor.bookingControls = {};
     }
@@ -71,9 +65,7 @@ router.post('/pause-online/:doctorId', verifyToken, async (req, res) => {
     console.error('Error toggling online bookings:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
-});
-
-// Pause/Resume clinic bookings
+});
 router.post('/pause-clinic/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -106,9 +98,7 @@ router.post('/pause-clinic/:doctorId', verifyToken, async (req, res) => {
     console.error('Error toggling clinic bookings:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
-});
-
-// Block a day instantly (emergency leave)
+});
 router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -121,26 +111,20 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
-    }
-
-    // Parse date
+    }
     const [year, month, day] = date.split('-').map(Number);
     const blockDate = new Date(year, month - 1, day);
     blockDate.setHours(0, 0, 0, 0);
     
     const endOfDay = new Date(blockDate);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    // Find all appointments for this day
+    endOfDay.setHours(23, 59, 59, 999);
     const appointments = await Appointment.find({
       doctorId,
       date: { $gte: blockDate, $lte: endOfDay },
       status: { $in: ['pending', 'confirmed', 'pending_payment'] }
     }).populate('userId', 'name email phone');
 
-    const affectedCount = appointments.length;
-
-    // Cancel all appointments
+    const affectedCount = appointments.length;
     await Appointment.updateMany(
       {
         doctorId,
@@ -155,9 +139,7 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
           cancelledAt: new Date()
         }
       }
-    );
-
-    // Add to blocked days
+    );
     if (!doctor.blockedDays) {
       doctor.blockedDays = [];
     }
@@ -166,9 +148,7 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
       reason: reason || 'Emergency leave',
       createdAt: new Date()
     });
-    await doctor.save();
-
-    // Notify patients if requested
+    await doctor.save();
     if (notifyPatients && appointments.length > 0) {
       const formattedDate = blockDate.toLocaleDateString('en-IN', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
@@ -212,9 +192,7 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
     console.error('Error blocking day:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
-});
-
-// Extend clinic hours for a day
+});
 router.post('/extend-hours/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -227,14 +205,10 @@ router.post('/extend-hours/:doctorId', verifyToken, async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
-    }
-
-    // Store extended hours
+    }
     if (!doctor.extendedHours) {
       doctor.extendedHours = [];
-    }
-
-    // Remove existing extension for this date if any
+    }
     doctor.extendedHours = doctor.extendedHours.filter(
       eh => eh.date.toISOString().split('T')[0] !== date
     );
@@ -259,9 +233,7 @@ router.post('/extend-hours/:doctorId', verifyToken, async (req, res) => {
     console.error('Error extending hours:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
-});
-
-// Bulk reschedule all appointments for a day
+});
 router.post('/reschedule-day/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -274,9 +246,7 @@ router.post('/reschedule-day/:doctorId', verifyToken, async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
-    }
-
-    // Parse dates
+    }
     const [fromYear, fromMonth, fromDay] = fromDate.split('-').map(Number);
     const sourceDate = new Date(fromYear, fromMonth - 1, fromDay);
     sourceDate.setHours(0, 0, 0, 0);
@@ -285,26 +255,20 @@ router.post('/reschedule-day/:doctorId', verifyToken, async (req, res) => {
     sourceEndOfDay.setHours(23, 59, 59, 999);
 
     const [toYear, toMonth, toDay] = toDate.split('-').map(Number);
-    const targetDate = new Date(toYear, toMonth - 1, toDay);
-
-    // Find all appointments for source day
+    const targetDate = new Date(toYear, toMonth - 1, toDay);
     const appointments = await Appointment.find({
       doctorId,
       date: { $gte: sourceDate, $lte: sourceEndOfDay },
       status: { $in: ['pending', 'confirmed'] }
     }).populate('userId', 'name email phone');
 
-    const rescheduledCount = appointments.length;
-
-    // Update all appointments to new date
+    const rescheduledCount = appointments.length;
     for (const apt of appointments) {
       apt.date = targetDate;
       apt.rescheduledFrom = sourceDate;
       apt.rescheduledAt = new Date();
       apt.rescheduledBy = 'doctor';
-      await apt.save();
-
-      // Notify patient
+      await apt.save();
       if (notifyPatients && apt.userId?.email) {
         const oldDateStr = sourceDate.toLocaleDateString('en-IN', {
           weekday: 'long', day: 'numeric', month: 'long'
@@ -349,9 +313,7 @@ router.post('/reschedule-day/:doctorId', verifyToken, async (req, res) => {
     console.error('Error rescheduling day:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
-});
-
-// Quick status update for queue management
+});
 router.patch('/queue-status/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -368,9 +330,7 @@ router.patch('/queue-status/:appointmentId', verifyToken, async (req, res) => {
     }
 
     const previousStatus = appointment.status;
-    appointment.status = status;
-
-    // Set timestamps based on status
+    appointment.status = status;
     if (status === 'in_progress' && previousStatus !== 'in_progress') {
       appointment.consultationStartedAt = new Date();
     }
@@ -397,9 +357,7 @@ router.patch('/queue-status/:appointmentId', verifyToken, async (req, res) => {
     console.error('Error updating queue status:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
-});
-
-// Get today's control summary
+});
 router.get('/today-summary/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -410,9 +368,7 @@ router.get('/today-summary/:doctorId', verifyToken, async (req, res) => {
     endOfDay.setHours(23, 59, 59, 999);
 
     const doctor = await Doctor.findById(doctorId)
-      .select('name bookingControls blockedDays extendedHours');
-
-    // Get appointment counts by type and status
+      .select('name bookingControls blockedDays extendedHours');
     const [onlineStats, clinicStats] = await Promise.all([
       Appointment.aggregate([
         {

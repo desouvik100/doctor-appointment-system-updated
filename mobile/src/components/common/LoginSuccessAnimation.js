@@ -1,6 +1,4 @@
-/**
- * LoginSuccessAnimation - Swiggy-style celebration animation on login
- */
+
 
 import React, { useEffect, useRef } from 'react';
 import {
@@ -22,9 +20,7 @@ const CONFETTI_COLORS = ['#00D4AA', '#6C5CE7', '#FF6B6B', '#FFD93D', '#4ECDC4', 
 const NUM_CONFETTI = 50;
 
 const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
-  const { colors } = useTheme();
-  
-  // Main animations
+  const { colors } = useTheme();
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const checkScale = useRef(new Animated.Value(0)).current;
   const checkOpacity = useRef(new Animated.Value(0)).current;
@@ -37,9 +33,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
   const subtitleOpacity = useRef(new Animated.Value(0)).current;
   const subtitleTranslateY = useRef(new Animated.Value(20)).current;
   const logoScale = useRef(new Animated.Value(0)).current;
-  const logoRotate = useRef(new Animated.Value(0)).current;
-  
-  // Confetti animations
+  const logoRotate = useRef(new Animated.Value(0)).current;
   const confettiAnims = useRef(
     Array.from({ length: NUM_CONFETTI }, () => ({
       translateY: new Animated.Value(-50),
@@ -48,9 +42,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
       opacity: new Animated.Value(1),
       scale: new Animated.Value(1),
     }))
-  ).current;
-
-  // Sparkle animations
+  ).current;
   const sparkles = useRef(
     Array.from({ length: 8 }, () => ({
       scale: new Animated.Value(0),
@@ -64,8 +56,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
     }
   }, [visible]);
 
-  const startAnimation = () => {
-    // Reset all animations
+  const startAnimation = () => {
     backdropOpacity.setValue(0);
     checkScale.setValue(0);
     checkOpacity.setValue(0);
@@ -78,18 +69,13 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
     subtitleOpacity.setValue(0);
     subtitleTranslateY.setValue(20);
     logoScale.setValue(0);
-    logoRotate.setValue(0);
-
-    // Sequence of animations
-    Animated.sequence([
-      // 1. Fade in backdrop
+    logoRotate.setValue(0);
+    Animated.sequence([
       Animated.timing(backdropOpacity, {
         toValue: 1,
         duration: 200,
         useNativeDriver: true,
-      }),
-      
-      // 2. Logo bounce in with rotation
+      }),
       Animated.parallel([
         Animated.spring(logoScale, {
           toValue: 1,
@@ -103,9 +89,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           easing: Easing.out(Easing.back(1.5)),
           useNativeDriver: true,
         }),
-      ]),
-
-      // 3. Checkmark with rings
+      ]),
       Animated.parallel([
         Animated.spring(checkScale, {
           toValue: 1,
@@ -117,8 +101,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           toValue: 1,
           duration: 200,
           useNativeDriver: true,
-        }),
-        // Ring 1
+        }),
         Animated.sequence([
           Animated.parallel([
             Animated.timing(ringScale, {
@@ -141,9 +124,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
             ]),
           ]),
         ]),
-      ]),
-
-      // 4. Ring 2 (delayed)
+      ]),
       Animated.parallel([
         Animated.timing(ring2Scale, {
           toValue: 2.5,
@@ -164,15 +145,9 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           }),
         ]),
       ]),
-    ]).start();
-
-    // Start confetti with delay
-    setTimeout(() => startConfetti(), 400);
-    
-    // Start sparkles
-    setTimeout(() => startSparkles(), 300);
-
-    // Text animations
+    ]).start();
+    setTimeout(() => startConfetti(), 400);
+    setTimeout(() => startSparkles(), 300);
     setTimeout(() => {
       Animated.parallel([
         Animated.timing(textOpacity, {
@@ -187,9 +162,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 600);
-
-    // Subtitle animation
+    }, 600);
     setTimeout(() => {
       Animated.parallel([
         Animated.timing(subtitleOpacity, {
@@ -204,9 +177,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 800);
-
-    // Complete after animation
+    }, 800);
     setTimeout(() => {
       if (onAnimationComplete) {
         onAnimationComplete();
@@ -321,7 +292,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           colors={[colors.background, colors.background]}
           style={styles.gradient}
         >
-          {/* Confetti */}
+          {}
           {confettiAnims.map((anim, index) => {
             const confettiRotate = anim.rotate.interpolate({
               inputRange: [0, 10],
@@ -351,7 +322,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
             );
           })}
 
-          {/* Sparkles */}
+          {}
           {sparkles.map((sparkle, index) => (
             <Animated.Text
               key={`sparkle-${index}`}
@@ -368,9 +339,9 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
             </Animated.Text>
           ))}
 
-          {/* Main content */}
+          {}
           <View style={styles.content}>
-            {/* Logo */}
+            {}
             <Animated.View
               style={[
                 styles.logoContainer,
@@ -390,9 +361,9 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
               </LinearGradient>
             </Animated.View>
 
-            {/* Checkmark with rings */}
+            {}
             <View style={styles.checkContainer}>
-              {/* Ring 1 */}
+              {}
               <Animated.View
                 style={[
                   styles.ring,
@@ -404,7 +375,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
                 ]}
               />
               
-              {/* Ring 2 */}
+              {}
               <Animated.View
                 style={[
                   styles.ring,
@@ -416,7 +387,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
                 ]}
               />
 
-              {/* Checkmark circle */}
+              {}
               <Animated.View
                 style={[
                   styles.checkCircle,
@@ -431,7 +402,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
               </Animated.View>
             </View>
 
-            {/* Welcome text */}
+            {}
             <Animated.Text
               style={[
                 styles.welcomeText,

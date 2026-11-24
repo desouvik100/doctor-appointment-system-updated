@@ -5,11 +5,8 @@ async function checkProductionAdmin() {
   
   console.log('🔍 Checking production admin via API...');
   
-  try {
-    // First, let's try to get all users (if there's such an endpoint)
-    console.log('📡 Testing user endpoints...');
-    
-    // Try different login combinations
+  try {
+    console.log('📡 Testing user endpoints...');
     const testCredentials = [
       { email: 'admin@healthsyncpro.in', password: 'admin123' },
       { email: 'admin@healthsyncpro.in', password: 'Admin@123' },
@@ -27,7 +24,7 @@ async function checkProductionAdmin() {
         console.log('✅ SUCCESS!');
         console.log('Status:', res.status);
         console.log('Body:', JSON.stringify(res.data, null, 2));
-        return; // Exit on first success
+        return; 
       } catch (err) {
         if (err.response) {
           console.log('❌ Status:', err.response.status, '- Message:', err.response.data.message);

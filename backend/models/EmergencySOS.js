@@ -1,59 +1,41 @@
 const mongoose = require('mongoose');
 
-/**
- * Emergency SOS System
- * Requirement 9: Emergency SOS Feature
- */
-
-const emergencySOSSchema = new mongoose.Schema({
-  // User who triggered SOS
+const emergencySOSSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  
-  // Emergency type
+  },
   type: {
     type: String,
     enum: ['medical', 'accident', 'cardiac', 'breathing', 'unconscious', 'other'],
     default: 'medical'
-  },
-  
-  // Status
+  },
   status: {
     type: String,
     enum: ['triggered', 'acknowledged', 'ambulance_dispatched', 'ambulance_arrived', 
            'patient_picked', 'hospital_reached', 'resolved', 'cancelled', 'false_alarm'],
     default: 'triggered'
-  },
-  
-  // Location at time of SOS
+  },
   location: {
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
     address: String,
     landmark: String,
-    accuracy: Number // GPS accuracy in meters
-  },
-  
-  // Live location updates
+    accuracy: Number 
+  },
   locationHistory: [{
     latitude: Number,
     longitude: Number,
     timestamp: { type: Date, default: Date.now }
-  }],
-  
-  // Patient's critical medical info (auto-fetched from profile)
+  }],
   medicalInfo: {
     bloodGroup: String,
     allergies: [String],
     chronicConditions: [String],
     currentMedications: [String],
     emergencyNotes: String
-  },
-  
-  // Emergency contacts notified
+  },
   emergencyContacts: [{
     name: String,
     phone: String,
@@ -66,9 +48,7 @@ const emergencySOSSchema = new mongoose.Schema({
     },
     responseReceived: Boolean,
     responseAt: Date
-  }],
-  
-  // Ambulance details
+  }],
   ambulance: {
     providerId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -78,7 +58,7 @@ const emergencySOSSchema = new mongoose.Schema({
     driverName: String,
     driverPhone: String,
     dispatchedAt: Date,
-    eta: Number, // in minutes
+    eta: Number, 
     currentLocation: {
       latitude: Number,
       longitude: Number,
@@ -87,9 +67,7 @@ const emergencySOSSchema = new mongoose.Schema({
     arrivedAt: Date,
     hospitalName: String,
     hospitalAddress: String
-  },
-  
-  // Timeline of events
+  },
   timeline: [{
     event: {
       type: String,
@@ -99,34 +77,26 @@ const emergencySOSSchema = new mongoose.Schema({
     },
     timestamp: { type: Date, default: Date.now },
     details: String,
-    updatedBy: String // 'system', 'user', 'driver', 'hospital'
-  }],
-  
-  // Voice/Text notes during emergency
+    updatedBy: String 
+  }],
   notes: [{
     type: { type: String, enum: ['text', 'voice'] },
-    content: String, // text or audio URL
+    content: String, 
     addedAt: { type: Date, default: Date.now },
     addedBy: String
-  }],
-  
-  // Response metrics
+  }],
   metrics: {
-    timeToAcknowledge: Number, // seconds
+    timeToAcknowledge: Number, 
     timeToDispatch: Number,
     timeToArrival: Number,
     timeToHospital: Number,
     totalResponseTime: Number
-  },
-  
-  // Feedback after resolution
+  },
   feedback: {
     rating: { type: Number, min: 1, max: 5 },
     comment: String,
     submittedAt: Date
-  },
-  
-  // For medical records
+  },
   medicalRecordId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'MedicalRecord'
@@ -142,24 +112,18 @@ const emergencySOSSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
-
-// Indexes
+}, { timestamps: true });
 emergencySOSSchema.index({ userId: 1, status: 1 });
 emergencySOSSchema.index({ triggeredAt: -1 });
 emergencySOSSchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
-emergencySOSSchema.index({ status: 1, 'ambulance.providerId': 1 });
-
-// Add timeline event
+emergencySOSSchema.index({ status: 1, 'ambulance.providerId': 1 });
 emergencySOSSchema.methods.addTimelineEvent = function(event, details = '', updatedBy = 'system') {
   this.timeline.push({
     event,
     timestamp: new Date(),
     details,
     updatedBy
-  });
-  
-  // Update metrics
+  });
   const triggerTime = this.triggeredAt.getTime();
   const now = Date.now();
   
@@ -178,30 +142,23 @@ emergencySOSSchema.methods.addTimelineEvent = function(event, details = '', upda
       this.metrics.totalResponseTime = this.metrics.timeToHospital;
       break;
   }
-};
-
-// Update ambulance location
+};
 emergencySOSSchema.methods.updateAmbulanceLocation = function(latitude, longitude) {
   this.ambulance.currentLocation = {
     latitude,
     longitude,
     lastUpdated: new Date()
-  };
-  
-  // Calculate new ETA based on distance (simplified)
+  };
   if (this.location.latitude && this.location.longitude) {
     const distance = this.calculateDistance(
       latitude, longitude,
       this.location.latitude, this.location.longitude
-    );
-    // Assume average speed of 40 km/h in city
+    );
     this.ambulance.eta = Math.ceil((distance / 40) * 60);
   }
-};
-
-// Calculate distance between two points (Haversine formula)
+};
 emergencySOSSchema.methods.calculateDistance = function(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth's radius in km
+  const R = 6371; 
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -209,9 +166,7 @@ emergencySOSSchema.methods.calculateDistance = function(lat1, lon1, lat2, lon2) 
             Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
-};
-
-// Update status
+};
 emergencySOSSchema.methods.updateStatus = function(newStatus, details = '', updatedBy = 'system') {
   this.status = newStatus;
   
@@ -233,21 +188,16 @@ emergencySOSSchema.methods.updateStatus = function(newStatus, details = '', upda
     this.resolvedAt = new Date();
     this.isActive = false;
   }
-};
-
-// Add emergency contact
+};
 emergencySOSSchema.methods.notifyContact = function(contact) {
   this.emergencyContacts.push({
     ...contact,
     notifiedAt: new Date(),
     notificationStatus: 'pending'
   });
-};
-
-// Static: Get active emergencies near location
-emergencySOSSchema.statics.getActiveNearby = async function(latitude, longitude, radiusKm = 10) {
-  // Simple bounding box query (for production, use MongoDB geospatial queries)
-  const latDelta = radiusKm / 111; // 1 degree ≈ 111 km
+};
+emergencySOSSchema.statics.getActiveNearby = async function(latitude, longitude, radiusKm = 10) {
+  const latDelta = radiusKm / 111; 
   const lonDelta = radiusKm / (111 * Math.cos(latitude * Math.PI / 180));
   
   return await this.find({
@@ -256,9 +206,7 @@ emergencySOSSchema.statics.getActiveNearby = async function(latitude, longitude,
     'location.latitude': { $gte: latitude - latDelta, $lte: latitude + latDelta },
     'location.longitude': { $gte: longitude - lonDelta, $lte: longitude + lonDelta }
   }).populate('userId', 'name phone');
-};
-
-// Static: Get user's emergency history
+};
 emergencySOSSchema.statics.getUserHistory = async function(userId) {
   return await this.find({ userId })
     .sort({ triggeredAt: -1 })

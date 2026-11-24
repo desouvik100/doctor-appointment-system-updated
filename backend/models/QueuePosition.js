@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const queuePositionSchema = new mongoose.Schema({
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
-  date: { type: Date, required: true },
-  // Queue entries
+  date: { type: Date, required: true },
   queue: [{
     appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
     patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -18,7 +17,7 @@ const queuePositionSchema = new mongoose.Schema({
     estimatedWaitMinutes: Number
   }],
   currentToken: { type: Number, default: 0 },
-  averageConsultationTime: { type: Number, default: 15 }, // minutes
+  averageConsultationTime: { type: Number, default: 15 }, 
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });

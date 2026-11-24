@@ -1,7 +1,4 @@
-/**
- * Video Consultation Screen
- * Handles video call interface for telemedicine appointments
- */
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -33,18 +30,14 @@ const VideoConsultationScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(true);
   const [meetLink, setMeetLink] = useState(null);
   const [consultationStatus, setConsultationStatus] = useState('waiting');
-  const [error, setError] = useState(null);
-
-  // Handle back button
+  const [error, setError] = useState(null);
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       handleLeaveConsultation();
       return true;
     });
     return () => backHandler.remove();
-  }, []);
-
-  // Initialize consultation
+  }, []);
   useEffect(() => {
     initializeConsultation();
   }, []);
@@ -57,9 +50,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
       const appointmentId = appointment?._id || appointment?.id;
       if (!appointmentId) {
         throw new Error('Appointment ID not found');
-      }
-
-      // Get or generate meeting link
+      }
       const result = await videoService.getMeetingLink(appointmentId);
       
       if (result.success) {
@@ -84,13 +75,9 @@ const VideoConsultationScreen = ({ navigation, route }) => {
     }
 
     try {
-      setConsultationStatus('joining');
-      
-      // Notify backend that user is joining
+      setConsultationStatus('joining');
       const appointmentId = appointment?._id || appointment?.id;
-      await videoService.notifyJoined(appointmentId, userType);
-      
-      // Open meeting link
+      await videoService.notifyJoined(appointmentId, userType);
       const canOpen = await Linking.canOpenURL(meetLink);
       if (canOpen) {
         await Linking.openURL(meetLink);
@@ -180,7 +167,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       
       <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.gradient}>
-        {/* Header */}
+        {}
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <TouchableOpacity 
             style={styles.closeButton} 
@@ -197,7 +184,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Doctor/Patient Info */}
+        {}
         <View style={styles.participantCard}>
           <Avatar 
             name={doctor?.name || appointment?.doctorId?.name || 'Doctor'} 
@@ -226,7 +213,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Instructions */}
+        {}
         <View style={styles.instructionsCard}>
           <Text style={styles.instructionsTitle}>📋 Before You Join</Text>
           <View style={styles.instructionItem}>
@@ -247,7 +234,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Action Buttons */}
+        {}
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
             style={styles.joinButton}
@@ -283,7 +270,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* Help Text */}
+        {}
         <Text style={styles.helpText}>
           Having trouble? Contact support at support@healthsync.com
         </Text>

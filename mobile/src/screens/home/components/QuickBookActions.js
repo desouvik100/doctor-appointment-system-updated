@@ -1,6 +1,4 @@
-/**
- * QuickBookActions - Visually dominant hero actions for booking
- */
+
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';

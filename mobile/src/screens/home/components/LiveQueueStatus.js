@@ -1,6 +1,4 @@
-/**
- * LiveQueueStatus - Flagship Real-Time Consultation Queue Stepper (Uber-style)
- */
+
 
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -22,7 +20,6 @@ const LiveQueueStatus = ({ appointments = [], activeQueue }) => {
   const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation();
 
-  // Validate active confirmed waiting status context
   if (!activeQueue || !appointments || appointments.length === 0) {
     return null;
   }
@@ -37,29 +34,26 @@ const LiveQueueStatus = ({ appointments = [], activeQueue }) => {
     return null;
   }
 
-  // Animation values
   const pulseOpacity = useSharedValue(0.4);
   const fillProgress = useSharedValue(0);
 
-  // Stepper calculations (4 Steps: Arrived -> Consulting -> Your Turn -> Completed)
-  let activeStep = 0; // 0: Arrived, 1: Consulting, 2: Your Turn, 3: Completed
+  let activeStep = 0; 
   if (position > 1) {
-    activeStep = 1; // Consulting others
+    activeStep = 1; 
   } else if (position === 1 || isYourTurn) {
-    activeStep = 2; // Your Turn
+    activeStep = 2; 
   }
 
   const ratio = activeStep / 3;
 
   useEffect(() => {
-    // Pulse animation for active step glow
+
     pulseOpacity.value = withRepeat(
       withTiming(1.0, { duration: 1200 }),
       -1,
       true
     );
 
-    // Smooth filling progress bar
     fillProgress.value = withTiming(ratio, { duration: 1500 });
   }, [activeStep, ratio]);
 
@@ -84,7 +78,7 @@ const LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         },
       ]}
     >
-      {/* Header Banner */}
+      {}
       <View style={styles.topRow}>
         <View style={styles.liveBadgeContainer}>
           <Animated.View style={[styles.liveDot, { backgroundColor: colors.error }]} />
@@ -95,7 +89,7 @@ const LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         </Text>
       </View>
 
-      {/* Doctor & Info */}
+      {}
       <View style={styles.doctorInfoRow}>
         <View>
           <Text style={[styles.docName, { color: colors.textPrimary }]}>{todayAppointment.doctorName}</Text>
@@ -110,34 +104,34 @@ const LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Uber-style horizontal Stepper Timeline */}
+      {}
       <View style={styles.stepperContainer}>
-        {/* Progress Line Background */}
+        {}
         <View style={[styles.progressLineBg, { backgroundColor: isDarkMode ? '#2A344A' : '#E2E8F0' }]}>
           <Animated.View style={[styles.progressLineFill, { backgroundColor: colors.success }, animatedProgressStyle]} />
         </View>
 
-        {/* Stepper Nodes */}
+        {}
         <View style={styles.stepsRow}>
-          {/* Step 1: Arrived */}
+          {}
           <View style={styles.stepNodeContainer}>
             <View style={[styles.nodeCircle, activeStep >= 0 ? { backgroundColor: colors.success } : { backgroundColor: '#A0AEC0' }]} />
             <Text style={[styles.stepLabel, { color: colors.textPrimary, fontWeight: activeStep === 0 ? '800' : '500' }]}>Arrived</Text>
           </View>
 
-          {/* Step 2: Consulting */}
+          {}
           <View style={styles.stepNodeContainer}>
             <Animated.View style={[styles.nodeCircle, activeStep >= 1 ? { backgroundColor: colors.success } : { backgroundColor: '#A0AEC0' }, activeStep === 1 && animatedActiveStepStyle]} />
             <Text style={[styles.stepLabel, { color: colors.textPrimary, fontWeight: activeStep === 1 ? '800' : '500' }]}>Consulting</Text>
           </View>
 
-          {/* Step 3: Your Turn */}
+          {}
           <View style={styles.stepNodeContainer}>
             <Animated.View style={[styles.nodeCircle, activeStep >= 2 ? { backgroundColor: colors.primary } : { backgroundColor: '#A0AEC0' }, activeStep === 2 && animatedActiveStepStyle]} />
             <Text style={[styles.stepLabel, { color: colors.textPrimary, fontWeight: activeStep === 2 ? '800' : '500' }]}>Your Turn</Text>
           </View>
 
-          {/* Step 4: Finished */}
+          {}
           <View style={styles.stepNodeContainer}>
             <View style={[styles.nodeCircle, activeStep >= 3 ? { backgroundColor: colors.success } : { backgroundColor: '#A0AEC0' }]} />
             <Text style={[styles.stepLabel, { color: colors.textPrimary, fontWeight: activeStep === 3 ? '800' : '500' }]}>Finished</Text>
@@ -145,7 +139,7 @@ const LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         </View>
       </View>
 
-      {/* Metrics Row */}
+      {}
       <View style={[styles.metricsRow, { backgroundColor: isDarkMode ? '#1E283C' : '#FFFFFF' }]}>
         <View style={styles.metricItem}>
           <Text style={[styles.metricLabel, { color: colors.textMuted }]}>Estimated Wait</Text>
@@ -164,7 +158,7 @@ const LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         </View>
       </View>
 
-      {/* Real-time status subtext */}
+      {}
       <Text style={[styles.statusText, { color: colors.textMuted }]}>
         📢 {isYourTurn ? 'Please enter the consultation room now.' : `Doctor is currently consulting client #${position + 2}`}
       </Text>
@@ -230,7 +224,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
   },
-  // Stepper Timeline styles
+
   stepperContainer: {
     position: 'relative',
     height: 55,
@@ -270,7 +264,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     textAlign: 'center',
   },
-  // Metrics container
+
   metricsRow: {
     flexDirection: 'row',
     paddingVertical: spacing.md,

@@ -1,7 +1,4 @@
-/**
- * Admin Support Tickets Screen - Support Ticket Management
- * 100% Parity with Web Admin
- */
+
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -248,7 +245,6 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

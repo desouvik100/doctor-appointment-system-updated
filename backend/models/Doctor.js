@@ -38,14 +38,13 @@ const doctorSchema = new mongoose.Schema(
     availability: {
       type: String,
       default: "Available"
-    },
-    // Weekly Schedule - Doctor's regular availability
+    },
     weeklySchedule: {
       monday: {
         isAvailable: { type: Boolean, default: true },
         slots: [{
-          startTime: String, // "09:00"
-          endTime: String,   // "13:00"
+          startTime: String, 
+          endTime: String,   
           type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
           maxPatients: { type: Number, default: 10 }
         }]
@@ -104,34 +103,31 @@ const doctorSchema = new mongoose.Schema(
           maxPatients: { type: Number, default: 10 }
         }]
       }
-    },
-    // Special dates - Override weekly schedule for specific dates
+    },
     specialDates: [{
       date: { type: Date, required: true },
       isAvailable: { type: Boolean, default: true },
-      reason: String, // "Holiday", "Conference", "Emergency Leave"
+      reason: String, 
       slots: [{
         startTime: String,
         endTime: String,
         type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
         maxPatients: { type: Number, default: 10 }
       }]
-    }],
-    // Consultation settings
+    }],
     consultationSettings: {
       virtualConsultationEnabled: { type: Boolean, default: true },
       inClinicConsultationEnabled: { type: Boolean, default: true },
-      virtualConsultationFee: { type: Number, default: null }, // null means same as consultationFee
-      slotDuration: { type: Number, default: 15 }, // minutes per appointment (legacy)
-      bufferTime: { type: Number, default: 5 }, // minutes between appointments
-      advanceBookingDays: { type: Number, default: 30 }, // How far in advance can patients book
-      cancellationHours: { type: Number, default: 24 }, // Hours before appointment for free cancellation
-      // Separate settings for virtual and in-clinic
-      virtualSlotDuration: { type: Number, default: 20 }, // Virtual consultations typically shorter
-      inClinicSlotDuration: { type: Number, default: 30 }, // In-clinic consultations
-      maxVirtualSlots: { type: Number, default: 15 }, // Max virtual appointments per day
-      maxInClinicSlots: { type: Number, default: 20 }, // Max in-clinic appointments per day
-      virtualStartTime: { type: String, default: '08:00' }, // Virtual can start earlier
+      virtualConsultationFee: { type: Number, default: null }, 
+      slotDuration: { type: Number, default: 15 }, 
+      bufferTime: { type: Number, default: 5 }, 
+      advanceBookingDays: { type: Number, default: 30 }, 
+      cancellationHours: { type: Number, default: 24 }, 
+      virtualSlotDuration: { type: Number, default: 20 }, 
+      inClinicSlotDuration: { type: Number, default: 30 }, 
+      maxVirtualSlots: { type: Number, default: 15 }, 
+      maxInClinicSlots: { type: Number, default: 20 }, 
+      virtualStartTime: { type: String, default: '08:00' }, 
       virtualEndTime: { type: String, default: '20:00' },
       inClinicStartTime: { type: String, default: '09:00' },
       inClinicEndTime: { type: String, default: '19:00' }
@@ -139,8 +135,7 @@ const doctorSchema = new mongoose.Schema(
     consultationFee: {
       type: Number,
       default: 500
-    },
-    // Consultation duration in minutes (for queue-based booking)
+    },
     consultationDuration: {
       type: Number,
       default: 30,
@@ -170,8 +165,7 @@ const doctorSchema = new mongoose.Schema(
     forceLogoutAt: {
       type: Date,
       default: null
-    },
-    // Rating & Reviews
+    },
     rating: {
       type: Number,
       default: 0,
@@ -181,8 +175,7 @@ const doctorSchema = new mongoose.Schema(
     reviewCount: {
       type: Number,
       default: 0
-    },
-    // Profile
+    },
     profilePhoto: {
       type: String,
       default: null
@@ -190,8 +183,7 @@ const doctorSchema = new mongoose.Schema(
     profilePhotoPublicId: {
       type: String,
       default: null
-    },
-    // Verification Documents (Cloudinary)
+    },
     verificationDocs: {
       license: {
         url: String,
@@ -222,8 +214,7 @@ const doctorSchema = new mongoose.Schema(
     registrationNumber: {
       type: String,
       trim: true
-    },
-    // Authentication
+    },
     password: {
       type: String,
       default: null
@@ -239,12 +230,11 @@ const doctorSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
       default: null
-    },
-    // Admin Approval System
+    },
     approvalStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: 'approved' // Existing doctors are approved by default
+      default: 'approved' 
     },
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -255,8 +245,7 @@ const doctorSchema = new mongoose.Schema(
     },
     rejectionReason: {
       type: String
-    },
-    // Terms and Conditions Acceptance
+    },
     termsAccepted: {
       type: Boolean,
       default: false
@@ -272,8 +261,7 @@ const doctorSchema = new mongoose.Schema(
     privacyPolicyAcceptedAt: {
       type: Date,
       default: null
-    },
-    // ===== BOOKING CONTROLS (Doctor Override) =====
+    },
     bookingControls: {
       onlineBookingPaused: { type: Boolean, default: false },
       clinicBookingPaused: { type: Boolean, default: false },
@@ -283,29 +271,24 @@ const doctorSchema = new mongoose.Schema(
       clinicPausedUntil: { type: Date, default: null },
       onlinePausedAt: { type: Date, default: null },
       clinicPausedAt: { type: Date, default: null }
-    },
-    // Blocked days (emergency leaves)
+    },
     blockedDays: [{
       date: { type: Date, required: true },
       reason: { type: String, default: 'Emergency leave' },
       createdAt: { type: Date, default: Date.now }
-    }],
-    // Extended hours for specific days
+    }],
     extendedHours: [{
       date: { type: Date, required: true },
       newEndTime: { type: String, required: true },
       reason: { type: String, default: 'Extended hours' },
       createdAt: { type: Date, default: Date.now }
-    }],
-    // Online Status Tracking
+    }],
     isOnline: { type: Boolean, default: false },
     lastActiveAt: { type: Date, default: null },
     onlineStatusUpdatedAt: { type: Date, default: null }
   },
   { timestamps: true }
-);
-
-// ===== PERFORMANCE INDEXES =====
+);
 doctorSchema.index({ email: 1 });
 doctorSchema.index({ specialization: 1, isActive: 1 });
 doctorSchema.index({ clinicId: 1, isActive: 1 });
@@ -314,8 +297,7 @@ doctorSchema.index({ rating: -1 });
 doctorSchema.index({ consultationFee: 1 });
 doctorSchema.index({ availability: 1, isActive: 1 });
 doctorSchema.index({ isOnline: 1, lastActiveAt: -1 });
-doctorSchema.index({ createdAt: -1 });
-// Text search for doctor name and specialization
+doctorSchema.index({ createdAt: -1 });
 doctorSchema.index({ name: 'text', specialization: 'text', qualification: 'text' });
 
 module.exports = mongoose.model('Doctor', doctorSchema);
